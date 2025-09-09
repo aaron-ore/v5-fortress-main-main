@@ -127,60 +127,53 @@ const AuthenticatedApp = () => {
 };
 
 const AppContent = () => {
-  const [session, setSession] = useState<any>(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoadingProfile, fetchProfile, profile } = useProfile(); // Added profile
+  const { isLoadingProfile, profile, fetchProfile } = useProfile(); // Use profile and isLoadingProfile from context
   const { isPrinting, printContentData, resetPrintState } = usePrint();
   const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
   const { companyProfile } = useOnboarding(); // NEW: Get companyProfile for PDF props
 
   const qbCallbackProcessedRef = useRef(false);
+  const shopifyCallbackProcessedRef = useRef(false); // NEW: Ref for Shopify callback
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoadingAuth(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setLoadingAuth(false);
-      if (!session && !["/auth", "/reset-password"].includes(window.location.pathname)) {
-        navigate("/auth");
-      } else if (session && ["/auth", "/reset-password"].includes(window.location.pathname)) {
-        navigate("/");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  // Removed the useEffect with supabase.auth.onAuthStateChange as ProfileContext now handles it.
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const quickbooksSuccess = params.get('quickbooks_success');
     const quickbooksError = params.get('quickbooks_error');
-    const realmIdPresent = params.get('realmId_present');
+    const shopifySuccess = params.get('shopify_success'); // NEW: Get Shopify success param
+    const shopifyError = params.get('shopify_error'); // NEW: Get Shopify error param
 
-    console.log('AppContent.tsx: realmId_present from URL parameters:', realmIdPresent);
+    console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
+    console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
+    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess); // NEW: Log Shopify params
+    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError); // NEW: Log Shopify params
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
-        supabase.auth.refreshSession().then(() => {
-          fetchProfile();
-        });
+        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
-
       qbCallbackProcessedRef.current = true;
       navigate('/integrations', { replace: true });
     }
-  }, [location.search, navigate, fetchProfile]);
+
+    // NEW: Handle Shopify callback
+    if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
+      if (shopifySuccess) {
+        showSuccess("Shopify connected successfully!");
+        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it
+      } else if (shopifyError) {
+        showError(`Shopify connection failed: ${shopifyError}`);
+      }
+      shopifyCallbackProcessedRef.current = true;
+      navigate('/integrations', { replace: true });
+    }
+  }, [location.search, navigate]); // Removed fetchProfile from dependencies as it's not called directly here
 
   // NEW: Effect to manage print-mode-label class on <html>
   useEffect(() => {
@@ -191,7 +184,7 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
-  if (loadingAuth || isLoadingProfile) {
+  if (isLoadingProfile) { // Use isLoadingProfile from context
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         Loading application...
@@ -199,7 +192,7 @@ const AppContent = () => {
     );
   }
 
-  const mainAppRoutes = session ? (
+  const mainAppRoutes = profile ? ( // Use profile from context
     <ErrorBoundary>
       <Routes>
         <Route path="/*" element={<AuthenticatedApp />} />
@@ -209,7 +202,7 @@ const AppContent = () => {
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      {!session && <Route path="*" element={<Auth />} />}
+      {!profile && <Route path="*" element={<Auth />} />} {/* Use !profile */}
     </Routes>
   );
 

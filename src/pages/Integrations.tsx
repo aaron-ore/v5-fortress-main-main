@@ -39,9 +39,7 @@ const Integrations: React.FC = () => {
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
-        supabase.auth.refreshSession().then(() => {
-          fetchProfile();
-        });
+        // The ProfileContext's onAuthStateChange listener will trigger fetchProfile after the redirect.
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -53,16 +51,14 @@ const Integrations: React.FC = () => {
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
-        supabase.auth.refreshSession().then(() => {
-          fetchProfile();
-        });
+        // The ProfileContext's onAuthStateChange listener will trigger fetchProfile after the redirect.
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
       shopifyCallbackProcessedRef.current = true;
       navigate(location.pathname, { replace: true });
     }
-  }, [location.search, location.pathname, navigate, fetchProfile]);
+  }, [location.search, location.pathname, navigate]); // Removed fetchProfile from dependencies as it's not called directly here
 
   const handleConnectQuickBooks = () => {
     if (!profile?.id) {
