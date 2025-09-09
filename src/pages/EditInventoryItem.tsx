@@ -154,7 +154,7 @@ const EditInventoryItem: React.FC = () => {
       // Initialize image states
       setImageFile(null);
       setImageUrlPreview(item.imageUrl || null);
-      setIsImageCleared(false);
+      setIsImageCleared(false); // Reset cleared state when item loads
 
       // Generate QR code SVG from item.barcodeUrl (which now stores raw data)
       const generateAndSetQr = async () => {
@@ -190,7 +190,7 @@ const EditInventoryItem: React.FC = () => {
         setQrCodeSvg(undefined);
       }
     };
-    generateAndSetQr();
+    generateAndSetQr(); // Corrected function call
   }, [watchSku]);
 
   // NEW: Handle image file selection
@@ -230,14 +230,14 @@ const EditInventoryItem: React.FC = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrl: string | undefined = values.imageUrl; // Start with current form value (which might be old URL)
+    let finalImageUrl: string | undefined = item.imageUrl; // Initialize with current DB value
 
     try {
-      // 1. Handle image upload/deletion if there's a change
+      // Case 1: User uploaded a new image
       if (imageFile) {
         setIsUploadingImage(true);
-        // If there's an old image URL, delete the old file from storage
-        if (item.imageUrl) {
+        // If there was an old image URL, delete the old file from storage
+        if (item.imageUrl) { // Check item.imageUrl (original from DB)
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
@@ -247,18 +247,22 @@ const EditInventoryItem: React.FC = () => {
         // Upload new image
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
         showSuccess("Product image uploaded successfully!");
-      } else if (isImageCleared && item.imageUrl) {
-        // If image was explicitly cleared and there was an old image, delete it
-        const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
-        if (oldFilePath) {
-          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
-          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-        }
-        finalImageUrl = undefined; // Set to undefined to clear in DB
-      } else if (!imageFile && !isImageCleared) {
-        // No new file, not cleared, keep existing URL (from item.imageUrl)
-        finalImageUrl = item.imageUrl;
       }
+      // Case 2: User explicitly cleared the existing image
+      else if (isImageCleared) { // No need to check item.imageUrl here, as we want to clear it regardless if it existed
+        // If image was explicitly cleared and there was an old image, delete it
+        if (item.imageUrl) { // Only attempt deletion if there was an actual URL
+          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
+          if (oldFilePath) {
+            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          }
+        }
+        finalImageUrl = undefined; // Explicitly set to undefined to clear in DB
+      }
+      // Case 3: No new file uploaded, and existing image was NOT explicitly cleared (finalImageUrl remains item.imageUrl from initialization)
+      // This covers the case where the user didn't touch the image field.
+
     } catch (error: any) {
       console.error("Error processing product image:", error);
       showError(`Failed to process product image: ${error.message}`);
