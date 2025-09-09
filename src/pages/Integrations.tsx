@@ -35,7 +35,11 @@ const Integrations: React.FC = () => {
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
 
-    // Handle QuickBooks callback
+    console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
+    console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
+    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess);
+    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError);
+
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
@@ -58,7 +62,7 @@ const Integrations: React.FC = () => {
       shopifyCallbackProcessedRef.current = true;
       navigate(location.pathname, { replace: true });
     }
-  }, [location.search, location.pathname, navigate]); // Removed fetchProfile from dependencies as it's not called directly here
+  }, [location.search, location.pathname, navigate]);
 
   const handleConnectQuickBooks = () => {
     if (!profile?.id) {
@@ -235,12 +239,24 @@ const Integrations: React.FC = () => {
         return;
       }
 
-      // Placeholder for actual Shopify sync logic (e.g., another Edge Function)
-      // For now, just simulate a sync
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      showSuccess("Shopify product sync initiated (placeholder).");
-      console.log("Simulating Shopify product sync for store:", profile.shopifyStoreName);
+      const { data, error } = await supabase.functions.invoke('sync-shopify-products', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
 
+      if (error) {
+        throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      showSuccess(data.message || "Shopify products synced successfully!");
+      console.log("Shopify Product Sync Results:", data.results);
+      await fetchProfile(); // Refresh profile to ensure latest Shopify tokens/status
     } catch (error: any) {
       console.error("Error syncing Shopify products:", error);
       showError(`Failed to sync Shopify products: ${error.message}`);
@@ -327,7 +343,7 @@ const Integrations: React.FC = () => {
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           {/* Dynamic Shopify Logo */}
           <img src={shopifyLogoSrc} alt="Shopify Logo" className="h-10 object-contain" />
-          {/* Removed CardTitle for Shopify */}
+          <CardTitle className="text-xl font-semibold">Shopify</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {isShopifyConnected ? (
