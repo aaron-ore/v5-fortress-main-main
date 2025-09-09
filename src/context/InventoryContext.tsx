@@ -215,13 +215,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       : false;
 
     if (!isAutoReorderGloballyEnabled) {
-      console.log("[Auto-Reorder] Globally disabled. Skipping auto-reorder check.");
-      return;
+      console.log("[InventoryContext] Auto-reorder is globally disabled. Skipping auto-reorder check.");
+      return; // Exit early if globally disabled
     }
 
     // Only run auto-reorder logic if initial load is complete, and there's an organization
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
-      console.log("[InventoryContext] Triggering auto-reorder check due to inventory/vendor/profile change.");
+      console.log("[InventoryContext] Auto-reorder is globally enabled. Triggering check due to inventory/vendor/profile change.");
       processAutoReorder(inventoryItems, addOrder, vendors, profile.organizationId, addNotification);
     }
   }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification]);
