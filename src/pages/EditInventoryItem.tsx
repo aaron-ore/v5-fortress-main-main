@@ -35,6 +35,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
+import CustomFileInput from "@/components/CustomFileInput"; // NEW: Import CustomFileInput
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -445,39 +446,18 @@ const EditInventoryItem: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* Product Image Field */}
-              <FormItem>
-                <FormLabel>Product Image</FormLabel>
-                <FormControl>
-                  <Input
-                    id="itemImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    disabled={isUploadingImage}
-                  />
-                </FormControl>
-                {imageUrlPreview ? (
-                  <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-between bg-muted/20">
-                    {isUploadingImage ? (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin" /> Uploading...
-                      </div>
-                    ) : (
-                      <img src={imageUrlPreview} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
-                    )}
-                    <Button variant="ghost" size="icon" onClick={handleClearImage} aria-label="Clear image">
-                      <X className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
-                    <span>No image selected</span>
-                  </div>
-                )}
-                <FormDescription>Upload a product image. Max 5MB.</FormDescription>
-                <FormMessage />
-              </FormItem>
+              {/* Product Image Field using CustomFileInput */}
+              <CustomFileInput
+                id="itemImage"
+                label="Product Image"
+                file={imageFile}
+                onChange={handleImageFileChange}
+                onClear={handleClearImage}
+                disabled={isUploadingImage}
+                accept="image/*"
+                isUploading={isUploadingImage}
+                previewUrl={imageUrlPreview}
+              />
             </div>
 
             {/* Stock & Pricing */}

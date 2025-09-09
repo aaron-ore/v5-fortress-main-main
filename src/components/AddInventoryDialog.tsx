@@ -28,6 +28,7 @@ import { parseLocationString, buildLocationString, getUniqueLocationParts, Locat
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
+import CustomFileInput from "@/components/CustomFileInput"; // NEW: Import CustomFileInput
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -593,32 +594,17 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
             )}
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="itemImage">Product Image</Label>
-            <Input
+            <CustomFileInput
               id="itemImage"
-              type="file"
-              accept="image/*"
+              label="Product Image"
+              file={imageFile}
               onChange={handleImageChange}
+              onClear={handleClearImage}
               disabled={isUploadingImage}
+              accept="image/*"
+              isUploading={isUploadingImage}
+              previewUrl={imageUrlPreview}
             />
-            {imageUrlPreview ? (
-              <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-between bg-muted/20">
-                {isUploadingImage ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin" /> Uploading...
-                  </div>
-                ) : (
-                  <img src={imageUrlPreview} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
-                )}
-                <Button variant="ghost" size="icon" onClick={handleClearImage} aria-label="Clear image">
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </div>
-            ) : (
-              <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
-                <span>No image selected</span>
-              </div>
-            )}
           </div>
           <div className="space-y-2 md:col-span-2 border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold">Auto-Reorder Settings</h3>
