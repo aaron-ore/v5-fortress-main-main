@@ -73,6 +73,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
   // NEW: Ref to track if the initial load is complete
   const isInitialLoadComplete = useRef(false);
+  // NEW: Ref to track if the "auto-reorder disabled" message has already been logged
+  const hasLoggedDisabledRef = useRef(false);
 
   const mapSupabaseItemToInventoryItem = (item: any): InventoryItem => {
     const pickingBinQuantity = parseInt(item.picking_bin_quantity || '0');
@@ -209,15 +211,21 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
   // Effect to trigger auto-reorder logic when inventory or vendors change
   useEffect(() => {
-    // Check global auto-reorder setting first
     const isAutoReorderGloballyEnabled = typeof window !== 'undefined' 
       ? localStorage.getItem("enableAutoReorder") === "true" 
       : false;
 
     if (!isAutoReorderGloballyEnabled) {
-      console.log("[InventoryContext] Auto-reorder is globally disabled. Skipping auto-reorder check.");
+      // Only log if it hasn't been logged since the last time it was enabled (or component mount)
+      if (!hasLoggedDisabledRef.current) {
+        console.log("[InventoryContext] Auto-reorder is globally disabled. Skipping auto-reorder check.");
+        hasLoggedDisabledRef.current = true; // Set flag to true after logging
+      }
       return; // Exit early if globally disabled
     }
+
+    // If auto-reorder is enabled, reset the flag for next time it might be disabled
+    hasLoggedDisabledRef.current = false;
 
     // Only run auto-reorder logic if initial load is complete, and there's an organization
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
