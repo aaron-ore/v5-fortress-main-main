@@ -133,7 +133,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const { data, error } = await supabase
       .from("inventory_items")
       .select("*")
-      .eq("organization_id", profile.organizationId);
+      .eq("organization_id", profile.organizationId)
+      .order("name", { ascending: true }); // Order by name for consistent display
 
     if (error) {
       console.error("Error fetching inventory items:", error);
@@ -185,13 +186,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
             switch (payload.eventType) {
               case 'INSERT':
                 if (!prevItems.some(item => item.id === newItem.id)) {
-                  return [...prevItems, newItem];
+                  return [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name)); // Sort on insert
                 }
                 return prevItems;
               case 'UPDATE':
-                return prevItems.map(item => item.id === newItem.id ? newItem : item);
+                return prevItems.map(item => item.id === newItem.id ? newItem : item).sort((a, b) => a.name.localeCompare(b.name)); // Sort on update
               case 'DELETE':
-                return prevItems.filter(item => item.id !== newItem.id);
+                return prevItems.filter(item => item.id !== newItem.id).sort((a, b) => a.name.localeCompare(b.name)); // Sort on delete
               default:
                 return prevItems;
             }
@@ -208,12 +209,22 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
   // Effect to trigger auto-reorder logic when inventory or vendors change
   useEffect(() => {
+    // Check global auto-reorder setting first
+    const isAutoReorderGloballyEnabled = typeof window !== 'undefined' 
+      ? localStorage.getItem("enableAutoReorder") === "true" 
+      : false;
+
+    if (!isAutoReorderGloballyEnabled) {
+      console.log("[Auto-Reorder] Globally disabled. Skipping auto-reorder check.");
+      return;
+    }
+
     // Only run auto-reorder logic if initial load is complete, and there's an organization
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
       console.log("[InventoryContext] Triggering auto-reorder check due to inventory/vendor/profile change.");
       processAutoReorder(inventoryItems, addOrder, vendors, profile.organizationId, addNotification);
     }
-  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification]); // Removed isLoadingInventory from dependencies
+  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification]);
 
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -274,7 +285,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     const totalQuantity = updatedItem.pickingBinQuantity + updatedItem.overstockQuantity;
     const newStatus = totalQuantity > updatedItem.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
-    const lastUpdated = new Date().toISOString();
+    const lastUpdated = new Date().toISOString().split('T')[0];
 
     const { data, error } = await supabase
       .from("inventory_items")

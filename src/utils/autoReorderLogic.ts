@@ -17,18 +17,13 @@ export const processAutoReorder = async (
   organizationId: string | null,
   addNotification: (message: string, type?: AppNotification['type']) => void // NEW: addNotification passed as argument
 ) => {
-  // Check global auto-reorder setting
-  const isAutoReorderGloballyEnabled = typeof window !== 'undefined' 
-    ? localStorage.getItem("enableAutoReorder") === "true" 
-    : false;
+  // REMOVED: Global auto-reorder check is now handled by the calling useEffect in InventoryContext.tsx
+  // if (!isAutoReorderGloballyEnabled) {
+  //   console.log("[Auto-Reorder] Globally disabled. Skipping check.");
+  //   return;
+  // }
 
-  if (!isAutoReorderGloballyEnabled) {
-    console.log("[Auto-Reorder] Globally disabled. Skipping check."); // Now explicitly logs when skipped
-    return;
-  }
-
-  // Only log this if auto-reorder is actually enabled and proceeding
-  console.log("[Auto-Reorder] Globally enabled. Performing auto-reorder check due to inventory/vendor/profile change.");
+  console.log("[Auto-Reorder] Performing auto-reorder check due to inventory/vendor/profile change.");
 
   if (!organizationId) {
     console.warn("Cannot process auto-reorder: No organization ID available.");
