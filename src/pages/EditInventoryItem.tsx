@@ -234,6 +234,7 @@ const EditInventoryItem: React.FC = () => {
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
+        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl); // ADDED LOG
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         if (item.imageUrl) {
@@ -244,6 +245,7 @@ const EditInventoryItem: React.FC = () => {
           }
         }
         finalImageUrl = undefined;
+        console.log("[EditInventoryItem] Image cleared. Final URL will be undefined."); // ADDED LOG
       }
     } catch (error: any) {
       console.error("Error processing product image:", error);
@@ -267,6 +269,7 @@ const EditInventoryItem: React.FC = () => {
         return;
       }
 
+      console.log("[EditInventoryItem] Updating item with imageUrl:", finalImageUrl); // ADDED LOG
       await updateInventoryItem({
         ...item,
         ...values,

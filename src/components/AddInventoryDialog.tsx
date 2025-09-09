@@ -191,8 +191,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       !retailPrice ||
       (viewMode === "simple" && (!simpleQuantity || isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) ||
       (viewMode === "detailed" && (isNaN(finalPickingBinQuantity) || finalPickingBinQuantity < 0 || isNaN(finalOverstockQuantity) || finalOverstockQuantity < 0)) ||
-      isNaN(finalReorderLevel) || finalReorderLevel < 0 ||
-      isNaN(finalPickingReorderLevel) || finalPickingReorderLevel < 0 ||
+      !reorderLevel || isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0 ||
+      (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
       isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
       isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
       (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
@@ -233,6 +233,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setIsUploadingImage(true);
       try {
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
+        console.log("[AddInventoryDialog] Uploaded image URL:", finalImageUrl); // ADDED LOG
         showSuccess("Product image uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading product image:", error);
@@ -244,6 +245,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       }
     }
 
+    console.log("[AddInventoryDialog] Adding item with imageUrl:", finalImageUrl); // ADDED LOG
     const newItem = {
       name: itemName.trim(),
       description: description.trim(),

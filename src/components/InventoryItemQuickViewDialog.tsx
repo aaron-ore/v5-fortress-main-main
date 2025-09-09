@@ -90,6 +90,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       }
       if (currentItem) {
         fetchStockMovements(currentItem.id);
+        console.log("[InventoryItemQuickViewDialog] Current item imageUrl on open:", currentItem.imageUrl); // ADDED LOG
         const generateAndSetQr = async () => {
           if (currentItem.barcodeUrl) {
             try {
