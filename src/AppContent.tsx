@@ -28,7 +28,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Locations from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
-import OnboardingWizard from "./components/onboarding/OnboardingWizard";
+import OnboardingWizard from "./components/onboarding/OnboardingWizard"; // Keep import for OnboardingPage
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
@@ -218,7 +218,7 @@ const AppContent = () => {
       </div>
 
       {/* Conditionally render OnboardingWizard */}
-      {!isLoadingProfile && !isOnboardingComplete && <OnboardingWizard onComplete={() => navigate("/")} />}
+      {/* REMOVED: !isLoadingProfile && !isOnboardingComplete && <OnboardingWizard onComplete={() => navigate("/")} /> */}
 
       {printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
