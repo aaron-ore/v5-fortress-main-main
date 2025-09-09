@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format, isValid, startOfDay, endOfDay } from "date-fns";
+import { format, isValid, startOfDay, endOfDay, subDays } from "date-fns"; // NEW: Import subDays
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange, SelectRangeEventHandler } from "react-day-picker";
 
@@ -34,7 +34,34 @@ export function DateRangePicker({
     onSelect({ from, to }, selectedDay, activeModifiers, e);
   };
 
-  const content = (
+  const handleQuickSelect = (days: number) => {
+    const today = new Date();
+    let fromDate: Date;
+    let toDate: Date;
+
+    if (days === 0) { // Today
+      fromDate = startOfDay(today);
+      toDate = endOfDay(today);
+    } else if (days === 1) { // Yesterday
+      fromDate = startOfDay(subDays(today, 1));
+      toDate = endOfDay(subDays(today, 1));
+    } else { // Last N Days
+      fromDate = startOfDay(subDays(today, days - 1));
+      toDate = endOfDay(today);
+    }
+    onSelect({ from: fromDate, to: toDate }, undefined, undefined, undefined);
+  };
+
+  const quickSelectButtons = (
+    <div className="flex flex-col p-2 border-r border-border">
+      <Button variant="ghost" className="justify-start" onClick={() => handleQuickSelect(0)}>Today</Button>
+      <Button variant="ghost" className="justify-start" onClick={() => handleQuickSelect(1)}>Yesterday</Button>
+      <Button variant="ghost" className="justify-start" onClick={() => handleQuickSelect(7)}>Last 7 Days</Button>
+      <Button variant="ghost" className="justify-start" onClick={() => handleQuickSelect(30)}>Last 30 Days</Button>
+    </div>
+  );
+
+  const calendarContent = (
     <Calendar
       initialFocus
       mode="range"
@@ -80,8 +107,9 @@ export function DateRangePicker({
           <DrawerHeader>
             <DrawerTitle>Select Date Range</DrawerTitle>
           </DrawerHeader>
-          <div className="flex justify-center pb-4">
-            {content}
+          <div className="flex flex-col sm:flex-row justify-center pb-4">
+            {quickSelectButtons}
+            {calendarContent}
           </div>
         </DrawerContent>
       </Drawer>
@@ -91,8 +119,9 @@ export function DateRangePicker({
   return (
     <Popover>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent className={cn("w-auto p-0", className)} align={align}>
-        {content}
+      <PopoverContent className={cn("w-auto p-0 flex", className)} align={align}>
+        {quickSelectButtons}
+        {calendarContent}
       </PopoverContent>
     </Popover>
   );
