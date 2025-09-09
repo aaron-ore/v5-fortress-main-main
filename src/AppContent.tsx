@@ -28,7 +28,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Locations from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
-import OnboardingWizard from "./components/onboarding/OnboardingWizard";
+import OnboardingWizard from "./components/onboarding/OnboardingWizard"; // Keep import for OnboardingPage
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
@@ -68,6 +68,7 @@ import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext"; // NEW: Import AutomationProvider
 import Automation from "./pages/Automation"; // NEW: Import Automation page
 import ItemHistoryPage from "./pages/ItemHistoryPage"; // NEW: Import ItemHistoryPage
+import OnboardingPage from "./pages/OnboardingPage"; // NEW: Import OnboardingPage
 
 
 // Moved AuthenticatedApp definition here
@@ -197,6 +198,7 @@ const AppContent = () => {
     <ErrorBoundary>
       <Routes>
         <Route path="/*" element={<AuthenticatedApp />} />
+        <Route path="/onboarding" element={<OnboardingPage />} /> {/* NEW: Add OnboardingPage route */}
       </Routes>
     </ErrorBoundary>
   ) : (
@@ -212,9 +214,6 @@ const AppContent = () => {
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
       </div>
-
-      {/* Conditionally render OnboardingWizard */}
-      {!isLoadingProfile && !isOnboardingComplete && <OnboardingWizard />}
 
       {printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>

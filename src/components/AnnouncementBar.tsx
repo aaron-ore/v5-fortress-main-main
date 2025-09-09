@@ -63,7 +63,7 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkTo, link
         {typedMessage.length === message.length && ( // Only show link after typing is complete
           <>
             {" "}
-            <Link to={linkTo} className="underline font-semibold hover:opacity-80">
+            <Link to="/onboarding" className="underline font-semibold hover:opacity-80"> {/* NEW: Link to /onboarding */}
               {linkText}
             </Link>
           </>

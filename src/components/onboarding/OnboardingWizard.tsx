@@ -7,8 +7,12 @@ import { LocationSetupStepProps } from "./LocationSetupStep"; // Import the inte
 // import ProductImportStep from "./ProductImportStep"; // Removed
 import { useOnboarding } from "@/context/OnboardingContext";
 
-const OnboardingWizard: React.FC = () => {
-  const { isOnboardingComplete, markOnboardingComplete } = useOnboarding();
+interface OnboardingWizardProps {
+  onComplete: () => void; // NEW: Callback for when onboarding is complete
+}
+
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => { // NEW: Accept onComplete prop
+  const { markOnboardingComplete } = useOnboarding(); // Keep markOnboardingComplete for internal state update
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
@@ -27,7 +31,8 @@ const OnboardingWizard: React.FC = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      markOnboardingComplete();
+      markOnboardingComplete(); // Update internal context state
+      onComplete(); // Call the external onComplete callback
     }
   };
 
@@ -40,7 +45,7 @@ const OnboardingWizard: React.FC = () => {
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
-    <Dialog open={!isOnboardingComplete} onOpenChange={() => { /* Prevent closing */ }}>
+    <Dialog open={true} onOpenChange={() => { /* Prevent closing */ }}> {/* Always open when rendered */}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
