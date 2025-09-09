@@ -218,7 +218,7 @@ const Inventory: React.FC = () => {
   const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, structuredLocations), [handleQuickView, structuredLocations]); // NEW: Pass structuredLocations
 
   return (
-    <div className="flex flex-col space-y-6" data-testid="inventory-page-root">
+    <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root"> {/* Added flex-grow */}
       <h1 className="text-3xl font-bold">Inventory Management</h1>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -294,7 +294,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Current Stock</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
@@ -331,7 +331,7 @@ const Inventory: React.FC = () => {
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
           {isLoadingInventory ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

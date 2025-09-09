@@ -86,7 +86,7 @@ const Locations: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-6 p-6">
+    <div className="flex flex-col flex-grow space-y-6 p-6"> {/* Changed h-full to flex-grow */}
       <h1 className="text-3xl font-bold">Location Management</h1>
       <p className="text-muted-foreground">Manage your inventory storage locations and generate QR code labels for them.</p>
 
@@ -106,7 +106,7 @@ const Locations: React.FC = () => {
             {locations.length > 0 ? (
               <div className="space-y-2 flex-grow flex flex-col">
                 <Label>Current Locations</Label>
-                <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20">
+                <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20"> {/* Added flex-grow */}
                   <ul className="space-y-1">
                     {locations.map((loc) => (
                       <li key={loc.id} className="flex items-center justify-between py-1 text-foreground">

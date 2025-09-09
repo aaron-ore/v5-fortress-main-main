@@ -18,6 +18,7 @@ import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
+import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
 
 const Users: React.FC = () => {
   const { profile, allProfiles, updateUserRole, fetchAllProfiles } = useProfile();
@@ -90,7 +91,7 @@ const Users: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
       <h1 className="text-3xl font-bold">User Management</h1>
       <p className="text-muted-foreground">Manage user accounts and assign roles within Fortress.</p>
 
@@ -121,15 +122,15 @@ const Users: React.FC = () => {
         </Button>
       </div>
 
-      <Card className="bg-card border-border rounded-lg shadow-sm p-6">
+      <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold">All Users ({allProfiles.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow flex flex-col"> {/* Added flex-grow flex-col */}
           {allProfiles.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No users found.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <ScrollArea className="flex-grow border rounded-md"> {/* Changed h-[500px] to flex-grow */}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -180,7 +181,7 @@ const Users: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>

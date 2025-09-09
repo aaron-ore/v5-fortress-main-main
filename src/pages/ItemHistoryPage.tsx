@@ -66,7 +66,7 @@ const ItemHistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <History className="h-8 w-8 text-primary" /> Stock Movement History for {currentItem.name}
@@ -80,17 +80,17 @@ const ItemHistoryPage: React.FC = () => {
         A complete log of all stock changes for "{currentItem.name}" (SKU: {currentItem.sku}).
       </p>
 
-      <Card className="bg-card border-border rounded-lg shadow-sm">
+      <Card className="bg-card border-border rounded-lg shadow-sm flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Package className="h-5 w-5 text-accent" /> Movement Log ({itemSpecificMovements.length} entries)
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow flex flex-col"> {/* Added flex-grow flex-col */}
           {itemSpecificMovements.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No stock movement history found for this item.</p>
           ) : (
-            <ScrollArea className="h-[500px] border rounded-md">
+            <ScrollArea className="flex-grow border rounded-md"> {/* Changed h-[500px] to flex-grow */}
               <Table>
                 <TableHeader>
                   <TableRow>

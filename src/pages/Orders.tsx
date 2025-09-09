@@ -621,7 +621,7 @@ const Orders: React.FC = () => {
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <div className="flex flex-col space-y-6 p-6">
+    <div className="flex flex-col space-y-6 p-6 flex-grow"> {/* Added flex-grow */}
       <h1 className="text-3xl font-bold">Order Management</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -687,30 +687,30 @@ const Orders: React.FC = () => {
         </Dialog>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All Active Orders</TabsTrigger>
           <TabsTrigger value="sales">Sales Orders</TabsTrigger>
           <TabsTrigger value="purchase">Purchase Orders</TabsTrigger>
           <TabsTrigger value="archived">Archived Orders</TabsTrigger>
         </TabsList>
-        <TabsContent value="all">
-          <div className="">
+        <TabsContent value="all" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+          <div className="h-full"> {/* Ensure DataTable container takes full height */}
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>
-        <TabsContent value="sales">
-          <div className="">
+        <TabsContent value="sales" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+          <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>
-        <TabsContent value="purchase">
-          <div className="">
+        <TabsContent value="purchase" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+          <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>
-        <TabsContent value="archived">
-          <div className="">
+        <TabsContent value="archived" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+          <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>

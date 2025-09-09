@@ -15,7 +15,7 @@ import InventoryValuationReport from "./InventoryValuationReport";
 import LowStockReport from "./LowStockReport";
 import InventoryMovementReport from "./InventoryMovementReport";
 import SalesByCustomerReport from "./SalesByCustomerReport";
-import SalesByProductReport from "././SalesByProductReport";
+import SalesByProductReport from "./SalesByProductReport";
 import PurchaseOrderStatusReport from "./PurchaseOrderStatusReport";
 import ProfitabilityReport from "./ProfitabilityReport";
 import DiscrepancyReport from "./DiscrepancyReport";
@@ -181,22 +181,26 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
 
   if (!reportId) {
     return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        Select a report from the sidebar to get started.
+      <div className="flex items-center justify-center h-full">
+        <div className="text-muted-foreground">
+          Select a report from the sidebar to get started.
+        </div>
       </div>
     );
   }
 
   if (!CurrentReportComponent) {
     return (
-      <div className="flex items-center justify-center h-full text-destructive">
-        Report type "{reportId}" not found.
+      <div className="flex items-center justify-center h-full">
+        <div className="text-destructive">
+          Report type "{reportId}" not found.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
       {/* Removed Report Configuration Card as it's now in the parent Reports component */}
 
       <div className="flex-grow overflow-y-auto">

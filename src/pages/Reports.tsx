@@ -118,7 +118,7 @@ const Reports: React.FC = () => {
   }, [activeReportId, allReports]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Reports & Analytics</h1>
         <div className="flex items-center gap-4">

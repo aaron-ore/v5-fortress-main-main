@@ -47,9 +47,8 @@ const WarehouseOperationsPage: React.FC = () => {
   const [isStockTransferDialogOpen, setIsStockTransferDialogOpen] = useState(false);
   const [isCycleCountDialogOpen, setIsCycleCountDialogOpen] = useState(false);
   const [isIssueReportDialogOpen, setIsIssueReportDialogOpen] = useState(false);
-  const [isPutawayDialogOpen, setIsPutawayDialogOpen] = useState(false); // NEW: State for PutawayDialog
+  const [isPutawayDialogOpen, setIsPutawayDialogOpen] = useState(false); // NEW: Add PutawayDialog state
 
-  // Map tool values to their dialog open/close states
   const dialogStates = {
     "item-lookup": { isOpen: isItemLookupDialogOpen, setIsOpen: setIsItemLookupDialogOpen },
     "receive-inventory": { isOpen: isReceiveInventoryDialogOpen, setIsOpen: setIsReceiveInventoryDialogOpen },
@@ -232,7 +231,7 @@ const WarehouseOperationsPage: React.FC = () => {
 
       {/* Only Dashboard remains as a TabsContent */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
-        <TabsContent value="dashboard" className="h-full min-h-0">
+        <TabsContent value="dashboard" className="flex-grow min-h-0"> {/* Changed h-full to flex-grow */}
           <WarehouseDashboard />
         </TabsContent>
       </Tabs>
