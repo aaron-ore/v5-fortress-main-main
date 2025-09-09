@@ -27,6 +27,7 @@ import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, R
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge"; // Import Badge
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Import QR code generator
+import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -308,6 +309,14 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     }
   };
 
+  // NEW: Handler for 'View All History' button
+  const handleViewAllHistory = () => {
+    if (currentItem) {
+      navigate(`/inventory/${currentItem.id}/history`);
+      onClose();
+    }
+  };
+
   if (!currentItem) {
     return null;
   }
@@ -326,222 +335,231 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="h-6 w-6 text-primary" /> {currentItem.name}
-          </DialogTitle>
-          <DialogDescription>
-            Quick overview and stock adjustment for this item.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {/* Product Image */}
-          <div className="flex justify-center mb-4">
-            {currentItem.imageUrl ? (
-              <img src={currentItem.imageUrl} alt={currentItem.name} className="max-h-48 max-w-full object-contain rounded-md border border-border" />
-            ) : (
-              <div className="h-48 w-48 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
-                No Image
-              </div>
-            )}
-          </div>
-
-          {/* Basic Item Info */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">SKU:</span> {currentItem.sku}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">Item ID:</span> {currentItem.id}
-            </div>
-            <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">Category:</span> {currentItem.category}
-            </div>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">Retail Price:</span> ${currentItem.retailPrice.toFixed(2)}
-            </div>
-            <div className="flex items-center gap-2 col-span-2">
-              <span className="font-semibold text-lg text-foreground">Total Stock: {currentItem.quantity} units</span>
-              <Badge variant={statusVariant} className="ml-2">
-                {currentItem.status}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 col-span-2">
-              <span className="font-semibold text-base text-foreground">Picking Bin: {currentItem.pickingBinQuantity} units</span>
-              <span className="font-semibold text-base text-foreground ml-4">Overstock: {currentItem.overstockQuantity} units</span>
-            </div>
-            {qrCodeSvg && ( // Display QR code if available
-              <div className="col-span-2 mt-2 p-4 border border-border rounded-md bg-white flex justify-center">
-                <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} />
-              </div>
-            )}
-          </div>
-
-          {/* Stock Adjustment Section */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <h3 className="text-lg font-semibold mb-3">Adjust Stock</h3>
-            <div className="grid gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="adjustmentAmount">Adjustment Quantity</Label>
-                <Input
-                  id="adjustmentAmount"
-                  type="number"
-                  value={adjustmentAmount}
-                  onChange={(e) => setAdjustmentAmount(e.target.value)}
-                  placeholder="e.g., 10"
-                  min="1"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Adjustment Type</Label>
-                <RadioGroup
-                  value={adjustmentType}
-                  onValueChange={(value: "add" | "subtract") => setAdjustmentType(value)}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="add" id="add-stock" />
-                    <Label htmlFor="add-stock" className="flex items-center gap-1">
-                      <ArrowUp className="h-4 w-4 text-green-500" /> Add Stock
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="subtract" id="subtract-stock" />
-                    <Label htmlFor="subtract-stock" className="flex items-center gap-1">
-                      <ArrowDown className="h-4 w-4 text-red-500" /> Remove Stock
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              <div className="space-y-2">
-                <Label>Adjustment Target</Label>
-                <RadioGroup
-                  value={adjustmentTarget}
-                  onValueChange={(value: "pickingBin" | "overstock") => setAdjustmentTarget(value)}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pickingBin" id="target-picking-bin" />
-                    <Label htmlFor="target-picking-bin">Picking Bin</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="overstock" id="target-overstock" />
-                    <Label htmlFor="target-overstock">Overstock</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="adjustmentReason">Reason</Label>
-                <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                  <SelectTrigger id="adjustmentReason">
-                    <SelectValue placeholder="Select a reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {adjustmentReasons.map((reason) => (
-                      <SelectItem key={reason} value={reason}>
-                        {reason}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleAdjustStock} className="w-full mt-2">
-                Apply Adjustment
-              </Button>
-            </div>
-          </div>
-
-          {/* NEW: Auto-Reorder Settings */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Repeat className="h-5 w-5 text-primary" /> Auto-Reorder Settings
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between space-x-2">
-                <Label htmlFor="autoReorderEnabled">Enable Auto-Reorder</Label>
-                <Switch
-                  id="autoReorderEnabled"
-                  checked={autoReorderEnabled}
-                  onCheckedChange={handleToggleAutoReorder}
-                />
-              </div>
-              {autoReorderEnabled && (
-                <div className="space-y-2 mt-2">
-                  <Label htmlFor="autoReorderQuantity">Quantity to Auto-Reorder</Label>
-                  <Input
-                    id="autoReorderQuantity"
-                    type="number"
-                    value={autoReorderQuantity}
-                    onChange={(e) => setAutoReorderQuantity(e.target.value)}
-                    placeholder="e.g., 50"
-                    min="1"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This quantity will be ordered when stock drops to or below the overall reorder level.
-                  </p>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="h-6 w-6 text-primary" /> {currentItem.name}
+            </DialogTitle>
+            <DialogDescription>
+              Quick overview and stock adjustment for this item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Product Image */}
+            <div className="flex justify-center mb-4">
+              {currentItem.imageUrl ? (
+                <img src={currentItem.imageUrl} alt={currentItem.name} className="max-h-48 max-w-full object-contain rounded-md border border-border" />
+              ) : (
+                <div className="h-48 w-48 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
+                  No Image
                 </div>
               )}
-              <Button
-                onClick={handleManualReorder}
-                className="w-full mt-2"
-                disabled={!currentItem.vendorId || currentItem.autoReorderQuantity <= 0}
-              >
-                Manually Reorder Now
-              </Button>
+            </div>
+
+            {/* Basic Item Info */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">SKU:</span> {currentItem.sku}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Item ID:</span> {currentItem.id}
+              </div>
+              <div className="flex items-center gap-2">
+                <Scale className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">Category:</span> {currentItem.category}
+              </div>
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">Retail Price:</span> ${currentItem.retailPrice.toFixed(2)}
+              </div>
+              <div className="flex items-center gap-2 col-span-2">
+                <span className="font-semibold text-lg text-foreground">Total Stock: {currentItem.quantity} units</span>
+                <Badge variant={statusVariant} className="ml-2">
+                  {currentItem.status}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2 col-span-2">
+                <span className="font-semibold text-base text-foreground">Picking Bin: {currentItem.pickingBinQuantity} units</span>
+                <span className="font-semibold text-base text-foreground ml-4">Overstock: {currentItem.overstockQuantity} units</span>
+              </div>
+              {qrCodeSvg && ( // Display QR code if available
+                <div className="col-span-2 mt-2 p-4 border border-border rounded-md bg-white flex justify-center">
+                  <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} />
+                </div>
+              )}
+            </div>
+
+            {/* Stock Adjustment Section */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <h3 className="text-lg font-semibold mb-3">Adjust Stock</h3>
+              <div className="grid gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="adjustmentAmount">Adjustment Quantity</Label>
+                  <Input
+                    id="adjustmentAmount"
+                    type="number"
+                    value={adjustmentAmount}
+                    onChange={(e) => setAdjustmentAmount(e.target.value)}
+                    placeholder="e.g., 10"
+                    min="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Adjustment Type</Label>
+                  <RadioGroup
+                    value={adjustmentType}
+                    onValueChange={(value: "add" | "subtract") => setAdjustmentType(value)}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="add" id="add-stock" />
+                      <Label htmlFor="add-stock" className="flex items-center gap-1">
+                        <ArrowUp className="h-4 w-4 text-green-500" /> Add Stock
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="subtract" id="subtract-stock" />
+                      <Label htmlFor="subtract-stock" className="flex items-center gap-1">
+                        <ArrowDown className="h-4 w-4 text-red-500" /> Remove Stock
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Adjustment Target</Label>
+                  <RadioGroup
+                    value={adjustmentTarget}
+                    onValueChange={(value: "pickingBin" | "overstock") => setAdjustmentTarget(value)}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pickingBin" id="target-picking-bin" />
+                      <Label htmlFor="target-picking-bin">Picking Bin</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="overstock" id="target-overstock" />
+                      <Label htmlFor="target-overstock">Overstock</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adjustmentReason">Reason</Label>
+                  <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                    <SelectTrigger id="adjustmentReason">
+                      <SelectValue placeholder="Select a reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {adjustmentReasons.map((reason) => (
+                        <SelectItem key={reason} value={reason}>
+                          {reason}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleAdjustStock} className="w-full mt-2">
+                  Apply Adjustment
+                </Button>
+              </div>
+            </div>
+
+            {/* NEW: Auto-Reorder Settings */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Repeat className="h-5 w-5 text-primary" /> Auto-Reorder Settings
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between space-x-2">
+                  <Label htmlFor="autoReorderEnabled">Enable Auto-Reorder</Label>
+                  <Switch
+                    id="autoReorderEnabled"
+                    checked={autoReorderEnabled}
+                    onCheckedChange={handleToggleAutoReorder}
+                  />
+                </div>
+                {autoReorderEnabled && (
+                  <div className="space-y-2 mt-2">
+                    <Label htmlFor="autoReorderQuantity">Quantity to Auto-Reorder</Label>
+                    <Input
+                      id="autoReorderQuantity"
+                      type="number"
+                      value={autoReorderQuantity}
+                      onChange={(e) => setAutoReorderQuantity(e.target.value)}
+                      placeholder="e.g., 50"
+                      min="1"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This quantity will be ordered when stock drops to or below the overall reorder level.
+                    </p>
+                  </div>
+                )}
+                <Button
+                  onClick={handleManualReorder}
+                  className="w-full mt-2"
+                  disabled={!currentItem.vendorId || currentItem.autoReorderQuantity <= 0}
+                >
+                  Manually Reorder Now
+                </Button>
+              </div>
+            </div>
+
+            {/* Stock Movement History */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <History className="h-5 w-5 text-muted-foreground" /> Stock Movement History
+              </h3>
+              {itemStockMovements.length > 0 ? (
+                <ScrollArea className="h-32 pr-2"> {/* Added ScrollArea and fixed height */}
+                  <ul className="space-y-2 text-sm">
+                    {itemStockMovements.slice(0, 3).map((movement) => (
+                      <li key={movement.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
+                        <span className="flex items-center gap-2">
+                          {movement.type === "add" ? (
+                            <ArrowUp className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <ArrowDown className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="font-medium">
+                            {movement.type === "add" ? "+" : "-"}
+                            {movement.amount} units
+                          </span>
+                          <span className="text-muted-foreground">({movement.reason})</span>
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(movement.timestamp), "MMM dd, HH:mm")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              ) : (
+                <p className="text-center text-muted-foreground text-sm py-4">No stock movement history for this item.</p>
+              )}
+              {itemStockMovements.length > 3 && (
+                <Button variant="link" onClick={handleViewAllHistory} className="w-full mt-2">
+                  View All History
+                </Button>
+              )}
             </div>
           </div>
-
-          {/* Stock Movement History */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <History className="h-5 w-5 text-muted-foreground" /> Stock Movement History
-            </h3>
-            {itemStockMovements.length > 0 ? (
-              <ul className="space-y-2 text-sm">
-                {itemStockMovements.map((movement) => (
-                  <li key={movement.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
-                    <span className="flex items-center gap-2">
-                      {movement.type === "add" ? (
-                        <ArrowUp className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDown className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className="font-medium">
-                        {movement.type === "add" ? "+" : "-"}
-                        {movement.amount} units
-                      </span>
-                      <span className="text-muted-foreground">({movement.reason})</span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(movement.timestamp), "MMM dd, HH:mm")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-center text-muted-foreground text-sm py-4">No stock movement history for this item.</p>
-            )}
-          </div>
-        </div>
-        <DialogFooter className="flex justify-between items-center mt-4">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          <div className="flex space-x-2">
-            <Button variant="destructive" onClick={handleDeleteItemClick}>
-              <Trash2 className="h-4 w-4 mr-2" /> Delete Item
+          <DialogFooter className="flex justify-between items-center mt-4">
+            <Button variant="outline" onClick={onClose}>
+              Close
             </Button>
-            <Button variant="secondary" onClick={handleViewFullDetails}>
-              View Full Details
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
+            <div className="flex space-x-2">
+              <Button variant="destructive" onClick={handleDeleteItemClick}>
+                <Trash2 className="h-4 w-4 mr-2" /> Delete Item
+              </Button>
+              <Button variant="secondary" onClick={handleViewFullDetails}>
+                View Full Details
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {currentItem && (
         <ConfirmDialog
           isOpen={isConfirmDeleteDialogOpen}
@@ -553,7 +571,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
           cancelText="Cancel"
         />
       )}
-    </Dialog>
+    </>
   );
 };
 

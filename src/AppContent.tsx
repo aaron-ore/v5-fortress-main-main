@@ -67,6 +67,7 @@ import { ReplenishmentProvider } from "./context/ReplenishmentContext";
 import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext"; // NEW: Import AutomationProvider
 import Automation from "./pages/Automation"; // NEW: Import Automation page
+import ItemHistoryPage from "./pages/ItemHistoryPage"; // NEW: Import ItemHistoryPage
 
 
 // Moved AuthenticatedApp definition here
@@ -89,6 +90,7 @@ const AuthenticatedApp = () => {
                             <Route index element={<Dashboard />} />
                             <Route path="inventory" element={<Inventory />} />
                             <Route path="inventory/:id" element={<EditInventoryItem />} />
+                            <Route path="inventory/:id/history" element={<ItemHistoryPage />} /> {/* NEW: Add ItemHistoryPage route */}
                             <Route path="orders" element={<Orders />} />
                             <Route path="orders/:id" element={<EditPurchaseOrder />} />
                             <Route path="reports" element={<Reports />} />
@@ -154,7 +156,7 @@ const AppContent = () => {
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
-        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it
+        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it.
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -166,7 +168,7 @@ const AppContent = () => {
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
-        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it
+        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it.
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
