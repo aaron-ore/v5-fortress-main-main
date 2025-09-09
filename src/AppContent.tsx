@@ -28,7 +28,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Locations from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
-import OnboardingWizard from "./components/onboarding/OnboardingWizard"; // Keep import for OnboardingPage
+import OnboardingWizard from "./components/onboarding/OnboardingWizard";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
@@ -69,6 +69,7 @@ import { AutomationProvider } from "./context/AutomationContext"; // NEW: Import
 import Automation from "./pages/Automation"; // NEW: Import Automation page
 import ItemHistoryPage from "./pages/ItemHistoryPage"; // NEW: Import ItemHistoryPage
 import OnboardingPage from "./pages/OnboardingPage"; // NEW: Import OnboardingPage
+import { Loader2 } from "lucide-react"; // NEW: Import Loader2 icon
 
 
 // Moved AuthenticatedApp definition here
@@ -189,7 +190,8 @@ const AppContent = () => {
   if (isLoadingProfile) { // Use isLoadingProfile from context
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-        Loading application...
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <span className="ml-4 text-lg">Loading application...</span>
       </div>
     );
   }
@@ -214,6 +216,9 @@ const AppContent = () => {
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
       </div>
+
+      {/* Conditionally render OnboardingWizard */}
+      {!isLoadingProfile && !isOnboardingComplete && <OnboardingWizard onComplete={() => navigate("/")} />}
 
       {printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
