@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
         const decodedState = JSON.parse(atob(state));
         userId = decodedState.userId;
         redirectToFrontend = decodedState.redirectToFrontend;
-        console('Shopify OAuth Callback: Decoded state - userId:', userId, 'redirectToFrontend:', redirectToFrontend);
+        console.log('Shopify OAuth Callback: Decoded state - userId:', userId, 'redirectToFrontend:', redirectToFrontend);
       } catch (e) {
         console.error('Error decoding state parameter:', e);
       }

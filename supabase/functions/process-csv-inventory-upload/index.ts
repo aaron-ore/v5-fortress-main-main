@@ -1,6 +1,3 @@
-/// <reference lib="deno.ns" />
-/// <reference lib="deno.window" />
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5'; // Import XLSX for CSV parsing
 // Inlined corsHeaders to avoid module resolution issues
@@ -98,24 +95,52 @@ Deno.serve(async (req) => {
     );
 
     // Process each row
-    for (const row of jsonData) {
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      const rowNumber = i + 2; // Assuming header is row 1
+
       const itemName = String(row.name || '').trim();
       const sku = String(row.sku || '').trim();
-      const description = String(row.description || '').trim();
-      const imageUrl = String(row.imageUrl || '').trim() || undefined;
-      const vendorId = String(row.vendorId || '').trim() || undefined;
-      const barcodeUrl = String(row.barcodeUrl || '').trim() || sku;
-      const autoReorderEnabled = String(row.autoReorderEnabled || 'false').toLowerCase() === 'true';
 
-      if (!itemName || !sku) {
-        errors.push(`Row: Missing required fields (name, sku). Skipping item.`);
+      // --- Strict Validation for Required Fields ---
+      if (!itemName) {
+        errors.push(`Row ${rowNumber} (SKU: ${sku || 'N/A'}): Item Name is required.`);
+        continue;
+      }
+      if (!sku) {
+        errors.push(`Row ${rowNumber} (Item: ${itemName}): SKU is required.`);
         continue;
       }
 
       let pickingBinQuantity = parseInt(String(row.pickingBinQuantity || '0'));
-      if (isNaN(pickingBinQuantity) || pickingBinQuantity < 0) pickingBinQuantity = 0;
+      if (isNaN(pickingBinQuantity) || pickingBinQuantity < 0) {
+        errors.push(`Row ${rowNumber} (SKU: ${sku}): Picking Bin Quantity is required and must be a non-negative number.`);
+        continue;
+      }
       let overstockQuantity = parseInt(String(row.overstockQuantity || '0'));
-      if (isNaN(overstockQuantity) || overstockQuantity < 0) overstockQuantity = 0;
+      if (isNaN(overstockQuantity) || overstockQuantity < 0) {
+        errors.push(`Row ${rowNumber} (SKU: ${sku}): Overstock Quantity is required and must be a non-negative number.`);
+        continue;
+      }
+      let unitCost = parseFloat(String(row.unitCost || '0'));
+      if (isNaN(unitCost) || unitCost < 0) {
+        errors.push(`Row ${rowNumber} (SKU: ${sku}): Unit Cost is required and must be a non-negative number.`);
+        continue;
+      }
+      let retailPrice = parseFloat(String(row.retailPrice || '0'));
+      if (isNaN(retailPrice) || retailPrice < 0) {
+        errors.push(`Row ${rowNumber} (SKU: ${sku}): Retail Price is required and must be a non-negative number.`);
+        continue;
+      }
+      // --- End Strict Validation ---
+
+      // --- Optional Fields Handling ---
+      const description = String(row.description || '').trim() || undefined;
+      const imageUrl = String(row.imageUrl || '').trim() || undefined;
+      const vendorId = String(row.vendorId || '').trim() || undefined;
+      const barcodeUrl = String(row.barcodeUrl || '').trim() || sku; // Default to SKU if not provided
+      const autoReorderEnabled = String(row.autoReorderEnabled || 'false').toLowerCase() === 'true';
+      
       let reorderLevel = parseInt(String(row.reorderLevel || '0'));
       if (isNaN(reorderLevel) || reorderLevel < 0) reorderLevel = 0;
       let pickingReorderLevel = parseInt(String(row.pickingReorderLevel || '0'));
@@ -124,15 +149,11 @@ Deno.serve(async (req) => {
       if (isNaN(committedStock) || committedStock < 0) committedStock = 0;
       let incomingStock = parseInt(String(row.incomingStock || '0'));
       if (isNaN(incomingStock) || incomingStock < 0) incomingStock = 0;
-      let unitCost = parseFloat(String(row.unitCost || '0'));
-      if (isNaN(unitCost) || unitCost < 0) unitCost = 0;
-      let retailPrice = parseFloat(String(row.retailPrice || '0'));
-      if (isNaN(retailPrice) || retailPrice < 0) retailPrice = 0;
       let autoReorderQuantity = parseInt(String(row.autoReorderQuantity || '0'));
       if (isNaN(autoReorderQuantity) || autoReorderQuantity < 0) autoReorderQuantity = 0;
 
       let categoryName = String(row.category || '').trim();
-      if (!categoryName) categoryName = 'Uncategorized';
+      if (!categoryName) categoryName = 'Uncategorized'; // Default category
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
           .from('categories')
@@ -140,14 +161,14 @@ Deno.serve(async (req) => {
           .select('id, name')
           .single();
         if (insertCatError) {
-          errors.push(`SKU '${sku}': Failed to create category '${categoryName}': ${insertCatError.message}`);
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create category '${categoryName}': ${insertCatError.message}`);
           continue;
         }
         categoryMap.set(newCat.name.toLowerCase(), newCat.id);
       }
 
       let mainLocationString = String(row.location || '').trim();
-      if (!mainLocationString) mainLocationString = 'Unassigned';
+      if (!mainLocationString) mainLocationString = 'Unassigned'; // Default location
       if (!locationMap.has(mainLocationString.toLowerCase())) {
         // Simplified creation for locations in Edge Function, assuming basic structure
         const { data: newLoc, error: insertLocError } = await supabaseAdmin
@@ -163,14 +184,14 @@ Deno.serve(async (req) => {
           .select('id, full_location_string')
           .single();
         if (insertLocError) {
-          errors.push(`SKU '${sku}': Failed to create location '${mainLocationString}': ${insertLocError.message}`);
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create location '${mainLocationString}': ${insertLocError.message}`);
           continue;
         }
         locationMap.set(newLoc.full_location_string.toLowerCase(), newLoc.id);
       }
 
       let pickingBinLocationString = String(row.pickingBinLocation || '').trim();
-      if (!pickingBinLocationString) pickingBinLocationString = mainLocationString; // Default to main location
+      if (!pickingBinLocationString) pickingBinLocationString = mainLocationString; // Default to main location if not provided
       if (!locationMap.has(pickingBinLocationString.toLowerCase())) {
         const { data: newLoc, error: insertLocError } = await supabaseAdmin
           .from('locations')
@@ -185,7 +206,7 @@ Deno.serve(async (req) => {
           .select('id, full_location_string')
           .single();
         if (insertLocError) {
-          errors.push(`SKU '${sku}': Failed to create picking bin location '${pickingBinLocationString}': ${insertLocError.message}`);
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create picking bin location '${pickingBinLocationString}': ${insertLocError.message}`);
           continue;
         }
         locationMap.set(newLoc.full_location_string.toLowerCase(), newLoc.id);
@@ -223,7 +244,7 @@ Deno.serve(async (req) => {
 
       if (existingItem) {
         if (actionForDuplicates === "skip") {
-          errors.push(`SKU '${sku}': Skipped due to duplicate entry confirmation.`);
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Skipped due to duplicate entry confirmation.`);
           continue;
         } else if (actionForDuplicates === "add_to_stock") {
           // Add quantities to existing stock

@@ -1,4 +1,3 @@
-/// <reference types="https://deno.land/x/deno_types/types/lib.deno.d.ts" />
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 
 // Inlined corsHeaders to avoid module resolution issues
