@@ -1,3 +1,28 @@
+import * as XLSX from 'xlsx';
+import { showSuccess, showError } from "@/utils/toast";
+
+interface ExportData {
+  [key: string]: any;
+}
+
+export const exportToExcel = (data: ExportData[], filename: string, sheetName: string = "Sheet1") => {
+  if (!data || data.length === 0) {
+    showError("No data available to export.");
+    return;
+  }
+
+  try {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, `${filename}.xlsx`);
+    showSuccess(`Exported "${filename}.xlsx" successfully!`);
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+    showError(`Failed to export "${filename}.xlsx".`);
+  }
+};
+
 export const generateInventoryCsvTemplate = (): string => {
   const headers = [
     "name",
@@ -29,12 +54,14 @@ export const generateInventoryCsvTemplate = (): string => {
     "50", // overstockQuantity
     "20", // reorderLevel
     "10", // pickingReorderLevel
-    "5",
-    "10",
-    "Main Warehouse-A-01-01", // Example structured location
-    "http://example.com/imageA.jpg",
-    "vendor-uuid-123",
-    "SKU-001", // Barcode value, not the SVG itself
+    "5", // committedStock
+    "10", // incomingStock
+    "15.00", // unitCost
+    "25.00", // retailPrice
+    "Main Warehouse-A-01-01-1-A", // example structured location
+    "http://example.com/imageA.jpg", // imageUrl
+    "vendor-uuid-123", // vendorId
+    "SKU-001", // barcodeUrl
     "TRUE", // autoReorderEnabled
     "100", // autoReorderQuantity
   ];
