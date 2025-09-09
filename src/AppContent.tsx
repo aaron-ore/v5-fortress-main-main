@@ -114,7 +114,6 @@ const AuthenticatedApp = () => {
                             <Route path="*" element={<NotFound />} />
                           </Route>
                         </Routes>
-                      {isOnboardingComplete ? null : <OnboardingWizard />}
                       </AutomationProvider> {/* NEW: Close AutomationProvider */}
                     </InventoryProvider>
                   </ReplenishmentProvider>
@@ -133,7 +132,7 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile, fetchProfile } = useProfile(); // Use profile and isLoadingProfile from context
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations, isOnboardingComplete } = useOnboarding(); // NEW: Get isOnboardingComplete
   const { companyProfile } = useOnboarding(); // NEW: Get companyProfile for PDF props
 
   const qbCallbackProcessedRef = useRef(false);
@@ -213,6 +212,9 @@ const AppContent = () => {
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
       </div>
+
+      {/* Conditionally render OnboardingWizard */}
+      {!isLoadingProfile && !isOnboardingComplete && <OnboardingWizard />}
 
       {printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
