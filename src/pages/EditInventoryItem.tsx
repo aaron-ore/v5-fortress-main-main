@@ -28,13 +28,13 @@ import { Switch } from "@/components/ui/switch";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { PlusCircle, Loader2, Image as ImageIcon, X } from "lucide-react"; // NEW: Import Image and X icons
+import { PlusCircle, Loader2, Image as ImageIcon, X } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
-import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import storage utilities
-import { supabase } from "@/lib/supabaseClient"; // NEW: Import supabase client
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { supabase } from "@/lib/supabaseClient";
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -49,8 +49,8 @@ const formSchema = z.object({
   incomingStock: z.number().min(0, "Must be non-negative"),
   unitCost: z.number().min(0, "Must be non-negative"),
   retailPrice: z.number().min(0, "Must be non-negative"),
-  location: z.string().min(1, "Location is required"), // Keep as string for schema, handle parts in UI
-  pickingBinLocation: z.string().min(1, "Picking bin location is required"), // Keep as string for schema, handle parts in UI
+  location: z.string().min(1, "Location is required"),
+  pickingBinLocation: z.string().min(1, "Picking bin location is required"),
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
@@ -70,20 +70,16 @@ const EditInventoryItem: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [qrCodeSvg, setQrCodeSvg] = useState<string | undefined>(undefined);
 
-  // NEW: Image upload states
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isImageCleared, setIsImageCleared] = useState(false); // Track if user explicitly cleared image
+  const [isImageCleared, setIsImageCleared] = useState(false);
 
-  // State for main location parts
   const [mainLocationParts, setMainLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
-  // State for picking bin location parts
   const [pickingBinLocationParts, setPickingBinLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
 
   const item = useMemo(() => inventoryItems.find((i) => i.id === id), [inventoryItems, id]);
 
-  // Derived unique options for dropdowns from all existing locations
   const uniqueAreas = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'area');
   const uniqueRows = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'row');
   const uniqueBays = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'bay');
@@ -107,8 +103,8 @@ const EditInventoryItem: React.FC = () => {
           incomingStock: item.incomingStock,
           unitCost: item.unitCost,
           retailPrice: item.retailPrice,
-          location: item.location, // Will be overridden by local state
-          pickingBinLocation: item.pickingBinLocation, // Will be overridden by local state
+          location: item.location,
+          pickingBinLocation: item.pickingBinLocation,
           imageUrl: item.imageUrl || "",
           vendorId: item.vendorId || "null-vendor",
           autoReorderEnabled: item.autoReorderEnabled,
@@ -147,20 +143,17 @@ const EditInventoryItem: React.FC = () => {
         ...item,
         vendorId: item.vendorId || "null-vendor",
       });
-      // Initialize local location parts state
       setMainLocationParts(parseLocationString(item.location));
       setPickingBinLocationParts(parseLocationString(item.pickingBinLocation));
 
-      // Initialize image states
       setImageFile(null);
       setImageUrlPreview(item.imageUrl || null);
-      setIsImageCleared(false); // Reset cleared state when item loads
+      setIsImageCleared(false);
 
-      // Generate QR code SVG from item.barcodeUrl (which now stores raw data)
       const generateAndSetQr = async () => {
         if (item.barcodeUrl) {
           try {
-            const svg = await generateQrCodeSvg(item.barcodeUrl, 60); // Adjusted size to 60
+            const svg = await generateQrCodeSvg(item.barcodeUrl, 60);
             setQrCodeSvg(svg);
           } catch (error) {
             console.error("Error generating QR code for display:", error);
@@ -176,11 +169,10 @@ const EditInventoryItem: React.FC = () => {
 
   const watchSku = form.watch("sku");
   useEffect(() => {
-    // Regenerate QR code preview if SKU changes
     const generateAndSetQr = async () => {
       if (watchSku) {
         try {
-          const svg = await generateQrCodeSvg(watchSku, 60); // Adjusted size to 60
+          const svg = await generateQrCodeSvg(watchSku, 60);
           setQrCodeSvg(svg);
         } catch (error) {
           console.error("Error generating QR code preview:", error);
@@ -190,16 +182,15 @@ const EditInventoryItem: React.FC = () => {
         setQrCodeSvg(undefined);
       }
     };
-    generateAndSetQr(); // Corrected function call
+    generateAndSetQr();
   }, [watchSku]);
 
-  // NEW: Handle image file selection
   const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       if (file.type.startsWith("image/")) {
         setImageFile(file);
-        setIsImageCleared(false); // If a new file is selected, it's not cleared
+        setIsImageCleared(false);
         const reader = new FileReader();
         reader.onloadend = () => {
           setImageUrlPreview(reader.result as string);
@@ -208,19 +199,18 @@ const EditInventoryItem: React.FC = () => {
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
-        setImageUrlPreview(item?.imageUrl || null); // Revert to original preview
+        setImageUrlPreview(item?.imageUrl || null);
       }
     } else {
       setImageFile(null);
-      setImageUrlPreview(item?.imageUrl || null); // Revert to original preview
+      setImageUrlPreview(item?.imageUrl || null);
     }
   };
 
-  // NEW: Handle clearing the image
   const handleClearImage = () => {
     setImageFile(null);
     setImageUrlPreview(null);
-    setIsImageCleared(true); // Mark as cleared
+    setIsImageCleared(true);
     showSuccess("Image cleared. Save changes to apply.");
   };
 
@@ -230,39 +220,30 @@ const EditInventoryItem: React.FC = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrl: string | undefined = item.imageUrl; // Initialize with current DB value
+    let finalImageUrl: string | undefined = item.imageUrl;
 
     try {
-      // Case 1: User uploaded a new image
       if (imageFile) {
         setIsUploadingImage(true);
-        // If there was an old image URL, delete the old file from storage
-        if (item.imageUrl) { // Check item.imageUrl (original from DB)
+        if (item.imageUrl) {
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
           }
         }
-        // Upload new image
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
         showSuccess("Product image uploaded successfully!");
-      }
-      // Case 2: User explicitly cleared the existing image
-      else if (isImageCleared) { // No need to check item.imageUrl here, as we want to clear it regardless if it existed
-        // If image was explicitly cleared and there was an old image, delete it
-        if (item.imageUrl) { // Only attempt deletion if there was an actual URL
+      } else if (isImageCleared) {
+        if (item.imageUrl) {
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
           }
         }
-        finalImageUrl = undefined; // Explicitly set to undefined to clear in DB
+        finalImageUrl = undefined;
       }
-      // Case 3: No new file uploaded, and existing image was NOT explicitly cleared (finalImageUrl remains item.imageUrl from initialization)
-      // This covers the case where the user didn't touch the image field.
-
     } catch (error: any) {
       console.error("Error processing product image:", error);
       showError(`Failed to process product image: ${error.message}`);
@@ -276,7 +257,6 @@ const EditInventoryItem: React.FC = () => {
     try {
       const finalBarcodeValue = values.sku || undefined;
 
-      // Construct full location strings from local state
       const finalMainLocationString = buildLocationString(mainLocationParts);
       const finalPickingBinLocationString = buildLocationString(pickingBinLocationParts);
 
@@ -289,9 +269,9 @@ const EditInventoryItem: React.FC = () => {
       await updateInventoryItem({
         ...item,
         ...values,
-        location: finalMainLocationString, // Use constructed string
-        pickingBinLocation: finalPickingBinLocationString, // Use constructed string
-        imageUrl: finalImageUrl, // Use the final image URL
+        location: finalMainLocationString,
+        pickingBinLocation: finalPickingBinLocationString,
+        imageUrl: finalImageUrl,
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
@@ -465,7 +445,7 @@ const EditInventoryItem: React.FC = () => {
                   </FormItem>
                 )}
               />
-              {/* NEW: Image Upload Field */}
+              {/* Product Image Field */}
               <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
@@ -492,7 +472,7 @@ const EditInventoryItem: React.FC = () => {
                   </div>
                 ) : (
                   <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
-                    <ImageIcon className="h-5 w-5 mr-2" /> No image selected
+                    <span>No image selected</span>
                   </div>
                 )}
                 <FormDescription>Upload a product image. Max 5MB.</FormDescription>

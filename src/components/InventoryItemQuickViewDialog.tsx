@@ -17,17 +17,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { showSuccess, showError } from "@/utils/toast";
-import { useInventory, InventoryItem } from "@/context/InventoryContext"; // Corrected import
+import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNavigate } from "react-router-dom";
-import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, Image as ImageIcon } from "lucide-react"; // NEW: Import ImageIcon
+import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge"; // Import Badge
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Import QR code generator
-import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
+import { Badge } from "@/components/ui/badge";
+import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -65,13 +65,12 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
   const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
-  const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null); // State for QR code SVG
+  const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
 
   const prevItemIdRef = useRef<string | null>(null);
 
-  // Filter stock movements for the current item
   const itemStockMovements = useMemo(() => {
     return stockMovements
       .filter(movement => movement.itemId === currentItem?.id)
@@ -91,11 +90,10 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       }
       if (currentItem) {
         fetchStockMovements(currentItem.id);
-        // Generate QR code SVG from item.barcodeUrl (raw data)
         const generateAndSetQr = async () => {
           if (currentItem.barcodeUrl) {
             try {
-              const svg = await generateQrCodeSvg(currentItem.barcodeUrl, 60); // Adjusted size to 60
+              const svg = await generateQrCodeSvg(currentItem.barcodeUrl, 60);
               setQrCodeSvg(svg);
             } catch (error) {
               console.error("Error generating QR code for quick view display:", error);
@@ -109,7 +107,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       }
     } else {
       prevItemIdRef.current = null;
-      setQrCodeSvg(null); // Clear QR code when dialog closes
+      setQrCodeSvg(null);
     }
   }, [isOpen, currentItem, fetchStockMovements]);
 
@@ -128,7 +126,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
     let newPickingBinQuantity = currentItem.pickingBinQuantity;
     let newOverstockQuantity = currentItem.overstockQuantity;
-    const oldQuantity = currentItem.quantity; // Total old quantity
+    const oldQuantity = currentItem.quantity;
 
     if (adjustmentTarget === "pickingBin") {
       if (adjustmentType === "add") {
@@ -140,7 +138,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         }
         newPickingBinQuantity -= amount;
       }
-    } else { // overstock
+    } else {
       if (adjustmentType === "add") {
         newOverstockQuantity += amount;
       } else {
@@ -162,14 +160,13 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     try {
       await updateInventoryItem(updatedItem);
 
-      // Log stock movement
       await addStockMovement({
         itemId: currentItem.id,
         itemName: currentItem.name,
         type: adjustmentType,
         amount: amount,
-        oldQuantity: oldQuantity, // Log total old quantity
-        newQuantity: newPickingBinQuantity + newOverstockQuantity, // Log total new quantity
+        oldQuantity: oldQuantity,
+        newQuantity: newPickingBinQuantity + newOverstockQuantity,
         reason: `${adjustmentReason} (${adjustmentTarget === "pickingBin" ? "Picking Bin" : "Overstock"})`,
       });
 
@@ -178,7 +175,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       onClose();
     } catch (error: any) {
       console.error("Error adjusting stock:", error);
-      showError(error.message || String(error)); // Ensure string message
+      showError(error.message || String(error));
     }
   };
 
@@ -189,7 +186,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     const parsedAutoReorderQuantity = parseInt(autoReorderQuantity) || 0;
     if (checked && (isNaN(parsedAutoReorderQuantity) || parsedAutoReorderQuantity <= 0)) {
       showError("Please set a valid positive quantity for auto-reorder before enabling.");
-      setAutoReorderEnabled(false); // Revert toggle if invalid
+      setAutoReorderEnabled(false);
       return;
     }
 
@@ -204,8 +201,8 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       showSuccess(`Auto-reorder for ${currentItem.name} ${checked ? "enabled" : "disabled"}.`);
     } catch (error: any) {
       console.error("Error toggling auto-reorder:", error);
-      showError(error.message || String(error)); // Ensure string message
-      setAutoReorderEnabled(!checked); // Revert UI toggle on error
+      showError(error.message || String(error));
+      setAutoReorderEnabled(!checked);
     }
   };
 
@@ -225,8 +222,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
       } catch (error: any) {
         console.error("Error updating auto-reorder quantity:", error);
-        showError(error.message || String(error)); // Ensure string message
-        // Optionally, revert autoReorderQuantity state if update fails
+        showError(error.message || String(error));
         setAutoReorderQuantity(currentItem.autoReorderQuantity?.toString() || "");
       }
     }
@@ -256,7 +252,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       inventoryItemId: currentItem.id,
     }];
 
-    const newPoNumber = `PO${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`; // Simple mock PO number
+    const newPoNumber = `PO${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
     const totalAmount = poItems.reduce((sum, poItem) => sum + poItem.quantity * poItem.unitPrice, 0);
 
     const newPurchaseOrder = {
@@ -281,7 +277,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       onClose();
     } catch (error: any) {
       console.error("Error placing manual reorder:", error);
-      showError(error.message || String(error)); // Ensure string message
+      showError(error.message || String(error));
     }
   };
 
@@ -298,7 +294,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       onClose();
     } catch (error: any) {
       console.error("Error deleting item:", error);
-      showError(error.message || String(error)); // Ensure string message
+      showError(error.message || String(error));
     }
   };
 
@@ -309,7 +305,6 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     }
   };
 
-  // NEW: Handler for 'View All History' button
   const handleViewAllHistory = () => {
     if (currentItem) {
       navigate(`/inventory/${currentItem.id}/history`);
@@ -353,7 +348,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                 <img src={currentItem.imageUrl} alt={currentItem.name} className="max-h-48 max-w-full object-contain rounded-md border border-border" />
               ) : (
                 <div className="h-48 w-48 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
-                  <ImageIcon className="h-10 w-10" /> {/* NEW: Display ImageIcon if no image */}
+                  <span className="text-sm text-center">No Image</span>
                 </div>
               )}
             </div>
@@ -385,7 +380,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                 <span className="font-semibold text-base text-foreground">Picking Bin: {currentItem.pickingBinQuantity} units</span>
                 <span className="font-semibold text-base text-foreground ml-4">Overstock: {currentItem.overstockQuantity} units</span>
               </div>
-              {qrCodeSvg && ( // Display QR code if available
+              {qrCodeSvg && (
                 <div className="col-span-2 mt-2 p-4 border border-border rounded-md bg-white flex justify-center">
                   <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} />
                 </div>
@@ -512,7 +507,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                 <History className="h-5 w-5 text-muted-foreground" /> Stock Movement History
               </h3>
               {itemStockMovements.length > 0 ? (
-                <ScrollArea className="h-32 pr-2"> {/* Added ScrollArea and fixed height */}
+                <ScrollArea className="h-32 pr-2">
                   <ul className="space-y-2 text-sm">
                     {itemStockMovements.slice(0, 3).map((movement) => (
                       <li key={movement.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">

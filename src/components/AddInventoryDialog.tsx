@@ -24,10 +24,10 @@ import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
 import { Link } from "react-router-dom";
-import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser"; // NEW
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"; // NEW: Import ToggleGroup
-import { Image as ImageIcon, Loader2, X } from "lucide-react"; // NEW: Import X icon
-import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // NEW: Import uploadFileToSupabase
+import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Image as ImageIcon, Loader2, X } from "lucide-react";
+import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -39,18 +39,18 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   onClose,
 }) => {
   const { addInventoryItem } = useInventory();
-  const { locations } = useOnboarding(); // Now contains Location[]
+  const { locations } = useOnboarding();
   const { categories } = useCategories();
   const { vendors } = useVendors();
   const { profile } = useProfile();
 
-  const [viewMode, setViewMode] = useState<"simple" | "detailed">("simple"); // NEW: State for view mode
+  const [viewMode, setViewMode] = useState<"simple" | "detailed">("simple");
 
   const [itemName, setItemName] = useState("");
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
-  const [simpleQuantity, setSimpleQuantity] = useState(""); // NEW: For simple mode total quantity
+  const [simpleQuantity, setSimpleQuantity] = useState("");
   const [pickingBinQuantity, setPickingBinQuantity] = useState("");
   const [overstockQuantity, setOverstockQuantity] = useState("");
   const [reorderLevel, setReorderLevel] = useState("");
@@ -58,9 +58,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [unitCost, setUnitCost] = useState("");
   const [retailPrice, setRetailPrice] = useState("");
   
-  // NEW: States for main location parts
   const [mainLocationParts, setMainLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
-  // NEW: States for picking bin location parts
   const [pickingBinLocationParts, setPickingBinLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
 
   const [selectedVendorId, setSelectedVendorId] = useState("none");
@@ -68,58 +66,54 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [qrCodeSvgPreview, setQrCodeSvgPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
-  const [isUploadingImage, setIsUploadingImage] = useState(false); // NEW: Loading state for image upload
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
   const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
 
-  // Derived unique options for dropdowns from all existing locations
   const uniqueAreas = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'area');
   const uniqueRows = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'row');
   const uniqueBays = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'bay');
   const uniqueLevels = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'level');
   const uniquePositions = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'pos');
 
-  // Get a default location string for simple mode
   const defaultLocationString = locations.length > 0 ? locations[0].fullLocationString : "Main Warehouse-01-01-1-A";
   const defaultPickingBinLocationString = locations.length > 0 ? locations[0].fullLocationString : "Picking Bin-01-01-1-A";
 
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setViewMode("simple"); // Reset to simple mode
+      setViewMode("simple");
       setItemName("");
       setDescription("");
       setSku("");
       setCategory("");
-      setSimpleQuantity(""); // Reset simple quantity
+      setSimpleQuantity("");
       setPickingBinQuantity("");
       setOverstockQuantity("");
       setReorderLevel("");
       setPickingReorderLevel("");
       setUnitCost("");
       setRetailPrice("");
-      setMainLocationParts(parseLocationString(defaultLocationString)); // NEW: Set default parsed location
-      setPickingBinLocationParts(parseLocationString(defaultPickingBinLocationString)); // NEW: Set default parsed picking bin location
+      setMainLocationParts(parseLocationString(defaultLocationString));
+      setPickingBinLocationParts(parseLocationString(defaultPickingBinLocationString));
       setSelectedVendorId("none");
       setBarcodeValue("");
       setQrCodeSvgPreview(null);
       setImageFile(null);
       setImageUrlPreview(null);
-      setIsUploadingImage(false); // Reset image upload loading state
+      setIsUploadingImage(false);
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
     }
   }, [isOpen, defaultLocationString, defaultPickingBinLocationString]);
 
-  // Autopopulate barcodeValue with SKU and generate QR preview
   useEffect(() => {
     const updateQrCode = async () => {
       const value = sku.trim();
       setBarcodeValue(value);
       if (value) {
         try {
-          const svg = await generateQrCodeSvg(value, 60); // Adjusted size to 60
+          const svg = await generateQrCodeSvg(value, 60);
           setQrCodeSvgPreview(svg);
         } catch (error) {
           console.error("Error generating QR code preview:", error);
@@ -153,7 +147,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     }
   };
 
-  const handleClearImage = () => { // NEW: Handler to clear the image
+  const handleClearImage = () => {
     setImageFile(null);
     setImageUrlPreview(null);
     showSuccess("Image cleared. Add item to apply.");
@@ -172,24 +166,22 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     if (viewMode === "simple") {
       const parsedSimpleQuantity = parseInt(simpleQuantity || '0');
       finalPickingBinQuantity = parsedSimpleQuantity;
-      finalOverstockQuantity = 0; // No overstock in simple mode
+      finalOverstockQuantity = 0;
       finalReorderLevel = parseInt(reorderLevel || '0');
-      finalPickingReorderLevel = parseInt(reorderLevel || '0'); // Use overall reorder level for picking bin too
-      finalLocation = defaultLocationString; // Use default location
-      finalPickingBinLocation = defaultPickingBinLocationString; // Use default picking bin location
-    } else { // detailed mode
+      finalPickingReorderLevel = parseInt(reorderLevel || '0');
+      finalLocation = defaultLocationString;
+      finalPickingBinLocation = defaultPickingBinLocationString;
+    } else {
       finalPickingBinQuantity = parseInt(pickingBinQuantity || '0');
       finalOverstockQuantity = parseInt(overstockQuantity || '0');
       finalReorderLevel = parseInt(reorderLevel || '0');
       finalPickingReorderLevel = parseInt(pickingReorderLevel || '0');
       finalLocation = buildLocationString(mainLocationParts);
       finalPickingBinLocation = buildLocationString(pickingBinLocationParts);
-      // These are only in detailed mode, so use their states
-      finalCommittedStock = 0; // Not exposed in form, always 0 on add
-      finalIncomingStock = 0; // Not exposed in form, always 0 on add
+      finalCommittedStock = 0;
+      finalIncomingStock = 0;
     }
 
-    // Basic validation for common required fields
     if (
       !itemName.trim() ||
       !sku.trim() ||
@@ -208,7 +200,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
-    // Detailed mode specific location validation
     if (viewMode === "detailed" && (!finalLocation || !finalPickingBinLocation)) {
       showError("Please select all parts for both Main Storage Location and Picking Bin Location.");
       return;
@@ -267,7 +258,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       location: finalLocation,
       pickingBinLocation: finalPickingBinLocation,
-      imageUrl: finalImageUrl, // Use the uploaded URL
+      imageUrl: finalImageUrl,
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId,
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
@@ -284,7 +275,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     }
   };
 
-  // NEW: Check if any location parts are missing (only relevant for detailed mode)
   const areMainLocationPartsMissing = viewMode === "detailed" && (!mainLocationParts.area || !mainLocationParts.row || !mainLocationParts.bay || !mainLocationParts.pos);
   const arePickingBinLocationPartsMissing = viewMode === "detailed" && (!pickingBinLocationParts.area || !pickingBinLocationParts.row || !pickingBinLocationParts.bay || !pickingBinLocationParts.pos);
 
@@ -301,10 +291,10 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !retailPrice || isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
     areMainLocationPartsMissing ||
     arePickingBinLocationPartsMissing ||
-    (viewMode === "detailed" && locations.length === 0) || // Only require locations if in detailed mode
+    (viewMode === "detailed" && locations.length === 0) ||
     categories.length === 0 ||
     (autoReorderEnabled && (parseInt(autoReorderQuantity || '0') <= 0 || isNaN(parseInt(autoReorderQuantity || '0')))) ||
-    isUploadingImage; // Disable form if image is uploading
+    isUploadingImage;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -443,7 +433,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   min="0"
                 />
               </div>
-              {/* NEW: Main Storage Location Dropdowns */}
+              {/* Main Storage Location Dropdowns */}
               <div className="space-y-2">
                 <Label>Main Storage Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -487,7 +477,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   </p>
                 )}
               </div>
-              {/* NEW: Picking Bin Location Dropdowns */}
+              {/* Picking Bin Location Dropdowns */}
               <div className="space-y-2">
                 <Label>Picking Bin Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -528,7 +518,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                 <Input
                   id="committedStock"
                   type="number"
-                  value={0} // Always 0 on add
+                  value={0}
                   disabled
                   placeholder="0"
                   min="0"
@@ -539,7 +529,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                 <Input
                   id="incomingStock"
                   type="number"
-                  value={0} // Always 0 on add
+                  value={0}
                   disabled
                   placeholder="0"
                   min="0"
@@ -626,7 +616,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               </div>
             ) : (
               <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
-                <ImageIcon className="h-5 w-5 mr-2" /> No image selected
+                <span>No image selected</span>
               </div>
             )}
           </div>
