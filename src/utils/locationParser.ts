@@ -8,28 +8,30 @@ export interface LocationParts {
 
 /**
  * Parses a location string (e.g., "A-01-01-1-A") into its individual components.
- * Returns default empty strings if a part is missing.
+ * Returns default placeholders if a part is missing or empty.
  */
 export const parseLocationString = (location: string): LocationParts => {
   const parts = location.split('-');
   return {
-    area: parts[0] || '',
-    row: parts[1] || '',
-    bay: parts[2] || '',
-    level: parts[3] || '',
-    pos: parts[4] || '',
+    area: parts[0] || 'N/A',
+    row: parts[1] || 'N/A',
+    bay: parts[2] || 'N/A',
+    level: parts[3] || 'N/A',
+    pos: parts[4] || 'N/A',
   };
 };
 
 /**
  * Builds a location string (e.g., "A-01-01-1-A") from its individual components.
- * Returns an empty string if any required part is missing.
+ * It will always produce a full string, using 'N/A' for any parts that are empty or 'N/A'.
  */
 export const buildLocationString = (parts: LocationParts): string => {
-  if (!parts.area || !parts.row || !parts.bay || !parts.level || !parts.pos) {
-    return '';
-  }
-  return `${parts.area}-${parts.row}-${parts.bay}-${parts.level}-${parts.pos}`;
+  const area = parts.area || 'N/A';
+  const row = parts.row || 'N/A';
+  const bay = parts.bay || 'N/A';
+  const level = parts.level || 'N/A';
+  const pos = parts.pos || 'N/A';
+  return `${area}-${row}-${bay}-${level}-${pos}`;
 };
 
 /**
@@ -40,7 +42,7 @@ export const getUniqueLocationParts = (locations: string[], part: keyof Location
   const uniqueValues = new Set<string>();
   locations.forEach(location => {
     const parsed = parseLocationString(location);
-    if (parsed[part]) {
+    if (parsed[part] && parsed[part] !== 'N/A') { // Exclude 'N/A' from unique options
       uniqueValues.add(parsed[part]);
     }
   });
