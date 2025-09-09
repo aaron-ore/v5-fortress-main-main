@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"; // Added useEffect and useState
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Tag, MapPin, Eye, PlusCircle, MinusCircle, Trash2 } from "lucide-react";
+import { Package, Tag, MapPin, Eye, PlusCircle, MinusCircle, Trash2, Image as ImageIcon } from "lucide-react"; // NEW: Import ImageIcon
 import { InventoryItem } from "@/context/InventoryContext";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -82,9 +82,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
                 className="h-full w-full object-contain"
               />
             ) : (
-              <img
-                src="/placeholder.svg"
-                alt={item.name}
+              <ImageIcon // NEW: Display ImageIcon if no image
                 className="h-16 w-16 object-contain text-muted-foreground"
               />
             )}

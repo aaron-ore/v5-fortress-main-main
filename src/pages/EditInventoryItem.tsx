@@ -28,11 +28,13 @@ import { Switch } from "@/components/ui/switch";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, Image as ImageIcon, X } from "lucide-react"; // NEW: Import Image and X icons
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import storage utilities
+import { supabase } from "@/lib/supabaseClient"; // NEW: Import supabase client
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -67,6 +69,12 @@ const EditInventoryItem: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [qrCodeSvg, setQrCodeSvg] = useState<string | undefined>(undefined);
+
+  // NEW: Image upload states
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isImageCleared, setIsImageCleared] = useState(false); // Track if user explicitly cleared image
 
   // State for main location parts
   const [mainLocationParts, setMainLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
@@ -143,6 +151,11 @@ const EditInventoryItem: React.FC = () => {
       setMainLocationParts(parseLocationString(item.location));
       setPickingBinLocationParts(parseLocationString(item.pickingBinLocation));
 
+      // Initialize image states
+      setImageFile(null);
+      setImageUrlPreview(item.imageUrl || null);
+      setIsImageCleared(false);
+
       // Generate QR code SVG from item.barcodeUrl (which now stores raw data)
       const generateAndSetQr = async () => {
         if (item.barcodeUrl) {
@@ -180,12 +193,82 @@ const EditInventoryItem: React.FC = () => {
     generateAndSetQr();
   }, [watchSku]);
 
+  // NEW: Handle image file selection
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      if (file.type.startsWith("image/")) {
+        setImageFile(file);
+        setIsImageCleared(false); // If a new file is selected, it's not cleared
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImageUrlPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        showError("Please select an image file (PNG, JPG, GIF, SVG).");
+        setImageFile(null);
+        setImageUrlPreview(item?.imageUrl || null); // Revert to original preview
+      }
+    } else {
+      setImageFile(null);
+      setImageUrlPreview(item?.imageUrl || null); // Revert to original preview
+    }
+  };
+
+  // NEW: Handle clearing the image
+  const handleClearImage = () => {
+    setImageFile(null);
+    setImageUrlPreview(null);
+    setIsImageCleared(true); // Mark as cleared
+    showSuccess("Image cleared. Save changes to apply.");
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!item) {
       showError("Item not found for update.");
       return;
     }
     setIsSaving(true);
+    let finalImageUrl: string | undefined = values.imageUrl; // Start with current form value (which might be old URL)
+
+    try {
+      // 1. Handle image upload/deletion if there's a change
+      if (imageFile) {
+        setIsUploadingImage(true);
+        // If there's an old image URL, delete the old file from storage
+        if (item.imageUrl) {
+          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
+          if (oldFilePath) {
+            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          }
+        }
+        // Upload new image
+        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
+        showSuccess("Product image uploaded successfully!");
+      } else if (isImageCleared && item.imageUrl) {
+        // If image was explicitly cleared and there was an old image, delete it
+        const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
+        if (oldFilePath) {
+          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
+          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+        }
+        finalImageUrl = undefined; // Set to undefined to clear in DB
+      } else if (!imageFile && !isImageCleared) {
+        // No new file, not cleared, keep existing URL (from item.imageUrl)
+        finalImageUrl = item.imageUrl;
+      }
+    } catch (error: any) {
+      console.error("Error processing product image:", error);
+      showError(`Failed to process product image: ${error.message}`);
+      setIsSaving(false);
+      setIsUploadingImage(false);
+      return;
+    } finally {
+      setIsUploadingImage(false);
+    }
+
     try {
       const finalBarcodeValue = values.sku || undefined;
 
@@ -204,6 +287,7 @@ const EditInventoryItem: React.FC = () => {
         ...values,
         location: finalMainLocationString, // Use constructed string
         pickingBinLocation: finalPickingBinLocationString, // Use constructed string
+        imageUrl: finalImageUrl, // Use the final image URL
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
@@ -377,19 +461,39 @@ const EditInventoryItem: React.FC = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {/* NEW: Image Upload Field */}
+              <FormItem>
+                <FormLabel>Product Image</FormLabel>
+                <FormControl>
+                  <Input
+                    id="itemImage"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    disabled={isUploadingImage}
+                  />
+                </FormControl>
+                {imageUrlPreview ? (
+                  <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-between bg-muted/20">
+                    {isUploadingImage ? (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin" /> Uploading...
+                      </div>
+                    ) : (
+                      <img src={imageUrlPreview} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
+                    )}
+                    <Button variant="ghost" size="icon" onClick={handleClearImage} aria-label="Clear image">
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
+                    <ImageIcon className="h-5 w-5 mr-2" /> No image selected
+                  </div>
                 )}
-              />
+                <FormDescription>Upload a product image. Max 5MB.</FormDescription>
+                <FormMessage />
+              </FormItem>
             </div>
 
             {/* Stock & Pricing */}
@@ -634,8 +738,8 @@ const EditInventoryItem: React.FC = () => {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSaving}>
-            {isSaving ? (
+          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage}>
+            {isSaving || isUploadingImage ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
               </>

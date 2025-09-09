@@ -26,6 +26,8 @@ import { useProfile } from "@/context/ProfileContext";
 import { Link } from "react-router-dom";
 import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser"; // NEW
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"; // NEW: Import ToggleGroup
+import { Image as ImageIcon, Loader2, X } from "lucide-react"; // NEW: Import X icon
+import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // NEW: Import uploadFileToSupabase
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -66,6 +68,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [qrCodeSvgPreview, setQrCodeSvgPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false); // NEW: Loading state for image upload
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
   const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
 
@@ -103,6 +106,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setQrCodeSvgPreview(null);
       setImageFile(null);
       setImageUrlPreview(null);
+      setIsUploadingImage(false); // Reset image upload loading state
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
     }
@@ -147,6 +151,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setImageFile(null);
       setImageUrlPreview(null);
     }
+  };
+
+  const handleClearImage = () => { // NEW: Handler to clear the image
+    setImageFile(null);
+    setImageUrlPreview(null);
+    showSuccess("Image cleared. Add item to apply.");
   };
 
   const handleSubmit = async () => {
@@ -226,6 +236,22 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
+    let finalImageUrl: string | undefined = undefined;
+    if (imageFile) {
+      setIsUploadingImage(true);
+      try {
+        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
+        showSuccess("Product image uploaded successfully!");
+      } catch (error: any) {
+        console.error("Error uploading product image:", error);
+        showError(`Failed to upload product image: ${error.message}`);
+        setIsUploadingImage(false);
+        return;
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+
     const newItem = {
       name: itemName.trim(),
       description: description.trim(),
@@ -241,7 +267,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       location: finalLocation,
       pickingBinLocation: finalPickingBinLocation,
-      imageUrl: imageUrlPreview || undefined,
+      imageUrl: finalImageUrl, // Use the uploaded URL
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId,
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
@@ -277,7 +303,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     arePickingBinLocationPartsMissing ||
     (viewMode === "detailed" && locations.length === 0) || // Only require locations if in detailed mode
     categories.length === 0 ||
-    (autoReorderEnabled && (parseInt(autoReorderQuantity || '0') <= 0 || isNaN(parseInt(autoReorderQuantity || '0'))));
+    (autoReorderEnabled && (parseInt(autoReorderQuantity || '0') <= 0 || isNaN(parseInt(autoReorderQuantity || '0')))) ||
+    isUploadingImage; // Disable form if image is uploading
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -582,10 +609,24 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               type="file"
               accept="image/*"
               onChange={handleImageChange}
+              disabled={isUploadingImage}
             />
-            {imageUrlPreview && (
-              <div className="mt-2">
-                <img src={imageUrlPreview} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain border border-border p-1 rounded-md" />
+            {imageUrlPreview ? (
+              <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-between bg-muted/20">
+                {isUploadingImage ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin" /> Uploading...
+                  </div>
+                ) : (
+                  <img src={imageUrlPreview} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
+                )}
+                <Button variant="ghost" size="icon" onClick={handleClearImage} aria-label="Clear image">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
+                <ImageIcon className="h-5 w-5 mr-2" /> No image selected
               </div>
             )}
           </div>
