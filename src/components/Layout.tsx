@@ -10,6 +10,7 @@ import GlobalSearchDialog from "./GlobalSearchDialog";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/context/SidebarContext"; // NEW: Import useSidebar
 import FeedbackDialog from "./FeedbackDialog"; // NEW: Import FeedbackDialog
+import BackButton from "./BackButton"; // NEW: Import BackButton
 
 const Layout: React.FC = () => {
   const isMobile = useIsMobile();
@@ -37,6 +38,7 @@ const Layout: React.FC = () => {
             linkText="Click here"
           />
           <main className="flex-grow p-4 container mx-auto">
+            <BackButton /> {/* NEW: Add BackButton */}
             <Outlet />
           </main>
           {/* REMOVED: <div className="mt-auto">
@@ -68,6 +70,7 @@ const Layout: React.FC = () => {
               linkText="Click here"
             />
             <main className="flex-grow bg-card rounded-lg shadow-sm p-6">
+              <BackButton /> {/* NEW: Add BackButton */}
               <Outlet />
             </main>
             {/* REMOVED: <div className="mt-auto">
