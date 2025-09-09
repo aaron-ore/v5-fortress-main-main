@@ -159,11 +159,11 @@ Deno.serve(async (req) => {
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
           .from('categories')
-          .insert({ name: categoryName, organization_id: organizationId, user_id: user.id })
+          .insert({ name: categoryName, organization_id: organizationId, user_id: user!.id }) // Use user!.id
           .select('id, name')
           .single();
         if (insertCatError) {
-          errors.push(`Failed to create category '${categoryName}': ${insertCatError.message}`);
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create category '${categoryName}': ${insertCatError.message}`);
           continue;
         }
         categoryMap.set(newCat.name.toLowerCase(), newCat.id);
@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: userId,
+            user_id: user!.id, // Use user!.id
           })
           .select('id, full_location_string')
           .single();
@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: userId,
+            user_id: user!.id, // Use user!.id
           })
           .select('id, full_location_string')
           .single();
@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
         image_url: imageUrl,
         vendor_id: vendorId,
         barcode_url: barcodeUrl,
-        user_id: userId,
+        user_id: user!.id, // Safely access user.id here
         organization_id: organizationId,
         auto_reorder_enabled: autoReorderEnabled,
         auto_reorder_quantity: autoReorderQuantity,
@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
             old_quantity: existingItem.quantity,
             new_quantity: updatedPickingBinQty + updatedOverstockQty,
             reason: 'CSV Bulk Import - Added to stock',
-            user_id: userId,
+            user_id: user!.id, // Safely access user.id here
             organization_id: organizationId,
           });
         } else if (actionForDuplicates === "update") {
