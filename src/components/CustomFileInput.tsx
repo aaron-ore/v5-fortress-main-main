@@ -61,7 +61,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
             accept={accept}
             onChange={onChange}
             ref={fileInputRef}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer sr-only" // Added sr-only
             disabled={disabled || isUploading}
           />
         </Button>
