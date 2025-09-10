@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ const useTypingEffect = (text: string, speed: number = 50) => {
   return displayedText;
 };
 
-const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkTo, linkText }) => {
+const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) => { // Removed linkTo
   const { companyProfile } = useOnboarding(); // Get companyProfile from context
 
   const [isDismissed, setIsDismissed] = useState(() => {

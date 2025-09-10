@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +13,6 @@ import QrScanner, { QrScannerRef } from "@/components/QrScanner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
-import { cn } from "@/lib/utils";
 
 interface CameraScannerDialogProps {
   isOpen: boolean;

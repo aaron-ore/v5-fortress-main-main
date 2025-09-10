@@ -1,11 +1,8 @@
-"use client";
-
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Still use shadcn Input for hidden input
 import { Label } from '@/components/ui/label';
-import { X, UploadCloud, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { X, UploadCloud, Loader2 } from 'lucide-react';
 
 interface CustomFileInputProps {
   id: string;
@@ -38,7 +35,6 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
     }
   };
 
-  const displayFileName = file ? file.name : (previewUrl ? "Image selected" : "No file selected");
   const hasFileOrPreview = !!file || !!previewUrl;
 
   return (

@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Package, Tag, MapPin, Eye, PlusCircle, MinusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Package, Tag, MapPin, Eye, PlusCircle, MinusCircle, Trash2, Image as ImageIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/context/InventoryContext";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
 
 interface InventoryCardProps {

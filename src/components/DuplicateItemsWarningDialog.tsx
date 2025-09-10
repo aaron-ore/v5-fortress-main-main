@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -79,7 +79,7 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
             <>
               <ScrollArea className="flex-grow max-h-[200px] border border-border rounded-md p-3">
                 <ul className="list-disc list-inside text-left text-sm">
-                  {paginatedDuplicates.map((item, index) => (
+                  {paginatedDuplicates.map((item) => (
                     <li key={item.sku} className="font-semibold">
                       {item.itemName} (SKU: {item.sku}) - CSV Quantity: {item.csvQuantity}
                     </li>

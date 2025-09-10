@@ -1,15 +1,18 @@
-import React from "react";
-import { InventoryItem } from "@/context/InventoryContext";
-import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns"; // Import isValid
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { DateRange } from "react-day-picker"; // NEW: Import DateRange
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
+interface ForecastDataPoint {
+  name: string; // Month name
+  "Historical Demand": number;
+  "Forecasted Demand": number;
+  "Upper Confidence": number;
+  "Lower Confidence": number;
+  "External Factor (Trend)": number;
+}
+
 interface DashboardSummaryPdfContentProps {
-  // REMOVED: companyName: string;
-  // REMOVED: companyAddress: string;
-  // REMOVED: companyContact: string;
   companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
   reportDate: string;
   totalStockValue: number;
@@ -22,9 +25,6 @@ interface DashboardSummaryPdfContentProps {
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
-  // REMOVED: companyName,
-  // REMOVED: companyAddress,
-  // REMOVED: companyContact,
   companyLogoUrl, // Keep this prop for now, as it's passed explicitly
   reportDate,
   totalStockValue,

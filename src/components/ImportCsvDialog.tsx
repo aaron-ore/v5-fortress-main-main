@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +15,6 @@ import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding, Location } from "@/context/OnboardingContext";
-import { useStockMovement } from "@/context/StockMovementContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateInventoryCsvTemplate } from "@/utils/csvGenerator";
 import DuplicateItemsWarningDialog from "@/components/DuplicateItemsWarningDialog";
@@ -42,10 +39,9 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { addInventoryItem, updateInventoryItem, inventoryItems, refreshInventory } = useInventory();
+  const { inventoryItems, refreshInventory } = useInventory();
   const { categories, addCategory } = useCategories();
   const { locations, addLocation } = useOnboarding();
-  const { addStockMovement } = useStockMovement();
   const { profile } = useProfile(); // Get profile for organizationId and userId
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

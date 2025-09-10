@@ -1,4 +1,3 @@
-import React from "react";
 import { format, isValid } from "date-fns"; // Import isValid
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
@@ -13,9 +12,6 @@ interface ForecastDataPoint {
 }
 
 interface AdvancedDemandForecastPdfContentProps {
-  // REMOVED: companyName: string;
-  // REMOVED: companyAddress: string;
-  // REMOVED: companyContact: string;
   companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
   reportDate: string;
   forecastData: ForecastDataPoint[];
@@ -23,9 +19,6 @@ interface AdvancedDemandForecastPdfContentProps {
 }
 
 const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfContentProps> = ({
-  // REMOVED: companyName,
-  // REMOVED: companyAddress,
-  // REMOVED: companyContact,
   companyLogoUrl, // Keep this prop for now, as it's passed explicitly
   reportDate,
   forecastData,

@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +22,8 @@ import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
 import { Link } from "react-router-dom";
-import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
+import { buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Image as ImageIcon, Loader2, X } from "lucide-react";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import CustomFileInput from "@/components/CustomFileInput"; // NEW: Import CustomFileInput
 
@@ -95,8 +92,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setPickingReorderLevel("");
       setUnitCost("");
       setRetailPrice("");
-      setMainLocationParts(parseLocationString(defaultLocationString));
-      setPickingBinLocationParts(parseLocationString(defaultPickingBinLocationString));
+      setMainLocationParts({ area: '', row: '', bay: '', level: '', pos: '' }); // Reset to empty
+      setPickingBinLocationParts({ area: '', row: '', bay: '', level: '', pos: '' }); // Reset to empty
       setSelectedVendorId("none");
       setBarcodeValue("");
       setQrCodeSvgPreview(null);
@@ -106,7 +103,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
     }
-  }, [isOpen, defaultLocationString, defaultPickingBinLocationString]);
+  }, [isOpen]); // Removed defaultLocationString, defaultPickingBinLocationString from dependencies as they are derived from `locations`
 
   useEffect(() => {
     const updateQrCode = async () => {
@@ -170,8 +167,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       finalOverstockQuantity = 0;
       finalReorderLevel = parseInt(reorderLevel || '0');
       finalPickingReorderLevel = parseInt(reorderLevel || '0');
-      finalLocation = defaultLocationString;
-      finalPickingBinLocation = defaultPickingBinLocationString;
+      finalLocation = locations.length > 0 ? locations[0].fullLocationString : "Unassigned";
+      finalPickingBinLocation = locations.length > 0 ? locations[0].fullLocationString : "Unassigned";
     } else {
       finalPickingBinQuantity = parseInt(pickingBinQuantity || '0');
       finalOverstockQuantity = parseInt(overstockQuantity || '0');
@@ -198,6 +195,11 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
     ) {
       showError("Please fill in all required fields with valid numbers.");
+      return;
+    }
+
+    if (locations.length === 0) {
+      showError("You need to set up inventory locations first. Please go to Manage Locations.");
       return;
     }
 
@@ -278,8 +280,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     }
   };
 
-  const areMainLocationPartsMissing = viewMode === "detailed" && (!mainLocationParts.area || !mainLocationParts.row || !mainLocationParts.bay || !mainLocationParts.pos);
-  const arePickingBinLocationPartsMissing = viewMode === "detailed" && (!pickingBinLocationParts.area || !pickingBinLocationParts.row || !pickingBinLocationParts.bay || !pickingBinLocationParts.pos);
+  const areMainLocationPartsMissing = viewMode === "detailed" && (!mainLocationParts.area || !mainLocationParts.row || !mainLocationParts.bay || !mainLocationParts.level || !mainLocationParts.pos);
+  const arePickingBinLocationPartsMissing = viewMode === "detailed" && (!pickingBinLocationParts.area || !pickingBinLocationParts.row || !pickingBinLocationParts.bay || !pickingBinLocationParts.level || !pickingBinLocationParts.pos);
 
   const isFormInvalid =
     !itemName.trim() ||
@@ -292,9 +294,9 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
     !unitCost || isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
     !retailPrice || isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
-    areMainLocationPartsMissing ||
-    arePickingBinLocationPartsMissing ||
     (viewMode === "detailed" && locations.length === 0) ||
+    (viewMode === "detailed" && areMainLocationPartsMissing) ||
+    (viewMode === "detailed" && arePickingBinLocationPartsMissing) ||
     categories.length === 0 ||
     (autoReorderEnabled && (parseInt(autoReorderQuantity || '0') <= 0 || isNaN(parseInt(autoReorderQuantity || '0')))) ||
     isUploadingImage;

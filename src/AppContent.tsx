@@ -1,6 +1,3 @@
-"use client";
-
-import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -28,7 +25,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Locations from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
-import OnboardingWizard from "./components/onboarding/OnboardingWizard"; // Keep import for OnboardingPage
+import OnboardingPage from "./pages/OnboardingPage"; // Keep import for OnboardingPage
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
@@ -68,7 +65,6 @@ import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext"; // NEW: Import AutomationProvider
 import Automation from "./pages/Automation"; // NEW: Import Automation page
 import ItemHistoryPage from "./pages/ItemHistoryPage"; // NEW: Import ItemHistoryPage
-import OnboardingPage from "./pages/OnboardingPage"; // NEW: Import OnboardingPage
 import { Loader2 } from "lucide-react"; // NEW: Import Loader2 icon
 
 
@@ -132,9 +128,9 @@ const AuthenticatedApp = () => {
 const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoadingProfile, profile, fetchProfile } = useProfile(); // Use profile and isLoadingProfile from context
+  const { isLoadingProfile, profile } = useProfile(); // Use profile and isLoadingProfile from context
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { locations: structuredLocations, isOnboardingComplete } = useOnboarding(); // NEW: Get isOnboardingComplete
+  const { locations: structuredLocations } = useOnboarding(); // NEW: Get isOnboardingComplete
   const { companyProfile } = useOnboarding(); // NEW: Get companyProfile for PDF props
 
   const qbCallbackProcessedRef = useRef(false);
@@ -169,7 +165,6 @@ const AppContent = () => {
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
-        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it.
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
@@ -207,7 +202,7 @@ const AppContent = () => {
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      {!profile && <Route path="*" element={<Auth />} />} {/* Use !profile */}
+      <Route path="*" element={<Auth />} /> {/* Use !profile */}
     </Routes>
   );
 

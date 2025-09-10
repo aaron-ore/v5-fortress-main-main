@@ -1,7 +1,5 @@
-"use client";
-
-import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, LogOut, Flag } from "lucide-react";
@@ -21,8 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } from "@/lib/navigation";
-import { Input } from "@/components/ui/input";
-// REMOVED: import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface HeaderProps {
   setIsNotificationSheetOpen: (isOpen: boolean) => void;
@@ -36,7 +32,6 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();
-  // REMOVED: const { companyProfile } = useOnboarding(); // NEW: Get companyProfile
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {

@@ -6,7 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 import { OnboardingProvider } from "./context/OnboardingContext";
 import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
-import React from "react";
 import ThemedAppContent from "./components/ThemedAppContent"; // NEW: Import ThemedAppContent
 
 const queryClient = new QueryClient();
