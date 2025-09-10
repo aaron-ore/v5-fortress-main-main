@@ -130,6 +130,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
     );
   }
 
+  // Access properties directly from currentReportData
   const {
     totalStockValue,
     totalUnitsOnHand,

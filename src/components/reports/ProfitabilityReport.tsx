@@ -63,6 +63,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
     let totalCostOfGoodsSold = 0;
 
     filteredOrders.forEach(order => {
+      totalSalesRevenue += order.totalAmount;
       order.items.forEach(orderItem => {
         const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
         if (inventoryItem) {
