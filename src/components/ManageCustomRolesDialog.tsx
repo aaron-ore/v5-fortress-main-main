@@ -272,7 +272,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
               {roleToEdit ? "Save Changes" : "Create Role"}
             </Button>
           </DialogFooter>
-        </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       {roleToDelete && (
