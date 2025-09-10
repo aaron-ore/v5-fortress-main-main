@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Re-added React
 import {
   Dialog,
   DialogContent,
@@ -20,9 +20,9 @@ import { generateInventoryCsvTemplate } from "@/utils/csvGenerator";
 import DuplicateItemsWarningDialog from "@/components/DuplicateItemsWarningDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { parseLocationString } from "@/utils/locationParser";
-import { supabase } from "@/lib/supabaseClient"; // Import supabase client
-import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import storage utility
-import { useProfile } from "@/context/ProfileContext"; // Import useProfile
+import { supabase } from "@/lib/supabaseClient";
+import { uploadFileToSupabase } from "@/integrations/supabase/storage";
+import { useProfile } from "@/context/ProfileContext";
 
 interface CsvDuplicateItem {
   sku: string;
@@ -42,7 +42,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   const { inventoryItems, refreshInventory } = useInventory();
   const { categories, addCategory } = useCategories();
   const { locations, addLocation } = useOnboarding();
-  const { profile } = useProfile(); // Get profile for organizationId and userId
+  const { profile } = useProfile();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -55,14 +55,13 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   // States for Duplicate SKUs Warning
   const [duplicateSkusInCsv, setDuplicateSkusInCsv] = useState<CsvDuplicateItem[]>([]);
   const [isDuplicateItemsWarningDialogOpen, setIsDuplicateItemsWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "add_to_stock" | "update">("skip"); // Default action for duplicates
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "add_to_stock" | "update">("skip");
 
   // Memoize existing SKUs for efficient lookup
   const existingInventorySkus = useMemo(() => {
     return new Set(inventoryItems.map(item => item.sku.toLowerCase()));
   }, [inventoryItems]);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null);
@@ -89,7 +88,6 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     }
   };
 
-  // Helper function to check for new locations and then proceed with CSV processing
   const checkForNewLocationsAndProceed = async (data: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => {
     const uniqueLocationsInCsv = Array.from(new Set(data.map(row => String(row.location || '').trim())));
     const uniquePickingBinLocationsInCsv = Array.from(new Set(data.map(row => String(row.pickingBinLocation || '').trim())));
@@ -100,11 +98,10 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
 
     if (newLocations.length > 0) {
       setNewLocationsToConfirm(newLocations);
-      setDuplicateAction(actionForDuplicates); // Store action for duplicates
+      setDuplicateAction(actionForDuplicates);
       setIsConfirmNewLocationsDialogOpen(true);
-      setIsUploading(false); // Stop loading until user confirms new locations
+      setIsUploading(false);
     } else {
-      // If no new locations, proceed directly to invoking Edge Function
       await invokeEdgeFunction(data, actionForDuplicates);
       setSelectedFile(null);
     }
@@ -121,14 +118,12 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     let uploadedFilePath: string | null = null;
 
     try {
-      // 1. Upload the CSV file to Supabase Storage
       if (!selectedFile) {
         throw new Error("No file selected for upload.");
       }
       uploadedFilePath = await uploadFileToSupabase(selectedFile, 'csv-uploads', 'inventory-imports/');
       showSuccess("CSV file uploaded to storage. Processing...");
 
-      // 2. Invoke the Edge Function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         throw new Error("User session not found. Please log in again.");
@@ -168,18 +163,16 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         showError(result.message || "Bulk import completed with errors. Check console for details.");
         console.error("Bulk Import Errors:", result.errors);
       }
-      refreshInventory(); // Refresh inventory after bulk import
+      refreshInventory();
       onClose();
 
     } catch (error: any) {
       console.error("Error during bulk import process:", error);
-      // Ensure a string message is always displayed
       const errorMessage = typeof error === 'string' ? error : (error.message || "An unknown error occurred during bulk import.");
       showError(`Bulk import failed: ${errorMessage}`);
     } finally {
       setIsUploading(false);
       setSelectedFile(null);
-      // The Edge Function is responsible for deleting the file from storage
     }
   };
 
@@ -212,15 +205,14 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
           return;
         }
 
-        setJsonDataToProcess(jsonData); // Store data for later processing
+        setJsonDataToProcess(jsonData);
 
-        // Check for duplicate SKUs first
         const duplicates: CsvDuplicateItem[] = [];
         const seenSkus = new Set<string>();
         jsonData.forEach(row => {
           const sku = String(row.sku || '').trim();
           if (sku && existingInventorySkus.has(sku.toLowerCase())) {
-            if (!seenSkus.has(sku.toLowerCase())) { // Only add to duplicates list once
+            if (!seenSkus.has(sku.toLowerCase())) {
               duplicates.push({
                 sku: sku,
                 csvQuantity: parseInt(String(row.pickingBinQuantity || '0')) + parseInt(String(row.overstockQuantity || '0')),
@@ -235,16 +227,13 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
           setDuplicateSkusInCsv(duplicates);
           setIsDuplicateItemsWarningDialogOpen(true);
         } else {
-          // If no duplicates, proceed directly to checking for new locations
-          await checkForNewLocationsAndProceed(jsonData, "skip"); // Default to skip if no duplicates
+          await checkForNewLocationsAndProceed(jsonData, "skip");
         }
 
       } catch (parseError: any) {
         showError(`Error parsing CSV file: ${parseError.message}`);
         console.error("CSV Parse Error:", parseError);
       } finally {
-        // setIsUploading(false); // Keep loading true if dialogs are open
-        // setSelectedFile(null); // Keep file selected until final processing
       }
     };
 
@@ -275,7 +264,6 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     }
   };
 
-  // Handlers for Duplicate Items Warning Dialog
   const handleSkipAllDuplicates = async () => {
     setIsDuplicateItemsWarningDialogOpen(false);
     if (jsonDataToProcess) {
@@ -319,27 +307,23 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     onClose();
   };
 
-  // Handlers for New Locations Confirmation Dialog
   const handleConfirmAddLocations = async () => {
     setIsConfirmNewLocationsDialogOpen(false);
     setIsUploading(true);
 
-    // The `addLocation` function in context now expects a structured object.
-    // We need to convert the simple string names from `newLocationsToConfirm`
-    // into `Location` objects before passing them.
     for (const locString of newLocationsToConfirm) {
       const parsed = parseLocationString(locString);
       const newLocation: Omit<Location, "id" | "createdAt" | "userId" | "organizationId"> = {
         fullLocationString: locString,
-        displayName: locString, // Use full string as display name for auto-added
+        displayName: locString,
         area: parsed.area || "N/A",
         row: parsed.row || "N/A",
         bay: parsed.bay || "N/A",
         level: parsed.level || "N/A",
         pos: parsed.pos || "N/A",
-        color: "#CCCCCC", // Default color for auto-added locations
+        color: "#CCCCCC",
       };
-      await addLocation(newLocation); // Use the updated addLocation
+      await addLocation(newLocation);
     }
     showSuccess(`Added new locations: ${newLocationsToConfirm.join(", ")}`);
 
@@ -403,28 +387,26 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         </DialogFooter>
       </DialogContent>
 
-      {/* Duplicate Items Warning Dialog */}
       <DuplicateItemsWarningDialog
         isOpen={isDuplicateItemsWarningDialogOpen}
         onClose={handleCancelDuplicateWarning}
         duplicates={duplicateSkusInCsv}
         onSkipAll={handleSkipAllDuplicates}
         onAddToExistingStock={handleAddToExistingStock}
-        onUpdateExisting={handleUpdateExisting} // NEW: Pass new handler
+        onUpdateExisting={handleUpdateExisting}
       />
 
-      {/* New Locations Confirmation Dialog */}
       <ConfirmDialog
         isOpen={isConfirmNewLocationsDialogOpen}
         onClose={handleCancelAddLocations}
         onConfirm={handleConfirmAddLocations}
         title="New Locations Detected"
         description={
-          <div> {/* NEW: Wrap content in a div */}
+          <div>
             The following new inventory locations were found in your CSV:
             <ul className="list-disc list-inside mt-2 ml-4 text-left">
-              {newLocationsToConfirm.map((loc, index) => (
-                <li key={index} className="font-semibold">{loc}</li>
+              {newLocationsToConfirm.map((loc, _index) => (
+                <li key={_index} className="font-semibold">{loc}</li>
               ))}
             </ul>
             Would you like to add these to your available locations? Items with these locations will only be imported if confirmed.

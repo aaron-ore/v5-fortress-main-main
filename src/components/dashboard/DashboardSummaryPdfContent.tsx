@@ -1,54 +1,61 @@
 import React from "react";
 import { InventoryItem } from "@/context/InventoryContext";
 import { OrderItem } from "@/context/OrdersContext";
-import { format, isValid } from "date-fns"; // Import isValid
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { DateRange } from "react-day-picker";
+import { useProfile } from "@/context/ProfileContext";
 
 interface DashboardSummaryPdfContentProps {
-  companyName: string;
-  companyAddress: string;
-  companyContact: string; // e.g., currency or main contact
   companyLogoUrl?: string;
+  reportDate: string;
   totalStockValue: number;
   totalUnitsOnHand: number;
   lowStockItems: InventoryItem[];
   outOfStockItems: InventoryItem[];
   recentSalesOrders: OrderItem[];
   recentPurchaseOrders: OrderItem[];
-  reportDate: string;
+  dateRange?: DateRange;
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
-  companyName,
-  companyAddress,
-  companyContact,
   companyLogoUrl,
+  reportDate,
   totalStockValue,
   totalUnitsOnHand,
   lowStockItems,
   outOfStockItems,
   recentSalesOrders,
   recentPurchaseOrders,
-  reportDate,
+  dateRange,
 }) => {
-  // dateRange is not directly used here, but if it were, it would need isValid checks.
-  // For now, assuming reportDate is the primary date for this PDF.
+  const { profile } = useProfile();
+
+  if (!profile) {
+    return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
+  }
+
+  const formattedDateRange = (dateRange?.from && isValid(dateRange.from))
+    ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
+    : "All Time";
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {companyLogoUrl ? (
-            <img src={companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          {profile.companyLogoUrl ? (
+            <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            <div className="text-xs text-gray-600 mb-1">YOUR LOGO</div>
+            <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             DASHBOARD SUMMARY
           </h1>
         </div>
         <div className="text-right">
-          <p className="text-sm font-semibold">REPORT DATE: {reportDate}</p>
+          <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
+          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p>
         </div>
       </div>
 
@@ -56,10 +63,10 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{companyName}</p>
-          <p>{companyContact}</p>
-          <p>{companyAddress.split('\n')[0]}</p>
-          <p>{companyAddress.split('\n')[1]}</p>
+          <p className="font-semibold">{profile.companyName || "Your Company"}</p>
+          <p>{profile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 
@@ -77,11 +84,11 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
               <span>{totalUnitsOnHand.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-semibold">Low Stock Items:</span>
+              <span className={lowStockItems.length > 0 ? "font-semibold text-red-600" : "font-semibold"}>Low Stock Items:</span>
               <span className={lowStockItems.length > 0 ? "text-red-600" : ""}>{lowStockItems.length}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-semibold">Out-of-Stock Items:</span>
+              <span className={outOfStockItems.length > 0 ? "font-semibold text-red-600" : "font-semibold"}>Out-of-Stock Items:</span>
               <span className={outOfStockItems.length > 0 ? "text-red-600" : ""}>{outOfStockItems.length}</span>
             </div>
           </div>
@@ -114,58 +121,66 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       </div>
 
       {/* Detailed Low Stock Items */}
-      {lowStockItems.length > 0 && (
-        <div className="mb-8">
-          <p className="font-bold mb-2">LOW STOCK ITEMS:</p>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100 border border-gray-300">
-                <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
-                <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">SKU</th>
-                <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">On Hand</th>
-                <th className="py-2 px-4 text-right font-semibold">Reorder Level</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lowStockItems.map((item) => (
+      <div className="mb-8">
+        <p className="font-bold mb-2">LOW STOCK ITEMS:</p>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border border-gray-300">
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">SKU</th>
+              <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">On Hand</th>
+              <th className="py-2 px-4 text-right font-semibold">Reorder Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lowStockItems.length > 0 ? (
+              lowStockItems.map((item) => (
                 <tr key={item.id} className="border-b border-gray-200">
                   <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity}</td>
                   <td className="py-2 px-4 text-right">{item.reorderLevel}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            ) : (
+              <tr className="border-b border-gray-200">
+                <td colSpan={4} className="py-2 px-4 text-center text-gray-600">No low stock items.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Detailed Out-of-Stock Items */}
-      {outOfStockItems.length > 0 && (
-        <div className="mb-8">
-          <p className="font-bold mb-2">OUT-OF-STOCK ITEMS:</p>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100 border border-gray-300">
-                <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
-                <th className="py-2 px-4 text-left font-semibold">SKU</th>
-              </tr>
-            </thead>
-            <tbody>
-              {outOfStockItems.map((item) => (
+      <div className="mb-8">
+        <p className="font-bold mb-2">OUT-OF-STOCK ITEMS:</p>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border border-gray-300">
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
+              <th className="py-2 px-4 text-left font-semibold">SKU</th>
+            </tr>
+          </thead>
+          <tbody>
+            {outOfStockItems.length > 0 ? (
+              outOfStockItems.map((item) => (
                 <tr key={item.id} className="border-b border-gray-200">
                   <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
                   <td className="py-2 px-4">{item.sku}</td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            ) : (
+              <tr className="border-b border-gray-200">
+                <td colSpan={2} className="py-2 px-4 text-center text-gray-600">No out of stock items.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Footer */}
       <div className="text-xs text-gray-500 mt-12 text-right">
-        <p>Generated by Fortress on {reportDate}</p>
+        <p>Generated by Fortress on {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CsvDuplicateItem {
   sku: string;
@@ -19,14 +19,14 @@ interface CsvDuplicateItem {
 
 interface DuplicateItemsWarningDialogProps {
   isOpen: boolean;
-  onClose: () => void; // For cancelling the whole operation
+  onClose: () => void;
   duplicates: CsvDuplicateItem[];
   onSkipAll: () => void;
   onAddToExistingStock: () => void;
-  onUpdateExisting: () => void; // NEW: Add onUpdateExisting prop
+  onUpdateExisting: () => void;
 }
 
-const MAX_ITEMS_PER_PAGE = 5; // Max items to show per page
+const MAX_ITEMS_PER_PAGE = 5;
 
 const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = ({
   isOpen,
@@ -34,7 +34,7 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
   duplicates,
   onSkipAll,
   onAddToExistingStock,
-  onUpdateExisting, // NEW: Destructure onUpdateExisting
+  onUpdateExisting,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -52,7 +52,6 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   };
 
-  // Reset page when dialog opens or duplicates change
   React.useEffect(() => {
     if (isOpen) {
       setCurrentPage(0);
@@ -61,7 +60,7 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col"> {/* Increased max-w to 700px */}
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-yellow-500" /> Potential Duplicate Items Detected
@@ -79,7 +78,7 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
             <>
               <ScrollArea className="flex-grow max-h-[200px] border border-border rounded-md p-3">
                 <ul className="list-disc list-inside text-left text-sm">
-                  {paginatedDuplicates.map((item) => (
+                  {paginatedDuplicates.map((item, _index) => (
                     <li key={item.sku} className="font-semibold">
                       {item.itemName} (SKU: {item.sku}) - CSV Quantity: {item.csvQuantity}
                     </li>
@@ -109,10 +108,10 @@ const DuplicateItemsWarningDialog: React.FC<DuplicateItemsWarningDialogProps> = 
           <Button variant="secondary" onClick={onSkipAll}>
             Skip All Duplicates
           </Button>
-          <Button variant="secondary" onClick={onAddToExistingStock}> {/* Changed to secondary */}
+          <Button variant="secondary" onClick={onAddToExistingStock}>
             Add Quantities to Existing Stock
           </Button>
-          <Button onClick={onUpdateExisting}> {/* NEW: Add Update Existing button */}
+          <Button onClick={onUpdateExisting}>
             Update Existing Items
           </Button>
         </DialogFooter>

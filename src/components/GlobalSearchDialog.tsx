@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import React, { useState, useEffect, useRef } from "react"; // Re-added React
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -16,23 +16,23 @@ import {
   Package,
   Receipt,
   Truck,
-  LayoutDashboard, // For Dashboard
-  BarChart, // For Reports
-  Settings as SettingsIcon, // For Settings, Account Settings
-  Users as UsersIcon, // For Users
-  HelpCircle, // For Help Center
-  DollarSign, // For Billing
-  Sparkles, // For What's New
-  BookOpen, // For Setup Instructions
-  User, // For My Profile
-  Bell, // For Notifications
-  FileText, // Generic for other app pages
+  LayoutDashboard,
+  BarChart,
+  Settings as SettingsIcon,
+  Users as UsersIcon,
+  HelpCircle,
+  DollarSign,
+  Sparkles,
+  BookOpen,
+  User,
+  Bell,
+  FileText,
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
-import { useProfile } from "@/context/ProfileContext"; // Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GlobalSearchDialogProps {
@@ -48,10 +48,9 @@ interface SearchResult {
   status?: string;
   customerSupplier?: string;
   contactPerson?: string;
-  path?: string; // Added path for app pages
+  path?: string;
 }
 
-// Define a static list of app pages for search
 const appPages = [
   { id: 'dashboard', name: 'Dashboard', description: 'Overview of your inventory and orders', path: '/' },
   { id: 'inventory', name: 'Inventory', description: 'Manage all your stock items', path: '/inventory' },
@@ -76,14 +75,13 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
   const { vendors } = useVendors();
-  const { profile } = useProfile(); // Use profile to check user role
-  const navigate = useNavigate(); // Initialize useNavigate
+  const { profile } = useProfile();
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Effect to debounce the search
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -96,16 +94,15 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
 
     debounceTimeoutRef.current = setTimeout(() => {
       performSearch(searchTerm);
-    }, 300); // 300ms debounce delay
+    }, 300);
 
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [searchTerm, inventoryItems, orders, vendors, profile]); // Re-run effect if data or profile changes
+  }, [searchTerm, inventoryItems, orders, vendors, profile]);
 
-  // Reset search term and results when dialog opens/closes
   useEffect(() => {
     if (!isOpen) {
       setSearchTerm("");
@@ -117,7 +114,6 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
     const lowerCaseSearchTerm = term.trim().toLowerCase();
     const results: SearchResult[] = [];
 
-    // Search Inventory Items
     inventoryItems.forEach(item => {
       if (
         item.name.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -133,7 +129,6 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
       }
     });
 
-    // Search Orders
     orders.forEach(order => {
       if (
         order.id.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -150,7 +145,6 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
       }
     });
 
-    // Search Vendors
     vendors.forEach(vendor => {
       if (
         vendor.name.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -168,9 +162,7 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
       }
     });
 
-    // Search App Pages
     appPages.forEach(page => {
-      // Only include 'users' page if the current user is an admin
       if (page.id === 'users' && profile?.role !== 'admin') {
         return;
       }
@@ -231,13 +223,8 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
   const handleResultClick = (result: SearchResult) => {
     if (result.type === 'app-page' && result.path) {
       navigate(result.path);
-      onClose(); // Close the dialog after navigation
+      onClose();
     }
-    // You can add specific navigation for 'inventory', 'order', 'vendor' types here
-    // For example:
-    // if (result.type === 'inventory') { navigate(`/inventory/${result.id}`); onClose(); }
-    // if (result.type === 'order') { navigate(`/orders/${result.id}`); onClose(); }
-    // if (result.type === 'vendor') { navigate(`/vendors/${result.id}`); onClose(); }
   };
 
   return (

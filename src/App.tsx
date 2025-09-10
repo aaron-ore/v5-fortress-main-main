@@ -6,7 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { OnboardingProvider } from "./context/OnboardingContext";
 import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
-import ThemedAppContent from "./components/ThemedAppContent"; // NEW: Import ThemedAppContent
+import ThemedAppContent from "./components/ThemedAppContent";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ const App = () => {
             <OnboardingProvider>
               <PrintProvider>
                 <TooltipProvider>
-                  <ThemedAppContent /> {/* Render ThemedAppContent here */}
+                  <ThemedAppContent />
                 </TooltipProvider>
               </PrintProvider>
             </OnboardingProvider>

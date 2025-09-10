@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -15,12 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MapPin, Package, Search } from "lucide-react";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface LocationInventoryViewDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  locationName: string; // This is the fullLocationString
+  locationName: string;
 }
 
 const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = ({
@@ -29,7 +27,7 @@ const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = 
   locationName,
 }) => {
   const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding();
   const [searchTerm, setSearchTerm] = useState("");
 
   const locationDisplayName = useMemo(() => {
@@ -56,7 +54,7 @@ const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = 
 
   useEffect(() => {
     if (isOpen) {
-      setSearchTerm(""); // Reset search when dialog opens
+      setSearchTerm("");
     }
   }, [isOpen]);
 

@@ -3,15 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, QrCode, Palette, Download, Save } from "lucide-react"; // NEW: Import Save icon
+import { Printer, QrCode, Palette, Download, Save } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
+import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
 import LocationLabelPdfContent from "@/components/LocationLabelPdfContent";
-import html2canvas from 'html2canvas'; // NEW: Import html2canvas
-import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser"; // NEW
+import html2canvas from 'html2canvas';
+import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [
@@ -24,22 +24,22 @@ const labelColors = [
 ];
 
 interface LocationLabelGeneratorProps {
-  initialLocation?: Location | null; // NEW: Pass full Location object
-  onSave: (location: Omit<Location, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void; // NEW: onSave callback
-  onClose: () => void; // NEW: onClose callback for the dialog
-  onGenerateAndPrint?: (data: PrintContentData[]) => void; // Optional callback for external print
+  initialLocation?: Location | null;
+  onSave: (location: Omit<Location, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void;
+  onClose: () => void;
+  onGenerateAndPrint?: (data: PrintContentData[]) => void;
 }
 
 const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
-  initialLocation, // NEW: Destructure initialLocation
+  initialLocation,
   onSave,
   onClose,
   onGenerateAndPrint,
 }) => {
   const { initiatePrint } = usePrint();
-  const { locations: existingLocationsInContext } = useOnboarding(); // Get all existing locations from context
+  const { locations: existingLocationsInContext } = useOnboarding();
 
-  const [displayName, setDisplayName] = useState(initialLocation?.displayName || ""); // NEW: State for display name
+  const [displayName, setDisplayName] = useState(initialLocation?.displayName || "");
   const [area, setArea] = useState(initialLocation?.area || "A");
   const [row, setRow] = useState(initialLocation?.row || "01");
   const [bay, setBay] = useState(initialLocation?.bay || "01");
@@ -51,14 +51,12 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
 
   const labelPreviewRef = useRef<HTMLDivElement>(null);
 
-  // Derived unique options for dropdowns from all existing locations
   const uniqueAreas = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'area');
   const uniqueRows = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'row');
   const uniqueBays = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'bay');
   const uniqueLevels = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'level');
   const uniquePositions = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'pos');
 
-  // Update internal state when initial props change (e.g., when editing a different location)
   useEffect(() => {
     setDisplayName(initialLocation?.displayName || "");
     setArea(initialLocation?.area || "A");
@@ -67,19 +65,18 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     setLevel(initialLocation?.level || "1");
     setPos(initialLocation?.pos || "A");
     setSelectedColor(initialLocation?.color || labelColors[0].hex);
-    setQuantity("1"); // Reset quantity when editing a new item
+    setQuantity("1");
   }, [initialLocation]);
 
   const fullLocationString = useMemo(() => {
     return buildLocationString({ area, row, bay, level, pos });
   }, [area, row, bay, level, pos]);
 
-  // Generate QR code for preview
   useEffect(() => {
     const generatePreviewQr = async () => {
       if (fullLocationString) {
         try {
-          const svg = await generateQrCodeSvg(fullLocationString, 150); 
+          const svg = await generateQrCodeSvg(fullLocationString, 150);
           setQrCodeSvg(svg);
         } catch (error) {
           console.error("Error generating QR for preview:", error);
@@ -100,9 +97,8 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
 
     const isNew = !initialLocation;
 
-    // Check for duplicate fullLocationString (excluding the current item if editing)
-    const duplicateExists = existingLocationsInContext.some(loc => 
-      loc.fullLocationString.toLowerCase() === fullLocationString.toLowerCase() && 
+    const duplicateExists = existingLocationsInContext.some(loc =>
+      loc.fullLocationString.toLowerCase() === fullLocationString.toLowerCase() &&
       loc.id !== initialLocation?.id
     );
 
@@ -123,7 +119,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     };
 
     onSave(locationData, isNew);
-    onClose(); // Close the dialog after saving
+    onClose();
   };
 
   const handleGenerateAndPrint = async () => {
@@ -138,11 +134,8 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
       return;
     }
 
-    // No need for duplication check here, as it's for printing labels, not saving the location itself.
-    // The location should already be saved or be a temporary configuration.
-
     try {
-      const qrSvg = await generateQrCodeSvg(fullLocationString, 150); // Generate QR for print
+      const qrSvg = await generateQrCodeSvg(fullLocationString, 150);
 
       const labelsToPrint: PrintContentData[] = Array.from({ length: numQuantity }).map(() => ({
         type: "location-label",
@@ -172,7 +165,6 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     }
   };
 
-  // Handle Download as PNG
   const handleDownloadPng = async () => {
     if (!labelPreviewRef.current) {
       showError("No label preview available to download.");
@@ -181,9 +173,9 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
 
     try {
       const canvas = await html2canvas(labelPreviewRef.current, {
-        scale: 3, // Increase scale for higher resolution PNG
-        useCORS: true, // Enable CORS if images are from external sources
-        backgroundColor: '#ffffff', // Ensure white background
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
       });
 
       const dataUrl = canvas.toDataURL('image/png');
@@ -203,7 +195,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
   const isSaveDisabled = !fullLocationString || !selectedColor || !area || !row || !bay || !level || !pos;
 
   return (
-    <div className="space-y-4 flex-grow flex flex-col p-4"> {/* Added padding to the content */}
+    <div className="space-y-4 flex-grow flex flex-col p-4">
       <div className="space-y-2">
         <Label htmlFor="displayName">Display Name (Optional)</Label>
         <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Location Display Name" />

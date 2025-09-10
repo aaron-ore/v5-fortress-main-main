@@ -17,12 +17,12 @@ import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface DailyIssuesDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
 interface IssueLog {
@@ -42,7 +42,7 @@ interface IssueLog {
   };
 }
 
-const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, dateRange }) => { // NEW: Destructure dateRange
+const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, dateRange }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
   const [issues, setIssues] = useState<IssueLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,8 +73,7 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
         } else {
           const fetchedIssues: IssueLog[] = data.map((log: any) => ({
             id: log.id,
-            // Ensure timestamp is valid before storing
-            timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(), // NEW: Use parseAndValidateDate
+            timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
             userId: log.user_id,
             organizationId: log.organization_id,
             activityType: log.activity_type,
@@ -87,9 +86,9 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
       };
 
       fetchIssues();
-      fetchAllProfiles(); // Ensure all profiles are fetched to map user IDs to names
+      fetchAllProfiles();
     }
-  }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]); // NEW: Added dateRange to dependencies
+  }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]);
 
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
@@ -128,7 +127,7 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
             <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
               <div className="space-y-4">
                 {issues.map((issue) => {
-                  const issueTimestamp = parseAndValidateDate(issue.timestamp); // NEW: Use parseAndValidateDate
+                  const issueTimestamp = parseAndValidateDate(issue.timestamp);
                   return (
                     <div key={issue.id} className="bg-muted/20 p-3 rounded-md border border-border">
                       <div className="flex items-center justify-between text-sm mb-2">

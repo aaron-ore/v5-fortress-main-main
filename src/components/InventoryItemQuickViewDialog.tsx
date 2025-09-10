@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
@@ -19,11 +17,11 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { showSuccess, showError } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import { useOrders, POItem } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
-import { processAutoReorder } from "@/utils/autoReorderLogic";
+import { processAutoReorder } from "@/utils/autoReorderLogic"; // Re-added processAutoReorder
 import { useNavigate } from "react-router-dom";
-import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, Image as ImageIcon } from "lucide-react";
+import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
@@ -90,7 +88,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       }
       if (currentItem) {
         fetchStockMovements(currentItem.id);
-        console.log("[InventoryItemQuickViewDialog] Current item imageUrl on open:", currentItem.imageUrl); // ADDED LOG
+        console.log("[InventoryItemQuickViewDialog] Current item imageUrl on open:", currentItem.imageUrl);
         const generateAndSetQr = async () => {
           if (currentItem.barcodeUrl) {
             try {
@@ -359,9 +357,6 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-muted-foreground" />
                 <span className="font-semibold">SKU:</span> {currentItem.sku}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold">Item ID:</span> {currentItem.id}
               </div>
               <div className="flex items-center gap-2">
                 <Scale className="h-4 w-4 text-muted-foreground" />

@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp, Lightbulb } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { format, subMonths, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const DemandForecastCard: React.FC = () => {
   const { orders } = useOrders();
@@ -14,7 +14,6 @@ const DemandForecastCard: React.FC = () => {
     const today = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // Aggregate historical sales data by month for the last 6 months
     const historicalSales: { [key: string]: number } = {};
     for (let i = 5; i >= 0; i--) {
       const month = subMonths(today, i);
@@ -24,19 +23,18 @@ const DemandForecastCard: React.FC = () => {
 
     orders.filter(order => order.type === "Sales").forEach(order => {
       const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return; // Ensure valid date
+      if (!orderDate || !isValid(orderDate)) return;
       const monthKey = format(orderDate, "MMM yyyy");
       if (historicalSales.hasOwnProperty(monthKey)) {
         historicalSales[monthKey] += order.totalAmount;
       }
     });
 
-    // Prepare data for the chart: last 6 months historical + next 3 months forecast
     const chartData = [];
     const historicalKeys = Object.keys(historicalSales).sort((a, b) => {
       const dateA = parseAndValidateDate(a);
       const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB) return 0; // Handle null dates
+      if (!dateA || !dateB) return 0;
       return dateA.getTime() - dateB.getTime();
     });
 
@@ -44,11 +42,10 @@ const DemandForecastCard: React.FC = () => {
       chartData.push({
         name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
         "Actual Sales": parseFloat(historicalSales[monthKey].toFixed(2)),
-        "Projected Demand": null, // No projection for historical data
+        "Projected Demand": null,
       });
     });
 
-    // Simple projection for the next 3 months based on average of last 3 months
     const lastThreeMonthsSales = historicalKeys.slice(-3).map(key => historicalSales[key]);
     const averageSales = lastThreeMonthsSales.length > 0
       ? lastThreeMonthsSales.reduce((sum, val) => sum + val, 0) / lastThreeMonthsSales.length
@@ -57,10 +54,10 @@ const DemandForecastCard: React.FC = () => {
     for (let i = 1; i <= 3; i++) {
       const futureMonth = subMonths(today, -i);
       const futureMonthName = format(futureMonth, "MMM");
-      const projectedValue = averageSales > 0 ? Math.max(0, averageSales * (1 + (Math.random() - 0.5) * 0.1)) : 0; // +/- 5% fluctuation
+      const projectedValue = averageSales > 0 ? Math.max(0, averageSales * (1 + (Math.random() - 0.5) * 0.1)) : 0;
       chartData.push({
         name: futureMonthName,
-        "Actual Sales": null, // No actual sales for future
+        "Actual Sales": null,
         "Projected Demand": parseFloat(projectedValue.toFixed(2)),
       });
     }

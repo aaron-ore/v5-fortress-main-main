@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react"; // Re-added React, useEffect, useRef
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -25,7 +26,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Locations from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
-import OnboardingPage from "./pages/OnboardingPage"; // Keep import for OnboardingPage
+import OnboardingPage from "./pages/OnboardingPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
@@ -36,7 +37,7 @@ import PutawayLabelPdfContent from "./components/PutawayLabelPdfContent";
 import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
-// NEW: Import all new PDF content components
+// Import all new PDF content components
 import InventoryValuationPdfContent from "./components/reports/pdf/InventoryValuationPdfContent";
 import LowStockPdfContent from "./components/reports/pdf/LowStockPdfContent";
 import InventoryMovementPdfContent from "./components/reports/pdf/InventoryMovementPdfContent";
@@ -52,7 +53,7 @@ import { usePrint } from "./context/PrintContext";
 import { supabase } from "./lib/supabaseClient";
 import { showSuccess, showError } from "./utils/toast";
 
-// NEW: Import all providers needed for AuthenticatedApp
+// Import all providers needed for AuthenticatedApp
 import { SidebarProvider } from "./context/SidebarContext";
 import { OrdersProvider } from "./context/OrdersContext";
 import { VendorProvider } from "./context/VendorContext";
@@ -62,10 +63,10 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { StockMovementProvider } from "./context/StockMovementContext";
 import { ReplenishmentProvider } from "./context/ReplenishmentContext";
 import { InventoryProvider } from "./context/InventoryContext";
-import { AutomationProvider } from "./context/AutomationContext"; // NEW: Import AutomationProvider
-import Automation from "./pages/Automation"; // NEW: Import Automation page
-import ItemHistoryPage from "./pages/ItemHistoryPage"; // NEW: Import ItemHistoryPage
-import { Loader2 } from "lucide-react"; // NEW: Import Loader2 icon
+import { AutomationProvider } from "./context/AutomationContext";
+import Automation from "./pages/Automation";
+import ItemHistoryPage from "./pages/ItemHistoryPage";
+import { Loader2 } from "lucide-react";
 
 
 // Moved AuthenticatedApp definition here
@@ -82,13 +83,13 @@ const AuthenticatedApp = () => {
                 <StockMovementProvider>
                   <ReplenishmentProvider>
                     <InventoryProvider>
-                      <AutomationProvider> {/* NEW: Wrap with AutomationProvider */}
+                      <AutomationProvider>
                         <Routes>
                           <Route path="/" element={<Layout />}>
                             <Route index element={<Dashboard />} />
                             <Route path="inventory" element={<Inventory />} />
                             <Route path="inventory/:id" element={<EditInventoryItem />} />
-                            <Route path="inventory/:id/history" element={<ItemHistoryPage />} /> {/* NEW: Add ItemHistoryPage route */}
+                            <Route path="inventory/:id/history" element={<ItemHistoryPage />} />
                             <Route path="orders" element={<Orders />} />
                             <Route path="orders/:id" element={<EditPurchaseOrder />} />
                             <Route path="reports" element={<Reports />} />
@@ -108,11 +109,11 @@ const AuthenticatedApp = () => {
                             <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
                             <Route path="locations" element={<Locations />} />
                             <Route path="integrations" element={<Integrations />} />
-                            <Route path="automation" element={<Automation />} /> {/* NEW: Add Automation route */}
+                            <Route path="automation" element={<Automation />} />
                             <Route path="*" element={<NotFound />} />
                           </Route>
                         </Routes>
-                      </AutomationProvider> {/* NEW: Close AutomationProvider */}
+                      </AutomationProvider>
                     </InventoryProvider>
                   </ReplenishmentProvider>
                 </StockMovementProvider>
@@ -128,32 +129,29 @@ const AuthenticatedApp = () => {
 const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoadingProfile, profile } = useProfile(); // Use profile and isLoadingProfile from context
+  const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get isOnboardingComplete
-  const { companyProfile } = useOnboarding(); // NEW: Get companyProfile for PDF props
+  const { locations: structuredLocations } = useOnboarding();
+  const { companyProfile } = useOnboarding();
 
   const qbCallbackProcessedRef = useRef(false);
-  const shopifyCallbackProcessedRef = useRef(false); // NEW: Ref for Shopify callback
-
-  // Removed the useEffect with supabase.auth.onAuthStateChange as ProfileContext now handles it.
+  const shopifyCallbackProcessedRef = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const quickbooksSuccess = params.get('quickbooks_success');
     const quickbooksError = params.get('quickbooks_error');
-    const shopifySuccess = params.get('shopify_success'); // NEW: Get Shopify success param
-    const shopifyError = params.get('shopify_error'); // NEW: Get Shopify error param
+    const shopifySuccess = params.get('shopify_success');
+    const shopifyError = params.get('shopify_error');
 
     console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
     console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
-    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess); // NEW: Log Shopify params
-    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError); // NEW: Log Shopify params
+    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess);
+    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError);
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
-        // No need to call fetchProfile here, ProfileContext's onAuthStateChange will handle it.
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -161,7 +159,6 @@ const AppContent = () => {
       navigate('/integrations', { replace: true });
     }
 
-    // NEW: Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
@@ -171,9 +168,8 @@ const AppContent = () => {
       shopifyCallbackProcessedRef.current = true;
       navigate('/integrations', { replace: true });
     }
-  }, [location.search, navigate]); // Removed fetchProfile from dependencies as it's not called directly here
+  }, [location.search, navigate]);
 
-  // NEW: Effect to manage print-mode-label class on <html>
   useEffect(() => {
     if (isPrinting && printContentData?.type === "location-label") {
       document.documentElement.classList.add("print-mode-label");
@@ -182,7 +178,7 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
-  if (isLoadingProfile) { // Use isLoadingProfile from context
+  if (isLoadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -191,18 +187,18 @@ const AppContent = () => {
     );
   }
 
-  const mainAppRoutes = profile ? ( // Use profile from context
+  const mainAppRoutes = profile ? (
     <ErrorBoundary>
       <Routes>
         <Route path="/*" element={<AuthenticatedApp />} />
-        <Route path="/onboarding" element={<OnboardingPage />} /> {/* NEW: Add OnboardingPage route */}
+        <Route path="/onboarding" element={<OnboardingPage />} />
       </Routes>
     </ErrorBoundary>
   ) : (
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="*" element={<Auth />} /> {/* Use !profile */}
+      <Route path="*" element={<Auth />} />
     </Routes>
   );
 
@@ -211,9 +207,6 @@ const AppContent = () => {
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
       </div>
-
-      {/* Conditionally render OnboardingWizard */}
-      {/* REMOVED: !isLoadingProfile && !isOnboardingComplete && <OnboardingWizard onComplete={() => navigate("/")} /> */}
 
       {printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>

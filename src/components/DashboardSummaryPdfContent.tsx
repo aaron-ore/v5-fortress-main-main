@@ -1,10 +1,12 @@
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { DateRange } from "react-day-picker"; // NEW: Import DateRange
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { DateRange } from "react-day-picker";
+import { useProfile } from "@/context/ProfileContext";
+import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
+import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
 
 interface ForecastDataPoint {
-  name: string; // Month name
+  name: string;
   "Historical Demand": number;
   "Forecasted Demand": number;
   "Upper Confidence": number;
@@ -13,7 +15,7 @@ interface ForecastDataPoint {
 }
 
 interface DashboardSummaryPdfContentProps {
-  companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl?: string;
   reportDate: string;
   totalStockValue: number;
   totalUnitsOnHand: number;
@@ -21,11 +23,11 @@ interface DashboardSummaryPdfContentProps {
   outOfStockItems: InventoryItem[];
   recentSalesOrders: OrderItem[];
   recentPurchaseOrders: OrderItem[];
-  dateRange?: DateRange; // NEW: Add dateRange prop
+  dateRange?: DateRange;
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
-  companyLogoUrl, // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl,
   reportDate,
   totalStockValue,
   totalUnitsOnHand,
@@ -33,9 +35,9 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
   outOfStockItems,
   recentSalesOrders,
   recentPurchaseOrders,
-  dateRange, // NEW: Destructure dateRange
+  dateRange,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { profile } = useProfile();
 
   if (!profile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
@@ -50,10 +52,9 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyLogoUrl ? ( // Use profile.companyLogoUrl
+          {profile.companyLogoUrl ? (
             <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            // Removed "YOUR LOGO" placeholder
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
@@ -62,7 +63,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
-          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p> {/* NEW: Display data period */}
+          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p>
         </div>
       </div>
 
@@ -70,10 +71,10 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyName || "Your Company"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyCurrency || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[1] || ""}</p> {/* NEW: Use from profile */}
+          <p className="font-semibold">{profile.companyName || "Your Company"}</p>
+          <p>{profile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

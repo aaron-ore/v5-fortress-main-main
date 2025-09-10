@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
@@ -20,7 +20,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   };
 
   public static getDerivedStateFromError(_: Error): ErrorBoundaryState {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error: _, errorInfo: null };
   }
 
@@ -30,13 +29,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       error: error,
       errorInfo: errorInfo,
     });
-    // You can also log error messages to an error reporting service here
-    // logErrorToMyService(error, errorInfo);
   }
 
   public render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
       return (
         <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
           <Card className="w-full max-w-md text-center border-destructive">

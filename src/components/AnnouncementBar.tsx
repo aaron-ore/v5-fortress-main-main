@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface AnnouncementBarProps {
   message: string;
@@ -28,25 +28,22 @@ const useTypingEffect = (text: string, speed: number = 50) => {
   return displayedText;
 };
 
-const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) => { // Removed linkTo
-  const { companyProfile } = useOnboarding(); // Get companyProfile from context
+const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) => {
+  const { companyProfile } = useOnboarding();
 
   const [isDismissed, setIsDismissed] = useState(() => {
-    // Check local storage to see if it was previously dismissed
     if (typeof window !== 'undefined') {
       return localStorage.getItem("fortress_announcement_dismissed") === "true";
     }
     return false;
   });
 
-  // Determine visibility: not dismissed AND no company profile set
   const isVisible = !isDismissed && !companyProfile;
 
   const typedMessage = useTypingEffect(message);
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    // Store dismissal preference in local storage
     if (typeof window !== 'undefined') {
       localStorage.setItem("fortress_announcement_dismissed", "true");
     }
@@ -60,10 +57,10 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) 
     <div className="relative bg-primary text-primary-foreground p-3 text-center text-sm flex items-center justify-center overflow-hidden">
       <p className="flex-grow">
         {typedMessage}
-        {typedMessage.length === message.length && ( // Only show link after typing is complete
+        {typedMessage.length === message.length && (
           <>
             {" "}
-            <Link to="/onboarding" className="underline font-semibold hover:opacity-80"> {/* NEW: Link to /onboarding */}
+            <Link to="/onboarding" className="underline font-semibold hover:opacity-80">
               {linkText}
             </Link>
           </>

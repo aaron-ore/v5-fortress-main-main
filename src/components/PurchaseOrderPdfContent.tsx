@@ -1,7 +1,9 @@
 import React from "react";
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
+import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
 
 interface POItem {
   id: number;
@@ -14,19 +16,16 @@ interface PurchaseOrderPdfContentProps {
   poNumber: string;
   poDate: string;
   supplierName: string;
-  supplierEmail?: string; // New: Supplier Email
+  supplierEmail?: string;
   supplierAddress: string;
-  supplierContact: string; // This will be used for phone if email is separate
-  // REMOVED: recipientName: string; // This is your company's name
-  // REMOVED: recipientAddress: string; // This is your company's address
-  // REMOVED: recipientContact: string; // This is your company's contact (e.g., email)
-  terms: string; // New: Payment Terms
-  dueDate: string; // New: Due Date
+  supplierContact: string;
+  terms: string;
+  dueDate: string;
   items: POItem[];
   notes: string;
-  taxRate: number; // New: Tax Rate (e.g., 0.05 for 5%)
-  companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
-  poQrCodeSvg?: string; // NEW: Add QR code SVG prop
+  taxRate: number;
+  companyLogoUrl?: string;
+  poQrCodeSvg?: string;
 }
 
 const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
@@ -36,18 +35,15 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
   supplierEmail,
   supplierAddress,
   supplierContact,
-  // REMOVED: recipientName,
-  // REMOVED: recipientAddress,
-  // REMOVED: recipientContact,
   terms,
   dueDate,
   items,
   notes,
   taxRate,
-  companyLogoUrl, // Keep this prop for now, as it's passed explicitly
-  poQrCodeSvg, // NEW: Destructure QR code SVG
+  companyLogoUrl,
+  poQrCodeSvg,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { profile } = useProfile();
 
   if (!profile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
@@ -61,14 +57,13 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
   const dueDateObj = parseAndValidateDate(dueDate);
 
   return (
-    <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]"> {/* Changed padding to 20mm */}
+    <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyLogoUrl ? ( // Use profile.companyLogoUrl
+          {profile.companyLogoUrl ? (
             <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            // Removed "YOUR LOGO" placeholder
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
@@ -78,7 +73,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <div className="text-right">
           <p className="text-sm font-semibold">DATE: {poDateObj && isValid(poDateObj) ? format(poDateObj, "MMM dd, yyyy") : "N/A"}</p>
           <p className="text-sm font-semibold">PO: {poNumber}</p>
-          {poQrCodeSvg && ( // NEW: Display QR code here
+          {poQrCodeSvg && (
             <div className="mt-2 flex justify-end p-2 bg-white">
               <div dangerouslySetInnerHTML={{ __html: poQrCodeSvg }} className="w-[20mm] h-[20mm] object-contain" />
             </div>
@@ -91,10 +86,10 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">FROM:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p className="font-semibold">{profile.companyName || "Your Company"}</p> {/* NEW: Use from profile */}
-            <p>{profile.companyCurrency || "N/A"}</p> {/* NEW: Use from profile */}
-            <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* NEW: Use from profile */}
-            <p>{profile.companyAddress?.split('\n')[1] || ""}</p> {/* NEW: Use from profile */}
+            <p className="font-semibold">{profile.companyName || "Your Company"}</p>
+            <p>{profile.companyCurrency || "N/A"}</p>
+            <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p>
+            <p>{profile.companyAddress?.split('\n')[1] || ""}</p>
           </div>
         </div>
         <div>
@@ -143,7 +138,6 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
               <td className="py-2 px-4 text-right">${(item.quantity * item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
-          {/* Add empty rows to fill space if needed, similar to the screenshot */}
           {Array.from({ length: Math.max(0, 10 - items.length) }).map((_, i) => (
             <tr key={`empty-${i}`} className="border-b border-gray-200">
               <td className="py-2 px-4 border-r border-gray-200">&nbsp;</td>
@@ -181,7 +175,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
 
         {/* Right side: Totals Summary */}
         <div className="flex flex-col items-end">
-          <div className="w-full max-w-xs"> {/* Constrain width for totals block */}
+          <div className="w-full max-w-xs">
             <div className="flex justify-between py-1">
               <span className="font-bold">Subtotal</span>
               <span>${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -200,7 +194,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
 
       {/* Footer */}
       <div className="text-xs text-gray-500 mt-12 text-right">
-        <p>eForms.com</p> {/* Placeholder from screenshot */}
+        <p>eForms.com</p>
       </div>
     </div>
   );

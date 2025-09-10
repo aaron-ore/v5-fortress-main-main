@@ -18,12 +18,12 @@ import { Switch } from "@/components/ui/switch";
 import { Zap, AlertTriangle, BellRing, Package, Receipt, UserRound, MapPin, DollarSign, Repeat } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { useInventory } from "@/context/InventoryContext"; // NEW: Import InventoryContext
-import { useOrders } from "@/context/OrdersContext"; // NEW: Import OrdersContext
-import { useCategories } from "@/context/CategoryContext"; // NEW: Import CategoryContext
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import OnboardingContext
-import { useVendors } from "@/context/VendorContext"; // NEW: Import VendorContext
-import { useCustomers } from "@/context/CustomerContext"; // NEW: Import CustomerContext
+import { useInventory } from "@/context/InventoryContext";
+import { useOrders } from "@/context/OrdersContext";
+import { useCategories } from "@/context/CategoryContext";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { useVendors } from "@/context/VendorContext";
+import { useCustomers } from "@/context/CustomerContext";
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -33,30 +33,28 @@ interface AutomationRuleDialogProps {
 
 const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onClose, ruleToEdit }) => {
   const { addRule, updateRule } = useAutomation();
-  const { inventoryItems } = useInventory(); // For item selection in conditions/actions
-  const { orders } = useOrders(); // For order selection in conditions/actions
-  const { categories } = useCategories(); // For category selection in conditions
-  const { locations } = useOnboarding(); // For location selection in conditions
-  const { vendors } = useVendors(); // For vendor selection in actions
-  const { customers } = useCustomers(); // For customer selection in conditions
+  const { inventoryItems } = useInventory();
+  const { orders } = useOrders();
+  const { categories } = useCategories();
+  const { locations } = useOnboarding();
+  const { vendors } = useVendors();
+  const { customers } = useCustomers();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [triggerType, setTriggerType] = useState<AutomationRule['triggerType']>("ON_STOCK_LEVEL_CHANGE");
 
-  // Condition states (dynamic based on triggerType)
-  const [conditionField, setConditionField] = useState(""); // e.g., 'quantity', 'status', 'category'
-  const [conditionOperator, setConditionOperator] = useState(""); // e.g., 'lt', 'eq', 'gt'
-  const [conditionValue, setConditionValue] = useState(""); // number or string
-  const [conditionOldStatus, setConditionOldStatus] = useState(""); // For ON_ORDER_STATUS_CHANGE
-  const [conditionNewStatus, setConditionNewStatus] = useState(""); // For ON_ORDER_STATUS_CHANGE
-  const [conditionOrderType, setConditionOrderType] = useState(""); // For ON_ORDER_STATUS_CHANGE
+  const [conditionField, setConditionField] = useState("");
+  const [conditionOperator, setConditionOperator] = useState("");
+  const [conditionValue, setConditionValue] = useState("");
+  const [conditionOldStatus, setConditionOldStatus] = useState("");
+  const [conditionNewStatus, setConditionNewStatus] = useState("");
+  const [conditionOrderType, setConditionOrderType] = useState("");
 
-  // Action states (dynamic based on actionType)
   const [actionType, setActionType] = useState("SEND_NOTIFICATION");
   const [actionNotificationMessage, setActionNotificationMessage] = useState("");
-  const [actionEmailTo, setActionEmailTo] = useState(""); // 'admin', 'manager', 'email@example.com'
+  const [actionEmailTo, setActionEmailTo] = useState("");
   const [actionEmailSubject, setActionEmailSubject] = useState("");
   const [actionEmailBody, setActionEmailBody] = useState("");
   const [actionCreatePoItemId, setActionCreatePoItemId] = useState("");
@@ -73,7 +71,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         setIsActive(ruleToEdit.isActive);
         setTriggerType(ruleToEdit.triggerType);
 
-        // Populate condition states
         if (ruleToEdit.triggerType === "ON_STOCK_LEVEL_CHANGE") {
           setConditionField(ruleToEdit.conditionJson?.field || "");
           setConditionOperator(ruleToEdit.conditionJson?.operator || "");
@@ -95,7 +92,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           setConditionOrderType("");
         }
 
-        // Populate action states
         if (ruleToEdit.actionJson?.type === "SEND_NOTIFICATION") {
           setActionType("SEND_NOTIFICATION");
           setActionNotificationMessage(ruleToEdit.actionJson.message);
@@ -118,7 +114,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           setActionCreatePoQuantity("");
         }
       } else {
-        // Reset form for new rule
         setName("");
         setDescription("");
         setIsActive(true);
@@ -149,7 +144,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
     let conditionJson: any = null;
     let actionJson: any = null;
 
-    // --- Build Condition JSON based on trigger type ---
     if (triggerType === "ON_STOCK_LEVEL_CHANGE") {
       if (!conditionField || !conditionOperator || !conditionValue) {
         showError("Please define a complete condition for Stock Level Change.");
@@ -167,7 +161,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
       }
       conditionJson = {
         orderType: conditionOrderType,
-        oldStatus: conditionOldStatus || "any", // 'any' means it doesn't matter what the old status was
+        oldStatus: conditionOldStatus || "any",
         newStatus: conditionNewStatus,
       };
     } else if (triggerType === "ON_NEW_INVENTORY_ITEM") {
@@ -181,9 +175,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         value: ["unitCost", "retailPrice"].includes(conditionField) ? parseFloat(conditionValue) : conditionValue,
       };
     }
-    // Add other trigger conditions here
 
-    // --- Build Action JSON based on action type ---
     if (actionType === "SEND_NOTIFICATION") {
       if (!actionNotificationMessage.trim()) {
         showError("Notification message is required for the 'Send Notification' action.");
@@ -216,7 +208,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         quantity: quantity,
       };
     }
-    // Add other action types here
 
     const ruleData: Omit<AutomationRule, "id" | "organizationId" | "userId" | "createdAt"> = {
       name: name.trim(),
@@ -407,7 +398,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             )}
           </>
         );
-      // Add other trigger condition renderings here
       default:
         return <p className="text-muted-foreground text-sm">Select a trigger to define conditions.</p>;
     }
@@ -446,7 +436,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               {actionEmailTo === "custom" && (
                 <Input
                   type="email"
-                  value={actionEmailTo.includes('@') ? actionEmailTo : ''} // Clear if not a valid email
+                  value={actionEmailTo.includes('@') ? actionEmailTo : ''}
                   onChange={(e) => setActionEmailTo(e.target.value)}
                   placeholder="e.g., alerts@yourcompany.com"
                   className="mt-2"
@@ -506,7 +496,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             </div>
           </>
         );
-      // Add other action renderings here
       default:
         return <p className="text-muted-foreground text-sm">Select an action type.</p>;
     }
@@ -552,7 +541,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             />
           </div>
 
-          {/* Trigger Definition */}
           <div className="space-y-2 border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" /> Trigger (When...)
@@ -564,12 +552,10 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 <SelectItem value="ON_STOCK_LEVEL_CHANGE">On Stock Level Change</SelectItem>
                 <SelectItem value="ON_ORDER_STATUS_CHANGE">On Order Status Change</SelectItem>
                 <SelectItem value="ON_NEW_INVENTORY_ITEM">On New Inventory Item</SelectItem>
-                {/* Add other trigger types here */}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Condition Definition (Dynamic based on trigger) */}
           <div className="space-y-2 border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Package className="h-5 w-5 text-blue-500" /> Condition (If...)
@@ -577,7 +563,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             {renderConditionFields()}
           </div>
 
-          {/* Action Definition (Dynamic based on action type) */}
           <div className="space-y-2 border-t border-border pt-4 mt-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <BellRing className="h-5 w-5 text-green-500" /> Action (Then...)
@@ -589,7 +574,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 <SelectItem value="SEND_NOTIFICATION">Send In-App Notification</SelectItem>
                 <SelectItem value="SEND_EMAIL">Send Email</SelectItem>
                 <SelectItem value="CREATE_PURCHASE_ORDER">Create Purchase Order</SelectItem>
-                {/* Add other action types here */}
               </SelectContent>
             </Select>
             {renderActionFields()}

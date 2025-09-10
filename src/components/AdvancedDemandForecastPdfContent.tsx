@@ -1,9 +1,11 @@
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
+import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
 
 interface ForecastDataPoint {
-  name: string; // Month name
+  name: string;
   "Historical Demand": number;
   "Forecasted Demand": number;
   "Upper Confidence": number;
@@ -12,19 +14,19 @@ interface ForecastDataPoint {
 }
 
 interface AdvancedDemandForecastPdfContentProps {
-  companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl?: string;
   reportDate: string;
   forecastData: ForecastDataPoint[];
   selectedItemName: string;
 }
 
 const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfContentProps> = ({
-  companyLogoUrl, // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl,
   reportDate,
   forecastData,
   selectedItemName,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { profile } = useProfile();
   const reportDateObj = parseAndValidateDate(reportDate);
 
   if (!profile) {
@@ -36,10 +38,9 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyLogoUrl ? ( // Use profile.companyLogoUrl
+          {profile.companyLogoUrl ? (
             <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            // Removed "YOUR LOGO" placeholder
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
@@ -58,10 +59,10 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyName || "Your Company"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyCurrency || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[1] || ""}</p> {/* NEW: Use from profile */}
+          <p className="font-semibold">{profile.companyName || "Your Company"}</p>
+          <p>{profile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

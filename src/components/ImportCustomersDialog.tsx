@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react"; // Re-added React
 import {
   Dialog,
   DialogContent,
@@ -40,12 +40,12 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Default action for duplicates
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip");
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
-    const map = new Map<string, Customer>(); // Key by name
-    const emailMap = new Map<string, Customer>(); // Key by email for additional check
+    const map = new Map<string, Customer>();
+    const emailMap = new Map<string, Customer>();
     customers.forEach(customer => {
       map.set(customer.name.toLowerCase(), customer);
       if (customer.email) {
@@ -55,7 +55,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
     return { nameMap: map, emailMap: emailMap };
   }, [customers]);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null);
@@ -80,7 +79,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
     }
   };
 
-  // Main processing function, now accepts duplicateAction
   const processCsvData = async (data: any[], actionForDuplicates: "skip" | "update") => {
     setIsUploading(true);
     let successCount = 0;
@@ -95,7 +93,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       const contactPerson = String(row.contactPerson || '').trim();
       const notes = String(row.notes || '').trim();
 
-      // Basic validation for required fields
       if (!name) {
         errors.push(`Row: Missing Customer Name. Cannot import customer.`);
         errorCount++;
@@ -131,7 +128,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
               errors.push(`Failed to update customer '${name}': ${updateError.message || 'Unknown error'}.`);
               errorCount++;
             }
-            continue; // Move to next row after processing duplicate
+            continue;
           } else {
             errors.push(`Customer '${name}': Not found for update, despite being marked as duplicate.`);
             errorCount++;
@@ -140,7 +137,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         }
       }
 
-      // If not a duplicate, or duplicate but not handled by specific action, add as new customer
       try {
         const newCustomerData = {
           name: name,
@@ -204,11 +200,10 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
           return;
         }
 
-        setJsonDataToProcess(jsonData); // Store data for later processing
+        setJsonDataToProcess(jsonData);
 
-        // Check for duplicate customers
         const duplicates: CsvDuplicateCustomer[] = [];
-        const seenDuplicates = new Set<string>(); // To avoid adding same duplicate multiple times
+        const seenDuplicates = new Set<string>();
 
         jsonData.forEach(row => {
           const name = String(row.name || '').trim();
@@ -230,16 +225,13 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
           setDuplicateCustomersInCsv(duplicates);
           setIsDuplicateCustomersWarningDialogOpen(true);
         } else {
-          // If no duplicates, proceed directly to processing
-          await processCsvData(jsonData, "skip"); // Default to skip if no duplicates
+          await processCsvData(jsonData, "skip");
         }
 
       } catch (parseError: any) {
         showError(`Error parsing CSV file: ${parseError.message}`);
         console.error("CSV Parse Error:", parseError);
       } finally {
-        // setIsUploading(false); // Keep loading true if dialogs are open
-        // setSelectedFile(null); // Keep file selected until final processing
       }
     };
 
@@ -270,7 +262,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
     }
   };
 
-  // Handlers for Duplicate Customers Warning Dialog
   const handleSkipAllDuplicates = async () => {
     setIsDuplicateCustomersWarningDialogOpen(false);
     if (jsonDataToProcess) {
@@ -348,7 +339,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         </DialogFooter>
       </DialogContent>
 
-      {/* Duplicate Customers Warning Dialog */}
       <DuplicateCustomersWarningDialog
         isOpen={isDuplicateCustomersWarningDialogOpen}
         onClose={handleCancelDuplicateWarning}

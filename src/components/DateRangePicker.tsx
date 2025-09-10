@@ -1,5 +1,5 @@
-import { useState } from "react"; // Keep useState if needed for internal component state
-import { format, isValid, startOfDay, endOfDay, subDays } from "date-fns"; // NEW: Import subDays
+import React, { useState } from "react";
+import { format, isValid, startOfDay, endOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange, SelectRangeEventHandler } from "react-day-picker";
 
@@ -26,7 +26,6 @@ export function DateRangePicker({
   const isMobile = useIsMobile();
 
   const handleSelect: SelectRangeEventHandler = (range, selectedDay, activeModifiers, e) => {
-    // Ensure that the selected dates are valid before passing them on
     const from = range?.from && isValid(range.from) ? startOfDay(range.from) : undefined;
     const to = range?.to && isValid(range.to) ? endOfDay(range.to) : undefined;
     onSelect({ from, to }, selectedDay, activeModifiers, e);
@@ -63,7 +62,7 @@ export function DateRangePicker({
     <Calendar
       initialFocus
       mode="range"
-      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()} // Default to current date if invalid
+      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()}
       selected={dateRange}
       onSelect={handleSelect}
       numberOfMonths={isMobile ? 1 : 2}
@@ -77,13 +76,13 @@ export function DateRangePicker({
       variant={"outline"}
       className={cn(
         "w-full justify-start text-left font-normal",
-        !dateRange?.from && "text-muted-foreground", // Check for from property
+        !dateRange?.from && "text-muted-foreground",
         className
       )}
     >
       <CalendarIcon className="mr-2 h-4 w-4" />
-      {dateRange?.from && isValid(dateRange.from) ? ( // Explicitly check isValid
-        dateRange.to && isValid(dateRange.to) ? ( // Explicitly check isValid
+      {dateRange?.from && isValid(dateRange.from) ? (
+        dateRange.to && isValid(dateRange.to) ? (
           <>
             {format(dateRange.from, "LLL dd, y")} -{" "}
             {format(dateRange.to, "LLL dd, y")}

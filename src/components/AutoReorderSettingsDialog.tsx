@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
-import { Repeat } from "lucide-react";
+import { Repeat } from "lucide-react"; // Restored Repeat icon
 
 interface AutoReorderSettingsDialogProps {
   isOpen: boolean;
@@ -32,20 +32,19 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
     }
     return true;
   });
-  const [enableAutoReorder, setEnableAutoReorder] = useState<boolean>(() => { // NEW: State for global auto-reorder
+  const [enableAutoReorder, setEnableAutoReorder] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("enableAutoReorder") === "true";
     }
-    return false; // Default to false
+    return false;
   });
 
   useEffect(() => {
     if (isOpen) {
-      // Load settings when dialog opens
       if (typeof window !== 'undefined') {
         setDefaultReorderLevel(localStorage.getItem("autoReorderDefaultLevel") || "10");
         setEnableAutoReorderNotifications(localStorage.getItem("enableAutoReorderNotifications") === "true");
-        setEnableAutoReorder(localStorage.getItem("enableAutoReorder") === "true"); // Load new setting
+        setEnableAutoReorder(localStorage.getItem("enableAutoReorder") === "true");
       }
     }
   }, [isOpen]);
@@ -60,7 +59,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
     if (typeof window !== 'undefined') {
       localStorage.setItem("autoReorderDefaultLevel", defaultReorderLevel);
       localStorage.setItem("enableAutoReorderNotifications", String(enableAutoReorderNotifications));
-      localStorage.setItem("enableAutoReorder", String(enableAutoReorder)); // Save new setting
+      localStorage.setItem("enableAutoReorder", String(enableAutoReorder));
     }
     showSuccess("Auto-reorder settings saved successfully!");
     onClose();

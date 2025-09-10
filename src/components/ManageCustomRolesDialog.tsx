@@ -39,7 +39,7 @@ interface CustomRole {
   id: string;
   name: string;
   description: string;
-  features: string[]; // Array of feature names
+  features: string[];
 }
 
 const initialMockRoles: CustomRole[] = [
@@ -94,13 +94,11 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   useEffect(() => {
     if (!isAddEditRoleDialogOpen) {
-      // Reset form when add/edit dialog closes
       setNewRoleName("");
       setNewRoleDescription("");
       setSelectedFeatures(new Set());
       setRoleToEdit(null);
     } else if (roleToEdit) {
-      // Populate form if editing
       setNewRoleName(roleToEdit.name);
       setNewRoleDescription(roleToEdit.description);
       setSelectedFeatures(new Set(roleToEdit.features));
@@ -126,7 +124,6 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
     }
 
     if (roleToEdit) {
-      // Edit existing role
       setRoles(prev => prev.map(role =>
         role.id === roleToEdit.id
           ? { ...role, name: newRoleName.trim(), description: newRoleDescription.trim(), features: Array.from(selectedFeatures) }
@@ -134,7 +131,6 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
       ));
       showSuccess(`Role "${newRoleName.trim()}" updated.`);
     } else {
-      // Add new role
       const newId = `role-${Date.now()}`;
       setRoles(prev => [
         ...prev,
@@ -222,7 +218,6 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Add/Edit Role Dialog */}
       <Dialog open={isAddEditRoleDialogOpen} onOpenChange={setIsAddEditRoleDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -280,14 +275,13 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Confirm Delete Dialog */}
-      {roleToDelete && (
+      {ruleToDelete && (
         <ConfirmDialog
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteRole}
           title="Confirm Role Deletion"
-          description={`Are you sure you want to delete the custom role "${roleToDelete.name}"? This action cannot be undone.`}
+          description={`Are you sure you want to delete the automation rule "${ruleToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
           cancelText="Cancel"
         />

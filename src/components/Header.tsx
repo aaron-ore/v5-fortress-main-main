@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, LogOut, Flag } from "lucide-react";
@@ -23,11 +23,11 @@ import { userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } from "@
 interface HeaderProps {
   setIsNotificationSheetOpen: (isOpen: boolean) => void;
   setIsGlobalSearchDialogOpen: (isOpen: boolean) => void;
-  setIsFeedbackDialogOpen: (isOpen: boolean) => void; // NEW: Add setIsFeedbackDialogOpen prop
-  className?: string; // NEW: Add className prop
+  setIsFeedbackDialogOpen: (isOpen: boolean) => void;
+  className?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobalSearchDialogOpen, setIsFeedbackDialogOpen, className }) => { // NEW: Destructure className
+const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobalSearchDialogOpen, setIsFeedbackDialogOpen, className }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
@@ -35,11 +35,8 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {
-    // Changed to perform a local logout
-    const { error } = await supabase.auth.signOut({ scope: 'local' }); 
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
-      // If the error is specifically "Auth session missing", it means they are effectively logged out.
-      // Treat it as a success for the user experience.
       if (error.message.includes("Auth session missing")) {
         showSuccess("Logged out successfully!");
       } else {
@@ -48,7 +45,6 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
     } else {
       showSuccess("Logged out successfully!");
     }
-    // Navigation to /auth is handled by App.tsx's onAuthStateChange listener
   };
 
   const renderDropdownItems = (items: NavItem[]) => (
@@ -74,11 +70,11 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
 
   if (isMobile) {
     return (
-      <header className={cn("bg-card border-b border-border px-4 py-3 flex items-center justify-between h-[60px] flex-shrink-0", className)}> {/* NEW: Apply className */}
+      <header className={cn("bg-card border-b border-border px-4 py-3 flex items-center justify-between h-[60px] flex-shrink-0", className)}>
         <div className="flex items-center space-x-4">
           <MobileNav />
           <div className="flex items-center space-x-2">
-            {profile?.companyLogoUrl ? ( // NEW: Display company logo if available
+            {profile?.companyLogoUrl ? (
               <img src={profile.companyLogoUrl} alt="Company Logo" className="h-6 w-auto object-contain" />
             ) : (
               <svg
@@ -129,10 +125,9 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
 
   // Desktop Header
   return (
-    <header className={cn("bg-card rounded-lg shadow-sm p-4 flex items-center justify-between h-[80px] flex-shrink-0", className)}> {/* NEW: Apply className */}
+    <header className={cn("bg-card rounded-lg shadow-sm p-4 flex items-center justify-between h-[80px] flex-shrink-0", className)}>
       <div className="flex items-center space-x-4 flex-grow">
-        {/* Company Name where search bar used to be */}
-        {profile?.companyLogoUrl ? ( // NEW: Display company logo if available
+        {profile?.companyLogoUrl ? (
           <img src={profile.companyLogoUrl} alt="Company Logo" className="h-8 w-auto object-contain" />
         ) : (
           <h2 className="text-2xl font-bold text-foreground truncate max-w-xs">
@@ -142,12 +137,11 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
       </div>
 
       <div className="flex items-center space-x-4">
-        <CurrentDateTime /> {/* Date/Time on desktop header */}
-        {/* Search icon moved next to time */}
+        <CurrentDateTime />
         <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)}>
           <Search className="h-5 w-5 text-muted-foreground" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => setIsFeedbackDialogOpen(true)}> {/* NEW: Make Flag button open FeedbackDialog */}
+        <Button variant="ghost" size="icon" onClick={() => setIsFeedbackDialogOpen(true)}>
           <Flag className="h-5 w-5 text-muted-foreground" />
         </Button>
         <Button
@@ -170,7 +164,6 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
             >
               <User className="h-5 w-5 mr-3" />
               <span className="truncate">{profile?.fullName || "My Profile"}</span>
-              {/* Removed MoreVertical icon */}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end">
