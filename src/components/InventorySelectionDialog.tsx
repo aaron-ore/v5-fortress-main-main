@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Package } from "lucide-react";
+import { Package } from "lucide-react";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { showSuccess } from "@/utils/toast";
 import { useOnboarding } from "@/context/OnboardingContext";

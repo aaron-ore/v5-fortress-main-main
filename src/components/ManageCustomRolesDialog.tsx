@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Edit, Trash2, Settings, Copy } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Settings } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -272,7 +272,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
               {roleToEdit ? "Save Changes" : "Create Role"}
             </Button>
           </DialogFooter>
-        </DialogContent>
+        </DialogFooter>
       </Dialog>
 
       {roleToDelete && (

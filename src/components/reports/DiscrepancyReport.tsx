@@ -44,7 +44,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
   reportContentRef,
 }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations
   const { companyProfile } = useOnboarding(); // NEW: Use useOnboarding for companyProfile
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "resolved">("all");
@@ -97,7 +97,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
       }));
       return fetchedDiscrepancies;
     }
-  }, [profile?.organizationId, statusFilter, dateRange]); // NEW: Added dateRange to dependencies
+  }, [profile?.organizationId, statusFilter, dateRange]);
 
   const generateReport = useCallback(async () => {
     if (!profile?.companyProfile) {
@@ -109,14 +109,14 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     await fetchAllProfiles(); // Ensure user profiles are loaded for names
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       discrepancies: itemsToDisplay,
       statusFilter,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
       allProfiles, // Pass all profiles to resolve user names in PDF
       structuredLocations, // NEW: Pass structuredLocations to resolve display names
     };
@@ -124,7 +124,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "discrepancy-report" });
     setReportGenerated(true);
-  }, [fetchDiscrepancies, statusFilter, onGenerateReport, allProfiles, fetchAllProfiles, dateRange, structuredLocations, profile]); // NEW: Added profile to dependencies
+  }, [fetchDiscrepancies, statusFilter, onGenerateReport, allProfiles, fetchAllProfiles, dateRange, structuredLocations, profile]);
 
   useEffect(() => {
     generateReport();
@@ -210,7 +210,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {itemsToDisplay.map((discrepancy) => {
+                  {itemsToDisplay.map((discrepancy: DiscrepancyLog) => {
                     const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                     return (
                       <TableRow key={discrepancy.id}>

@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download, Upload, Users } from "lucide-react";
+import { Download, Users } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError, showSuccess } from "@/utils/toast";

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   DndContext,
   closestCorners,
@@ -11,7 +11,7 @@ import {
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import KanbanColumn from "./KanbanColumn";
 import { OrderItem, useOrders } from "@/context/OrdersContext";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 
 interface KanbanBoardProps {
   onOrderClick: (order: OrderItem) => void;

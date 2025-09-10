@@ -1,5 +1,3 @@
-// src/App.tsx
-import React from "react"; // Re-added React
 import { Toaster as SonnerToaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

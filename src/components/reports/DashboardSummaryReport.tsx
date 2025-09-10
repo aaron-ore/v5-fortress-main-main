@@ -28,7 +28,6 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
 }) => {
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
-  const { companyProfile } = useOnboarding();
   const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -43,7 +42,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredInventory = inventoryItems.filter(item => {
+    const filteredInventory = inventoryItems.filter((item: InventoryItem) => {
       const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
       if (!itemLastUpdated) return false;
       if (filterFrom && filterTo) {
@@ -52,7 +51,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       return true;
     });
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order: OrderItem) => {
       const orderDate = parseAndValidateDate(order.date);
       if (!orderDate) return false;
       if (filterFrom && filterTo) {
@@ -61,14 +60,14 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       return true;
     });
 
-    const totalStockValue = filteredInventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    const totalUnitsOnHand = filteredInventory.reduce((sum, item) => sum + item.quantity, 0);
-    const lowStockItems = filteredInventory.filter(item => item.quantity <= item.reorderLevel);
-    const outOfStockItems = filteredInventory.filter(item => item.quantity === 0);
+    const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+    const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
+    const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
 
     const recentSalesOrders = filteredOrders
-      .filter(order => order.type === "Sales")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Sales")
+      .sort((a: OrderItem, b: OrderItem) => {
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB) return 0; // Handle null dates
@@ -77,8 +76,8 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       .slice(0, 5);
 
     const recentPurchaseOrders = filteredOrders
-      .filter(order => order.type === "Purchase")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Purchase")
+      .sort((a: OrderItem, b: OrderItem) => {
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB) return 0;
@@ -87,9 +86,9 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       .slice(0, 5);
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       totalStockValue,
@@ -98,13 +97,13 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       outOfStockItems,
       recentSalesOrders,
       recentPurchaseOrders,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "dashboard-summary" });
     setReportGenerated(true);
-  }, [inventoryItems, orders, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [inventoryItems, orders, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     // Regenerate report if dependencies change
@@ -185,7 +184,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentSalesOrders.map(order => (
+                  {recentSalesOrders.map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
@@ -217,7 +216,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentPurchaseOrders.map(order => (
+                  {recentPurchaseOrders.map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>

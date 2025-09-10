@@ -6,7 +6,7 @@ import { DateRange } from "react-day-picker";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, AlertTriangle, Package, MapPin, FileText } from "lucide-react";
+import { Loader2, AlertTriangle, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label"; // Added Label import
@@ -44,7 +44,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredItems = inventoryItems.filter(item => {
+    const filteredItems = inventoryItems.filter((item: InventoryItem) => {
       const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
       if (!itemLastUpdated || !isValid(itemLastUpdated)) return false; // Ensure valid date
       if (filterFrom && filterTo) {
@@ -56,29 +56,29 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
     let itemsToDisplay: InventoryItem[] = [];
 
     if (statusFilter === "low-stock") {
-      itemsToDisplay = filteredItems.filter(item => item.quantity > 0 && item.quantity <= item.reorderLevel);
+      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
     } else if (statusFilter === "out-of-stock") {
-      itemsToDisplay = filteredItems.filter(item => item.quantity === 0);
+      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity === 0);
     } else { // "all"
-      itemsToDisplay = filteredItems.filter(item => item.quantity <= item.reorderLevel);
+      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
     }
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       items: itemsToDisplay,
       statusFilter,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
       structuredLocations, // NEW: Pass structuredLocations to resolve display names
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "low-stock-report" });
     setReportGenerated(true);
-  }, [inventoryItems, structuredLocations, statusFilter, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [inventoryItems, structuredLocations, statusFilter, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -150,7 +150,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {itemsToDisplay.map((item) => (
+                  {itemsToDisplay.map((item: InventoryItem) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>
@@ -163,7 +163,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
               </Table>
             </ScrollArea>
           ) : (
-            <p className="text-center text-muted-foreground py-8">No items found for the selected criteria. Great job!</p>
+            <p className="text-center text-muted-foreground py-8">No items found for the selected criteria.</p>
           )}
         </CardContent>
       </Card>

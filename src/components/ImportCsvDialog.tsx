@@ -107,7 +107,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     }
   };
 
-  const invokeEdgeFunction = async (data: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => {
+  const invokeEdgeFunction = async (dataToProcess: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => {
     if (!profile?.organizationId || !profile?.id) {
       showError("User or organization not loaded. Cannot perform import.");
       setIsUploading(false);

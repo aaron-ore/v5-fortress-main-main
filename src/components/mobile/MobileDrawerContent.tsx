@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,10 @@ import { useProfile } from "@/context/ProfileContext";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface MobileDrawerContentProps {
-  onLinkClick: () => void; // Callback to close the sheet after navigation
+  onLinkClick: () => void;
 }
 
 const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }) => {
@@ -26,13 +26,11 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();
-  const { companyProfile } = useOnboarding(); // NEW: Get companyProfile
+  const {  } = useOnboarding();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut({ scope: 'local' }); // Changed to perform a local logout
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
-      // If the error is specifically "Auth session missing", it means they are effectively logged out.
-      // Treat it as a success for the user experience.
       if (error.message.includes("Auth session missing")) {
         showSuccess("Logged out successfully!");
       } else {
@@ -41,12 +39,11 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
     } else {
       showSuccess("Logged out successfully!");
     }
-    // Call onLinkClick to close the drawer, but let App.tsx handle navigation.
     onLinkClick();
   };
 
   const handleNavigation = (path: string) => {
-    onLinkClick(); // Close the sheet immediately
+    onLinkClick();
     navigate(path);
   };
 
@@ -57,7 +54,6 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
   const renderNavItems = useCallback((items: NavItem[], isSubItem = false) => (
     <div className={cn("space-y-1", isSubItem && "ml-4 border-l border-muted/30 pl-2")}>
       {items.map((item) => {
-        // Refined logic for active link detection
         const currentIsActive = item.href === "/"
           ? location.pathname === "/"
           : location.pathname.startsWith(item.href);
@@ -116,7 +112,7 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
         );
       })}
     </div>
-  ), [location.pathname, navigate, onLinkClick, unreadCount, profile]); // Dependencies for useCallback
+  ), [location.pathname, navigate, onLinkClick, unreadCount, profile]);
 
   return (
     <ScrollArea className="flex-grow py-4">

@@ -28,9 +28,8 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
   reportContentRef,
 }) => {
   const { stockMovements, fetchStockMovements } = useStockMovement();
-  const { companyProfile } = useOnboarding();
   const { allProfiles, fetchAllProfiles, profile } = useProfile(); // NEW: Use useProfile
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
@@ -48,7 +47,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredMovements = stockMovements.filter(movement => {
+    const filteredMovements = stockMovements.filter((movement: StockMovement) => {
       if (movementTypeFilter !== "all" && movement.type !== movementTypeFilter) {
         return false;
       }
@@ -61,13 +60,13 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     });
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       movements: filteredMovements,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
       allProfiles,
       structuredLocations, // NEW: Pass structuredLocations to resolve display names
     };
@@ -75,7 +74,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "inventory-movement-report" });
     setReportGenerated(true);
-  }, [stockMovements, movementTypeFilter, onGenerateReport, allProfiles, fetchStockMovements, fetchAllProfiles, dateRange, structuredLocations, profile]); // NEW: Added profile to dependencies
+  }, [stockMovements, movementTypeFilter, onGenerateReport, allProfiles, fetchStockMovements, fetchAllProfiles, dateRange, structuredLocations, profile]);
 
   useEffect(() => {
     generateReport();
@@ -160,7 +159,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {movementsToDisplay.map((movement) => {
+                  {movementsToDisplay.map((movement: StockMovement) => {
                     const movementTimestamp = parseAndValidateDate(movement.timestamp);
                     return (
                       <TableRow key={movement.id}>

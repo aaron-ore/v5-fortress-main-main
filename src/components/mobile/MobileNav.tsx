@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,15 +12,15 @@ import {
 import {
   Menu,
 } from "lucide-react";
-import MobileDrawerContent from "@/components/MobileDrawerContent"; // Import the new component
+import MobileDrawerContent from "@/components/MobileDrawerContent";
 
 const MobileNav: React.FC = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const navigate = useNavigate(); // NEW: Import useNavigate
+  const navigate = useNavigate();
 
-  const handleLogoClick = () => { // NEW: Handler for logo click
-    setIsSheetOpen(false); // Close the sheet
-    navigate("/"); // Navigate to dashboard
+  const handleLogoClick = () => {
+    setIsSheetOpen(false);
+    navigate("/");
   };
 
   return (
@@ -32,7 +32,7 @@ const MobileNav: React.FC = () => {
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] sm:w-[320px] flex flex-col">
         <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
-          <SheetTitle className="flex items-center space-x-2 cursor-pointer" onClick={handleLogoClick}> {/* NEW: Add onClick */}
+          <SheetTitle className="flex items-center space-x-2 cursor-pointer" onClick={handleLogoClick}>
             <svg
               width="24"
               height="24"
@@ -51,8 +51,8 @@ const MobileNav: React.FC = () => {
                 d="M12 2L2 12L12 22L22 12L12 2Z"
                 fill="currentColor"
                 fillOpacity="0.2"
-              />
-            </svg>
+            />
+          </svg>
             <span className="text-xl font-semibold text-foreground">Fortress</span>
           </SheetTitle>
         </SheetHeader>

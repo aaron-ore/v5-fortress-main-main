@@ -46,7 +46,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredItems = inventoryItems.filter(item => {
+    const filteredItems = inventoryItems.filter((item: InventoryItem) => {
       const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
       if (!itemLastUpdated || !isValid(itemLastUpdated)) return false; // Ensure valid date
       if (filterFrom && filterTo) {
@@ -61,7 +61,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
 
     if (groupBy === "category") {
       const categoryMap: { [key: string]: { totalValue: number; totalQuantity: number } } = {};
-      filteredItems.forEach(item => {
+      filteredItems.forEach((item: InventoryItem) => {
         if (!categoryMap[item.category]) {
           categoryMap[item.category] = { totalValue: 0, totalQuantity: 0 };
         }
@@ -77,7 +77,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
       })).sort((a, b) => b.totalValue - a.totalValue);
     } else { // groupBy === "location"
       const locationMap: { [key: string]: { totalValue: number; totalQuantity: number, displayName: string } } = {};
-      filteredItems.forEach(item => {
+      filteredItems.forEach((item: InventoryItem) => {
         // Use the fullLocationString as the key, but display the displayName if available
         const locationKey = item.location;
         const display = structuredLocations.find(loc => loc.fullLocationString === locationKey)?.displayName || locationKey;
@@ -98,22 +98,22 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
     }
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       groupedData,
       groupBy,
       totalOverallValue,
       totalOverallQuantity,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "inventory-valuation-report" });
     setReportGenerated(true);
-  }, [inventoryItems, categories, structuredLocations, groupBy, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [inventoryItems, categories, structuredLocations, groupBy, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -189,7 +189,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {groupedData.map((data, index) => (
+                  {groupedData.map((data: { name: string; totalValue: number; totalQuantity: number }, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.name}</TableCell>
                       <TableCell className="text-right">{data.totalQuantity.toLocaleString()}</TableCell>

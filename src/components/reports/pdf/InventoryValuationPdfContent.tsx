@@ -11,7 +11,6 @@ interface GroupedDataItem {
 }
 
 interface InventoryValuationPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   groupedData: GroupedDataItem[];
   groupBy: "category" | "location";
@@ -21,7 +20,6 @@ interface InventoryValuationPdfContentProps {
 }
 
 const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   groupedData,
   groupBy,
@@ -64,10 +62,10 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

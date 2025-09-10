@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
@@ -37,8 +37,6 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
 }) => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
-  const { categories } = useCategories();
-  const { companyProfile } = useOnboarding();
   const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -53,7 +51,7 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order: OrderItem) => {
       if (order.type !== "Sales") return false;
       const orderDate = parseAndValidateDate(order.date);
       if (!orderDate || !isValid(orderDate)) return false; // Ensure valid date
@@ -65,9 +63,9 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
 
     const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
 
-    filteredOrders.forEach(order => {
-      order.items.forEach(orderItem => {
-        const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+    filteredOrders.forEach((order: OrderItem) => {
+      order.items.forEach((orderItem: POItem) => {
+        const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
         const sku = inventoryItem?.sku || "N/A";
         const category = inventoryItem?.category || "Uncategorized";
         const productName = orderItem.itemName;
@@ -83,19 +81,19 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
     const productSales: ProductSalesData[] = Object.values(productSalesMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       productSales,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "sales-by-product-report" });
     setReportGenerated(true);
-  }, [orders, inventoryItems, categories, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [orders, inventoryItems, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -121,8 +119,8 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
   }
 
   const { productSales } = currentReportData;
-  const totalOverallRevenue = productSales.reduce((sum, data) => sum + data.totalRevenue, 0);
-  const totalOverallUnits = productSales.reduce((sum, data) => sum + data.unitsSold, 0);
+  const totalOverallRevenue = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.totalRevenue, 0);
+  const totalOverallUnits = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.unitsSold, 0);
 
   return (
     <div ref={reportContentRef} className="space-y-6">
@@ -165,7 +163,7 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {productSales.map((data, index) => (
+                  {productSales.map((data: ProductSalesData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.productName}</TableCell>
                       <TableCell>{data.sku}</TableCell>

@@ -62,7 +62,7 @@ export function DateRangePicker({
     <Calendar
       initialFocus
       mode="range"
-      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()}
+      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : undefined}
       selected={dateRange}
       onSelect={handleSelect}
       numberOfMonths={isMobile ? 1 : 2}

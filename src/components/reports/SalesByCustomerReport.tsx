@@ -33,7 +33,6 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
   reportContentRef,
 }) => {
   const { orders } = useOrders();
-  const { companyProfile } = useOnboarding();
   const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -48,7 +47,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order: OrderItem) => {
       if (order.type !== "Sales") return false;
       const orderDate = parseAndValidateDate(order.date);
       if (!orderDate || !isValid(orderDate)) return false; // Ensure valid date
@@ -60,7 +59,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
 
     const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: Date } } = {};
 
-    filteredOrders.forEach(order => {
+    filteredOrders.forEach((order: OrderItem) => {
       if (!customerSalesMap[order.customerSupplier]) {
         customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: new Date(0) };
       }
@@ -80,19 +79,19 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
     })).sort((a, b) => b.totalSales - a.totalSales);
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       customerSales,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "sales-by-customer-report" });
     setReportGenerated(true);
-  }, [orders, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [orders, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -118,8 +117,8 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
   }
 
   const { customerSales } = currentReportData;
-  const totalOverallSales = customerSales.reduce((sum, data) => sum + data.totalSales, 0);
-  const totalOverallItems = customerSales.reduce((sum, data) => sum + data.totalItems, 0);
+  const totalOverallSales = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalSales, 0);
+  const totalOverallItems = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalItems, 0);
 
   return (
     <div ref={reportContentRef} className="space-y-6">
@@ -161,7 +160,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customerSales.map((data, index) => (
+                  {customerSales.map((data: CustomerSalesData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.customerName}</TableCell>
                       <TableCell className="text-right">${data.totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>

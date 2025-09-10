@@ -10,8 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MapPin, Package, Search } from "lucide-react";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
+import { MapPin, Search } from "lucide-react";
+import { useInventory } from "@/context/InventoryContext";
 import { Input } from "@/components/ui/input";
 import { useOnboarding } from "@/context/OnboardingContext";
 

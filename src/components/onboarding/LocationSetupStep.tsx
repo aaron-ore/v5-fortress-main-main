@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useOnboarding, Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
-import { showSuccess, showError } from "@/utils/toast";
+import { showError } from "@/utils/toast";
 import { XCircle } from "lucide-react";
 import { parseLocationString, buildLocationString } from "@/utils/locationParser"; // NEW: Import location parsers
 

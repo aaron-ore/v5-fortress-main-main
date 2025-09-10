@@ -28,7 +28,6 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
   reportContentRef,
 }) => {
   const { orders } = useOrders();
-  const { companyProfile } = useOnboarding();
   const { profile } = useProfile(); // NEW: Use useProfile
 
   const [statusFilter, setStatusFilter] = useState<"all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived">("all");
@@ -44,7 +43,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order: OrderItem) => {
       if (order.type !== "Purchase") return false;
       if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
       const orderDate = parseAndValidateDate(order.date);
@@ -56,20 +55,20 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
     });
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       orders: filteredOrders,
       statusFilter,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "purchase-order-status-report" });
     setReportGenerated(true);
-  }, [orders, statusFilter, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [orders, statusFilter, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -96,7 +95,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
 
   const { orders: ordersToDisplay, statusFilter: currentStatusFilter } = currentReportData;
   const totalOrders = ordersToDisplay.length;
-  const totalAmount = ordersToDisplay.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalAmount = ordersToDisplay.reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
 
   return (
     <div ref={reportContentRef} className="space-y-6">
@@ -157,7 +156,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ordersToDisplay.map((order) => {
+                  {ordersToDisplay.map((order: OrderItem) => {
                     const orderDate = parseAndValidateDate(order.date);
                     const dueDate = parseAndValidateDate(order.dueDate);
                     return (

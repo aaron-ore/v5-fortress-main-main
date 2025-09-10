@@ -1,6 +1,5 @@
 import React from "react";
-import { format, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
+import { format } from "date-fns";
 import { Diamond } from "lucide-react";
 
 interface LocationLabelPdfContentProps {
@@ -24,8 +23,6 @@ const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPd
   pos,
   color,
   qrCodeSvg,
-  printDate,
-  locationString,
   className,
 }, ref) => {
   return (

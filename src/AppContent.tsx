@@ -1,4 +1,3 @@
-import React, { useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -130,8 +129,7 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { locations: structuredLocations } = useOnboarding();
-  const { companyProfile } = useOnboarding();
+  const {  } = useOnboarding(); // Removed unused destructured variables
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);

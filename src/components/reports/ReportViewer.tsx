@@ -41,7 +41,7 @@ const reportComponents: { [key: string]: React.ElementType } = {
 
 const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => { // NEW: Destructure dateRange
   const { initiatePrint } = usePrint();
-  const { companyProfile, locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
   const { profile } = useProfile();
 
   const [reportData, setReportData] = useState<any>(null);
@@ -82,7 +82,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
       showError("No report data to print. Please generate the report first.");
       return;
     }
-    if (!profile?.companyProfile) { // Corrected access
+    if (!profile?.companyProfile) {
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -90,19 +90,19 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
     // Each report component will need to provide its specific PDF content props
     // This is a placeholder, actual implementation will be in individual report components
     const pdfProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress, // Corrected access
-      companyContact: profile.companyProfile.companyCurrency, // Corrected access
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Pass companyLogoUrl
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress,
+      companyContact: profile.companyProfile.companyCurrency,
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: new Date().toLocaleDateString(),
-      dateRange, // NEW: Pass dateRange to PDF props
-      structuredLocations, // NEW: Pass structuredLocations to PDF props
+      dateRange,
+      structuredLocations,
       ...reportData.pdfProps, // Specific props from the generated report
     };
 
     initiatePrint({ type: reportData.printType, props: pdfProps });
     showSuccess("Report sent to printer!");
-  }, [reportData, profile, initiatePrint, dateRange, structuredLocations]); // NEW: Add profile to dependencies
+  }, [reportData, profile, initiatePrint, dateRange, structuredLocations]);
 
   const handleSummarizeReport = async () => {
     if (!reportData) {
@@ -172,7 +172,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
         showError("Failed to get a summary from the AI. Please try again.");
       }
     } catch (error: any) {
-      console.error("Error generating summary:", error); // Changed log message
+      console.error("Error generating summary:", error);
       showError(`Error generating summary: ${error.message}`);
     } finally {
       setIsSummarizing(false);
@@ -200,15 +200,15 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
   }
 
   return (
-    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
+    <div className="flex flex-col flex-grow">
       {/* Removed Report Configuration Card as it's now in the parent Reports component */}
 
       <div className="flex-grow overflow-y-auto">
         <CurrentReportComponent
-          dateRange={dateRange} // NEW: Pass dateRange prop to child component
+          dateRange={dateRange}
           onGenerateReport={handleGenerateReport}
           isLoading={isLoadingReport}
-          reportContentRef={reportContentRef} // Pass ref to child component
+          reportContentRef={reportContentRef}
         />
       </div>
 

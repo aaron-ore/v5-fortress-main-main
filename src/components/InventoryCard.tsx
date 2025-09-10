@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { cn } from "@/lib/utils";
 
 interface InventoryCardProps {
   item: InventoryItem;

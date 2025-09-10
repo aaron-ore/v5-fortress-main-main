@@ -1,12 +1,10 @@
 import React from "react";
-import { format, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
+import { format, isValid } from "date-fns"; // Import isValid
+import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext";
-import { OrderItem } from "@/context/OrdersContext";
 
 interface ForecastDataPoint {
-  name: string;
+  name: string; // Month name
   "Historical Demand": number;
   "Forecasted Demand": number;
   "Upper Confidence": number;
@@ -15,14 +13,12 @@ interface ForecastDataPoint {
 }
 
 interface AdvancedDemandForecastPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   forecastData: ForecastDataPoint[];
   selectedItemName: string;
 }
 
 const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   forecastData,
   selectedItemName,

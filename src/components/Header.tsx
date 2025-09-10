@@ -28,7 +28,6 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobalSearchDialogOpen, setIsFeedbackDialogOpen, className }) => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();

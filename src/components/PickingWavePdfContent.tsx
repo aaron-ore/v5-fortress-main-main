@@ -2,8 +2,6 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext";
-import { OrderItem } from "@/context/OrdersContext";
 
 interface PickListItem {
   itemName: string;
@@ -13,7 +11,6 @@ interface PickListItem {
 }
 
 interface PickingWavePdfContentProps {
-  companyLogoUrl?: string;
   waveId: string;
   pickDate: string;
   ordersInWave: { id: string; customerSupplier: string; deliveryRoute?: string }[];
@@ -22,7 +19,6 @@ interface PickingWavePdfContentProps {
 }
 
 const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
-  companyLogoUrl,
   waveId,
   pickDate,
   ordersInWave,
@@ -61,10 +57,10 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">ISSUED BY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

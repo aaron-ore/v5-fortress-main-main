@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Printer, QrCode, Palette, Download, Save } from "lucide-react";
+import { Printer, Download, Save } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useOnboarding, Location } from "@/context/OnboardingContext";
@@ -11,7 +11,7 @@ import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
 import LocationLabelPdfContent from "@/components/LocationLabelPdfContent";
 import html2canvas from 'html2canvas';
-import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
+import { buildLocationString, getUniqueLocationParts, parseLocationString } from "@/utils/locationParser";
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [

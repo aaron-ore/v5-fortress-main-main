@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, DollarSign, BarChart, FileText } from "lucide-react"; // NEW: Import FileText
@@ -34,7 +34,6 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
 }) => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
-  const { companyProfile } = useOnboarding();
   const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -49,7 +48,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders.filter((order: OrderItem) => {
       if (order.type !== "Sales") return false;
       const orderDate = parseAndValidateDate(order.date);
       if (!orderDate || !isValid(orderDate)) return false; // Ensure valid date
@@ -62,10 +61,10 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
     let totalSalesRevenue = 0;
     let totalCostOfGoodsSold = 0;
 
-    filteredOrders.forEach(order => {
+    filteredOrders.forEach((order: OrderItem) => {
       totalSalesRevenue += order.totalAmount;
-      order.items.forEach(orderItem => {
-        const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+      order.items.forEach((orderItem: POItem) => {
+        const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
         if (inventoryItem) {
           totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
         } else {
@@ -90,21 +89,21 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
     ];
 
     const reportProps = {
-      companyName: profile.companyProfile.companyName, // Corrected access
-      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
-      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress || "N/A",
+      companyContact: profile.companyProfile.companyCurrency || "N/A",
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       metricsData,
       totalSalesRevenue,
       totalCostOfGoodsSold,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "profitability-report" });
     setReportGenerated(true);
-  }, [orders, inventoryItems, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
+  }, [orders, inventoryItems, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
     generateReport();
@@ -174,7 +173,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {metricsData.map((metric, index) => (
+                  {metricsData.map((metric: ProfitabilityMetricsData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{metric.name}</TableCell>
                       <TableCell className="text-right">{metric.value.toFixed(1)}%</TableCell>
