@@ -6,19 +6,19 @@ import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
 
 interface PurchaseOrderStatusPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   orders: OrderItem[];
   statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
   dateRange?: DateRange;
+  groupBy?: string; // Added groupBy prop
 }
 
 const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   orders,
   statusFilter,
   dateRange,
+  groupBy, // Destructure groupBy
 }) => {
   const { profile } = useProfile();
 

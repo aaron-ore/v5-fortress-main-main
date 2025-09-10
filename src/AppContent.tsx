@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react"; // Import useEffect and useRef
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";

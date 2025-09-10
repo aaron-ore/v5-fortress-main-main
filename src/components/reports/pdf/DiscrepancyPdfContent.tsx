@@ -23,7 +23,6 @@ interface DiscrepancyLog {
 }
 
 interface DiscrepancyPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   discrepancies: DiscrepancyLog[];
   statusFilter: "all" | "pending" | "resolved";
@@ -33,7 +32,6 @@ interface DiscrepancyPdfContentProps {
 }
 
 const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   discrepancies,
   statusFilter,

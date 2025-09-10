@@ -8,7 +8,6 @@ import { Location } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext";
 
 interface InventoryMovementPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   movements: StockMovement[];
   dateRange?: DateRange;
@@ -17,7 +16,6 @@ interface InventoryMovementPdfContentProps {
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   movements,
   dateRange,

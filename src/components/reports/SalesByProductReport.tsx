@@ -5,8 +5,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, Package, Receipt, BarChart, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";

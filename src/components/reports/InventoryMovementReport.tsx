@@ -170,7 +170,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                         <TableCell className="text-right">{movement.newQuantity}</TableCell>
                         <TableCell>{movement.reason}</TableCell>
                         <TableCell>{getUserName(movement.userId)}</TableCell>
-                        <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, HH:mm") : "N/A"}</TableCell>
+                        <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
                       </TableRow>
                     );
                   })}

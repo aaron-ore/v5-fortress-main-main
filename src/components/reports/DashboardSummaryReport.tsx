@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
+import { useInventory, InventoryItem } from "@/context/InventoryContext"; // Import InventoryItem
+import { useOrders, OrderItem } from "@/context/OrdersContext"; // Import OrderItem
 import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, Package, Receipt, AlertTriangle, DollarSign, FileText } from "lucide-react"; // Added FileText

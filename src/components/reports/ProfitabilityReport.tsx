@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, DollarSign, BarChart, FileText } from "lucide-react"; // NEW: Import FileText
 import { ScrollArea } from "@/components/ui/scroll-area";

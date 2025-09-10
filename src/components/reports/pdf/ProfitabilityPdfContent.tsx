@@ -11,21 +11,21 @@ interface ProfitabilityMetricsData {
 }
 
 interface ProfitabilityPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   metricsData: ProfitabilityMetricsData[];
   totalSalesRevenue: number;
   totalCostOfGoodsSold: number;
   dateRange?: DateRange;
+  groupBy: "category" | "product"; // Added groupBy prop
 }
 
 const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   metricsData,
   totalSalesRevenue,
   totalCostOfGoodsSold,
   dateRange,
+  groupBy, // Destructure groupBy
 }) => {
   const { profile } = useProfile();
 
@@ -52,6 +52,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             PROFITABILITY REPORT
           </h1>
+          <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
@@ -63,10 +64,10 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

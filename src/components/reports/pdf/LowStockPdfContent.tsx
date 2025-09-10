@@ -7,7 +7,6 @@ import { Location } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext";
 
 interface LowStockPdfContentProps {
-  companyLogoUrl?: string;
   reportDate: string;
   items: InventoryItem[];
   statusFilter: "all" | "low-stock" | "out-of-stock";
@@ -16,7 +15,6 @@ interface LowStockPdfContentProps {
 }
 
 const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
-  companyLogoUrl,
   reportDate,
   items,
   statusFilter,

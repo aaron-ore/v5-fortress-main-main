@@ -9,6 +9,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; // Import Input
+import { Label } from "@/components/ui/label"; // Import Label
 import {
   Search,
   Package,

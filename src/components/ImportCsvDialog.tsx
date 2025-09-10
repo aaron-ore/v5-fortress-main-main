@@ -403,13 +403,13 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         title="New Locations Detected"
         description={
           <div>
-            The following new inventory locations were found in your CSV:
+            <p>The following new inventory locations were found in your CSV:</p>
             <ul className="list-disc list-inside mt-2 ml-4 text-left">
               {newLocationsToConfirm.map((loc, _index) => (
                 <li key={_index} className="font-semibold">{loc}</li>
               ))}
             </ul>
-            Would you like to add these to your available locations? Items with these locations will only be imported if confirmed.
+            <p>Would you like to add these to your available locations? Items with these locations will only be imported if confirmed.</p>
           </div>
         }
         confirmText="Add Locations & Continue"
