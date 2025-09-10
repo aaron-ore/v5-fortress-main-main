@@ -11,6 +11,7 @@ import { Loader2, DollarSign, BarChart, FileText } from "lucide-react"; // NEW: 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // NEW: Import showError
 
 interface ProfitabilityMetricsData {
   name: string;
@@ -62,7 +63,6 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
     let totalCostOfGoodsSold = 0;
 
     filteredOrders.forEach(order => {
-      totalSalesRevenue += order.totalAmount;
       order.items.forEach(orderItem => {
         const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
         if (inventoryItem) {

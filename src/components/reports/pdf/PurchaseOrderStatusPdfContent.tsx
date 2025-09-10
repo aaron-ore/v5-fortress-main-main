@@ -79,7 +79,7 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Value of Orders:</span>
-              <span>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span
             </div>
           </div>
         </div>

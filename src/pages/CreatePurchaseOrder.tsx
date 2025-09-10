@@ -33,6 +33,7 @@ import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 import {
   DndContext,
@@ -144,6 +145,7 @@ const CreatePurchaseOrder: React.FC = () => {
   const { companyProfile } = useOnboarding();
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [poNumber, setPoNumber] = useState(""); // Removed initial generation, will be set after order creation
   const [supplierName, setSupplierName] = useState("");
@@ -270,7 +272,7 @@ const CreatePurchaseOrder: React.FC = () => {
       showError("Please fill in all required PO details before generating the PDF.");
       return;
     }
-    if (!companyProfile) {
+    if (!profile?.companyProfile) { // Corrected access
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -282,15 +284,15 @@ const CreatePurchaseOrder: React.FC = () => {
       supplierEmail: supplierEmail,
       supplierAddress: supplierAddress,
       supplierContact: supplierContact,
-      recipientName: companyProfile.name,
-      recipientAddress: companyProfile.address,
-      recipientContact: companyProfile.currency,
+      recipientName: profile.companyProfile.companyName, // Corrected access
+      recipientAddress: profile.companyProfile.companyAddress, // Corrected access
+      recipientContact: profile.companyProfile.companyCurrency, // Corrected access
       terms,
       dueDate,
       items,
       notes,
       taxRate,
-      companyLogoUrl: companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
       poQrCodeSvg: poQrCodeSvg, // Pass QR code SVG to PDF
     };
 

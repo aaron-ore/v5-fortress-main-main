@@ -11,7 +11,7 @@ import { Loader2, AlertTriangle, Scale, User, Clock, FileText } from "lucide-rea
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label"; // Added Label import
-import { showError } from "@/utils/toast";
+import { showError } from "@/utils/toast"; // NEW: Import showError
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 
 interface DiscrepancyLog {

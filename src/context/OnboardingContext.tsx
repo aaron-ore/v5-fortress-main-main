@@ -5,13 +5,12 @@ import { supabase } from "@/lib/supabaseClient";
 import { generateUniqueCode } from "@/utils/numberGenerator";
 import { parseLocationString } from "@/utils/locationParser";
 
-// Removed local CompanyProfile interface as it's now imported from ProfileContext
-// export interface CompanyProfile {
-//   name: string;
-//   currency: string;
-//   address: string;
-//   companyLogoUrl?: string;
-// }
+export interface CompanyProfile { // This local interface is now aligned with ProfileContext's CompanyProfile
+  name: string;
+  currency: string;
+  address: string;
+  companyLogoUrl?: string;
+}
 
 export interface Location {
   id: string;
@@ -33,7 +32,7 @@ interface OnboardingContextType {
   companyProfile: ProfileCompanyProfile | null; // Use the imported CompanyProfile type
   locations: Location[]; // Changed to Location[]
   markOnboardingComplete: () => void;
-  setCompanyProfile: (profile: ProfileCompanyProfile, uniqueCode?: string) => Promise<void>; // Use the imported CompanyProfile type
+  setCompanyProfile: (profile: CompanyProfile, uniqueCode?: string) => Promise<void>; // Use the local CompanyProfile type for input
   addLocation: (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">) => Promise<Location | null>; // Takes structured data, returns Location or null
   updateLocation: (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => Promise<void>; // Takes structured data
   removeLocation: (locationId: string) => Promise<void>; // Removes by ID
@@ -49,7 +48,7 @@ const getStoragePathFromUrl = (url: string): string | null => {
 };
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile } = useProfile(); // NEW: Get companyProfile from ProfileContext
+  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile: updateProfileCompanyProfileFromContext } = useProfile(); // NEW: Get companyProfile from ProfileContext
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("onboarding_skipped") === "true";
@@ -132,7 +131,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     showSuccess("Onboarding complete! Welcome to Fortress.");
   };
 
-  const setCompanyProfile = async (profileData: ProfileCompanyProfile, newUniqueCode?: string) => { // Add newUniqueCode parameter
+  const setCompanyProfile = async (profileData: CompanyProfile, newUniqueCode?: string) => { // Add newUniqueCode parameter
     console.log("[OnboardingContext] setCompanyProfile called with profileData:", profileData, "newUniqueCode:", newUniqueCode);
 
     if (!profile) { // Ensure profile is not null before proceeding

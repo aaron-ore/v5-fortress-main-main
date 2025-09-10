@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 import {
   DndContext,
@@ -145,6 +146,7 @@ const CreateInvoice: React.FC = () => {
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers(); // NEW: Use customers context
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null); // NEW: State for selected customer ID
@@ -288,7 +290,7 @@ const CreateInvoice: React.FC = () => {
       showError("Please fill in all required invoice details before generating the PDF.");
       return;
     }
-    if (!companyProfile) {
+    if (!profile?.companyProfile) { // Corrected access
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -300,15 +302,15 @@ const CreateInvoice: React.FC = () => {
       customerEmail,
       customerAddress,
       customerContact: customerContact.replace(/[^\d]/g, ''),
-      sellerName: companyProfile.name,
-      sellerAddress: companyProfile.address,
-      sellerContact: companyProfile.currency,
+      sellerName: profile.companyProfile.companyName, // Corrected access
+      sellerAddress: profile.companyProfile.companyAddress, // Corrected access
+      sellerContact: profile.companyProfile.companyCurrency, // Corrected access
       terms,
       dueDate,
       items,
       notes,
       taxRate,
-      companyLogoUrl: companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
       invoiceQrCodeSvg: invoiceQrCodeSvg, // Pass QR code SVG to PDF
     };
 

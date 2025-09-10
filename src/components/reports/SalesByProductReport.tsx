@@ -12,6 +12,7 @@ import { Loader2, Package, Receipt, BarChart, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // NEW: Import showError
 
 interface ProductSalesData {
   productName: string;

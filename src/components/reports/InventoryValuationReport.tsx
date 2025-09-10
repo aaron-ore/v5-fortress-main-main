@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"; // Added Label import
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // NEW: Import showError
 
 interface InventoryValuationReportProps {
   dateRange: DateRange | undefined; // NEW: dateRange prop
