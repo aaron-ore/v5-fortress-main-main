@@ -16,34 +16,32 @@ import { Link } from "react-router-dom";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 
 const Settings: React.FC = () => {
-  const { theme, setTheme } = useTheme(); // Current active theme from next-themes
-  const { profile, updateProfile, isLoadingProfile, fetchProfile, updateOrganizationTheme } = useProfile();
-  const { companyProfile, setCompanyProfile, locations, addLocation, removeLocation } = useOnboarding();
+  const { theme, setTheme } = useTheme();
+  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile, updateOrganizationTheme } = useProfile();
+  const { setCompanyProfile } = useOnboarding(); // Keep this for now, but will transition to updateCompanyProfile from ProfileContext
 
-  const [companyName, setCompanyName] = useState(profile?.companyName || ""); // Derived from profile
-  const [companyAddress, setCompanyAddress] = useState(profile?.companyAddress || ""); // Derived from profile
-  const [companyCurrency, setCompanyCurrency] = useState(profile?.companyCurrency || "USD"); // Derived from profile
+  const [companyName, setCompanyName] = useState(profile?.companyProfile?.companyName || "");
+  const [companyAddress, setCompanyAddress] = useState(profile?.companyProfile?.companyAddress || "");
+  const [companyCurrency, setCompanyCurrency] = useState(profile?.companyProfile?.companyCurrency || "USD");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
-  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyLogoUrl || ""); // Derived from profile
+  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyProfile?.companyLogoUrl || "");
   const [isSavingCompanyProfile, setIsSavingCompanyProfile] = useState(false);
-  const [organizationCodeInput, setOrganizationCodeInput] = useState(profile?.organizationCode || "");
+  const [organizationCodeInput, setOrganizationCodeInput] = useState(profile?.companyProfile?.organizationCode || "");
   const [isSavingOrganizationCode, setIsSavingOrganizationCode] = useState(false);
 
-  // NEW: State for theme selection
-  const [selectedTheme, setSelectedTheme] = useState(profile?.organizationTheme || "dark");
+  const [selectedTheme, setSelectedTheme] = useState(profile?.companyProfile?.organizationTheme || "dark");
   const [isSavingTheme, setIsSavingTheme] = useState(false);
 
   useEffect(() => {
-    if (profile) {
-      setCompanyName(profile.companyName || "");
-      setCompanyAddress(profile.companyAddress || "");
-      setCompanyCurrency(profile.companyCurrency || "USD");
-      setCompanyLogoUrlPreview(profile.companyLogoUrl || "");
-      setOrganizationCodeInput(profile.organizationCode || "");
-      // NEW: Update selectedTheme when profile.organizationTheme changes
-      setSelectedTheme(profile.organizationTheme || "dark");
+    if (profile?.companyProfile) {
+      setCompanyName(profile.companyProfile.companyName || "");
+      setCompanyAddress(profile.companyProfile.companyAddress || "");
+      setCompanyCurrency(profile.companyProfile.companyCurrency || "USD");
+      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || "");
+      setOrganizationCodeInput(profile.companyProfile.organizationCode || "");
+      setSelectedTheme(profile.companyProfile.organizationTheme || "dark");
     }
-  }, [profile]);
+  }, [profile?.companyProfile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -58,11 +56,11 @@ const Settings: React.FC = () => {
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
-        setCompanyLogoUrlPreview(profile?.companyLogoUrl || "");
+        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
       }
     } else {
       setCompanyLogoFile(null);
-      setCompanyLogoUrlPreview(profile?.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
     }
   };
 
@@ -81,27 +79,38 @@ const Settings: React.FC = () => {
     setIsSavingCompanyProfile(true);
     let finalCompanyLogoUrl = companyLogoUrlPreview;
 
-    if (companyLogoFile) {
+    if (imageFile) {
       try {
-        finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/');
+        setIsUploadingImage(true);
+        if (profile?.companyProfile?.companyLogoUrl) {
+          const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
+          if (oldFilePath) {
+            const { error: deleteError } = await supabase.storage.from('company-logos').remove([oldFilePath]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          }
+        }
+        finalCompanyLogoUrl = await uploadFileToSupabase(imageFile, 'company-logos', 'logos/');
         showSuccess("Company logo uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading company logo:", error);
         showError(`Failed to upload company logo: ${error.message}`);
         setIsSavingCompanyProfile(false);
+        setIsUploadingImage(false);
         return;
+      } finally {
+        setIsUploadingImage(false);
       }
     } else if (companyLogoUrlPreview === "") {
       finalCompanyLogoUrl = undefined;
     }
 
     try {
-      await setCompanyProfile({
-        name: companyName,
-        address: companyAddress,
-        currency: companyCurrency,
+      await updateCompanyProfile({
+        companyName: companyName,
+        companyAddress: companyAddress,
+        companyCurrency: companyCurrency,
         companyLogoUrl: finalCompanyLogoUrl,
-      }, organizationCodeInput);
+      }, organizationCodeInput); // Pass organizationCodeInput here
     } catch (error: any) {
       showError(`Failed to update company profile: ${error.message}`);
     } finally {
@@ -118,18 +127,15 @@ const Settings: React.FC = () => {
       showError("Organization Code cannot be empty.");
       return;
     }
-    if (organizationCodeInput === profile.organizationCode) {
+    if (organizationCodeInput === (profile?.companyProfile?.organizationCode || "")) {
       showSuccess("No changes to save for Organization Code.");
       return;
     }
 
     setIsSavingOrganizationCode(true);
     try {
-      await setCompanyProfile({
-        name: companyName,
-        address: companyAddress,
-        currency: companyCurrency,
-        companyLogoUrl: companyLogoUrlPreview || undefined,
+      await updateCompanyProfile({
+        organizationCode: organizationCodeInput.trim(),
       }, organizationCodeInput.trim());
     } catch (error: any) {
       showError(`Failed to update Organization Code: ${error.message}`);
@@ -138,20 +144,19 @@ const Settings: React.FC = () => {
     }
   };
 
-  // NEW: Handle saving theme
   const handleSaveTheme = async () => {
     if (!profile?.organizationId) {
       showError("Organization not found. Please set up your company profile first.");
       return;
     }
-    if (selectedTheme === (profile?.organizationTheme || "dark")) {
+    if (selectedTheme === (profile?.companyProfile?.organizationTheme || "dark")) {
       showSuccess("No changes to save for Theme.");
       return;
     }
     setIsSavingTheme(true);
     try {
       await updateOrganizationTheme(selectedTheme);
-      setTheme(selectedTheme); // Immediately apply theme to UI
+      setTheme(selectedTheme);
     } catch (error: any) {
       showError(`Failed to update theme: ${error.message}`);
     } finally {
@@ -160,14 +165,14 @@ const Settings: React.FC = () => {
   };
 
   const hasCompanyProfileChanges =
-    companyName !== (profile?.companyName || "") ||
-    companyAddress !== (profile?.companyAddress || "") ||
-    companyCurrency !== (profile?.companyCurrency || "USD") ||
-    companyLogoUrlPreview !== (profile?.companyLogoUrl || "") ||
+    companyName !== (profile?.companyProfile?.companyName || "") ||
+    companyAddress !== (profile?.companyProfile?.companyAddress || "") ||
+    companyCurrency !== (profile?.companyProfile?.companyCurrency || "USD") ||
+    companyLogoUrlPreview !== (profile?.companyProfile?.companyLogoUrl || "") ||
     companyLogoFile !== null;
 
-  const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.organizationCode || "");
-  const hasThemeChanges = selectedTheme !== (profile?.organizationTheme || "dark");
+  const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
+  const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
 
   const availableThemes = ['dark', 'ocean-breeze', 'sunset-glow', 'forest-whisper', 'emerald', 'deep-forest', 'natural-light'];
 
@@ -246,7 +251,6 @@ const Settings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* NEW: Theme Settings - only for admins */}
       {profile?.role === 'admin' && (
         <Card>
           <CardHeader>
@@ -281,7 +285,6 @@ const Settings: React.FC = () => {
         </Card>
       )}
 
-      {/* Organization Code Settings */}
       {profile?.role === 'admin' && profile?.organizationId && (
         <Card>
           <CardHeader>

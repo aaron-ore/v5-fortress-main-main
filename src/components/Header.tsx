@@ -74,8 +74,8 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
         <div className="flex items-center space-x-4">
           <MobileNav />
           <div className="flex items-center space-x-2">
-            {profile?.companyLogoUrl ? (
-              <img src={profile.companyLogoUrl} alt="Company Logo" className="h-6 w-auto object-contain" />
+            {profile?.companyProfile?.companyLogoUrl ? (
+              <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="h-6 w-auto object-contain" />
             ) : (
               <svg
                 width="24"
@@ -98,7 +98,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
                 />
               </svg>
             )}
-            <span className="text-xl font-semibold text-foreground">{profile?.companyName || "Fortress"}</span>
+            <span className="text-xl font-semibold text-foreground">{profile?.companyProfile?.companyName || "Fortress"}</span>
           </div>
         </div>
 
@@ -127,11 +127,11 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
   return (
     <header className={cn("bg-card rounded-lg shadow-sm p-4 flex items-center justify-between h-[80px] flex-shrink-0", className)}>
       <div className="flex items-center space-x-4 flex-grow">
-        {profile?.companyLogoUrl ? (
-          <img src={profile.companyLogoUrl} alt="Company Logo" className="h-8 w-auto object-contain" />
+        {profile?.companyProfile?.companyLogoUrl ? (
+          <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="h-8 w-auto object-contain" />
         ) : (
           <h2 className="text-2xl font-bold text-foreground truncate max-w-xs">
-            {profile?.companyName || "Fortress"}
+            {profile?.companyProfile?.companyName || "Fortress"}
           </h2>
         )}
       </div>

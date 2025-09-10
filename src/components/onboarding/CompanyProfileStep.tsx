@@ -7,40 +7,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
-import { Image as ImageIcon, Loader2, X } from "lucide-react"; // NEW: Import X icon
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Image as ImageIcon, Loader2, X } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext";
 
-export interface CompanyProfileStepProps { // Exported interface
+export interface CompanyProfileStepProps {
   onNext: () => void;
-  onBack?: () => void; // Added onBack prop
+  onBack?: () => void;
 }
 
 const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
-  const { companyProfile, setCompanyProfile } = useOnboarding();
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { setCompanyProfile } = useOnboarding();
+  const { profile } = useProfile();
 
-  const [companyName, setCompanyName] = useState(companyProfile?.name || "");
-  const [currency, setCurrency] = useState(companyProfile?.currency || "USD");
-  const [address, setAddress] = useState(companyProfile?.address || "");
+  const [companyName, setCompanyName] = useState(profile?.companyProfile?.companyName || "");
+  const [currency, setCurrency] = useState(profile?.companyProfile?.companyCurrency || "USD");
+  const [address, setAddress] = useState(profile?.companyProfile?.companyAddress || "");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
-  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(companyProfile?.companyLogoUrl || "");
+  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyProfile?.companyLogoUrl || "");
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
-    // Initialize state from companyProfile (derived from ProfileContext)
-    if (companyProfile) {
-      setCompanyName(companyProfile.name);
-      setCurrency(companyProfile.currency);
-      setAddress(companyProfile.address);
-      setCompanyLogoUrlPreview(companyProfile.companyLogoUrl || "");
-    } else if (profile) {
-      // If companyProfile is null but profile exists, use profile's organization data if available
-      setCompanyName(profile.companyName || "");
-      setCurrency(profile.companyCurrency || "USD");
-      setAddress(profile.companyAddress || "");
-      setCompanyLogoUrlPreview(profile.companyLogoUrl || "");
+    if (profile?.companyProfile) {
+      setCompanyName(profile.companyProfile.companyName || "");
+      setCurrency(profile.companyProfile.companyCurrency || "USD");
+      setAddress(profile.companyProfile.companyAddress || "");
+      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || "");
     }
-  }, [companyProfile, profile]);
+  }, [profile?.companyProfile]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -55,15 +48,15 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
-        setCompanyLogoUrlPreview(companyProfile?.companyLogoUrl || "");
+        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
       }
     } else {
       setCompanyLogoFile(null);
-      setCompanyLogoUrlPreview(companyProfile?.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
     }
   };
 
-  const handleClearLogo = () => { // NEW: Handler to clear the logo
+  const handleClearLogo = () => {
     setCompanyLogoFile(null);
     setCompanyLogoUrlPreview("");
     showSuccess("Logo cleared. Save changes to apply.");
@@ -91,16 +84,14 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
         setIsUploadingLogo(false);
       }
     } else if (companyLogoUrlPreview === "") {
-      // If preview is empty and no new file, it means user cleared the logo
       finalCompanyLogoUrl = undefined;
     }
 
     try {
       await setCompanyProfile({ name: companyName, currency, address, companyLogoUrl: finalCompanyLogoUrl || undefined });
-      // showSuccess("Company profile updated successfully!"); // Moved to OnboardingContext
-      onNext(); // Only call onNext if successful
+      onNext();
     } catch (error: any) {
-      showError(`Failed to set up/update organization: ${error.message}`); // Use the error message from setCompanyProfile
+      showError(`Failed to set up/update organization: ${error.message}`);
     }
   };
 
@@ -144,7 +135,6 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
             rows={3}
           />
         </div>
-        {/* Company Logo File Input and Preview */}
         <div className="space-y-2">
           <Label htmlFor="companyLogoFile">Company Logo (Optional)</Label>
           <Input

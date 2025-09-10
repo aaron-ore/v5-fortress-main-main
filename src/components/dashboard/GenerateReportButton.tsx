@@ -8,19 +8,19 @@ import { useOrders } from "@/context/OrdersContext";
 import { showError } from "@/utils/toast";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
 
 interface GenerateReportButtonProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
-const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }) => { // NEW: Destructure dateRange
+const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }) => {
   const { initiatePrint } = usePrint();
-  const { companyProfile } = useOnboarding();
+  const { companyProfile } = useOnboarding(); // Keep this for now, but will transition to profile.companyProfile
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { profile } = useProfile();
 
   const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
   const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
@@ -72,7 +72,7 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }
         if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
         return dateB.getTime() - dateA.getTime();
       })
-      .slice(0, 5); // Get top 5 recent sales orders
+      .slice(0, 5);
   }, [filteredOrders]);
 
   const recentPurchaseOrders = useMemo(() => {
@@ -84,20 +84,20 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }
         if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
         return dateB.getTime() - dateB.getTime();
       })
-      .slice(0, 5); // Get top 5 recent purchase orders
+      .slice(0, 5);
   }, [filteredOrders]);
 
   const handleGenerateReport = () => {
-    if (!profile?.companyName || !profile?.companyAddress || !profile?.companyCurrency) { // NEW: Check profile for company info
+    if (!profile?.companyProfile?.companyName || !profile?.companyProfile?.companyAddress || !profile?.companyProfile?.companyCurrency) {
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
 
     const reportProps = {
-      companyName: profile.companyName, // NEW: Use from profile
-      companyAddress: profile.companyAddress, // NEW: Use from profile
-      companyContact: profile.companyCurrency, // NEW: Use from profile
-      companyLogoUrl: profile.companyLogoUrl || undefined, // NEW: Use from profile
+      companyName: profile.companyProfile.companyName,
+      companyAddress: profile.companyProfile.companyAddress,
+      companyContact: profile.companyProfile.companyCurrency,
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       totalStockValue,
       totalUnitsOnHand,
@@ -105,14 +105,14 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }
       outOfStockItems,
       recentSalesOrders,
       recentPurchaseOrders,
-      dateRange, // NEW: Pass dateRange to reportProps
+      dateRange,
     };
 
     initiatePrint({ type: "dashboard-summary", props: reportProps });
   };
 
   return (
-    <Button className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 text-base font-semibold" onClick={handleGenerateReport}> {/* Adjusted height to h-10 (40px) */}
+    <Button className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 text-base font-semibold" onClick={handleGenerateReport}>
       <Printer className="h-4 w-4 mr-2" /> Generate Report
     </Button>
   );

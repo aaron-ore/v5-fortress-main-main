@@ -18,7 +18,7 @@ import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
-import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Users: React.FC = () => {
   const { profile, allProfiles, updateUserRole, fetchAllProfiles } = useProfile();
@@ -69,8 +69,8 @@ const Users: React.FC = () => {
   };
 
   const handleCopyOrganizationCode = () => {
-    if (profile?.organizationCode) {
-      navigator.clipboard.writeText(profile.organizationCode);
+    if (profile?.companyProfile?.organizationCode) {
+      navigator.clipboard.writeText(profile.companyProfile.organizationCode);
       showSuccess("Organization Code copied to clipboard!");
     } else {
       showError("No Organization Code available to copy.");
@@ -91,7 +91,7 @@ const Users: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+    <div className="space-y-6 flex flex-col flex-grow">
       <h1 className="text-3xl font-bold">User Management</h1>
       <p className="text-muted-foreground">Manage user accounts and assign roles within Fortress.</p>
 
@@ -106,11 +106,11 @@ const Users: React.FC = () => {
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <Input
-            value={profile?.organizationCode || "Not available"}
+            value={profile?.companyProfile?.organizationCode || "Not available"}
             readOnly
             className="font-mono text-lg flex-grow"
           />
-          <Button onClick={handleCopyOrganizationCode} disabled={!profile?.organizationCode}>
+          <Button onClick={handleCopyOrganizationCode} disabled={!profile?.companyProfile?.organizationCode}>
             <Copy className="h-4 w-4 mr-2" /> Copy
           </Button>
         </CardContent>
@@ -122,15 +122,15 @@ const Users: React.FC = () => {
         </Button>
       </div>
 
-      <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+      <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold">All Users ({allProfiles.length})</CardTitle>
         </CardHeader>
-        <CardContent className="flex-grow flex flex-col"> {/* Added flex-grow flex-col */}
+        <CardContent className="flex-grow flex flex-col">
           {allProfiles.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No users found.</p>
           ) : (
-            <ScrollArea className="flex-grow border rounded-md"> {/* Changed h-[500px] to flex-grow */}
+            <ScrollArea className="flex-grow border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>

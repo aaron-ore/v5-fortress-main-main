@@ -2,19 +2,20 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
-import { isValid } from 'date-fns'; // Keep isValid as it's used in other contexts
+import { isValid } from 'date-fns';
 
 export interface CompanyProfile {
   id: string;
   organizationId: string;
   companyName: string;
-  companyAddress?: string; // Made optional
+  companyAddress?: string;
   companyPhone?: string;
   companyEmail?: string;
   companyWebsite?: string;
   companyCurrency: string;
   companyLogoUrl?: string;
   organizationTheme: string;
+  organizationCode?: string; // Added organizationCode to CompanyProfile
   createdAt: string;
 }
 
@@ -25,20 +26,24 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   avatarUrl?: string;
-  role: 'admin' | 'manager' | 'staff';
-  organizationId: string;
+  role: 'admin' | 'inventory_manager' | 'viewer';
+  organizationId?: string;
   createdAt: string;
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
+  shopifyAccessToken?: string;
+  shopifyStoreName?: string;
+  companyProfile?: CompanyProfile; // Added nested CompanyProfile for easier access
 }
 
 interface ProfileContextType {
   profile: UserProfile | null;
-  companyProfile: CompanyProfile | null;
   isLoadingProfile: boolean;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  updateCompanyProfile: (updates: Partial<CompanyProfile>) => Promise<void>;
+  updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
+  updateOrganizationTheme: (newTheme: string) => Promise<void>;
+  updateUserRole: (targetUserId: string, newRole: string, organizationId: string) => Promise<void>; // Added updateUserRole
   fetchProfile: () => Promise<void>;
   allProfiles: UserProfile[];
   fetchAllProfiles: () => Promise<void>;
@@ -49,14 +54,12 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) {
       setProfile(null);
-      setCompanyProfile(null);
       setIsLoadingProfile(false);
       return;
     }
@@ -70,17 +73,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .single();
 
       if (profileError) {
-        if (profileError.code === 'PGRST116') { // No rows found
-          console.warn("Profile not found for user, likely new user. Will create default profile.");
-          // This case is now handled by the auth.onAuthStateChange listener in AuthContext
-          // which triggers the onboarding flow.
+        if (profileError.code === 'PGRST116') {
+          console.warn("Profile not found for user, likely new user.");
           setProfile(null);
-          setCompanyProfile(null);
         } else {
           throw profileError;
         }
       } else if (profileData) {
-        const mappedProfile: UserProfile = {
+        let mappedProfile: UserProfile = {
           id: profileData.id,
           fullName: profileData.full_name,
           email: user.email || '',
@@ -88,50 +88,50 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           address: profileData.address,
           avatarUrl: profileData.avatar_url,
           role: profileData.role,
-          organizationId: profileData.organization_id,
+          organizationId: profileData.organization_id || undefined,
           createdAt: profileData.created_at,
           quickbooksAccessToken: profileData.quickbooks_access_token,
           quickbooksRefreshToken: profileData.quickbooks_refresh_token,
           quickbooksRealmId: profileData.quickbooks_realm_id,
         };
-        setProfile(mappedProfile);
 
         if (profileData.organization_id) {
-          const { data: companyData, error: companyError } = await supabase
+          const { data: organizationData, error: organizationError } = await supabase
             .from('organizations')
             .select('*')
             .eq('id', profileData.organization_id)
             .single();
 
-          if (companyError) {
-            throw companyError;
+          if (organizationError) {
+            throw organizationError;
           }
 
-          if (companyData) {
+          if (organizationData) {
             const mappedCompanyProfile: CompanyProfile = {
-              id: companyData.id,
-              organizationId: companyData.id,
-              companyName: companyData.company_name,
-              companyAddress: companyData.company_address,
-              companyPhone: companyData.company_phone,
-              companyEmail: companyData.company_email,
-              companyWebsite: companyData.company_website,
-              companyCurrency: companyData.company_currency,
-              companyLogoUrl: companyData.company_logo_url,
-              organizationTheme: companyData.organization_theme,
-              createdAt: companyData.created_at,
+              id: organizationData.id,
+              organizationId: organizationData.id,
+              companyName: organizationData.name,
+              companyAddress: organizationData.address || undefined,
+              companyPhone: organizationData.phone || undefined,
+              companyEmail: organizationData.email || undefined,
+              companyWebsite: organizationData.website || undefined,
+              companyCurrency: organizationData.currency,
+              companyLogoUrl: organizationData.company_logo_url || undefined,
+              organizationTheme: organizationData.default_theme || 'dark',
+              organizationCode: organizationData.unique_code || undefined,
+              createdAt: organizationData.created_at,
             };
-            setCompanyProfile(mappedCompanyProfile);
+            mappedProfile.companyProfile = mappedCompanyProfile;
+            mappedProfile.shopifyAccessToken = organizationData.shopify_access_token || undefined;
+            mappedProfile.shopifyStoreName = organizationData.shopify_store_name || undefined;
           }
-        } else {
-          setCompanyProfile(null);
         }
+        setProfile(mappedProfile);
       }
     } catch (error: any) {
       console.error("Error fetching profile or company profile:", error);
       showError("Failed to load user or company profile: " + error.message);
       setProfile(null);
-      setCompanyProfile(null);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -160,7 +160,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         address: p.address,
         avatarUrl: p.avatar_url,
         role: p.role,
-        organizationId: p.organization_id,
+        organizationId: p.organization_id || undefined,
         createdAt: p.created_at,
         quickbooksAccessToken: p.quickbooks_access_token,
         quickbooksRefreshToken: p.quickbooks_refresh_token,
@@ -176,7 +176,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile, user]); // Re-fetch profile if user changes
+  }, [fetchProfile, user]);
 
   useEffect(() => {
     if (profile?.organizationId) {
@@ -211,21 +211,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       if (data) {
-        const updatedMappedProfile: UserProfile = {
-          id: data.id,
+        setProfile(prev => prev ? {
+          ...prev,
           fullName: data.full_name,
-          email: user?.email || '',
           phone: data.phone,
           address: data.address,
           avatarUrl: data.avatar_url,
           role: data.role,
-          organizationId: data.organization_id,
-          createdAt: data.created_at,
           quickbooksAccessToken: data.quickbooks_access_token,
           quickbooksRefreshToken: data.quickbooks_refresh_token,
           quickbooksRealmId: data.quickbooks_realm_id,
-        };
-        setProfile(updatedMappedProfile);
+        } : null);
         showSuccess("Profile updated successfully!");
       }
     } catch (error: any) {
@@ -234,25 +230,26 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const updateCompanyProfile = async (updates: Partial<CompanyProfile>) => {
-    if (!companyProfile?.id) {
-      showError("No company profile to update.");
+  const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
+    if (!profile?.organizationId) {
+      showError("No organization found to update company profile.");
       return;
     }
     try {
       const { data, error } = await supabase
         .from('organizations')
         .update({
-          company_name: updates.companyName,
-          company_address: updates.companyAddress,
-          company_phone: updates.companyPhone,
-          company_email: updates.companyEmail,
-          company_website: updates.companyWebsite,
-          company_currency: updates.companyCurrency,
+          name: updates.companyName,
+          address: updates.companyAddress,
+          phone: updates.companyPhone,
+          email: updates.companyEmail,
+          website: updates.companyWebsite,
+          currency: updates.companyCurrency,
           company_logo_url: updates.companyLogoUrl,
-          organization_theme: updates.organizationTheme,
+          default_theme: updates.organizationTheme,
+          unique_code: uniqueCode,
         })
-        .eq('id', companyProfile.id)
+        .eq('id', profile.organizationId)
         .select()
         .single();
 
@@ -261,20 +258,24 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       if (data) {
-        const updatedMappedCompanyProfile: CompanyProfile = {
-          id: data.id,
-          organizationId: data.id,
-          companyName: data.company_name,
-          companyAddress: data.company_address,
-          companyPhone: data.company_phone,
-          companyEmail: data.company_email,
-          companyWebsite: data.company_website,
-          companyCurrency: data.company_currency,
-          companyLogoUrl: data.company_logo_url,
-          organizationTheme: data.organization_theme,
-          createdAt: data.created_at,
-        };
-        setCompanyProfile(updatedMappedCompanyProfile);
+        setProfile(prev => prev ? {
+          ...prev,
+          companyProfile: {
+            ...prev.companyProfile,
+            id: data.id,
+            organizationId: data.id,
+            companyName: data.name,
+            companyAddress: data.address || undefined,
+            companyPhone: data.phone || undefined,
+            companyEmail: data.email || undefined,
+            companyWebsite: data.website || undefined,
+            companyCurrency: data.currency,
+            companyLogoUrl: data.company_logo_url || undefined,
+            organizationTheme: data.default_theme || 'dark',
+            organizationCode: data.unique_code || undefined,
+            createdAt: data.created_at,
+          }
+        } : null);
         showSuccess("Company profile updated successfully!");
       }
     } catch (error: any) {
@@ -283,14 +284,80 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const updateOrganizationTheme = async (newTheme: string) => {
+    if (!profile?.organizationId) {
+      showError("No organization found to update theme.");
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update({ default_theme: newTheme })
+        .eq('id', profile.organizationId)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setProfile(prev => prev ? {
+          ...prev,
+          companyProfile: prev.companyProfile ? { ...prev.companyProfile, organizationTheme: data.default_theme } : undefined
+        } : null);
+        showSuccess("Organization theme updated successfully!");
+      }
+    } catch (error: any) {
+      console.error("Error updating organization theme:", error);
+      showError("Failed to update organization theme: " + error.message);
+    }
+  };
+
+  const updateUserRole = async (targetUserId: string, newRole: string, organizationId: string) => {
+    if (!profile?.id || profile.role !== 'admin') {
+      showError("Only administrators can update user roles.");
+      return;
+    }
+
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("User session not found. Please log in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-user-profile', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+        body: JSON.stringify({ targetUserId, newRole, organizationId }),
+      });
+
+      if (error) {
+        throw error;
+      }
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      showSuccess(`User role updated to ${newRole} successfully!`);
+      fetchAllProfiles(); // Refresh the list of all profiles
+    } catch (error: any) {
+      console.error("Error updating user role:", error);
+      showError(`Failed to update user role: ${error.message}`);
+    }
+  };
+
   return (
     <ProfileContext.Provider
       value={{
         profile,
-        companyProfile,
         isLoadingProfile,
         updateProfile,
         updateCompanyProfile,
+        updateOrganizationTheme,
+        updateUserRole,
         fetchProfile,
         allProfiles,
         fetchAllProfiles,

@@ -13,15 +13,20 @@ export const generateQrCodeSvg = async (value: string, size: number = 128): Prom
 
   try {
     // Use qrcode.toString to generate SVG
-    const svgString = await QRCode.toString(value, {
-      type: 'svg',
-      width: size,
-      height: size,
-      margin: 0, // Changed margin to 0 to remove internal white space
-      color: {
-        dark: '#000000', // Black dots
-        light: '#FFFFFF' // White background
-      }
+    const svgString = await new Promise<string>((resolve, reject) => {
+      QRCode.toString(value, {
+        type: 'svg',
+        width: size,
+        height: size,
+        margin: 0, // Changed margin to 0 to remove internal white space
+        color: {
+          dark: '#000000', // Black dots
+          light: '#FFFFFF' // White background
+        }
+      }, (err, url) => {
+        if (err) reject(err);
+        else resolve(url);
+      });
     });
     return svgString;
   } catch (error: any) {

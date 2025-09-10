@@ -7,24 +7,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Settings as SettingsIcon, Lock, Globe, Palette } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useTheme } from "next-themes"; // Import useTheme
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useTheme } from "next-themes";
+import { useProfile } from "@/context/ProfileContext";
 
 const AccountSettings: React.FC = () => {
-  const { theme } = useTheme(); // Current active theme from next-themes
-  const { profile } = useProfile(); // NEW: Get profile to display organization theme
+  const { theme } = useTheme();
+  const { profile } = useProfile();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [twoFactorAuth, setTwoFactorAuth] = useState(false);
 
-  // States to hold selected but not yet saved values for General Settings
-  const [selectedLanguage, setSelectedLanguage] = useState("en"); // This will be the value in the dropdown
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
 
-  // Load initial values for language when component mounts
   useEffect(() => {
-    setSelectedLanguage("en"); // Assuming 'en' is the default/current language for now
+    setSelectedLanguage("en");
   }, []);
 
   const handleChangePassword = () => {
@@ -39,7 +37,6 @@ const AccountSettings: React.FC = () => {
   };
 
   const handleSaveGeneralSettings = () => {
-    // Only language setting is saved now
     showSuccess("General settings saved!");
   };
 
@@ -48,15 +45,13 @@ const AccountSettings: React.FC = () => {
     showSuccess(`Two-factor authentication ${checked ? "enabled" : "disabled"}!`);
   };
 
-  // Determine if there are unsaved changes in General Settings
-  const hasGeneralSettingsChanges = selectedLanguage !== "en"; // Compare with current/default values
+  const hasGeneralSettingsChanges = selectedLanguage !== "en";
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Account Settings</h1>
       <p className="text-muted-foreground">Manage your personal account preferences and security.</p>
 
-      {/* General Settings */}
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <SettingsIcon className="h-6 w-6 text-primary" />
@@ -84,7 +79,7 @@ const AccountSettings: React.FC = () => {
             </Label>
             <Input
               id="theme"
-              value={profile?.organizationTheme ? profile.organizationTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Loading..."}
+              value={profile?.companyProfile?.organizationTheme ? profile.companyProfile.organizationTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Loading..."}
               disabled
               className="capitalize"
             />
@@ -100,7 +95,6 @@ const AccountSettings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Password & Security */}
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <Lock className="h-6 w-6 text-primary" />
