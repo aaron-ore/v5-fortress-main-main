@@ -3,21 +3,66 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
+import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2, MapPin, Link as LinkIcon, Trash2, Edit } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for Fortress locations
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import ConfirmDialog from "@/components/ConfirmDialog"; // Import ConfirmDialog
+import { Label } from "@/components/ui/label"; // NEW: Import Label
+
+interface ShopifyLocation {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  province: string;
+  country: string;
+  active: boolean;
+}
+
+interface ShopifyLocationMapping {
+  id: string;
+  organization_id: string;
+  shopify_location_id: string;
+  shopify_location_name: string;
+  fortress_location_id: string;
+  user_id: string;
+  created_at: string;
+}
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
+  const { locations: fortressLocations, fetchLocations: fetchFortressLocations } = useOnboarding(); // Get Fortress locations
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
 
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
   const [isSyncingShopify, setIsSyncingShopify] = useState(false);
+
+  // Shopify Location Mapping States
+  const [shopifyLocations, setShopifyLocations] = useState<ShopifyLocation[]>([]);
+  const [shopifyMappings, setShopifyMappings] = useState<ShopifyLocationMapping[]>([]);
+  const [isFetchingShopifyLocations, setIsFetchingShopifyLocations] = useState(false);
+  const [isFetchingShopifyMappings, setIsFetchingShopifyMappings] = useState(false);
+  const [isSavingMapping, setIsSavingMapping] = useState(false);
+  const [isDeletingMapping, setIsDeletingMapping] = useState(false);
+
+  const [selectedShopifyLocationId, setSelectedShopifyLocationId] = useState<string | null>(null);
+  const [selectedFortressLocationId, setSelectedFortressLocationId] = useState<string | null>(null);
+  const [mappingToEdit, setMappingToEdit] = useState<ShopifyLocationMapping | null>(null);
+  const [mappingToDelete, setMappingToDelete] = useState<ShopifyLocationMapping | null>(null);
+  const [isConfirmDeleteMappingOpen, setIsConfirmDeleteMappingOpen] = useState(false);
 
   // Ref to prevent re-processing URL parameters on re-renders
   const qbCallbackProcessedRef = React.useRef(false);
@@ -35,15 +80,14 @@ const Integrations: React.FC = () => {
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
 
-    console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
-    console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
-    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess);
-    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError);
+    console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
+    console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
+    console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
+    console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected successfully!");
-        // The ProfileContext's onAuthStateChange listener will trigger fetchProfile after the redirect.
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -55,7 +99,6 @@ const Integrations: React.FC = () => {
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
-        // The ProfileContext's onAuthStateChange listener will trigger fetchProfile after the redirect.
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
@@ -64,6 +107,15 @@ const Integrations: React.FC = () => {
     }
   }, [location.search, location.pathname, navigate]);
 
+  // Fetch Fortress locations and Shopify mappings on component mount/profile change
+  useEffect(() => {
+    if (!isLoadingProfile && profile?.organizationId) {
+      fetchFortressLocations();
+      fetchShopifyLocationMappings();
+    }
+  }, [isLoadingProfile, profile?.organizationId, fetchFortressLocations]);
+
+  // --- QuickBooks Handlers ---
   const handleConnectQuickBooks = () => {
     if (!profile?.id) {
       showError("You must be logged in to connect to QuickBooks.");
@@ -155,7 +207,7 @@ const Integrations: React.FC = () => {
     }
   };
 
-  // Shopify Integration Handlers
+  // --- Shopify Integration Handlers ---
   const handleConnectShopify = () => {
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
@@ -219,6 +271,8 @@ const Integrations: React.FC = () => {
 
       await fetchProfile();
       showSuccess("Disconnected from Shopify.");
+      setShopifyLocations([]); // Clear Shopify locations on disconnect
+      setShopifyMappings([]); // Clear mappings on disconnect
     } catch (error: any) {
       console.error("Error disconnecting Shopify:", error);
       showError(`Failed to disconnect from Shopify: ${error.message}`);
@@ -263,6 +317,154 @@ const Integrations: React.FC = () => {
     } finally {
       setIsSyncingShopify(false);
     }
+  };
+
+  // --- Shopify Location Mapping Handlers ---
+  const fetchShopifyLocations = async () => {
+    if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
+      showError("Shopify is not connected. Please connect your Shopify store first.");
+      return;
+    }
+    setIsFetchingShopifyLocations(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        showError("You must be logged in to fetch Shopify locations.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('fetch-shopify-locations', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setShopifyLocations(data.locations);
+      showSuccess("Shopify locations fetched successfully!");
+    } catch (error: any) {
+      console.error("Error fetching Shopify locations:", error);
+      showError(`Failed to fetch Shopify locations: ${error.message}`);
+    } finally {
+      setIsFetchingShopifyLocations(false);
+    }
+  };
+
+  const fetchShopifyLocationMappings = async () => {
+    if (!profile?.organizationId) return;
+    setIsFetchingShopifyMappings(true);
+    try {
+      const { data, error } = await supabase
+        .from('shopify_location_mappings')
+        .select('*')
+        .eq('organization_id', profile.organizationId);
+
+      if (error) throw error;
+      setShopifyMappings(data);
+    } catch (error: any) {
+      console.error("Error fetching Shopify location mappings:", error);
+      showError(`Failed to fetch Shopify location mappings: ${error.message}`);
+    } finally {
+      setIsFetchingShopifyMappings(false);
+    }
+  };
+
+  const handleSaveLocationMapping = async () => {
+    if (!profile?.organizationId || !profile?.id || !selectedShopifyLocationId || !selectedFortressLocationId) {
+      showError("Please select both a Shopify location and a Fortress location.");
+      return;
+    }
+
+    const shopifyLoc = shopifyLocations.find(loc => loc.id === selectedShopifyLocationId);
+    if (!shopifyLoc) {
+      showError("Selected Shopify location not found.");
+      return;
+    }
+
+    setIsSavingMapping(true);
+    try {
+      // Check if mapping already exists
+      const existingMapping = shopifyMappings.find(m => m.shopify_location_id === selectedShopifyLocationId);
+
+      if (existingMapping) {
+        // Update existing mapping
+        const { error } = await supabase
+          .from('shopify_location_mappings')
+          .update({ fortress_location_id: selectedFortressLocationId })
+          .eq('id', existingMapping.id)
+          .eq('organization_id', profile.organizationId);
+        if (error) throw error;
+        showSuccess(`Mapping for ${shopifyLoc.name} updated successfully!`);
+      } else {
+        // Insert new mapping
+        const { error } = await supabase
+          .from('shopify_location_mappings')
+          .insert({
+            organization_id: profile.organizationId,
+            shopify_location_id: selectedShopifyLocationId,
+            shopify_location_name: shopifyLoc.name,
+            fortress_location_id: selectedFortressLocationId,
+            user_id: profile.id,
+          });
+        if (error) throw error;
+        showSuccess(`Mapping for ${shopifyLoc.name} created successfully!`);
+      }
+      
+      await fetchShopifyLocationMappings(); // Refresh mappings
+      setSelectedShopifyLocationId(null);
+      setSelectedFortressLocationId(null);
+      setMappingToEdit(null);
+    } catch (error: any) {
+      console.error("Error saving location mapping:", error);
+      showError(`Failed to save mapping: ${error.message}`);
+    } finally {
+      setIsSavingMapping(false);
+    }
+  };
+
+  const handleEditMappingClick = (mapping: ShopifyLocationMapping) => {
+    setMappingToEdit(mapping);
+    setSelectedShopifyLocationId(mapping.shopify_location_id);
+    setSelectedFortressLocationId(mapping.fortress_location_id);
+  };
+
+  const handleDeleteMappingClick = (mapping: ShopifyLocationMapping) => {
+    setMappingToDelete(mapping);
+    setIsConfirmDeleteMappingOpen(true);
+  };
+
+  const confirmDeleteMapping = async () => {
+    if (!mappingToDelete || !profile?.organizationId) return;
+    setIsDeletingMapping(true);
+    try {
+      const { error } = await supabase
+        .from('shopify_location_mappings')
+        .delete()
+        .eq('id', mappingToDelete.id)
+        .eq('organization_id', profile.organizationId);
+      if (error) throw error;
+      showSuccess(`Mapping for ${mappingToDelete.shopify_location_name} deleted.`);
+      await fetchShopifyLocationMappings();
+    } catch (error: any) {
+      console.error("Error deleting mapping:", error);
+      showError(`Failed to delete mapping: ${error.message}`);
+    } finally {
+      setIsDeletingMapping(false);
+      setIsConfirmDeleteMappingOpen(false);
+      setMappingToDelete(null);
+    }
+  };
+
+  const getFortressLocationDisplayName = (id: string) => {
+    const loc = fortressLocations.find(l => l.id === id);
+    return loc ? (loc.displayName || loc.fullLocationString) : "Unknown Location";
   };
 
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
@@ -341,7 +543,6 @@ const Integrations: React.FC = () => {
       {/* Shopify Integration Card */}
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
-          {/* Dynamic Shopify Logo */}
           <img src={shopifyLogoSrc} alt="Shopify Logo" className="h-10 object-contain" />
           <CardTitle className="text-xl font-semibold">Shopify</CardTitle>
         </CardHeader>
@@ -368,6 +569,125 @@ const Integrations: React.FC = () => {
               <Button variant="destructive" onClick={handleDisconnectShopify}>
                 Disconnect Shopify
               </Button>
+
+              {/* Shopify Location Mapping Section */}
+              <div className="mt-6 pt-4 border-t border-border space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" /> Shopify Location Mappings
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Map your Shopify fulfillment locations to your Fortress inventory locations to ensure accurate stock deduction.
+                </p>
+                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations}>
+                  {isFetchingShopifyLocations ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" /> Fetch Shopify Locations
+                    </>
+                  )}
+                </Button>
+
+                {shopifyLocations.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-md">Create/Update Mapping</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                      <div className="space-y-2">
+                        <Label htmlFor="shopify-location-select">Shopify Location</Label>
+                        <Select
+                          value={selectedShopifyLocationId || ""}
+                          onValueChange={(value) => {
+                            setSelectedShopifyLocationId(value);
+                            const existing = shopifyMappings.find(m => m.shopify_location_id === value);
+                            setSelectedFortressLocationId(existing?.fortress_location_id || null);
+                            setMappingToEdit(existing || null);
+                          }}
+                          disabled={isSavingMapping}
+                        >
+                          <SelectTrigger id="shopify-location-select">
+                            <SelectValue placeholder="Select Shopify Location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {shopifyLocations.map(loc => (
+                              <SelectItem key={loc.id} value={loc.id}>
+                                {loc.name} ({loc.city}, {loc.country})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="fortress-location-select">Fortress Location</Label>
+                        <Select
+                          value={selectedFortressLocationId || ""}
+                          onValueChange={setSelectedFortressLocationId}
+                          disabled={isSavingMapping || fortressLocations.length === 0}
+                        >
+                          <SelectTrigger id="fortress-location-select">
+                            <SelectValue placeholder="Select Fortress Location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fortressLocations.map(loc => (
+                              <SelectItem key={loc.id} value={loc.id}>
+                                {loc.displayName || loc.fullLocationString}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        onClick={handleSaveLocationMapping}
+                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressLocationId}
+                      >
+                        {isSavingMapping ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                          </>
+                        ) : (
+                          <>
+                            <LinkIcon className="h-4 w-4 mr-2" /> {mappingToEdit ? "Update Mapping" : "Save Mapping"}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {isFetchingShopifyMappings ? (
+                  <div className="flex items-center justify-center h-24">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span className="ml-2 text-muted-foreground">Loading mappings...</span>
+                  </div>
+                ) : shopifyMappings.length > 0 && (
+                  <div className="mt-6 space-y-2">
+                    <h4 className="font-semibold text-md">Existing Mappings</h4>
+                    <div className="border rounded-md">
+                      {shopifyMappings.map(mapping => (
+                        <div key={mapping.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>
+                              <span className="font-medium">{mapping.shopify_location_name}</span>
+                              <span className="text-muted-foreground"> &rarr; </span>
+                              <span className="font-medium">{getFortressLocationDisplayName(mapping.fortress_location_id)}</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)}>
+                              <Edit className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -412,6 +732,18 @@ const Integrations: React.FC = () => {
           </ul>
         </CardContent>
       </Card>
+
+      {mappingToDelete && (
+        <ConfirmDialog
+          isOpen={isConfirmDeleteMappingOpen}
+          onClose={() => setIsConfirmDeleteMappingOpen(false)}
+          onConfirm={confirmDeleteMapping}
+          title="Confirm Delete Mapping"
+          description={`Are you sure you want to delete the mapping for Shopify location "${mappingToDelete.shopify_location_name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+      )}
     </div>
   );
 };
