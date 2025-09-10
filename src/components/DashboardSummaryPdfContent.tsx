@@ -1,18 +1,10 @@
+import React from "react"; // Re-added React
+import { InventoryItem } from "@/context/InventoryContext";
+import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
-import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
-
-interface ForecastDataPoint {
-  name: string;
-  "Historical Demand": number;
-  "Forecasted Demand": number;
-  "Upper Confidence": number;
-  "Lower Confidence": number;
-  "External Factor (Trend)": number;
-}
 
 interface DashboardSummaryPdfContentProps {
   companyLogoUrl?: string;

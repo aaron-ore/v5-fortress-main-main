@@ -19,7 +19,7 @@ import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
-import { processAutoReorder } from "@/utils/autoReorderLogic"; // Re-added processAutoReorder
+import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNavigate } from "react-router-dom";
 import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat } from "lucide-react";
 import { format } from "date-fns";

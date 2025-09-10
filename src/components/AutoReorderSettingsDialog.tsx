@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; // Re-added React
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
-import { Repeat } from "lucide-react"; // Restored Repeat icon
+import { Repeat } from "lucide-react";
 
 interface AutoReorderSettingsDialogProps {
   isOpen: boolean;

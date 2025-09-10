@@ -8,7 +8,7 @@ import PutawayLabelPdfContent from "./PutawayLabelPdfContent";
 import LocationLabelPdfContent from "./LocationLabelPdfContent";
 import PickingWavePdfContent from "./PickingWavePdfContent";
 
-// NEW: Import all new PDF content components
+// Import all new PDF content components
 import InventoryValuationPdfContent from "./reports/pdf/InventoryValuationPdfContent";
 import LowStockPdfContent from "./reports/pdf/LowStockPdfContent";
 import InventoryMovementPdfContent from "./reports/pdf/InventoryMovementPdfContent";

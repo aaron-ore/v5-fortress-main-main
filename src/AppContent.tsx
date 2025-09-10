@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"; // Re-added React, useEffect, useRef
+import React, { useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -50,7 +50,6 @@ import DiscrepancyPdfContent from "./components/reports/pdf/DiscrepancyPdfConten
 import { useOnboarding } from "./context/OnboardingContext";
 import { useProfile } from "./context/ProfileContext";
 import { usePrint } from "./context/PrintContext";
-import { supabase } from "./lib/supabaseClient";
 import { showSuccess, showError } from "./utils/toast";
 
 // Import all providers needed for AuthenticatedApp

@@ -2,8 +2,8 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
-import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
+import { InventoryItem } from "@/context/InventoryContext";
+import { OrderItem } from "@/context/OrdersContext";
 
 interface POItem {
   id: number;
@@ -130,7 +130,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => (
+          {items.map((item, _index) => (
             <tr key={item.id} className="border-b border-gray-200">
               <td className="py-2 px-4 border-r border-gray-200">{item.itemName}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity}</td>

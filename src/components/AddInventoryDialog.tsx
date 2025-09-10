@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; // Re-added React
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ import { Link } from "react-router-dom";
 import { buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
-import CustomFileInput from "@/components/CustomFileInput"; // NEW: Import CustomFileInput
+import CustomFileInput from "@/components/CustomFileInput";
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -74,10 +74,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const uniqueLevels = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'level');
   const uniquePositions = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'pos');
 
-  const defaultLocationString = locations.length > 0 ? locations[0].fullLocationString : "Main Warehouse-01-01-1-A";
-  const defaultPickingBinLocationString = locations.length > 0 ? locations[0].fullLocationString : "Picking Bin-01-01-1-A";
-
-
   useEffect(() => {
     if (isOpen) {
       setViewMode("simple");
@@ -92,8 +88,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setPickingReorderLevel("");
       setUnitCost("");
       setRetailPrice("");
-      setMainLocationParts({ area: '', row: '', bay: '', level: '', pos: '' }); // Reset to empty
-      setPickingBinLocationParts({ area: '', row: '', bay: '', level: '', pos: '' }); // Reset to empty
+      setMainLocationParts({ area: '', row: '', bay: '', level: '', pos: '' });
+      setPickingBinLocationParts({ area: '', row: '', bay: '', level: '', pos: '' });
       setSelectedVendorId("none");
       setBarcodeValue("");
       setQrCodeSvgPreview(null);
@@ -103,7 +99,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
     }
-  }, [isOpen]); // Removed defaultLocationString, defaultPickingBinLocationString from dependencies as they are derived from `locations`
+  }, [isOpen]);
 
   useEffect(() => {
     const updateQrCode = async () => {
@@ -235,7 +231,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setIsUploadingImage(true);
       try {
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[AddInventoryDialog] Uploaded image URL:", finalImageUrl); // ADDED LOG
+        console.log("[AddInventoryDialog] Uploaded image URL:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading product image:", error);
@@ -247,7 +243,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       }
     }
 
-    console.log("[AddInventoryDialog] Adding item with imageUrl:", finalImageUrl); // ADDED LOG
+    console.log("[AddInventoryDialog] Adding item with imageUrl:", finalImageUrl);
     const newItem = {
       name: itemName.trim(),
       description: description.trim(),

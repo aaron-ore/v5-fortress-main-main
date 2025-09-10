@@ -275,13 +275,13 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
         </DialogContent>
       </Dialog>
 
-      {ruleToDelete && (
+      {roleToDelete && (
         <ConfirmDialog
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteRole}
           title="Confirm Role Deletion"
-          description={`Are you sure you want to delete the automation rule "${ruleToDelete.name}"? This action cannot be undone.`}
+          description={`Are you sure you want to delete the custom role "${roleToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
           cancelText="Cancel"
         />

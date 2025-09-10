@@ -1,8 +1,9 @@
+import React from "react"; // Re-added React
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
-import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
+import { InventoryItem } from "@/context/InventoryContext";
+import { OrderItem } from "@/context/OrdersContext";
 
 interface ForecastDataPoint {
   name: string;
@@ -76,7 +77,6 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Historical Demand</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Forecasted Demand</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Lower Confidence</th>
-              <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Upper Confidence</th>
               <th className="py-2 px-4 text-right font-semibold">External Factor</th>
             </tr>
           </thead>

@@ -23,6 +23,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
     const isCameraStartedRef = useRef(false);
     const isStartingRef = useRef(false);
     const qrScannerDivRef = useRef<HTMLDivElement>(null);
+    const [scannerError, setScannerError] = useState<string | null>(null); // Local state for scanner error
 
     const html5QrcodeConstructorConfig: Html5QrcodeFullConfig = {
       formatsToSupport: [
@@ -82,7 +83,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       isCameraStartedRef.current = false;
       isStartingRef.current = false;
       onLoading(false);
-      setScannerError(null); // Use setScannerError to clear error
+      setScannerError(null);
     }, [stopScanner, clearScanner, onLoading]);
 
     const startScanner = useCallback(async () => {
@@ -108,7 +109,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
 
       isStartingRef.current = true;
       onLoading(true);
-      setScannerError(null); // Use setScannerError to clear previous errors
+      setScannerError(null);
 
       await stopScanner();
       await new Promise(resolve => setTimeout(resolve, 300));

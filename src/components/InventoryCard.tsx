@@ -1,11 +1,11 @@
-import React from "react"; // Re-added React
+import React from "react";
 import { Package, Tag, MapPin, Eye, PlusCircle, MinusCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { cn } from "@/lib/utils"; // Re-added cn
+import { cn } from "@/lib/utils";
 
 interface InventoryCardProps {
   item: InventoryItem;

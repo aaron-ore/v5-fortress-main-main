@@ -1,9 +1,9 @@
-import React from "react";
+import React from "react"; // Re-added React
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext"; // Re-added InventoryItem
-import { OrderItem } from "@/context/OrdersContext"; // Re-added OrderItem
+import { InventoryItem } from "@/context/InventoryContext";
+import { OrderItem } from "@/context/OrdersContext";
 
 interface PickListItem {
   itemName: string;
@@ -80,7 +80,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {ordersInWave.map((order, index) => (
+            {ordersInWave.map((order, _index) => (
               <tr key={order.id} className="border-b border-gray-200">
                 <td className="py-2 px-4 border-r border-gray-200">{order.id}</td>
                 <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier}</td>
@@ -104,8 +104,8 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {pickListItems.map((item, index) => (
-              <tr key={index} className="border-b border-gray-200">
+            {pickListItems.map((item, _index) => (
+              <tr key={_index} className="border-b border-gray-200">
                 <td className="py-2 px-4 border-r border-gray-200">{item.itemName}</td>
                 <td className="py-2 px-4 border-r border-gray-200">{item.itemSku}</td>
                 <td className="py-2 px-4 border-r border-gray-200">{item.pickingBinLocation}</td>

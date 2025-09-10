@@ -1,19 +1,19 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react'; // Re-added React
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Still use shadcn Input for hidden input
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X, UploadCloud, Loader2 } from 'lucide-react';
 
 interface CustomFileInputProps {
   id: string;
   label: string;
-  file?: File | null; // The actual file object if selected
+  file?: File | null;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
   disabled?: boolean;
   accept?: string;
   isUploading?: boolean;
-  previewUrl?: string | null; // For image previews (e.g., existing image URL or data URL for new file)
+  previewUrl?: string | null;
 }
 
 const CustomFileInput: React.FC<CustomFileInputProps> = ({
@@ -50,14 +50,13 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
         >
           <UploadCloud className="mr-2 h-4 w-4" />
           {isUploading ? "Uploading..." : (file ? file.name : "Choose File")}
-          {/* Hidden file input */}
           <Input
             id={id}
             type="file"
             accept={accept}
             onChange={onChange}
             ref={fileInputRef}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer hidden" // Changed sr-only to hidden
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer hidden"
             disabled={disabled || isUploading}
           />
         </Button>
@@ -75,7 +74,6 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
         )}
       </div>
 
-      {/* Visual preview area */}
       {isUploading ? (
         <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Uploading...

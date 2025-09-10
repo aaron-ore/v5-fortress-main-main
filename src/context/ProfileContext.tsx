@@ -1,10 +1,22 @@
-"use client";
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
+import { showError, showSuccess } from '@/utils/toast';
+import { isValid } from 'date-fns'; // Keep isValid as it's used in other contexts
 
-import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { showError, showSuccess } from "@/utils/toast";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+export interface CompanyProfile {
+  id: string;
+  organizationId: string;
+  companyName: string;
+  companyAddress?: string; // Made optional
+  companyPhone?: string;
+  companyEmail?: string;
+  companyWebsite?: string;
+  companyCurrency: string;
+  companyLogoUrl?: string;
+  organizationTheme: string;
+  createdAt: string;
+}
 
 export interface UserProfile {
   id: string;
@@ -13,322 +25,277 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   avatarUrl?: string;
-  role: string;
-  organizationId: string | null;
-  organizationCode?: string; // NEW: Add organizationCode
-  organizationTheme?: string; // NEW: Add organizationTheme
-  companyName?: string; // NEW: Add companyName
-  companyAddress?: string; // NEW: Add companyAddress
-  companyCurrency?: string; // NEW: Add companyCurrency
-  companyLogoUrl?: string; // NEW: Add companyLogoUrl
+  role: 'admin' | 'manager' | 'staff';
+  organizationId: string;
   createdAt: string;
-  quickbooksAccessToken?: string; // NEW: Add QuickBooks Access Token
-  quickbooksRefreshToken?: string; // NEW: Add QuickBooks Refresh Token
-  quickbooksRealmId?: string; // NEW: Add QuickBooks Realm ID
-  shopifyAccessToken?: string; // NEW: Add Shopify Access Token
-  shopifyStoreName?: string; // NEW: Add Shopify Store Name
+  quickbooksAccessToken?: string;
+  quickbooksRefreshToken?: string;
+  quickbooksRealmId?: string;
 }
 
 interface ProfileContextType {
   profile: UserProfile | null;
-  allProfiles: UserProfile[];
+  companyProfile: CompanyProfile | null;
   isLoadingProfile: boolean;
-  updateProfile: (updates: Partial<Omit<UserProfile, "id" | "email" | "createdAt" | "role" | "organizationId" | "organizationCode" | "organizationTheme" | "companyName" | "companyAddress" | "companyCurrency" | "companyLogoUrl" | "quickbooksAccessToken" | "quickbooksRefreshToken" | "quickbooksRealmId" | "shopifyAccessToken" | "shopifyStoreName">>) => Promise<void>;
-  updateUserRole: (userId: string, newRole: string, organizationId: string | null) => Promise<void>;
-  updateOrganizationTheme: (theme: string) => Promise<void>; // NEW: Add updateOrganizationTheme
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateCompanyProfile: (updates: Partial<CompanyProfile>) => Promise<void>;
   fetchProfile: () => Promise<void>;
+  allProfiles: UserProfile[];
   fetchAllProfiles: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, session } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const errorToastId = useRef<string | number | null>(null);
-
-  const mapSupabaseProfileToUserProfile = (p: any, sessionEmail?: string): UserProfile => {
-    // Ensure created_at is always a valid ISO string
-    const validatedCreatedAt = parseAndValidateDate(p.created_at);
-    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString(); // Fallback to current date if invalid
-
-    // Safely access organization data, whether it's an array or a direct object
-    const organizationData = Array.isArray(p.organizations) ? p.organizations[0] : p.organizations;
-    
-    const organizationCode = organizationData?.unique_code || undefined;
-    const organizationTheme = organizationData?.default_theme || 'dark';
-    const companyName = organizationData?.name || undefined; // NEW: Map company name
-    const companyAddress = organizationData?.address || undefined; // NEW: Map company address
-    const companyCurrency = organizationData?.currency || undefined; // NEW: Map company currency
-    const companyLogoUrl = organizationData?.company_logo_url || undefined; // NEW: Map company logo URL
-    const shopifyAccessToken = organizationData?.shopify_access_token || undefined; // NEW: Map shopify_access_token
-    const shopifyStoreName = organizationData?.shopify_store_name || undefined; // NEW: Map shopify_store_name
-
-    if (p.organization_id && !organizationCode) {
-      console.warn(`[ProfileContext] User ${p.id} has organization_id ${p.organization_id} but no unique_code found for organization.`);
-    }
-
-    return {
-      id: p.id,
-      fullName: p.full_name || "", // Ensure string fallback
-      email: p.email || sessionEmail || "", // Ensure string fallback
-      phone: p.phone || undefined,
-      address: p.address || undefined,
-      avatarUrl: p.avatar_url || undefined,
-      role: p.role || "viewer", // Default role
-      organizationId: p.organization_id,
-      organizationCode: organizationCode,
-      organizationTheme: organizationTheme,
-      companyName: companyName, // NEW: Assign companyName
-      companyAddress: companyAddress, // NEW: Assign companyAddress
-      companyCurrency: companyCurrency, // NEW: Assign companyCurrency
-      companyLogoUrl: companyLogoUrl, // NEW: Assign companyLogoUrl
-      createdAt: createdAtString,
-      quickbooksAccessToken: p.quickbooks_access_token || undefined,
-      quickbooksRefreshToken: p.quickbooks_refresh_token || undefined,
-      quickbooksRealmId: p.quickbooks_realm_id || undefined,
-      shopifyAccessToken: shopifyAccessToken, // NEW: Assign shopifyAccessToken
-      shopifyStoreName: shopifyStoreName, // NEW: Assign shopifyStoreName
-    };
-  };
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
 
   const fetchProfile = useCallback(async () => {
-    setIsLoadingProfile(true);
-    const { data: { session } } = await supabase.auth.getSession();
-
-    console.log("[ProfileContext] fetchProfile called. Session:", session);
-
-    if (!session) {
+    if (!user) {
       setProfile(null);
+      setCompanyProfile(null);
       setIsLoadingProfile(false);
-      console.log("[ProfileContext] No session found. Profile set to null.");
       return;
     }
 
-    let userProfileData = null;
-    let profileFetchError = null;
+    setIsLoadingProfile(true);
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    const selectString = "id, full_name, phone, address, avatar_url, role, organization_id, created_at, email, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id";
-    console.log("[ProfileContext] fetchProfile - Attempting to select string:", selectString);
+      if (profileError) {
+        if (profileError.code === 'PGRST116') { // No rows found
+          console.warn("Profile not found for user, likely new user. Will create default profile.");
+          // This case is now handled by the auth.onAuthStateChange listener in AuthContext
+          // which triggers the onboarding flow.
+          setProfile(null);
+          setCompanyProfile(null);
+        } else {
+          throw profileError;
+        }
+      } else if (profileData) {
+        const mappedProfile: UserProfile = {
+          id: profileData.id,
+          fullName: profileData.full_name,
+          email: user.email || '',
+          phone: profileData.phone,
+          address: profileData.address,
+          avatarUrl: profileData.avatar_url,
+          role: profileData.role,
+          organizationId: profileData.organization_id,
+          createdAt: profileData.created_at,
+          quickbooksAccessToken: profileData.quickbooks_access_token,
+          quickbooksRefreshToken: profileData.quickbooks_refresh_token,
+          quickbooksRealmId: profileData.quickbooks_realm_id,
+        };
+        setProfile(mappedProfile);
 
-    // 1. Fetch profile without the organizations join
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select(selectString)
-      .eq("id", session.user.id)
-      .single();
+        if (profileData.organization_id) {
+          const { data: companyData, error: companyError } = await supabase
+            .from('organizations')
+            .select('*')
+            .eq('id', profileData.organization_id)
+            .single();
 
-    console.log("[ProfileContext] Raw profile data from DB (before org join):", profileData);
-    console.log("[ProfileContext] Profile fetch error:", profileError);
+          if (companyError) {
+            throw companyError;
+          }
 
-    if (profileError && profileError.code === 'PGRST116') {
-      console.warn(`[ProfileContext] No profile found for user ${session.user.id}. This might be a new user or a missing profile entry.`);
-      profileFetchError = new Error("User profile not found after authentication.");
-    } else if (profileError) {
-      console.error("[ProfileContext] Error fetching profile:", profileError);
-      profileFetchError = profileError;
-    } else if (profileData) {
-      userProfileData = profileData;
-      console.log("[ProfileContext] Successfully fetched basic profile data:", userProfileData);
-
-      // 2. If organization_id exists, fetch organization details separately
-      if (userProfileData.organization_id) {
-        console.log(`[ProfileContext] Fetching organization details separately for organization_id: ${userProfileData.organization_id}.`);
-        const { data: orgData, error: orgError } = await supabase
-          .from('organizations')
-          .select('unique_code, default_theme, name, address, currency, company_logo_url, shopify_access_token, shopify_store_name') // NEW: Select company profile fields
-          .eq('id', userProfileData.organization_id)
-          .single();
-
-        console.log("[ProfileContext] Raw organization data:", orgData);
-        console.log("[ProfileContext] Organization fetch error:", orgError);
-
-        if (orgError) {
-          console.error("[ProfileContext] Error fetching organization separately:", orgError);
-          // Don't fail the whole profile fetch, just log the error and proceed without org data
-        } else if (orgData) {
-          // 3. Merge organization data into userProfileData
-          userProfileData = { ...userProfileData, organizations: orgData };
-          console.log("[ProfileContext] Successfully fetched and attached organization data separately:", orgData);
+          if (companyData) {
+            const mappedCompanyProfile: CompanyProfile = {
+              id: companyData.id,
+              organizationId: companyData.id,
+              companyName: companyData.company_name,
+              companyAddress: companyData.company_address,
+              companyPhone: companyData.company_phone,
+              companyEmail: companyData.company_email,
+              companyWebsite: companyData.company_website,
+              companyCurrency: companyData.company_currency,
+              companyLogoUrl: companyData.company_logo_url,
+              organizationTheme: companyData.organization_theme,
+              createdAt: companyData.created_at,
+            };
+            setCompanyProfile(mappedCompanyProfile);
+          }
+        } else {
+          setCompanyProfile(null);
         }
       }
-    }
-
-    if (profileFetchError) {
+    } catch (error: any) {
+      console.error("Error fetching profile or company profile:", error);
+      showError("Failed to load user or company profile: " + error.message);
       setProfile(null);
-      console.log("[ProfileContext] Profile fetch error occurred. Profile set to null.");
-    } else if (userProfileData) {
-      const mappedProfile = mapSupabaseProfileToUserProfile(userProfileData, session.user.email);
-      setProfile(mappedProfile);
-      console.log("[ProfileContext] Mapped profile object:", mappedProfile);
-      console.log("[ProfileContext] Loaded user role:", mappedProfile.role);
+      setCompanyProfile(null);
+    } finally {
+      setIsLoadingProfile(false);
     }
-    setIsLoadingProfile(false);
-    console.log("[ProfileContext] fetchProfile finished.");
-  }, []);
+  }, [user]);
 
   const fetchAllProfiles = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session || profile?.role !== 'admin' || !profile?.organizationId) {
+    if (!profile?.organizationId) {
       setAllProfiles([]);
       return;
     }
-
-    // Simplified select statement for fetchAllProfiles
-    const selectString = "id, full_name, phone, address, avatar_url, role, organization_id, created_at, email, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id";
-    console.log("[ProfileContext] fetchAllProfiles - Attempting to select string:", selectString);
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(selectString) // Removed organizations(...) join here
-      .eq("organization_id", profile.organizationId);
-
-    if (error) {
-      console.error("Error fetching all profiles:", error);
-      setAllProfiles([]);
-    } else if (data) {
-      // For each profile, manually fetch organization details if needed (or accept null for list view)
-      const fetchedProfiles: UserProfile[] = await Promise.all(data.map(async (p: any) => {
-        let profileWithOrg = p;
-        if (p.organization_id) {
-          const { data: orgData, error: orgError } = await supabase
-            .from('organizations')
-            .select('unique_code, default_theme, name, address, currency, company_logo_url, shopify_access_token, shopify_store_name') // NEW: Select company profile fields
-            .eq('id', p.organization_id)
-            .single();
-          if (orgError) {
-            console.warn(`[ProfileContext] Error fetching organization for profile ${p.id}:`, orgError);
-          } else if (orgData) {
-            profileWithOrg = { ...p, organizations: orgData };
-          }
-        }
-        return mapSupabaseProfileToUserProfile(profileWithOrg);
-      }));
-      setAllProfiles(fetchedProfiles);
-    }
-  }, [profile?.role, profile?.organizationId]);
-
-  useEffect(() => {
-    fetchProfile();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchProfile();
-      } else {
-        setProfile(null);
-        setAllProfiles([]);
-        setIsLoadingProfile(false);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
-
-  useEffect(() => {
-    if (profile?.role === 'admin' && profile.organizationId) {
-      fetchAllProfiles();
-    } else {
-      setAllProfiles([]);
-    }
-  }, [profile?.role, profile?.organizationId, fetchAllProfiles]);
-
-  const updateProfile = async (updates: Partial<Omit<UserProfile, "id" | "email" | "createdAt" | "role" | "organizationId" | "organizationCode" | "organizationTheme" | "companyName" | "companyAddress" | "companyCurrency" | "companyLogoUrl" | "quickbooksAccessToken" | "quickbooksRefreshToken" | "quickbooksRealmId" | "shopifyAccessToken" | "shopifyStoreName">>) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      showError("You must be logged in to update your profile.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: updates.fullName,
-        phone: updates.phone,
-        address: updates.address,
-        avatar_url: updates.avatarUrl,
-      })
-      .eq("id", session.user.id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error updating profile:", error);
-      showError(`Failed to update profile: ${error.message}`);
-    } else if (data) {
-      setProfile(mapSupabaseProfileToUserProfile(data, session.user.email));
-      showSuccess("Profile updated successfully!");
-    }
-  };
-
-  const updateOrganizationTheme = async (theme: string) => {
-    if (!profile || profile.role !== 'admin' || !profile.organizationId) {
-      showError("You do not have permission to update the organization's theme.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('organizations')
-      .update({ default_theme: theme })
-      .eq('id', profile.organizationId);
-
-    if (error) {
-      console.error("Error updating organization theme:", error);
-      showError(`Failed to update organization theme: ${error.message}`);
-    } else {
-      showSuccess("Organization theme updated successfully!");
-      // Refresh profile to get the new theme
-      fetchProfile();
-    }
-  };
-
-  const updateUserRole = async (userId: string, newRole: string, organizationId: string | null) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session || profile?.role !== 'admin' || !profile?.organizationId) {
-      showError("You do not have permission to update user roles.");
-      return;
-    }
-
     try {
-      const { data, error } = await supabase.functions.invoke('update-user-profile', {
-        body: JSON.stringify({
-          targetUserId: userId,
-          newRole: newRole,
-          organizationId: organizationId,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('organization_id', profile.organizationId);
 
       if (error) {
         throw error;
       }
 
-      if (data.error) {
-        throw new Error(data.error);
+      const mappedProfiles: UserProfile[] = data.map((p: any) => ({
+        id: p.id,
+        fullName: p.full_name,
+        email: p.email,
+        phone: p.phone,
+        address: p.address,
+        avatarUrl: p.avatar_url,
+        role: p.role,
+        organizationId: p.organization_id,
+        createdAt: p.created_at,
+        quickbooksAccessToken: p.quickbooks_access_token,
+        quickbooksRefreshToken: p.quickbooks_refresh_token,
+        quickbooksRealmId: p.quickbooks_realm_id,
+      }));
+      setAllProfiles(mappedProfiles);
+    } catch (error: any) {
+      console.error("Error fetching all profiles:", error);
+      showError("Failed to load all user profiles: " + error.message);
+      setAllProfiles([]);
+    }
+  }, [profile?.organizationId]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile, user]); // Re-fetch profile if user changes
+
+  useEffect(() => {
+    if (profile?.organizationId) {
+      fetchAllProfiles();
+    }
+  }, [profile?.organizationId, fetchAllProfiles]);
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!profile) {
+      showError("No profile to update.");
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: updates.fullName,
+          phone: updates.phone,
+          address: updates.address,
+          avatar_url: updates.avatarUrl,
+          role: updates.role,
+          quickbooks_access_token: updates.quickbooksAccessToken,
+          quickbooks_refresh_token: updates.quickbooksRefreshToken,
+          quickbooks_realm_id: updates.quickbooksRealmId,
+        })
+        .eq('id', profile.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
       }
 
-      const updatedProfileData = data.profile;
-
-      setAllProfiles((prevProfiles) =>
-        prevProfiles.map((p) =>
-          p.id === updatedProfileData.id ? {
-            ...mapSupabaseProfileToUserProfile(updatedProfileData),
-            organizationCode: profile?.organizationCode, // Keep existing organizationCode
-          } : p
-        )
-      );
-      showSuccess(`Role for ${updatedProfileData.full_name || updatedProfileData.id} updated to ${newRole}!`);
-      if (session.user.id === updatedProfileData.id) {
-        fetchProfile();
+      if (data) {
+        const updatedMappedProfile: UserProfile = {
+          id: data.id,
+          fullName: data.full_name,
+          email: user?.email || '',
+          phone: data.phone,
+          address: data.address,
+          avatarUrl: data.avatar_url,
+          role: data.role,
+          organizationId: data.organization_id,
+          createdAt: data.created_at,
+          quickbooksAccessToken: data.quickbooks_access_token,
+          quickbooksRefreshToken: data.quickbooks_refresh_token,
+          quickbooksRealmId: data.quickbooks_realm_id,
+        };
+        setProfile(updatedMappedProfile);
+        showSuccess("Profile updated successfully!");
       }
     } catch (error: any) {
-      console.error("Error calling Edge Function to update user role:", error);
-      showError(`Failed to update role for user ${userId}: ${error.message}`);
+      console.error("Error updating profile:", error);
+      showError("Failed to update profile: " + error.message);
+    }
+  };
+
+  const updateCompanyProfile = async (updates: Partial<CompanyProfile>) => {
+    if (!companyProfile?.id) {
+      showError("No company profile to update.");
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('organizations')
+        .update({
+          company_name: updates.companyName,
+          company_address: updates.companyAddress,
+          company_phone: updates.companyPhone,
+          company_email: updates.companyEmail,
+          company_website: updates.companyWebsite,
+          company_currency: updates.companyCurrency,
+          company_logo_url: updates.companyLogoUrl,
+          organization_theme: updates.organizationTheme,
+        })
+        .eq('id', companyProfile.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const updatedMappedCompanyProfile: CompanyProfile = {
+          id: data.id,
+          organizationId: data.id,
+          companyName: data.company_name,
+          companyAddress: data.company_address,
+          companyPhone: data.company_phone,
+          companyEmail: data.company_email,
+          companyWebsite: data.company_website,
+          companyCurrency: data.company_currency,
+          companyLogoUrl: data.company_logo_url,
+          organizationTheme: data.organization_theme,
+          createdAt: data.created_at,
+        };
+        setCompanyProfile(updatedMappedCompanyProfile);
+        showSuccess("Company profile updated successfully!");
+      }
+    } catch (error: any) {
+      console.error("Error updating company profile:", error);
+      showError("Failed to update company profile: " + error.message);
     }
   };
 
   return (
-    <ProfileContext.Provider value={{ profile, allProfiles, isLoadingProfile, updateProfile, updateUserRole, updateOrganizationTheme, fetchProfile, fetchAllProfiles }}>
+    <ProfileContext.Provider
+      value={{
+        profile,
+        companyProfile,
+        isLoadingProfile,
+        updateProfile,
+        updateCompanyProfile,
+        fetchProfile,
+        allProfiles,
+        fetchAllProfiles,
+      }}
+    >
       {children}
     </ProfileContext.Provider>
   );
@@ -337,7 +304,7 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
 export const useProfile = () => {
   const context = useContext(ProfileContext);
   if (context === undefined) {
-    throw new Error("useProfile must be used within a ProfileProvider");
+    throw new Error('useProfile must be used within a ProfileProvider');
   }
   return context;
 };
