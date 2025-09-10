@@ -16,6 +16,7 @@
   },
   "imports": {
     "https://esm.sh/@supabase/supabase-js@2.55.0": "https://esm.sh/@supabase/supabase-js@2.55.0",
-    "https://esm.sh/xlsx@0.18.5": "https://esm.sh/xlsx@0.18.5"
+    "https://esm.sh/xlsx@0.18.5": "https://esm.sh/xlsx@0.18.5",
+    "https://deno.land/std@0.200.0/http/server.ts": "https://deno.land/std@0.200.0/http/server.ts"
   }
 }

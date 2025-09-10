@@ -1,11 +1,22 @@
+// @deno-types="npm:@supabase/supabase-js"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+// Explicitly declare Deno global to resolve TS2304 errors for Deno.env
+declare global {
+  namespace Deno {
+    namespace env {
+      function get(key: string): string | undefined;
+    }
+  }
+}
+
+serve(async (req) => {
   console.log('Full incoming request URL:', req.url);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -23,7 +34,7 @@ Deno.serve(async (req) => {
 
     let userId: string | null = null;
     let redirectToFrontend: string | null = null;
-    const FALLBACK_CLIENT_APP_BASE_URL = 'https://dyad-generated-app.vercel.app';
+    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app'; // UPDATED: Use your Vercel app URL
 
     if (state) {
       try {
