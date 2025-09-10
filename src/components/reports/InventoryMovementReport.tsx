@@ -29,7 +29,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
 }) => {
   const { stockMovements, fetchStockMovements } = useStockMovement();
   const { companyProfile } = useOnboarding();
-  const { allProfiles, fetchAllProfiles } = useProfile();
+  const { allProfiles, fetchAllProfiles, profile } = useProfile(); // NEW: Use useProfile
   const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
 
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -37,6 +37,11 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
   const [movementTypeFilter, setMovementTypeFilter] = useState<"all" | "add" | "subtract">("all");
 
   const generateReport = useCallback(async () => {
+    if (!profile?.companyProfile) {
+      showError("Company profile not loaded. Cannot generate report.");
+      return;
+    }
+
     await fetchStockMovements(); // Ensure latest movements are fetched
     await fetchAllProfiles(); // Ensure user profiles are loaded for names
 
@@ -56,10 +61,10 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     });
 
     const reportProps = {
-      companyName: companyProfile?.name || "Fortress Inventory",
-      companyAddress: companyProfile?.address || "N/A",
-      companyContact: companyProfile?.currency || "N/A",
-      companyLogoUrl: localStorage.getItem("companyLogo") || undefined,
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
+      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       movements: filteredMovements,
       dateRange, // NEW: Pass dateRange to reportProps
@@ -70,7 +75,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "inventory-movement-report" });
     setReportGenerated(true);
-  }, [stockMovements, movementTypeFilter, companyProfile, onGenerateReport, allProfiles, fetchStockMovements, fetchAllProfiles, dateRange, structuredLocations]); // NEW: Added dateRange to dependencies
+  }, [stockMovements, movementTypeFilter, onGenerateReport, allProfiles, fetchStockMovements, fetchAllProfiles, dateRange, structuredLocations, profile]); // NEW: Added profile to dependencies
 
   useEffect(() => {
     generateReport();
@@ -151,7 +156,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                     <TableHead className="text-right">New Qty</TableHead>
                     <TableHead>Reason</TableHead>
                     <TableHead>User</TableHead>
-                    <TableHead>Timestamp</TableHead>
+                    <TableHead className="w-[180px]">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label"; // Added Label import
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryValuationReportProps {
   dateRange: DateRange | undefined; // NEW: dateRange prop
@@ -29,13 +30,18 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
   const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
-  const { companyProfile } = useOnboarding();
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [groupBy, setGroupBy] = useState<"category" | "location">("category");
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
 
   const generateReport = useCallback(() => {
+    if (!profile?.companyProfile) {
+      showError("Company profile not loaded. Cannot generate report.");
+      return;
+    }
+
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
@@ -91,10 +97,10 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
     }
 
     const reportProps = {
-      companyName: companyProfile?.name || "Fortress Inventory",
-      companyAddress: companyProfile?.address || "N/A",
-      companyContact: companyProfile?.currency || "N/A",
-      companyLogoUrl: localStorage.getItem("companyLogo") || undefined,
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
+      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       groupedData,
       groupBy,
@@ -106,7 +112,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "inventory-valuation-report" });
     setReportGenerated(true);
-  }, [inventoryItems, categories, structuredLocations, groupBy, companyProfile, onGenerateReport, dateRange]); // NEW: Added dateRange to dependencies
+  }, [inventoryItems, categories, structuredLocations, groupBy, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
 
   useEffect(() => {
     generateReport();

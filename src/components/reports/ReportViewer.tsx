@@ -82,7 +82,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
       showError("No report data to print. Please generate the report first.");
       return;
     }
-    if (!companyProfile) {
+    if (!profile?.companyProfile) { // Corrected access
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -90,10 +90,10 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
     // Each report component will need to provide its specific PDF content props
     // This is a placeholder, actual implementation will be in individual report components
     const pdfProps = {
-      companyName: companyProfile.name,
-      companyAddress: companyProfile.address,
-      companyContact: companyProfile.currency, // Using currency as a generic contact for company
-      companyLogoUrl: companyProfile.companyLogoUrl || undefined, // NEW: Pass companyLogoUrl
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress, // Corrected access
+      companyContact: profile.companyProfile.companyCurrency, // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Pass companyLogoUrl
       reportDate: new Date().toLocaleDateString(),
       dateRange, // NEW: Pass dateRange to PDF props
       structuredLocations, // NEW: Pass structuredLocations to PDF props
@@ -102,7 +102,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
 
     initiatePrint({ type: reportData.printType, props: pdfProps });
     showSuccess("Report sent to printer!");
-  }, [reportData, companyProfile, initiatePrint, dateRange, structuredLocations]); // NEW: Add dateRange and structuredLocations to dependencies
+  }, [reportData, profile, initiatePrint, dateRange, structuredLocations]); // NEW: Add profile to dependencies
 
   const handleSummarizeReport = async () => {
     if (!reportData) {

@@ -1,4 +1,4 @@
-import React from "react"; // Re-added React
+import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
@@ -32,7 +32,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
   const { profile } = useProfile();
   const pickDateObj = parseAndValidateDate(pickDate);
 
-  if (!profile) {
+  if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
   }
 
@@ -41,8 +41,8 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyLogoUrl ? (
-            <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          {profile.companyProfile.companyLogoUrl ? ( // Corrected access
+            <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
@@ -61,10 +61,10 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">ISSUED BY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyName || "Your Company"}</p>
-          <p>{profile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyAddress?.split('\n')[1] || ""}</p>
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
         </div>
       </div>
 

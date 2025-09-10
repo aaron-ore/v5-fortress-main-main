@@ -13,11 +13,11 @@ const ThemeInitializer: React.FC<ThemeInitializerProps> = ({ children }) => {
   const { setTheme, theme } = useTheme();
 
   useEffect(() => {
-    if (!isLoadingProfile && profile?.organizationTheme && theme !== profile.organizationTheme) {
-      console.log(`[ThemeInitializer] Setting theme to: ${profile.organizationTheme}`);
-      setTheme(profile.organizationTheme);
+    if (!isLoadingProfile && profile?.companyProfile?.organizationTheme && theme !== profile.companyProfile.organizationTheme) { // Corrected access
+      console.log(`[ThemeInitializer] Setting theme to: ${profile.companyProfile.organizationTheme}`); // Corrected access
+      setTheme(profile.companyProfile.organizationTheme); // Corrected access
     }
-  }, [isLoadingProfile, profile?.organizationTheme, setTheme, theme]);
+  }, [isLoadingProfile, profile?.companyProfile?.organizationTheme, setTheme, theme]); // Corrected dependency
 
   return <>{children}</>;
 };

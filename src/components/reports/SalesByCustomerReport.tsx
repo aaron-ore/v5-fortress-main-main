@@ -9,6 +9,7 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fn
 import { Loader2, Users, DollarSign, Receipt, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CustomerSalesData {
   customerName: string;
@@ -32,11 +33,17 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
 }) => {
   const { orders } = useOrders();
   const { companyProfile } = useOnboarding();
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
 
   const generateReport = useCallback(() => {
+    if (!profile?.companyProfile) {
+      showError("Company profile not loaded. Cannot generate report.");
+      return;
+    }
+
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
@@ -72,10 +79,10 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
     })).sort((a, b) => b.totalSales - a.totalSales);
 
     const reportProps = {
-      companyName: companyProfile?.name || "Fortress Inventory",
-      companyAddress: companyProfile?.address || "N/A",
-      companyContact: companyProfile?.currency || "N/A",
-      companyLogoUrl: localStorage.getItem("companyLogo") || undefined,
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
+      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       customerSales,
       dateRange, // NEW: Pass dateRange to reportProps
@@ -84,7 +91,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "sales-by-customer-report" });
     setReportGenerated(true);
-  }, [orders, companyProfile, onGenerateReport, dateRange]); // NEW: Added dateRange to dependencies
+  }, [orders, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
 
   useEffect(() => {
     generateReport();

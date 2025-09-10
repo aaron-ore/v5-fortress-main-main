@@ -10,6 +10,7 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fn
 import { Loader2, Package, Receipt, AlertTriangle, DollarSign, FileText } from "lucide-react"; // Added FileText
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface DashboardSummaryReportProps {
   dateRange: DateRange | undefined; // NEW: dateRange prop
@@ -27,11 +28,17 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
   const { companyProfile } = useOnboarding();
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
 
   const generateReport = useCallback(() => {
+    if (!profile?.companyProfile) {
+      showError("Company profile not loaded. Cannot generate report.");
+      return;
+    }
+
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
@@ -74,15 +81,15 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
+        return dateB.getTime() - dateB.getTime();
       })
       .slice(0, 5);
 
     const reportProps = {
-      companyName: companyProfile?.name || "Fortress Inventory",
-      companyAddress: companyProfile?.address || "N/A",
-      companyContact: companyProfile?.currency || "N/A",
-      companyLogoUrl: localStorage.getItem("companyLogo") || undefined,
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
+      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       totalStockValue,
       totalUnitsOnHand,
@@ -96,7 +103,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "dashboard-summary" });
     setReportGenerated(true);
-  }, [inventoryItems, orders, companyProfile, onGenerateReport, dateRange]); // NEW: Add dateRange to dependencies
+  }, [inventoryItems, orders, onGenerateReport, dateRange, profile]); // NEW: Added profile to dependencies
 
   useEffect(() => {
     // Regenerate report if dependencies change

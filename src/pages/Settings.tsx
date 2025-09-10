@@ -13,7 +13,8 @@ import { showError, showSuccess } from "@/utils/toast";
 import { Loader2, Palette, Settings as SettingsIcon, Image as ImageIcon, X } from "lucide-react";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Link } from "react-router-dom";
-import { uploadFileToSupabase } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // Import getFilePathFromPublicUrl
+import { supabase } from "@/lib/supabaseClient"; // Import supabase
 
 const Settings: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -31,6 +32,7 @@ const Settings: React.FC = () => {
 
   const [selectedTheme, setSelectedTheme] = useState(profile?.companyProfile?.organizationTheme || "dark");
   const [isSavingTheme, setIsSavingTheme] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false); // Declare isUploadingImage state
 
   useEffect(() => {
     if (profile?.companyProfile) {
@@ -79,9 +81,9 @@ const Settings: React.FC = () => {
     setIsSavingCompanyProfile(true);
     let finalCompanyLogoUrl = companyLogoUrlPreview;
 
-    if (imageFile) {
+    if (companyLogoFile) { // Use companyLogoFile state
       try {
-        setIsUploadingImage(true);
+        setIsUploadingImage(true); // Use setIsUploadingImage
         if (profile?.companyProfile?.companyLogoUrl) {
           const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
           if (oldFilePath) {
@@ -89,16 +91,16 @@ const Settings: React.FC = () => {
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
           }
         }
-        finalCompanyLogoUrl = await uploadFileToSupabase(imageFile, 'company-logos', 'logos/');
+        finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // Use companyLogoFile
         showSuccess("Company logo uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading company logo:", error);
         showError(`Failed to upload company logo: ${error.message}`);
         setIsSavingCompanyProfile(false);
-        setIsUploadingImage(false);
+        setIsUploadingImage(false); // Use setIsUploadingImage
         return;
       } finally {
-        setIsUploadingImage(false);
+        setIsUploadingImage(false); // Use setIsUploadingImage
       }
     } else if (companyLogoUrlPreview === "") {
       finalCompanyLogoUrl = undefined;

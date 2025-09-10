@@ -1,38 +1,32 @@
 import React from "react";
-import { format, isValid } from "date-fns"; // Import isValid
+import { format, isValid } from "date-fns";
 import { StockMovement } from "@/context/StockMovementContext";
 import { UserProfile } from "@/context/ProfileContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { DateRange } from "react-day-picker"; // NEW: Import DateRange
-import { Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { DateRange } from "react-day-picker";
+import { Location } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext";
 
 interface InventoryMovementPdfContentProps {
-  // REMOVED: companyName: string;
-  // REMOVED: companyAddress: string;
-  // REMOVED: companyContact: string;
-  companyLogoUrl?: string; // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl?: string;
   reportDate: string;
   movements: StockMovement[];
-  dateRange?: DateRange; // NEW: Add dateRange prop
+  dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: Location[]; // NEW: Add structuredLocations prop
+  structuredLocations: Location[];
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({
-  // REMOVED: companyName,
-  // REMOVED: companyAddress,
-  // REMOVED: companyContact,
-  companyLogoUrl, // Keep this prop for now, as it's passed explicitly
+  companyLogoUrl,
   reportDate,
   movements,
-  dateRange, // NEW: Destructure dateRange
+  dateRange,
   allProfiles,
-  structuredLocations, // NEW: Destructure structuredLocations
+  structuredLocations,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile from ProfileContext
+  const { profile } = useProfile();
 
-  if (!profile) {
+  if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
   }
 
@@ -55,10 +49,9 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyLogoUrl ? ( // Use profile.companyLogoUrl
-            <img src={profile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          {profile.companyProfile.companyLogoUrl ? ( // Corrected access
+            <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            // Removed "YOUR LOGO" placeholder
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
@@ -67,29 +60,18 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
-          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p> {/* NEW: Display data period */}
+          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p>
         </div>
       </div>
 
       {/* Company Info */}
       <div className="mb-8">
-        <p className="font-bold mb-2">REPORT FOR:</p>
-        <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyName || "Your Company"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyCurrency || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* NEW: Use from profile */}
-          <p>{profile.companyAddress?.split('\n')[1] || ""}</p> {/* NEW: Use from profile */}
-        </div>
-      </div>
-
-      {/* Summary */}
-      <div className="mb-8">
         <p className="font-bold mb-2">SUMMARY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">Total Movements: {movements.length}</p>
-          <p className="text-xs text-gray-600 mt-1">
-            This report details all recorded stock movements, including additions, subtractions, and reasons.
-          </p>
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
         </div>
       </div>
 

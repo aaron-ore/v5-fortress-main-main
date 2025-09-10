@@ -45,7 +45,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
 }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
   const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
-  const { companyProfile } = useOnboarding();
+  const { companyProfile } = useOnboarding(); // NEW: Use useOnboarding for companyProfile
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "resolved">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -100,14 +100,19 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
   }, [profile?.organizationId, statusFilter, dateRange]); // NEW: Added dateRange to dependencies
 
   const generateReport = useCallback(async () => {
+    if (!profile?.companyProfile) {
+      showError("Company profile not loaded. Cannot generate report.");
+      return;
+    }
+
     const itemsToDisplay = await fetchDiscrepancies();
     await fetchAllProfiles(); // Ensure user profiles are loaded for names
 
     const reportProps = {
-      companyName: companyProfile?.name || "Fortress Inventory",
-      companyAddress: companyProfile?.address || "N/A",
-      companyContact: companyProfile?.currency || "N/A",
-      companyLogoUrl: localStorage.getItem("companyLogo") || undefined,
+      companyName: profile.companyProfile.companyName, // Corrected access
+      companyAddress: profile.companyProfile.companyAddress || "N/A", // Corrected access
+      companyContact: profile.companyProfile.companyCurrency || "N/A", // Corrected access
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       discrepancies: itemsToDisplay,
       statusFilter,
@@ -119,7 +124,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     setCurrentReportData(reportProps);
     onGenerateReport({ pdfProps: reportProps, printType: "discrepancy-report" });
     setReportGenerated(true);
-  }, [fetchDiscrepancies, companyProfile, statusFilter, onGenerateReport, allProfiles, fetchAllProfiles, dateRange, structuredLocations]); // NEW: Added dateRange to dependencies
+  }, [fetchDiscrepancies, statusFilter, onGenerateReport, allProfiles, fetchAllProfiles, dateRange, structuredLocations, profile]); // NEW: Added profile to dependencies
 
   useEffect(() => {
     generateReport();

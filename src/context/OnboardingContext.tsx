@@ -1,53 +1,55 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { showSuccess, showError } from "@/utils/toast";
-import { useProfile } from "./ProfileContext";
+import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileContext"; // Import CompanyProfile from ProfileContext
 import { supabase } from "@/lib/supabaseClient";
 import { generateUniqueCode } from "@/utils/numberGenerator";
 import { parseLocationString } from "@/utils/locationParser";
 
-export interface CompanyProfile {
-  name: string;
-  currency: string;
-  address: string;
-  companyLogoUrl?: string;
-}
+// Removed local CompanyProfile interface as it's now imported from ProfileContext
+// export interface CompanyProfile {
+//   name: string;
+//   currency: string;
+//   address: string;
+//   companyLogoUrl?: string;
+// }
 
 export interface Location {
   id: string;
   organizationId: string;
-  fullLocationString: string;
-  displayName?: string;
+  fullLocationString: string; // e.g., "A-01-01-1-A"
+  displayName?: string; // e.g., "Main Warehouse"
   area: string;
   row: string;
   bay: string;
   level: string;
   pos: string;
-  color: string;
+  color: string; // Hex code
   createdAt: string;
   userId: string;
 }
 
 interface OnboardingContextType {
   isOnboardingComplete: boolean;
-  companyProfile: CompanyProfile | null;
-  locations: Location[];
+  companyProfile: ProfileCompanyProfile | null; // Use the imported CompanyProfile type
+  locations: Location[]; // Changed to Location[]
   markOnboardingComplete: () => void;
-  setCompanyProfile: (profileData: CompanyProfile, uniqueCode?: string) => Promise<void>;
-  addLocation: (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">) => Promise<Location | null>;
-  updateLocation: (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => Promise<void>;
-  removeLocation: (locationId: string) => Promise<void>;
-  fetchLocations: () => Promise<void>;
+  setCompanyProfile: (profile: ProfileCompanyProfile, uniqueCode?: string) => Promise<void>; // Use the imported CompanyProfile type
+  addLocation: (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">) => Promise<Location | null>; // Takes structured data, returns Location or null
+  updateLocation: (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => Promise<void>; // Takes structured data
+  removeLocation: (locationId: string) => Promise<void>; // Removes by ID
+  fetchLocations: () => Promise<void>; // Added fetch function
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
+// Helper function to extract storage path from URL (replicated from SQL function)
 const getStoragePathFromUrl = (url: string): string | null => {
   const match = url.match(/public\/company-logos\/(.*)/);
   return match ? match[1] : null;
 };
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile } = useProfile();
+  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile } = useProfile(); // NEW: Get companyProfile from ProfileContext
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("onboarding_skipped") === "true";
@@ -55,15 +57,19 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     return false;
   });
 
+  // Use companyProfile directly from ProfileContext
   const companyProfile = profile?.companyProfile || null;
 
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]); // Now stores Location objects
 
+  // Effect to check onboarding status
   useEffect(() => {
     if (!isLoadingProfile) {
+      // Onboarding is considered complete if a profile exists and has an organization ID
       if (profile?.organizationId) {
         setIsOnboardingComplete(true);
       } else {
+        // If no organizationId, check if onboarding was explicitly skipped
         setIsOnboardingComplete(localStorage.getItem("onboarding_skipped") === "true");
       }
     } else if (!isLoadingProfile && !profile) {
@@ -71,6 +77,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [profile, isLoadingProfile]);
 
+  // Helper function to map Supabase data to Location interface
   const mapSupabaseLocationToLocation = (data: any): Location => ({
     id: data.id,
     organizationId: data.organization_id,
@@ -86,6 +93,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     userId: data.user_id,
   });
 
+  // Fetch locations from Supabase
   const fetchLocations = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
@@ -108,25 +116,26 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
+  // Effect to fetch locations on profile load or change
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
       fetchLocations();
     } else if (!isLoadingProfile && !profile?.organizationId) {
-      setLocations([]);
+      setLocations([]); // Clear locations if no organization
     }
   }, [isLoadingProfile, profile?.organizationId]);
 
 
   const markOnboardingComplete = () => {
     setIsOnboardingComplete(true);
-    localStorage.setItem("onboarding_skipped", "true");
+    localStorage.setItem("onboarding_skipped", "true"); // Mark as skipped if user completes it
     showSuccess("Onboarding complete! Welcome to Fortress.");
   };
 
-  const setCompanyProfile = async (profileData: CompanyProfile, newUniqueCode?: string) => {
+  const setCompanyProfile = async (profileData: ProfileCompanyProfile, newUniqueCode?: string) => { // Add newUniqueCode parameter
     console.log("[OnboardingContext] setCompanyProfile called with profileData:", profileData, "newUniqueCode:", newUniqueCode);
 
-    if (!profile) {
+    if (!profile) { // Ensure profile is not null before proceeding
       console.warn("[OnboardingContext] Profile is null, cannot save company profile to Supabase.");
       showError("User profile not loaded. Please log in again.");
       return;
@@ -138,12 +147,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
       if (!profile.organizationId) {
         console.log("[OnboardingContext] User has no organization_id. Creating new organization.");
-        if (!uniqueCodeToPersist) {
+        if (!uniqueCodeToPersist) { // If no uniqueCode provided, generate one
           uniqueCodeToPersist = generateUniqueCode();
         }
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
-          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist, company_logo_url: profileData.companyLogoUrl })
+          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist, company_logo_url: profileData.companyLogoUrl }) // NEW: Save company_logo_url
           .select()
           .single();
 
@@ -164,24 +173,26 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       } else {
         console.log("[OnboardingContext] User already has organization_id:", profile.organizationId);
 
+        // --- NEW CHECK FOR DUPLICATE ORGANIZATION NAME ---
         const { data: existingOrgWithName, error: checkNameError } = await supabase
           .from('organizations')
           .select('id')
           .eq('name', profileData.name)
-          .neq('id', profile.organizationId)
+          .neq('id', profile.organizationId) // Exclude the current organization
           .single();
 
-        if (checkNameError && checkNameError.code !== 'PGRST116') {
-          throw checkNameError;
+        if (checkNameError && checkNameError.code !== 'PGRST116') { // PGRST116 means no rows found
+          throw checkNameError; // Re-throw if it's a real error, not just no match
         }
 
         if (existingOrgWithName) {
           throw new Error(`An organization with the name "${profileData.name}" already exists. Please choose a different name.`);
         }
+        // --- END NEW CHECK ---
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme')
+          .select('unique_code, company_logo_url, default_theme') // Fetch existing company_logo_url and default_theme
           .eq('id', profile.organizationId)
           .single();
 
@@ -190,7 +201,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         console.log("[OnboardingContext] Existing organization fetched:", existingOrg);
 
-        if (!uniqueCodeToPersist) {
+        if (!uniqueCodeToPersist) { // If no newUniqueCode provided, use existing or generate if missing
           if (!existingOrg?.unique_code) {
             uniqueCodeToPersist = generateUniqueCode();
             console.log(`[OnboardingContext] Generated missing unique_code: ${uniqueCodeToPersist} for organization ${profile.organizationId}`);
@@ -203,6 +214,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
 
         const oldCompanyLogoUrl = existingOrg?.company_logo_url;
+        // If the new logo URL is null/undefined/empty AND an old one existed, delete the old file
         if ((profileData.companyLogoUrl === undefined || profileData.companyLogoUrl === null || profileData.companyLogoUrl === "") && oldCompanyLogoUrl) {
             const oldFilePath = getStoragePathFromUrl(oldCompanyLogoUrl);
             if (oldFilePath) {
@@ -225,7 +237,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           address: profileData.address,
           currency: profileData.currency,
           unique_code: uniqueCodeToPersist,
-          default_theme: existingOrg?.default_theme || 'dark',
+          default_theme: existingOrg?.default_theme || 'dark', // Keep existing theme or default
           company_logo_url: profileData.companyLogoUrl,
         };
         console.log("[OnboardingContext] Update payload for organizations table:", updatePayload);
@@ -239,7 +251,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         if (updateOrgError) {
           console.error("[OnboardingContext] Error updating organization:", updateOrgError);
-          throw updateOrgError;
+          throw updateOrgError; // Throw the full error object
         }
         console.log("[OnboardingContext] Organization updated successfully.");
         showSuccess(`Company profile for "${profileData.name}" updated successfully!`);
@@ -250,12 +262,13 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       console.log("[OnboardingContext] fetchProfile completed after organization update.");
 
     } catch (error: any) {
-      console.error("[OnboardingContext] Error during organization setup/update:", error);
+      console.error("[OnboardingContext] Error during organization setup/update:", error); // Log full error object
       showError(`Failed to set up/update organization: ${error.message || 'Unknown error'}`);
-      throw error;
+      throw error; // Re-throw to propagate to caller if needed
     }
   };
 
+  // Add a new structured location
   const addLocation = async (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">): Promise<Location | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
@@ -263,6 +276,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       return null;
     }
 
+    // NEW: Check if location already exists in DB before inserting
     const { data: existingDbLocation, error: fetchError } = await supabase
       .from("locations")
       .select("*")
@@ -270,7 +284,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       .eq("full_location_string", location.fullLocationString)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
       console.error("Error checking for existing location:", fetchError);
       showError(`Failed to check for existing location: ${fetchError.message}`);
       return null;
@@ -279,6 +293,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     if (existingDbLocation) {
       console.log(`Location "${location.fullLocationString}" already exists in DB. Skipping insert.`);
       const mappedExistingLocation = mapSupabaseLocationToLocation(existingDbLocation);
+      // Ensure it's in the local state if not already
       setLocations(prev => {
         if (!prev.some(loc => loc.id === mappedExistingLocation.id)) {
           return [...prev, mappedExistingLocation];
@@ -318,6 +333,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     return null;
   };
 
+  // Update an existing structured location
   const updateLocation = async (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
@@ -353,6 +369,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
+  // Remove a structured location by ID
   const removeLocation = async (locationId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {

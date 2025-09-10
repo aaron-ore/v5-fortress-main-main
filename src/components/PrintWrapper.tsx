@@ -14,7 +14,7 @@ import LowStockPdfContent from "./reports/pdf/LowStockPdfContent";
 import InventoryMovementPdfContent from "./reports/pdf/InventoryMovementPdfContent";
 import SalesByCustomerPdfContent from "./reports/pdf/SalesByCustomerPdfContent";
 import SalesByProductPdfContent from "./reports/pdf/SalesByProductPdfContent";
-import PurchaseOrderStatusPdfContent from "./components/reports/pdf/PurchaseOrderStatusPdfContent";
+import PurchaseOrderStatusPdfContent from "./reports/pdf/PurchaseOrderStatusPdfContent"; // Corrected import path
 import ProfitabilityPdfContent from "./reports/pdf/ProfitabilityPdfContent";
 import DiscrepancyPdfContent from "./reports/pdf/DiscrepancyPdfContent";
 
