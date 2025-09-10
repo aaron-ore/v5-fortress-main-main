@@ -1,9 +1,11 @@
+"use client";
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 // REMOVED: import { mockCategories } from "@/utils/mockData";
-// REMOVED: import { useActivityLogs } from "./ActivityLogContext";
+// REMOVED: import { useActivityLogs } from "@/context/ActivityLogContext";
 
 export interface Category { // Exported interface
   id: string;

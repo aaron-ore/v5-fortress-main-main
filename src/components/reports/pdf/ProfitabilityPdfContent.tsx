@@ -16,7 +16,7 @@ interface ProfitabilityPdfContentProps {
   totalSalesRevenue: number;
   totalCostOfGoodsSold: number;
   dateRange?: DateRange;
-  groupBy: "category" | "product"; // Added groupBy prop
+  groupBy?: "category" | "product"; // Added groupBy prop
 }
 
 const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
@@ -44,7 +44,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyProfile.companyLogoUrl ? ( // Corrected access
+          {profile.companyProfile.companyLogoUrl ? (
             <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
@@ -52,7 +52,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             PROFITABILITY REPORT
           </h1>
-          <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}</p>
+          <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy?.charAt(0).toUpperCase() + groupBy?.slice(1) || "N/A"}</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>

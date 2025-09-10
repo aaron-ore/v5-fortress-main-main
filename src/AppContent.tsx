@@ -130,7 +130,8 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const {  } = useOnboarding(); // Removed unused destructured variables
+  // Removed unused destructured variables from useOnboarding
+  // const {  } = useOnboarding(); 
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);

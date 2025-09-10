@@ -70,7 +70,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyProfile.companyLogoUrl ? ( // Corrected access
+          {profile.companyProfile.companyLogoUrl ? (
             <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
@@ -89,10 +89,10 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyCurrency || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p> {/* Corrected access */}
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p> {/* Corrected access */}
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

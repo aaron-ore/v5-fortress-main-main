@@ -2,8 +2,8 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { InventoryItem } from "@/context/InventoryContext";
-import { OrderItem } from "@/context/OrdersContext";
+// REMOVED: import { InventoryItem } from "@/context/InventoryContext";
+// REMOVED: import { OrderItem } from "@/context/OrdersContext";
 
 interface POItem {
   id: number;

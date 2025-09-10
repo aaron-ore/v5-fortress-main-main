@@ -42,7 +42,7 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {profile.companyProfile.companyLogoUrl ? ( // Corrected access
+          {profile.companyProfile.companyLogoUrl ? (
             <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
