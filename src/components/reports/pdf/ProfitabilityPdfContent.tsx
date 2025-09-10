@@ -16,7 +16,7 @@ interface ProfitabilityPdfContentProps {
   totalSalesRevenue: number;
   totalCostOfGoodsSold: number;
   dateRange?: DateRange;
-  groupBy?: "category" | "product"; // Added groupBy prop
+  // Removed: groupBy?: "category" | "product"; // Added groupBy prop
 }
 
 const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
@@ -25,7 +25,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
   totalSalesRevenue,
   totalCostOfGoodsSold,
   dateRange,
-  groupBy, // Destructure groupBy
+  // Removed: groupBy, // Destructure groupBy
 }) => {
   const { profile } = useProfile();
 
@@ -52,7 +52,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             PROFITABILITY REPORT
           </h1>
-          <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy?.charAt(0).toUpperCase() + groupBy?.slice(1) || "N/A"}</p>
+          {/* Removed: <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy?.charAt(0).toUpperCase() + groupBy?.slice(1) || "N/A"}</p> */}
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
