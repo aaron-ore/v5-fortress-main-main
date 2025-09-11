@@ -45,8 +45,8 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    // Pass fromDate as selectedDay and an empty object for activeModifiers
-    onSelect({ from: fromDate, to: toDate }, fromDate, {}, undefined);
+    // Explicitly cast undefined for the MouseEvent argument
+    onSelect({ from: fromDate, to: toDate }, fromDate, {}, undefined as React.MouseEvent<Element, MouseEvent> | undefined);
   };
 
   const quickSelectButtons = (
