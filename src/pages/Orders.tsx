@@ -109,9 +109,9 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
 
   const watchItems = form.watch("items");
   useEffect(() => {
-    const newTotalAmount = watchItems.reduce((sum, item) => {
-      const quantity = typeof item.quantity === 'number' ? item.quantity : parseInt(item.quantity || '0');
-      const unitPrice = typeof item.unitPrice === 'number' ? item.unitPrice : parseFloat(item.unitPrice || '0');
+    const newTotalAmount = watchItems.reduce((sum, currentItem) => {
+      const quantity = typeof currentItem.quantity === 'number' ? currentItem.quantity : parseInt(currentItem.quantity || '0');
+      const unitPrice = typeof currentItem.unitPrice === 'number' ? currentItem.unitPrice : parseFloat(currentItem.unitPrice || '0');
       return sum + (isNaN(quantity) ? 0 : quantity) * (isNaN(unitPrice) ? 0 : unitPrice);
     }, 0);
     form.setValue("totalAmount", newTotalAmount);
@@ -292,7 +292,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           )}
         />
         <h3 className="text-lg font-semibold mt-6">Items</h3>
-        {form.watch("items").map((item, index) => (
+        {form.watch("items").map((currentItem, index) => (
           <div key={index} className="border p-4 rounded-md space-y-2">
             <div className="flex justify-between items-center">
               <h4 className="font-medium">Item #{index + 1}</h4>

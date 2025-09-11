@@ -18,7 +18,6 @@ import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// Removed Label import
 
 const Users: React.FC = () => {
   const { profile, allProfiles, updateUserRole, fetchAllProfiles } = useProfile();

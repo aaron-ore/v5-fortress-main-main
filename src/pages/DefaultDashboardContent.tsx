@@ -43,19 +43,6 @@ const DefaultDashboardContent: React.FC = () => {
     setDateRange(undefined);
   };
 
-  // Helper function to check if a date falls within the selected range
-  const isDateInRange = (dateString: string) => {
-    if (!dateRange?.from || !isValid(dateRange.from)) return true;
-
-    const date = parseAndValidateDate(dateString);
-    if (!date) return false;
-
-    const from = startOfDay(dateRange.from);
-    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-
-    return date >= from && date <= to;
-  };
-
   return (
     <div className="space-y-6">
       {/* Header and Date Filter in the same row */}
