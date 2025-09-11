@@ -1,7 +1,6 @@
-// @deno-types="npm:@supabase/supabase-js"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-// @deno-types="npm:xlsx"
-import * as XLSX from 'https://esm.sh/xlsx@0.18.5'; // Import XLSX for CSV parsing
+import { createClient } from 'npm:@supabase/supabase-js';
+import * as XLSX from 'npm:xlsx'; // Import XLSX for CSV parsing
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 // Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +17,7 @@ interface ExistingInventoryItem {
   quantity: number; // Total quantity
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => { // Changed Deno.serve to serve
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -38,6 +37,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Get the authenticated user's session (the user making the request)
+    const authHeader = req.headers.get('Authorization')!;
+    const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
 
     // 1. Download CSV from Supabase Storage
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
@@ -159,7 +169,7 @@ Deno.serve(async (req) => {
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
           .from('categories')
-          .insert({ name: categoryName, organization_id: organizationId, user_id: user!.id }) // Use user!.id
+          .insert({ name: categoryName, organization_id: organizationId, user_id: user.id }) // Use user.id
           .select('id, name')
           .single();
         if (insertCatError) {
@@ -181,7 +191,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: user!.id, // Use user!.id
+            user_id: user.id, // Use user.id
           })
           .select('id, full_location_string')
           .single();
@@ -203,7 +213,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: user!.id, // Use user!.id
+            user_id: user.id, // Use user.id
           })
           .select('id, full_location_string')
           .single();
@@ -238,7 +248,7 @@ Deno.serve(async (req) => {
         image_url: imageUrl,
         vendor_id: vendorId,
         barcode_url: barcodeUrl,
-        user_id: user!.id, // Safely access user.id here
+        user_id: user.id, // Safely access user.id here
         organization_id: organizationId,
         auto_reorder_enabled: autoReorderEnabled,
         auto_reorder_quantity: autoReorderQuantity,
@@ -269,7 +279,7 @@ Deno.serve(async (req) => {
             old_quantity: existingItem.quantity,
             new_quantity: updatedPickingBinQty + updatedOverstockQty,
             reason: 'CSV Bulk Import - Added to stock',
-            user_id: user!.id, // Safely access user.id here
+            user_id: user.id, // Safely access user.id here
             organization_id: organizationId,
           });
         } else if (actionForDuplicates === "update") {

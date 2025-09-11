@@ -1,6 +1,5 @@
-// @deno-types="npm:@supabase/supabase-js"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // NEW: Explicitly import serve
+import { createClient } from 'npm:@supabase/supabase-js';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 // Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
