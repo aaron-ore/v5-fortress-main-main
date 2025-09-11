@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ArrowUp, ArrowDown } from "lucide-react";
