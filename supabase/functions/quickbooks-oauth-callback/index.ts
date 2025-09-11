@@ -1,5 +1,4 @@
-// @deno-types="npm:@supabase/supabase-js"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from 'npm:@supabase/supabase-js@2.55.0';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 
 const corsHeaders = {
@@ -34,7 +33,7 @@ serve(async (req) => {
 
     let userId: string | null = null;
     let redirectToFrontend: string | null = null;
-    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app'; // UPDATED: Use your Vercel app URL
+    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app'; // Reverted to Vercel URL
 
     if (state) {
       try {
