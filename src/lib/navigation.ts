@@ -24,6 +24,7 @@ import {
   Sparkles,
   BookOpen,
   Zap, // NEW: Import Zap icon for Automation
+  Plug, // NEW: Import Plug icon for Integrations
   // Layout, // REMOVED: Import Layout icon for Floor Plan
 } from "lucide-react";
 // Removed unused import: React
