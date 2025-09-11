@@ -7,7 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -184,8 +183,6 @@ const Inventory: React.FC = () => {
     setItemToDelete(null);
   };
 
-  // Removed handleViewDetails as it's not used
-
   const handleQuickView = useCallback((item: InventoryItem) => {
     setSelectedItemForQuickView(item);
     setIsQuickViewDialogOpen(true);
@@ -278,7 +275,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-md border flex flex-col flex-grow">
+      <Card className="rounded-md border flex flex-col flex-grow">
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Current Stock</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
@@ -288,7 +285,7 @@ const Inventory: React.FC = () => {
             <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
               Manage Categories
             </Button>
-            <Button variant="outline" onClick={() => navigate("/locations")} size="sm">
+            <Button variant="outline" onClick={() => setIsManageLocationsDialogOpen(true)} size="sm">
               <MapPin className="h-4 w-4 mr-2" /> Manage Locations
             </Button>
             <DropdownMenu>
@@ -341,7 +338,7 @@ const Inventory: React.FC = () => {
             </>
           )}
         </CardContent>
-      </div>
+      </Card>
 
       <AddInventoryDialog
         isOpen={isAddInventoryDialogOpen}

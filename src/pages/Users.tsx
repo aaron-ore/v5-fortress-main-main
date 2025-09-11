@@ -76,7 +76,20 @@ const Users: React.FC = () => {
     }
   };
 
-  if (profile?.role !== 'admin') {
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Loading Users...</CardTitle>
+          <CardContent>
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
