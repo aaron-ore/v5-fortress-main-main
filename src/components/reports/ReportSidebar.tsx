@@ -1,9 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  LayoutDashboard, Package, Receipt, Truck, BarChart, Scale, FileText, DollarSign, Users, AlertTriangle
-} from "lucide-react";
+// Removed LayoutDashboard, Package, Receipt, Truck, BarChart, Scale, FileText, DollarSign, Users, AlertTriangle
 
 interface ReportCategory {
   title: string;

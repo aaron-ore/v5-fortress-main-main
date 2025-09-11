@@ -18,7 +18,7 @@ import {
 import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import InvoicePdfContent from "@/components/InvoicePdfContent";
-import { useOnboarding } from "@/context/OnboardingContext";
+// Removed unused import: useOnboarding
 import { useOrders, POItem, OrderItem } from "@/context/OrdersContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -142,7 +142,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
 
 const CreateInvoice: React.FC = () => {
   const navigate = useNavigate();
-  const { companyProfile } = useOnboarding();
+  // Removed unused: companyProfile
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers(); // NEW: Use customers context

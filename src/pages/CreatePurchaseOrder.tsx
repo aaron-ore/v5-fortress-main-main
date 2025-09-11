@@ -26,7 +26,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, POItem, OrderItem } from "@/context/OrdersContext"; // NEW: Import OrderItem
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PurchaseOrderPdfContent from "@/components/PurchaseOrderPdfContent";
-import { useOnboarding } from "@/context/OnboardingContext";
+// Removed unused: useOnboarding
 import { usePrint } from "@/context/PrintContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -142,7 +142,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
 
 const CreatePurchaseOrder: React.FC = () => {
   const navigate = useNavigate();
-  const { companyProfile } = useOnboarding();
+  // Removed unused: companyProfile
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { profile } = useProfile(); // NEW: Use useProfile

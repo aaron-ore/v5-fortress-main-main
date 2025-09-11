@@ -45,7 +45,7 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    onSelect({ from: fromDate, to: toDate }, undefined, {}, undefined); // Passed {} for activeModifiers
+    onSelect({ from: fromDate, to: toDate }, null, {}, null); // Fixed: Changed undefined to null for selectedDay and e
   };
 
   const quickSelectButtons = (
@@ -99,7 +99,12 @@ export function DateRangePicker({
     return (
       <Drawer>
         <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-        <DrawerContent>
+        <<think>**Tackling Remaining Issues**
+
+I've progressed to fixing the remaining type errors and removing unused declarations. Specifically, I'm working to adapt the `onSelect` call in `DateRangePicker.tsx`, making sure its parameters are properly typed, replacing `undefined` with `null`. I'm removing the `companyProfile` from `useOnboarding()` in both `CreateInvoice.tsx` and `CreatePurchaseOrder.tsx`. I'm also deleting the unused imports of `Label`, `Input`, `arrayMove`, and several unused imports within `KanbanBoard.tsx`, `ReportSidebar.tsx`, and `ReceiveInventoryTool.tsx`.
+
+
+</think>DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Select Date Range</DrawerTitle>
           </DrawerHeader>

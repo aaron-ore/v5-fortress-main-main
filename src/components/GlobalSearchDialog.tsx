@@ -8,9 +8,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Import Input
-import { Label } from "@/components/ui/label"; // Import Label
+// Removed Input
+// Removed Label
 import {
   Search,
   Package,
@@ -240,12 +239,15 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="globalSearch">Search Term</Label>
-            <Input
+            <label htmlFor="globalSearch" className="text-right">
+              Search Term
+            </label>
+            <input
               id="globalSearch"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Enter keywords, SKU, order ID, vendor name, or app page..."
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           {searchTerm.trim() !== "" && (
