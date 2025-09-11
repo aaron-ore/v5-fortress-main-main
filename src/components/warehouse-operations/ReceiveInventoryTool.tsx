@@ -155,7 +155,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     const lowerCaseScannedData = scannedData.toLowerCase();
     const itemToReceive = receivedItems.find(item =>
       item.inventoryItemDetails?.sku.toLowerCase() === lowerCaseScannedData ||
-      (item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData)
+      item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData
     );
 
     if (itemToReceive) {
@@ -300,7 +300,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanClick}
-          disabled={isScanning || !selectedPO}
+          disabled={isScanning}
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}

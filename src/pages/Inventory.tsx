@@ -184,11 +184,7 @@ const Inventory: React.FC = () => {
     setItemToDelete(null);
   };
 
-  const handleViewDetails = useCallback((item: InventoryItem) => {
-    navigate(`/inventory/${item.id}`);
-  }, [navigate]);
-
-  // Removed handleEditItem as it's not used
+  // Removed handleViewDetails as it's not used
 
   const handleQuickView = useCallback((item: InventoryItem) => {
     setSelectedItemForQuickView(item);

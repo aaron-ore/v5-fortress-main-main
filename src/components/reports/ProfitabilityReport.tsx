@@ -6,7 +6,7 @@ import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, BarChart, FileText } from "lucide-react"; // Removed DollarSign
+import { Loader2, BarChart, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";

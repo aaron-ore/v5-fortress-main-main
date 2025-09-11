@@ -88,7 +88,6 @@ const Users: React.FC = () => {
         </Card>
       </div>
     );
-  );
   }
 
   return (
