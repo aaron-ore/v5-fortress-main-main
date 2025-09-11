@@ -20,7 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";
 import { useOrders, POItem } from "@/context/OrdersContext";
