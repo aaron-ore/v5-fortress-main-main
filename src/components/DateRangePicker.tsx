@@ -28,7 +28,7 @@ export function DateRangePicker({
   const handleSelect: SelectRangeEventHandler = (range, selectedDay, activeModifiers, e) => {
     const from = range?.from && isValid(range.from) ? startOfDay(range.from) : undefined;
     const to = range?.to && isValid(range.to) ? endOfDay(range.to) : undefined;
-    onSelect({ from, to }, selectedDay, activeModifiers, e);
+    onSelect({ from, to }, selectedDay, activeModifiers || {}, e); // Pass {} for activeModifiers if undefined
   };
 
   const handleQuickSelect = (days: number) => {
@@ -46,7 +46,7 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    onSelect({ from: fromDate, to: toDate }, undefined, undefined, undefined);
+    onSelect({ from: fromDate, to: toDate }, undefined, {}, undefined); // Passed {} for activeModifiers
   };
 
   const quickSelectButtons = (

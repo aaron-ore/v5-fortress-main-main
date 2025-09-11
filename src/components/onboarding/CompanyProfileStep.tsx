@@ -23,7 +23,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
   const [currency, setCurrency] = useState(profile?.companyProfile?.companyCurrency || "USD");
   const [address, setAddress] = useState(profile?.companyProfile?.companyAddress || "");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
-  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyProfile?.companyLogoUrl || "");
+  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl || undefined); // Changed type to string | undefined
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
       setCompanyName(profile.companyProfile.companyName || "");
       setCurrency(profile.companyProfile.companyCurrency || "USD");
       setAddress(profile.companyProfile.companyAddress || "");
-      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || undefined); // Changed to undefined
     }
   }, [profile?.companyProfile]);
 
@@ -48,17 +48,17 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
-        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
+        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined); // Changed to undefined
       }
     } else {
       setCompanyLogoFile(null);
-      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined); // Changed to undefined
     }
   };
 
   const handleClearLogo = () => {
     setCompanyLogoFile(null);
-    setCompanyLogoUrlPreview("");
+    setCompanyLogoUrlPreview(undefined); // Changed to undefined
     showSuccess("Logo cleared. Save changes to apply.");
   };
 
@@ -68,7 +68,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
       return;
     }
 
-    let finalCompanyLogoUrl = companyLogoUrlPreview;
+    let finalCompanyLogoUrl: string | undefined = companyLogoUrlPreview; // Explicitly typed as string | undefined
 
     if (companyLogoFile) {
       setIsUploadingLogo(true);
@@ -83,12 +83,12 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
       } finally {
         setIsUploadingLogo(false);
       }
-    } else if (companyLogoUrlPreview === "") {
+    } else if (companyLogoUrlPreview === undefined || companyLogoUrlPreview === "") { // Check for undefined or empty string
       finalCompanyLogoUrl = undefined;
     }
 
     try {
-      await setCompanyProfile({ name: companyName, currency, address, companyLogoUrl: finalCompanyLogoUrl || undefined });
+      await setCompanyProfile({ name: companyName, currency, address, companyLogoUrl: finalCompanyLogoUrl });
       onNext();
     } catch (error: any) {
       showError(`Failed to set up/update organization: ${error.message}`);

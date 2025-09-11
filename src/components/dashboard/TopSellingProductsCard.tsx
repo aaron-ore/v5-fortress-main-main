@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext"; // Corrected import path
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+// Removed unused import: parseAndValidateDate
 
 const TopSellingProductsCard: React.FC = () => {
   const { inventoryItems } = useInventory();
@@ -28,7 +28,7 @@ const TopSellingProductsCard: React.FC = () => {
         <CardTitle className="text-lg font-bold text-foreground">Top 5 Selling Products (Last 30 Days)</CardTitle>
         <TrendingUp className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="p-4 pt-0 flex-grow flex flex-col justify-between">
+      <CardContent className="p-4 pt-0 flex-grow flex-col justify-between">
         {topSellingProducts.length > 0 ? (
           <ul className="text-sm space-y-2">
             {topSellingProducts.map((product, index) => (

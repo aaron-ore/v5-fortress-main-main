@@ -32,7 +32,7 @@ import {
   Zap, // NEW: Import Zap icon for Automation
   // Layout, // REMOVED: Import Layout icon for Floor Plan
 } from "lucide-react";
-import React from "react";
+// Removed unused import: React
 
 export interface NavItem {
   title: string;
@@ -65,6 +65,7 @@ export const mainNavItems: NavItem[] = [
       { title: "Dashboard", href: "/warehouse-operations#dashboard", icon: LayoutDashboard },
       { title: "Item Lookup", href: "/warehouse-operations#item-lookup", icon: Search },
       { title: "Receive Inventory", href: "/warehouse-operations#receive-inventory", icon: PackagePlus },
+      { title: "Putaway", href: "/warehouse-operations#putaway", icon: MapPin },
       { title: "Fulfill Order", href: "/warehouse-operations#fulfill-order", icon: ShoppingCart },
       { title: "Ship Order", href: "/warehouse-operations#ship-order", icon: Truck },
       { title: "Picking Wave", href: "/warehouse-operations#picking-wave", icon: ListOrdered },

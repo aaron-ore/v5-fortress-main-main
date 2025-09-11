@@ -16,7 +16,7 @@ const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> 
   const { stockMovements } = useStockMovement();
 
   const data = useMemo(() => {
-    const dataPoints = [];
+    // Removed unused dataPoints variable
     const today = new Date();
 
     // Determine effective date range for filtering

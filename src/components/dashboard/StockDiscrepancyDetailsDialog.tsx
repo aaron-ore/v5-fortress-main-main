@@ -63,7 +63,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
       .eq('status', 'pending') // Only fetch pending discrepancies
       .order('timestamp', { ascending: false });
 
-    const today = new Date();
+    // Removed unused today variable
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
@@ -117,9 +117,9 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
   };
 
   const getDisplayDateRange = () => {
-    const today = new Date();
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? dateRange.from : today;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? dateRange.to : today;
+    // Removed unused today variable
+    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? dateRange.from : new Date();
+    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? dateRange.to : new Date();
 
     if (format(filterFrom, "yyyy-MM-dd") === format(filterTo, "yyyy-MM-dd")) {
       return format(filterFrom, "MMM dd, yyyy");

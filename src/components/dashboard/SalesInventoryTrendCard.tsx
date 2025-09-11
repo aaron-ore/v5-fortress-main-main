@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, subMonths } from "date-fns";
+// Removed unused import: format, subMonths
 
 const SalesInventoryTrendCard: React.FC = () => {
   const { inventoryItems } = useInventory();

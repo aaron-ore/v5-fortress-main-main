@@ -34,7 +34,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
   customerName,
   customerEmail,
   customerAddress,
-  customerContact,
+  customerContact, // Kept as it is used in the JSX
   terms,
   dueDate,
   items,

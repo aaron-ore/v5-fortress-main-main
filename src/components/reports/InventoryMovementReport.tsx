@@ -7,7 +7,7 @@ import { useStockMovement, StockMovement } from "@/context/StockMovementContext"
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { useProfile } from "@/context/ProfileContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Scale, User, Clock, FileText } from "lucide-react";
+import { Loader2, Scale, FileText } from "lucide-react"; // Removed User, Clock
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label"; // Added Label import

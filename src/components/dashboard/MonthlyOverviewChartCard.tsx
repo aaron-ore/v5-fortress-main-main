@@ -57,7 +57,7 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
       if (!dateA || !dateB) return 0; // Handle null dates
       return dateA.getTime() - dateB.getTime();
     }).forEach((monthKey, index, array) => {
-      const monthName = format(parseAndValidateDate(monthKey) || new Date(), "MMM"); // Assert non-null after sorting, fallback for format
+      // Removed unused monthName variable
       if (monthKey === format(endDate, "MMM yyyy")) {
         monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
       } else {
@@ -96,6 +96,8 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
               left: 0,
               bottom: 5,
             }}
+            barCategoryGap="20%" // Keep this for bar spacing
+            barGap={0} // Ensure no gap between bars of the same category
           >
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
             <YAxis

@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";

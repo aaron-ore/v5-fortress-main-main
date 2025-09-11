@@ -4,7 +4,7 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { ArrowDown } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+// Removed unused import: parseAndValidateDate
 
 const LossesCard: React.FC = () => {
   const { orders } = useOrders();

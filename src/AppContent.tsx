@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -74,7 +74,7 @@ import { Loader2 } from "lucide-react";
 
 // Moved AuthenticatedApp definition here
 const AuthenticatedApp = () => {
-  const { isOnboardingComplete } = useOnboarding();
+  const {  } = useOnboarding(); // Removed isOnboardingComplete as it's not directly used here
 
   return (
     <SidebarProvider>

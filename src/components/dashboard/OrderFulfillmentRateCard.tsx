@@ -46,7 +46,7 @@ const OrderFulfillmentRateCard: React.FC = () => {
                   endAngle={-270}
                   cornerRadius={5}
                 >
-                  {data.map((entry, index) => (
+                  {data.map((_entry, index) => ( // Renamed entry to _entry
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

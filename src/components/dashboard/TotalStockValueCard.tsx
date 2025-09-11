@@ -27,8 +27,10 @@ const TotalStockValueCard: React.FC = () => {
   // Data for the MiniTrendChart (line chart) - now for the last 6 months
   const chartData = useMemo(() => {
     const dataPoints = [];
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentMonthIndex = new Date().getMonth();
+    // Removed unused months and currentMonthIndex variables
+
+    const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+    // const totalCurrentSalesRevenue = orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0); // This line was commented out or removed in previous steps
 
     for (let i = 0; i < 6; i++) {
       const month = subMonths(new Date(), 5 - i); // Get the actual month for the data point
@@ -43,12 +45,12 @@ const TotalStockValueCard: React.FC = () => {
         // The base value trends towards the current totalStockValue
         const trendFactor = (i + 1) / 6; // Increases from 1/6 to 6/6
         const baseValue = totalStockValue * (0.7 + (0.3 * trendFactor)); // Starts lower, trends towards current
-        simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalStockValue * 0.1)); // Add some random fluctuation
+        simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1)); // Add some random fluctuation
       }
       dataPoints.push({ name: monthName, value: parseFloat(simulatedValue.toFixed(2)) });
     }
     return dataPoints;
-  }, [totalStockValue]);
+  }, [totalStockValue, inventoryItems]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4">

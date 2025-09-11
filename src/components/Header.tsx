@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Removed Link
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, Bell, User, LogOut, Flag } from "lucide-react";

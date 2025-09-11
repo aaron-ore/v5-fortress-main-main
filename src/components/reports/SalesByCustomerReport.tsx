@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+// Removed unused import: useOnboarding
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, Users, DollarSign, Receipt, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";

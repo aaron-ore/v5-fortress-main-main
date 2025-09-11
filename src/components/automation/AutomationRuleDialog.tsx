@@ -17,11 +17,9 @@ import { Zap, AlertTriangle, BellRing, Package } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { useVendors } from "@/context/VendorContext";
-import { useCustomers } from "@/context/CustomerContext";
+// Removed unused imports: useOrders, useVendors, useCustomers
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;

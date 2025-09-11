@@ -1,25 +1,7 @@
 import React, { useEffect } from "react";
 
 // Corrected imports for PDF content components
-import PurchaseOrderPdfContent from "./PurchaseOrderPdfContent";
-import InvoicePdfContent from "./InvoicePdfContent";
-import LocationLabelPdfContent from "./LocationLabelPdfContent";
-import PickingWavePdfContent from "./PickingWavePdfContent";
-
-// PDF content components from specific directories
-import DashboardSummaryPdfContent from "./dashboard/DashboardSummaryPdfContent"; // Corrected path
-import AdvancedDemandForecastPdfContent from "./reports/pdf/AdvancedDemandForecastPdfContent"; // Corrected path
-import PutawayLabelPdfContent from "./reports/pdf/PutawayLabelPdfContent"; // Corrected path
-
-// Import all new PDF content components
-import InventoryValuationPdfContent from "./reports/pdf/InventoryValuationPdfContent";
-import LowStockPdfContent from "./reports/pdf/LowStockPdfContent";
-import InventoryMovementPdfContent from "./reports/pdf/InventoryMovementPdfContent";
-import SalesByCustomerPdfContent from "./reports/pdf/SalesByCustomerPdfContent";
-import SalesByProductPdfContent from "./reports/pdf/SalesByProductPdfContent";
-import PurchaseOrderStatusPdfContent from "./reports/pdf/PurchaseOrderStatusPdfContent";
-import ProfitabilityPdfContent from "./reports/pdf/ProfitabilityPdfContent";
-import DiscrepancyPdfContent from "./reports/pdf/DiscrepancyPdfContent";
+// Removed unused imports: PurchaseOrderPdfContent, InvoicePdfContent, LocationLabelPdfContent, PickingWavePdfContent, DashboardSummaryPdfContent, AdvancedDemandForecastPdfContent, PutawayLabelPdfContent, InventoryValuationPdfContent, LowStockPdfContent, InventoryMovementPdfContent, SalesByCustomerPdfContent, SalesByProductPdfContent, PurchaseOrderStatusPdfContent, ProfitabilityPdfContent, DiscrepancyPdfContent
 
 import { PrintContentData } from "@/context/PrintContext";
 

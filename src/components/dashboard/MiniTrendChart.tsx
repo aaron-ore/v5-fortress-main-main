@@ -23,7 +23,7 @@ const MiniTrendChart: React.FC<MiniTrendChartProps> = ({
   dataKey,
   color = "hsl(var(--primary))",
   className,
-  valueFormatter = (value) => value.toFixed(0),
+  // Removed unused valueFormatter
 }) => {
   const maxDataValue = Math.max(...data.map(d => d.value));
   const roundedMax = Math.ceil(maxDataValue / 500) * 500;

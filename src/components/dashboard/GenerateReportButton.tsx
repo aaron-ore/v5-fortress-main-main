@@ -9,7 +9,7 @@ import { showError } from "@/utils/toast";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext"; // Corrected path
 
 interface GenerateReportButtonProps {
   dateRange: DateRange | undefined;
@@ -17,7 +17,7 @@ interface GenerateReportButtonProps {
 
 const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({ dateRange }) => {
   const { initiatePrint } = usePrint();
-  const { companyProfile } = useOnboarding(); // Keep this for now, but will transition to profile.companyProfile
+  const {  } = useOnboarding(); // Removed companyProfile as it's not directly used here
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
   const { profile } = useProfile();

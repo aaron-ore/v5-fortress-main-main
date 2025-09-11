@@ -40,7 +40,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip");
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Keeping this as it is used
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
