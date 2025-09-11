@@ -191,7 +191,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+        const worksheet = XLSX.Sheets[sheetName];
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {

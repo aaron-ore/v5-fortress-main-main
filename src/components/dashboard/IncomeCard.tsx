@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { LineChart, Line } from "recharts";
 import { ArrowUp } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 

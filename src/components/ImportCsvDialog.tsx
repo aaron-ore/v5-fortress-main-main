@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Download } from "lucide-react"; // Removed Users
+import { Download } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
@@ -40,7 +40,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   onClose,
 }) => {
   const { inventoryItems, refreshInventory } = useInventory();
-  const { categories, addCategory } = useCategories();
+  const {  } = useCategories(); // Removed categories and addCategory
   const { locations, addLocation } = useOnboarding();
   const { profile } = useProfile();
 
@@ -102,12 +102,12 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       setIsConfirmNewLocationsDialogOpen(true);
       setIsUploading(false);
     } else {
-      await invokeEdgeFunction(data, actionForDuplicates);
+      await invokeEdgeFunction(actionForDuplicates); // Removed dataToProcess
       setSelectedFile(null);
     }
   };
 
-  const invokeEdgeFunction = async (dataToProcess: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => {
+  const invokeEdgeFunction = async (actionForDuplicates: "skip" | "add_to_stock" | "update") => { // Removed dataToProcess parameter
     if (!profile?.organizationId || !profile?.id) {
       showError("User or organization not loaded. Cannot perform import.");
       setIsUploading(false);
@@ -328,7 +328,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     showSuccess(`Added new locations: ${newLocationsToConfirm.join(", ")}`);
 
     if (jsonDataToProcess) {
-      await invokeEdgeFunction(jsonDataToProcess, duplicateAction);
+      await invokeEdgeFunction(duplicateAction); // Removed jsonDataToProcess
     }
     setNewLocationsToConfirm([]);
     setSelectedFile(null);

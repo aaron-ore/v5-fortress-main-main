@@ -1,4 +1,4 @@
-import React from 'react';
+// Removed unused import: React
 
 export const MadeWithDyad = () => {
   return (

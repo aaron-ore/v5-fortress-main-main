@@ -6,13 +6,13 @@ import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { supabase } from "@/lib/supabaseClient";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, AlertTriangle, FileText } from "lucide-react"; // Removed Scale, User, Clock
+import { format, startOfDay, endOfDay, isValid } from "date-fns";
+import { Loader2, AlertTriangle, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
-import { showError } from "@/utils/toast"; // NEW: Import showError
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { Label } from "@/components/ui/label";
+import { showError } from "@/utils/toast";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface DiscrepancyLog {
   id: string;
@@ -31,21 +31,21 @@ interface DiscrepancyLog {
 }
 
 interface DiscrepancyReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations
-  const { companyProfile } = useOnboarding(); // NEW: Use useOnboarding for companyProfile
+  const { locations: structuredLocations } = useOnboarding();
+  // Removed companyProfile from useOnboarding() as it's not directly used here
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "resolved">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -82,7 +82,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     } else {
       const fetchedDiscrepancies: DiscrepancyLog[] = data.map((log: any) => ({
         id: log.id,
-        timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(), // NEW: Use parseAndValidateDate
+        timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
         userId: log.user_id,
         organizationId: log.organization_id,
         itemId: log.item_id,

@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+// Removed Input, Label, CardDescription
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -14,13 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Zap, ToggleRight, ToggleLeft, Loader2 } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Zap } from "lucide-react"; // Removed ToggleRight, ToggleLeft
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog"; // NEW: Import AutomationRuleDialog
-import { format } from "date-fns";
+import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
+// Removed format
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2 } from "lucide-react"; // Added Loader2 import
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();
@@ -150,13 +150,13 @@ const Automation: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+    <div className="space-y-6 flex flex-col flex-grow">
       <h1 className="text-3xl font-bold">Automation Engine</h1>
       <p className="text-muted-foreground">
         Automate repetitive tasks and streamline your inventory workflows with custom rules.
       </p>
 
-      <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+      <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow">
         <CardHeader className="pb-4 flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> Automation Rules
@@ -165,11 +165,11 @@ const Automation: React.FC = () => {
             <PlusCircle className="h-4 w-4 mr-2" /> Create New Rule
           </Button>
         </CardHeader>
-        <CardContent className="flex-grow flex flex-col"> {/* Added flex-grow flex-col */}
+        <CardContent className="flex-grow flex flex-col">
           {automationRules.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No automation rules defined yet. Create your first rule!</p>
           ) : (
-            <ScrollArea className="flex-grow border rounded-md"> {/* Changed h-[500px] to flex-grow */}
+            <ScrollArea className="flex-grow border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>

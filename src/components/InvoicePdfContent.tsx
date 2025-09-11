@@ -15,7 +15,7 @@ interface InvoicePdfContentProps {
   customerName: string;
   customerEmail?: string;
   customerAddress: string;
-  customerContact?: string;
+  // customerContact?: string; // Removed
   terms: string;
   dueDate: string;
   items: InvoiceItem[];

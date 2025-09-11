@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Zap, AlertTriangle, BellRing, Package } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
-import { showError, showSuccess } from "@/utils/toast";
+import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext";
