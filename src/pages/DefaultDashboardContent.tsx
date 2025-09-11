@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
-import { isValid, startOfDay, endOfDay } from "date-fns"; // Import startOfDay, endOfDay
+import { isValid, startOfDay, endOfDay } from "date-fns";
 
 // Import new dashboard components
 import WalletCard from "@/components/dashboard/WalletCard";
@@ -18,22 +18,22 @@ import LiveInformationAreaChartCard from "@/components/dashboard/LiveInformation
 import StockDiscrepancyCard from "@/components/dashboard/StockDiscrepancyCard";
 import LocationStockHealthCard from "@/components/dashboard/LocationStockHealthCard";
 import MonthlyOverviewChartCard from "@/components/dashboard/MonthlyOverviewChartCard";
-import TopSellingProductsCard from "@/components/dashboard/TopSellingProductsCard"; // Replaced ProfitabilityMetricsCard
+import TopSellingProductsCard from "@/components/dashboard/TopSellingProductsCard";
 import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
-import { FilterX } from "lucide-react"; // Import FilterX icon
-import { parseAndValidateDate } from "@/utils/dateUtils"; // Import parseAndValidateDate
+import { FilterX } from "lucide-react";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 // NEW: Import the new cards for the 4th row
 import OpenPurchaseOrdersCard from "@/components/dashboard/OpenPurchaseOrdersCard";
 import PendingInvoicesCard from "@/components/dashboard/PendingInvoicesCard";
-import LowStockAlertsCard from "@/components/dashboard/LowStockAlertsCard"; // Moved from 1st row
+import LowStockAlertsCard from "@/components/dashboard/LowStockAlertsCard";
 import RecentShipmentsCard from "@/components/dashboard/RecentShipmentsCard";
 
 const DefaultDashboardContent: React.FC = () => {
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // Re-added dateRange state
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const handleScanItem = () => {
     setIsScanItemDialogOpen(true);
@@ -45,13 +45,13 @@ const DefaultDashboardContent: React.FC = () => {
 
   // Helper function to check if a date falls within the selected range
   const isDateInRange = (dateString: string) => {
-    if (!dateRange?.from || !isValid(dateRange.from)) return true; // No valid 'from' date, so no filter applied
+    if (!dateRange?.from || !isValid(dateRange.from)) return true;
 
     const date = parseAndValidateDate(dateString);
-    if (!date) return false; // Invalid date string, cannot be in range
+    if (!date) return false;
 
     const from = startOfDay(dateRange.from);
-    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from); // Ensure 'to' is valid or default to 'from'
+    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
 
     return date >= from && date <= to;
   };
@@ -63,7 +63,7 @@ const DefaultDashboardContent: React.FC = () => {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
           <DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
-          {dateRange?.from && isValid(dateRange.from) && ( // Only show clear button if a valid 'from' date exists
+          {dateRange?.from && isValid(dateRange.from) && (
             <Button variant="outline" onClick={handleClearDateFilter} size="icon">
               <FilterX className="h-4 w-4" />
             </Button>
@@ -80,21 +80,21 @@ const DefaultDashboardContent: React.FC = () => {
           <Last3MonthSalesCard />
         </div>
         <div className="col-span-full md:col-span-1">
-          <IssuesCard dateRange={dateRange} /> {/* Pass dateRange */}
+          <IssuesCard dateRange={dateRange} />
         </div>
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
           <WalletCard />
           <LossesCard />
           <IncomeCard />
-          <GenerateReportButton dateRange={dateRange} /> {/* Pass dateRange */}
+          <GenerateReportButton dateRange={dateRange} />
         </div>
 
         {/* Row 2: 1 wide card + 2 regular cards */}
         <div className="col-span-full md:col-span-2 lg:col-span-2 xl:col-span-2">
-          <LiveInformationAreaChartCard dateRange={dateRange} /> {/* Pass dateRange */}
+          <LiveInformationAreaChartCard dateRange={dateRange} />
         </div>
         <div className="col-span-full md:col-span-1">
-          <StockDiscrepancyCard dateRange={dateRange} /> {/* Pass dateRange */}
+          <StockDiscrepancyCard dateRange={dateRange} />
         </div>
         <div className="col-span-full md:col-span-1">
           <LocationStockHealthCard />
@@ -105,14 +105,14 @@ const DefaultDashboardContent: React.FC = () => {
           <MonthlyOverviewChartCard />
         </div>
         <div className="col-span-full md:col-span-1">
-          <TopSellingProductsCard /> {/* Replaced ProfitabilityMetricsCard */}
+          <TopSellingProductsCard />
         </div>
 
         {/* NEW Row 4: Operational Overview Cards */}
         <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <OpenPurchaseOrdersCard />
           <PendingInvoicesCard />
-          <LowStockAlertsCard /> {/* Moved from Row 1 */}
+          <LowStockAlertsCard />
           <RecentShipmentsCard />
         </div>
       </div>

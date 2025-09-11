@@ -15,14 +15,14 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
   }
 
   const fileExtension = file.name.split('.').pop();
-  const fileName = `${uuidv4()}.${fileExtension}`; // Generate a unique file name
-  const filePath = `${folderPath}${fileName}`; // This is the path within the bucket
+  const fileName = `${uuidv4()}.${fileExtension}`;
+  const filePath = `${folderPath}${fileName}`;
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from(bucketName)
     .upload(filePath, file, {
       cacheControl: '3600',
-      upsert: false, // Do not overwrite existing files with the same name
+      upsert: false,
     });
 
   if (error) {

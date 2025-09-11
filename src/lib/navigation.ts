@@ -23,16 +23,9 @@ import {
   HelpCircle,
   Sparkles,
   BookOpen,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  UserRound,
   Plug,
-  Zap, // NEW: Import Zap icon for Automation
-  // Layout, // REMOVED: Import Layout icon for Floor Plan
+  Zap,
 } from "lucide-react";
-// Removed unused import: React
 
 export interface NavItem {
   title: string;
@@ -42,20 +35,19 @@ export interface NavItem {
   children?: NavItem[];
   adminOnly?: boolean;
   mobileOnly?: boolean;
-  action?: () => void; // NEW: Add optional action property
+  action?: () => void;
 }
 
 export const mainNavItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Reports", href: "/reports", icon: BarChart }, // Moved Reports here
+  { title: "Reports", href: "/reports", icon: BarChart },
   { title: "Inventory", href: "/inventory", icon: Package },
   { title: "Orders", href: "/orders", icon: Receipt },
-  { title: "Customers", href: "/customers", icon: UserRound },
+  { title: "Customers", href: "/customers", icon: User },
   { title: "Vendors", href: "/vendors", icon: Truck },
   { title: "Locations", href: "/locations", icon: MapPin },
-  // { title: "Floor Plan", href: "/floor-plan", icon: Layout }, // REMOVED: Add Floor Plan NavItem
   { title: "Integrations", href: "/integrations", icon: Plug },
-  { title: "Automation", href: "/automation", icon: Zap, adminOnly: true }, // NEW: Automation NavItem
+  { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
   {
     title: "Warehouse Operations",
     href: "/warehouse-operations",

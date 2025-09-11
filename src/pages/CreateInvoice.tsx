@@ -16,25 +16,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
-import InvoicePdfContent from "@/components/InvoicePdfContent";
-// Removed unused import: useOnboarding
-import { useOrders, POItem, OrderItem } from "@/context/OrdersContext";
-import { generateSequentialNumber } from "@/utils/numberGenerator";
+import { showError } from "@/utils/toast";
+import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useCustomers } from "@/context/CustomerContext"; // NEW: Import useCustomers
+import { useCustomers } from "@/context/CustomerContext";
 import {
-  Select, // NEW: Import Select components
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 import {
   DndContext,
@@ -96,7 +93,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
       <TableCell className="text-right w-[100px]">
         <Input
           type="number"
-          value={item.quantity === 0 ? "" : String(item.quantity)} // Explicitly cast to string
+          value={item.quantity === 0 ? "" : String(item.quantity)}
           onChange={(e) =>
             handleItemChange(
               item.id,
@@ -111,7 +108,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
       <TableCell className="text-right w-[120px]">
         <Input
           type="number"
-          value={item.unitPrice === 0 ? "" : String(item.unitPrice)} // Explicitly cast to string
+          value={item.unitPrice === 0 ? "" : String(item.unitPrice)}
           onChange={(e) =>
             handleItemChange(
               item.id,
@@ -142,15 +139,14 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
 
 const CreateInvoice: React.FC = () => {
   const navigate = useNavigate();
-  // Removed unused: companyProfile
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
-  const { customers } = useCustomers(); // NEW: Use customers context
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { customers } = useCustomers();
+  const { profile } = useProfile();
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null); // NEW: State for selected customer ID
-  const [customerName, setCustomerName] = useState(""); // Kept for manual input if no customer selected
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerContact, setCustomerContact] = useState("");
@@ -160,7 +156,7 @@ const CreateInvoice: React.FC = () => {
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<POItem[]>([]);
   const [invoiceQrCodeSvg, setInvoiceQrCodeSvg] = useState<string | null>(null);
-  const [calculatedTotalAmount, setCalculatedTotalAmount] = useState(0); // NEW state for real-time total
+  const [calculatedTotalAmount, setCalculatedTotalAmount] = useState(0);
 
   const taxRate = 0.05;
 
@@ -201,7 +197,7 @@ const CreateInvoice: React.FC = () => {
     const generateQr = async () => {
       if (invoiceNumber) {
         try {
-          const svg = await generateQrCodeSvg(invoiceNumber, 60); // Adjusted size to 60
+          const svg = await generateQrCodeSvg(invoiceNumber, 60);
           setInvoiceQrCodeSvg(svg);
         } catch (error) {
           console.error("Error generating Invoice QR code:", error);
@@ -268,7 +264,7 @@ const CreateInvoice: React.FC = () => {
       customerSupplier: customerName,
       date: invoiceDate,
       status: "New Order" as "New Order",
-      totalAmount: calculatedTotalAmount, // Use the real-time calculated amount
+      totalAmount: calculatedTotalAmount,
       dueDate: dueDate,
       itemCount: items.length,
       notes: notes,
@@ -290,7 +286,7 @@ const CreateInvoice: React.FC = () => {
       showError("Please fill in all required invoice details before generating the PDF.");
       return;
     }
-    if (!profile?.companyProfile) { // Corrected access
+    if (!profile?.companyProfile) {
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -302,16 +298,16 @@ const CreateInvoice: React.FC = () => {
       customerEmail,
       customerAddress,
       customerContact: customerContact.replace(/[^\d]/g, ''),
-      sellerName: profile.companyProfile.companyName, // Corrected access
-      sellerAddress: profile.companyProfile.companyAddress, // Corrected access
-      sellerContact: profile.companyProfile.companyCurrency, // Corrected access
+      sellerName: profile.companyProfile.companyName,
+      sellerAddress: profile.companyProfile.companyAddress,
+      sellerContact: profile.companyProfile.companyCurrency,
       terms,
       dueDate,
       items,
       notes,
       taxRate,
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
-      invoiceQrCodeSvg: invoiceQrCodeSvg, // Pass QR code SVG to PDF
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
+      invoiceQrCodeSvg: invoiceQrCodeSvg,
     };
 
     initiatePrint({ type: "invoice", props: pdfProps });

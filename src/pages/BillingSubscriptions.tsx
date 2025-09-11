@@ -6,7 +6,7 @@ import { CreditCard, DollarSign, FileText, CheckCircle, XCircle, Sparkles } from
 import { showSuccess } from "@/utils/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge"; // Added this import
+import { Badge } from "@/components/ui/badge";
 
 interface PlanFeature {
   text: string;
@@ -21,23 +21,6 @@ interface SubscriptionPlan {
   features: PlanFeature[];
   isPopular?: boolean;
 }
-
-const allFeatures = [
-  "Inventory Items",
-  "Users",
-  "Basic Reporting",
-  "Advanced Reporting",
-  "Kanban Board",
-  "PDF Export (PO/Invoice)",
-  "CSV Import/Export",
-  "Bulk Update",
-  "Auto-Reorder Settings",
-  "Global Search",
-  "Notifications",
-  "Priority Support",
-  "Dedicated Account Manager",
-  "Custom Integrations",
-];
 
 const plans: SubscriptionPlan[] = [
   {
@@ -71,7 +54,7 @@ const plans: SubscriptionPlan[] = [
       { text: "Up to 250 Inventory Items", included: true },
       { text: "Up to 3 Users", included: true },
       { text: "Basic Reporting", included: true },
-      { text: "Advanced Reporting", included: false }, // Limited advanced reporting
+      { text: "Advanced Reporting", included: false },
       { text: "Kanban Board", included: true },
       { text: "PDF Export (PO/Invoice)", included: true },
       { text: "CSV Import/Export", included: true },
@@ -88,7 +71,7 @@ const plans: SubscriptionPlan[] = [
     id: "pro",
     name: "Pro",
     description: "Unlock full power for comprehensive inventory management.",
-    monthlyPrice: 99, // Increased price
+    monthlyPrice: 99,
     features: [
       { text: "Up to 1,000 Inventory Items", included: true },
       { text: "Up to 10 Users", included: true },
@@ -107,10 +90,10 @@ const plans: SubscriptionPlan[] = [
     isPopular: true,
   },
   {
-    id: "premium", // NEW: Premium Plan
+    id: "premium",
     name: "Premium",
     description: "Advanced features for growing enterprises.",
-    monthlyPrice: 349, // New price point
+    monthlyPrice: 349,
     features: [
       { text: "Up to 5,000 Inventory Items", included: true },
       { text: "Unlimited Users", included: true },
@@ -131,7 +114,7 @@ const plans: SubscriptionPlan[] = [
     id: "enterprise",
     name: "Enterprise",
     description: "Tailored solutions for large-scale operations.",
-    monthlyPrice: 0, // Custom pricing
+    monthlyPrice: 0,
     features: [
       { text: "Unlimited Inventory Items", included: true },
       { text: "Unlimited Users", included: true },
@@ -152,14 +135,14 @@ const plans: SubscriptionPlan[] = [
 
 const BillingSubscriptions: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-  const [currentPlanId, setCurrentPlanId] = useState<string>("pro"); // Default to Pro for demonstration
+  const [currentPlanId, setCurrentPlanId] = useState<string>("pro");
 
   const currentPlan = plans.find(p => p.id === currentPlanId) || plans[0];
 
   const getPriceDisplay = (monthlyPrice: number) => {
     if (monthlyPrice === 0) return "Free";
     if (billingCycle === "monthly") return `$${monthlyPrice}/month`;
-    const annualPrice = monthlyPrice * 12 * 0.8; // 20% discount for annual
+    const annualPrice = monthlyPrice * 12 * 0.8;
     return `$${annualPrice.toFixed(0)}/year`;
   };
 

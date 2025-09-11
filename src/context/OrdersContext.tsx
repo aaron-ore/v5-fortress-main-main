@@ -4,9 +4,9 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { generateSequentialNumber } from "@/utils/numberGenerator"; // Import generateSequentialNumber
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+import { generateSequentialNumber } from "@/utils/numberGenerator";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { isValid } from "date-fns";
 
 export interface POItem {
   id: number;
@@ -32,13 +32,13 @@ export interface OrderItem {
   items: POItem[];
   organizationId: string | null;
   terms?: string;
-  putawayStatus?: "Pending" | "Completed"; // NEW: Add putawayStatus for Purchase Orders
+  putawayStatus?: "Pending" | "Completed";
 }
 
 interface OrdersContextType {
   orders: OrderItem[];
   updateOrder: (updatedOrder: OrderItem) => void;
-  addOrder: (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => Promise<void>; // id is now explicitly optional
+  addOrder: (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => Promise<void>;
   archiveOrder: (orderId: string) => void;
   fetchOrders: () => Promise<void>;
 }
@@ -66,10 +66,10 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
 
     // Ensure created_at and due_date are always valid ISO strings
     const validatedCreatedAt = parseAndValidateDate(order.created_at);
-    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString(); // Fallback to current date if invalid
+    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
     const validatedDueDate = parseAndValidateDate(order.due_date);
-    const dueDateString = validatedDueDate ? validatedDueDate.toISOString() : new Date().toISOString(); // Fallback to current date if invalid
+    const dueDateString = validatedDueDate ? validatedDueDate.toISOString() : new Date().toISOString();
 
     return {
       id: order.id || "",
@@ -87,7 +87,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       items: items,
       organizationId: order.organization_id,
       terms: order.terms || undefined,
-      putawayStatus: order.putaway_status || undefined, // NEW: Map putaway_status
+      putawayStatus: order.putaway_status || undefined,
     };
   };
 
@@ -142,7 +142,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         delivery_route: updatedOrder.deliveryRoute,
         items: updatedOrder.items,
         terms: updatedOrder.terms,
-        putaway_status: updatedOrder.putawayStatus, // NEW: Update putaway_status
+        putaway_status: updatedOrder.putawayStatus,
       })
       .eq("id", updatedOrder.id)
       .eq("organization_id", profile.organizationId)
@@ -190,7 +190,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         terms: newOrder.terms,
         user_id: session.user.id,
         organization_id: profile.organizationId,
-        putaway_status: newOrder.type === "Purchase" ? "Pending" : undefined, // NEW: Set putawayStatus for new Purchase Orders
+        putaway_status: newOrder.type === "Purchase" ? "Pending" : undefined,
       })
       .select();
 
@@ -211,7 +211,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
-    const orderToArchive = orders.find(o => o.id === orderId);
+    const orderToArchive = orders.find(o => o.id === orderId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("orders")

@@ -28,14 +28,14 @@ import { Switch } from "@/components/ui/switch";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { PlusCircle, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
-import CustomFileInput from "@/components/CustomFileInput"; // NEW: Import CustomFileInput
+import CustomFileInput from "@/components/CustomFileInput";
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -234,7 +234,7 @@ const EditInventoryItem: React.FC = () => {
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl); // ADDED LOG
+        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         if (item.imageUrl) {
@@ -245,7 +245,7 @@ const EditInventoryItem: React.FC = () => {
           }
         }
         finalImageUrl = undefined;
-        console.log("[EditInventoryItem] Image cleared. Final URL will be undefined."); // ADDED LOG
+        console.log("[EditInventoryItem] Image cleared. Final URL will be undefined.");
       }
     } catch (error: any) {
       console.error("Error processing product image:", error);
@@ -269,7 +269,7 @@ const EditInventoryItem: React.FC = () => {
         return;
       }
 
-      console.log("[EditInventoryItem] Updating item with imageUrl:", finalImageUrl); // ADDED LOG
+      console.log("[EditInventoryItem] Updating item with imageUrl:", finalImageUrl);
       await updateInventoryItem({
         ...item,
         ...values,

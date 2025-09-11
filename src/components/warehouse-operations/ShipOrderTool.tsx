@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Barcode, Truck, ShoppingCart, CheckCircle, MapPin } from "lucide-react";
+import { Barcode, ShoppingCart, CheckCircle, MapPin } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -203,8 +203,8 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-          onClick={handleScanItem}
-          disabled={isScanning || !selectedSO}
+          onClick={handleScanClick}
+          disabled={isScanning}
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}

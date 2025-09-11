@@ -275,7 +275,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error adding inventory item:", error);
-      throw new Error(error.message || 'Failed to add item: Unknown error.'); // Ensure string message
+      throw new Error(error.message || 'Failed to add item: Unknown error.');
     } else if (data && data.length > 0) {
       showSuccess(`Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
     } else {
@@ -326,7 +326,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error updating inventory item:", error);
-      throw new Error(error.message || 'Failed to update item: Unknown error.'); // Ensure string message
+      throw new Error(error.message || 'Failed to update item: Unknown error.');
     } else if (data && data.length > 0) {
       showSuccess(`Updated inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
     } else {
@@ -343,7 +343,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
-    const itemToDelete = inventoryItems.find(item => item.id === itemId);
+    const itemToDelete = inventoryItems.find(item => item.id === itemId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("inventory_items")
@@ -353,7 +353,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error deleting inventory item:", error);
-      throw new Error(error.message || 'Failed to delete item: Unknown error.'); // Ensure string message
+      throw new Error(error.message || 'Failed to delete item: Unknown error.');
     } else {
       showSuccess("Item deleted successfully!");
     }

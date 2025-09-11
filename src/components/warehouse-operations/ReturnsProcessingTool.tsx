@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Undo2, Scan, Package, MapPin, AlertTriangle, CheckCircle } from "lucide-react";
+import { Undo2, Scan, Package, MapPin, CheckCircle } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useOnboarding } from "@/context/OnboardingContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 
 interface ReturnsProcessingToolProps {
@@ -20,13 +19,13 @@ interface ReturnsProcessingToolProps {
 
 const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { locations, addLocation } = useOnboarding(); // Use addLocation to ensure 'Returns Area' exists
+  const { locations, addLocation } = useOnboarding();
   const { addStockMovement } = useStockMovement();
 
   const [scannedItem, setScannedItem] = useState<InventoryItem | null>(null);
   const [returnQuantity, setReturnQuantity] = useState("");
   const [returnReason, setReturnReason] = useState("");
-  const [returnDestination, setReturnDestination] = useState(""); // Suggested or user-selected (fullLocationString)
+  const [returnDestination, setReturnDestination] = useState("");
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 

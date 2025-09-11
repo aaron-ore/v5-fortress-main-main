@@ -10,13 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Users as UsersIcon, Upload, ChevronDown } from "lucide-react"; // NEW: Import Upload and ChevronDown
+import { PlusCircle, Edit, Trash2, Upload, ChevronDown } from "lucide-react";
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import AddEditCustomerDialog from "@/components/AddEditCustomerDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import ImportCustomersDialog from "@/components/ImportCustomersDialog"; // NEW: Import ImportCustomersDialog
+import ImportCustomersDialog from "@/components/ImportCustomersDialog";
 import {
-  DropdownMenu, // NEW: Import DropdownMenu components
+  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -32,7 +32,7 @@ const Customers: React.FC = () => {
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [isImportCustomersDialogOpen, setIsImportCustomersDialogOpen] = useState(false); // ADDED: State for ImportCustomersDialog
+  const [isImportCustomersDialogOpen, setIsImportCustomersDialogOpen] = useState(false);
 
   const handleAddCustomerClick = () => {
     setCustomerToEdit(null);

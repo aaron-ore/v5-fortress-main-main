@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState(""); // NEW: State for full name
+  const [fullName, setFullName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -31,10 +31,10 @@ const Auth: React.FC = () => {
     } else {
       const options = {
         data: {
-          full_name: fullName.trim() || null, // NEW: Pass full_name
+          full_name: fullName.trim() || null,
           company_code: companyCode.trim() || null,
         },
-        redirectTo: window.location.origin + '/auth', // NEW: Redirect to /auth after email confirmation
+        redirectTo: window.location.origin + '/auth',
       };
       const { error } = await supabase.auth.signUp({ email, password, options });
       if (error) {
@@ -42,7 +42,7 @@ const Auth: React.FC = () => {
       } else {
         showSuccess("Account created! Please check your email to confirm.");
         setIsLogin(true);
-        setFullName(""); // Clear full name after sign up
+        setFullName("");
         setCompanyCode("");
       }
     }
@@ -128,7 +128,7 @@ const Auth: React.FC = () => {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label> {/* NEW: Full Name input */}
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
                     type="text"

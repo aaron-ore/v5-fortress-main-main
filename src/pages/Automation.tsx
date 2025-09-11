@@ -1,9 +1,6 @@
-"use client";
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// Removed Input, Label, CardDescription
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -13,14 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Zap } from "lucide-react"; // Removed ToggleRight, ToggleLeft
+import { PlusCircle, Edit, Trash2, Zap } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
-// Removed format
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react"; // Added Loader2 import
+import { Loader2 } from "lucide-react";
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();
@@ -35,7 +31,7 @@ const Automation: React.FC = () => {
   const isAdmin = profile?.role === 'admin';
 
   const handleCreateRuleClick = () => {
-    setRuleToEdit(null); // Clear for new rule
+    setRuleToEdit(null);
     setIsAutomationRuleDialogOpen(true);
   };
 
@@ -107,7 +103,6 @@ const Automation: React.FC = () => {
           return `Unit Cost < ${rule.conditionJson.value}`;
         }
         break;
-      // Add other trigger condition summaries here
     }
     return JSON.stringify(rule.conditionJson);
   };
@@ -122,7 +117,6 @@ const Automation: React.FC = () => {
         return `Send Email to ${rule.actionJson.to} with subject "${rule.actionJson.subject}"`;
       case "CREATE_PURCHASE_ORDER":
         return `Create PO for item ${rule.actionJson.itemId} (Qty: ${rule.actionJson.quantity})`;
-      // Add other action summaries here
     }
     return JSON.stringify(rule.actionJson);
   };

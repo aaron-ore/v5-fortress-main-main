@@ -22,22 +22,21 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Archive, Printer, QrCode } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import PurchaseOrderPdfContent from "@/components/PurchaseOrderPdfContent";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 const EditPurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
-  const { companyProfile } = useOnboarding();
+  const { useProfile: useProfileOnboarding } = useOnboarding(); // Renamed to avoid conflict
   const { initiatePrint } = usePrint();
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { profile } = useProfile();
   const [order, setOrder] = useState<OrderItem | null>(null);
 
   const [poNumber, setPoNumber] = useState("");
@@ -173,7 +172,7 @@ const EditPurchaseOrder: React.FC = () => {
       showError("Please fill in all required PO details before generating the PDF.");
       return;
     }
-    if (!profile?.companyProfile) { // Corrected access
+    if (!profile?.companyProfile) {
       showError("Company profile not set up. Please complete onboarding or set company details in settings.");
       return;
     }
@@ -185,16 +184,16 @@ const EditPurchaseOrder: React.FC = () => {
       supplierEmail: supplierEmail,
       supplierAddress: supplierAddress,
       supplierContact: supplierContact,
-      recipientName: profile.companyProfile.companyName, // Corrected access
-      recipientAddress: profile.companyProfile.companyAddress, // Corrected access
-      recipientContact: profile.companyProfile.companyCurrency, // Corrected access
+      recipientName: profile.companyProfile.companyName,
+      recipientAddress: profile.companyProfile.companyAddress,
+      recipientContact: profile.companyProfile.companyCurrency,
       terms,
       dueDate,
       items,
       notes,
       taxRate,
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined, // NEW: Use companyProfile.companyLogoUrl
-      poQrCodeSvg: poQrCodeSvg, // Pass QR code SVG to PDF
+      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
+      poQrCodeSvg: poQrCodeSvg,
     };
 
     initiatePrint({ type: "purchase-order", props: pdfProps });
@@ -322,7 +321,7 @@ const EditPurchaseOrder: React.FC = () => {
                 <Label htmlFor="totalAmount">Total Amount</Label>
                 <Input
                   id="totalAmount"
-                  type="text" // Changed to text to display formatted currency
+                  type="text"
                   value={`$${calculateTotalAmount().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   disabled
                 />

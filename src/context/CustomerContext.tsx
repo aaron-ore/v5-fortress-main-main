@@ -1,5 +1,3 @@
-"use client";
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
@@ -163,7 +161,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const customerToDelete = customers.find(c => c.id === customerId);
+    const customerToDelete = customers.find(c => c.id === customerId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("customers")

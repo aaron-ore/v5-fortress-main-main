@@ -40,7 +40,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Keeping this as it is used
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); 
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
@@ -191,8 +191,8 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = XLSX.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet); // Corrected: jsonData declared here
 
         if (jsonData.length === 0) {
           showError("The CSV file is empty or contains no data rows.");
@@ -205,7 +205,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const duplicates: CsvDuplicateCustomer[] = [];
         const seenDuplicates = new Set<string>();
 
-        jsonData.forEach(row => {
+        jsonData.forEach((row: any) => { // Explicitly type row as any
           const name = String(row.name || '').trim();
           const email = String(row.email || '').trim();
 

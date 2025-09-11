@@ -2,8 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface ReplenishmentTask {
   id: string;
@@ -13,7 +12,7 @@ export interface ReplenishmentTask {
   toLocation: string;
   quantity: number;
   status: "Pending" | "Assigned" | "Completed" | "Cancelled";
-  assignedTo?: string; // User ID of the operator
+  assignedTo?: string;
   createdAt: string;
   completedAt?: string;
   organizationId: string | null;
@@ -37,11 +36,11 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     // Ensure createdAt is always a valid ISO string
     const validatedCreatedAt = parseAndValidateDate(task.created_at);
-    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString(); // Fallback to current date if invalid
+    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
     // Ensure completedAt is valid or keep undefined if not present
     const validatedCompletedAt = parseAndValidateDate(task.completed_at);
-    const completedAtString = validatedCompletedAt ? validatedCompletedAt.toISOString() : undefined; // Fallback to undefined if invalid
+    const completedAtString = validatedCompletedAt ? validatedCompletedAt.toISOString() : undefined;
 
     return {
       id: task.id || "",
@@ -74,10 +73,10 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
     if (error) {
       console.error("Error fetching replenishment tasks:", error);
       showError("Failed to load replenishment tasks.");
-      setReplenishmentTasks([]); // Return empty array on error
+      setReplenishmentTasks([]);
     } else {
       const fetchedTasks: ReplenishmentTask[] = data.map(mapSupabaseTaskToReplenishmentTask);
-      setReplenishmentTasks(fetchedTasks); // Set fetched data, could be empty
+      setReplenishmentTasks(fetchedTasks);
     }
   }, [profile?.organizationId]);
 
@@ -102,7 +101,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
         from_location: task.fromLocation,
         to_location: task.toLocation,
         quantity: task.quantity,
-        status: "Pending", // Default status
+        status: "Pending",
         user_id: session.user.id,
         organization_id: profile.organizationId,
       })

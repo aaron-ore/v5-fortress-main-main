@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
-import { isValid } from 'date-fns';
 
 export interface CompanyProfile {
   companyName: string;
@@ -29,7 +28,7 @@ export interface UserProfile {
   shopifyAccessToken?: string;
   shopifyRefreshToken?: string;
   shopifyStoreName?: string;
-  companyProfile?: CompanyProfile; // Nested company profile
+  companyProfile?: CompanyProfile;
 }
 
 interface ProfileContextType {
@@ -136,7 +135,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showError('Failed to load all user profiles.');
       setAllProfiles([]);
     } else {
-      const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null)); // Pass null for companyData as it's not needed for other users' profiles
+      const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
   }, [profile?.organizationId]);
@@ -169,7 +168,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw error;
     } else {
       showSuccess('Profile updated successfully!');
-      await fetchProfile(); // Re-fetch to get the latest data
+      await fetchProfile();
     }
   };
 
@@ -192,7 +191,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (data.error) throw new Error(data.error);
 
       showSuccess(`User role updated to ${newRole} for ${userId}.`);
-      await fetchAllProfiles(); // Refresh all profiles to show updated role
+      await fetchAllProfiles();
     } catch (error: any) {
       console.error('Error updating user role:', error);
       showError(`Failed to update user role: ${error.message}`);
@@ -228,7 +227,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw error;
     } else {
       showSuccess('Company profile updated successfully!');
-      await fetchProfile(); // Re-fetch to get the latest data
+      await fetchProfile();
     }
   };
 
@@ -249,7 +248,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw error;
     } else {
       showSuccess('Organization theme updated successfully!');
-      await fetchProfile(); // Re-fetch to update local state and trigger ThemeInitializer
+      await fetchProfile();
     }
   };
 

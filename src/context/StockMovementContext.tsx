@@ -2,8 +2,8 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { isValid } from "date-fns";
 
 export interface StockMovement {
   id: string;
@@ -16,7 +16,7 @@ export interface StockMovement {
   reason: string;
   timestamp: string;
   organizationId: string | null;
-  userId: string; // NEW: Add userId to StockMovement interface
+  userId: string;
 }
 
 interface StockMovementContextType {
@@ -38,7 +38,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
 
     // Ensure timestamp is always a valid ISO string
     const validatedTimestamp = parseAndValidateDate(movement.timestamp);
-    const timestampString = validatedTimestamp ? validatedTimestamp.toISOString() : new Date().toISOString(); // Fallback to current date if invalid
+    const timestampString = validatedTimestamp ? validatedTimestamp.toISOString() : new Date().toISOString();
 
     return {
       id: movement.id || "",
@@ -51,7 +51,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
       reason: movement.reason || "",
       timestamp: timestampString,
       organizationId: movement.organization_id,
-      userId: movement.user_id || "", // Map user_id
+      userId: movement.user_id || "",
     };
   };
 

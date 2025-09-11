@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, MapPin, DollarSign, Boxes, FilterX } from "lucide-react";
+import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, DollarSign, Boxes, FilterX } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { format, isValid, startOfDay, endOfDay } from "date-fns";
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const ClassicDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -28,17 +28,17 @@ const ClassicDashboard: React.FC = () => {
 
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // Re-added dateRange state
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   // Helper function to check if a date falls within the selected range
   const isDateInRange = (dateString: string) => {
-    if (!dateRange?.from || !isValid(dateRange.from)) return true; // No valid 'from' date, so no filter applied
+    if (!dateRange?.from || !isValid(dateRange.from)) return true;
 
     const date = parseAndValidateDate(dateString);
-    if (!date) return false; // Invalid date string, cannot be in range
+    if (!date) return false;
 
     const from = startOfDay(dateRange.from);
-    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from); // Ensure 'to' is valid or default to 'from'
+    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
 
     return date >= from && date <= to;
   };
@@ -67,15 +67,15 @@ const ClassicDashboard: React.FC = () => {
       .sort((a, b) => {
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB) return 0; // Handle null dates
+        if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
       })
       .slice(0, 5);
-  }, [orders, isDateInRange, dateRange]); // Added dateRange to dependencies
+  }, [orders, isDateInRange, dateRange]);
 
   const handleCreatePO = () => navigate("/create-po");
   const handleCreateInvoice = () => navigate("/create-invoice");
-  const handleClearDateFilter = () => { setDateRange(undefined); }; // Re-added handler
+  const handleClearDateFilter = () => { setDateRange(undefined); };
 
   return (
     <div className="space-y-6">
@@ -84,7 +84,7 @@ const ClassicDashboard: React.FC = () => {
         <h1 className="text-3xl font-bold">Classic Dashboard</h1>
         <div className="flex items-center gap-2">
           <DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
-          {dateRange?.from && isValid(dateRange.from) && ( // Only show clear button if a valid 'from' date exists
+          {dateRange?.from && isValid(dateRange.from) && (
             <Button variant="outline" onClick={handleClearDateFilter} size="icon">
               <FilterX className="h-4 w-4" />
             </Button>
