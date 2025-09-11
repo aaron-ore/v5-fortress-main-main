@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { supabase } from "@/lib/supabaseClient";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";

@@ -116,8 +116,6 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const categoryToRemove = categories.find(cat => cat.id === id);
-
     const { error } = await supabase
       .from("categories")
       .delete()

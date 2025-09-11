@@ -229,7 +229,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
               <CheckCircle className="h-6 w-6 mr-2" /> All items verified!
             </div>
           )}
-          {verificationStatus === "error" && (
+            {verificationStatus === "error" && (
             <div className="flex items-center justify-center text-destructive font-semibold text-lg mt-4">
               <XCircle className="h-6 w-6 mr-2" /> Verification Error!
             </div>

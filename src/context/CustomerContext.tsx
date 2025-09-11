@@ -161,8 +161,6 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const customerToDelete = customers.find(c => c.id === customerId);
-
     const { error } = await supabase
       .from("customers")
       .delete()

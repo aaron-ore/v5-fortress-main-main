@@ -73,6 +73,7 @@ const formSchema = z.object({
   shippingMethod: z.enum(["Standard", "Express"]),
   deliveryRoute: z.string().optional(),
   items: z.array(z.object({
+    id: z.number(), // Added id to POItem schema
     itemName: z.string().min(1, "Item name is required"),
     quantity: z.number().min(1, "Quantity must be at least 1"),
     unitPrice: z.number().min(0, "Unit price must be non-negative"),
@@ -102,7 +103,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
       orderType: "Retail",
       shippingMethod: "Standard",
       deliveryRoute: "",
-      items: [{ itemName: "", quantity: 1, unitPrice: 0, inventoryItemId: "" }],
+      items: [{ id: Date.now(), itemName: "", quantity: 1, unitPrice: 0, inventoryItemId: "" }], // Added id
       terms: "",
     },
   });

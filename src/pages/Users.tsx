@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon } from "lucide-react";
+import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon, Loader2 } from "lucide-react";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -76,7 +76,7 @@ const Users: React.FC = () => {
     }
   };
 
-  if (isLoadingProfile) {
+  if (profile?.isLoadingProfile) { // Use profile.isLoadingProfile
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -88,6 +88,8 @@ const Users: React.FC = () => {
       </div>
     );
   }
+
+  const isAdmin = profile?.role === 'admin'; // Define isAdmin here
 
   if (!isAdmin) {
     return (

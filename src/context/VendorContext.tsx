@@ -161,8 +161,6 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
 
-    const vendorToDelete = vendors.find(v => v.id === vendorId);
-
     const { error } = await supabase
       .from("vendors")
       .delete()
