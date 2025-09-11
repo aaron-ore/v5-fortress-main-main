@@ -96,11 +96,11 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       console.error("Error adding category:", error);
       showError(`Failed to add category: ${error.message}`);
       return null;
-    } else if (data && data.length > 0) {
+    } else if (data) {
       const newCategory: Category = {
-        id: data[0].id,
-        name: data[0].name,
-        organizationId: data[0].organization_id,
+        id: data.id,
+        name: data.name,
+        organizationId: data.organization_id,
       };
       setCategories((prev) => [...prev, newCategory]);
       showSuccess(`Category "${trimmedName}" added.`);
@@ -116,7 +116,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const categoryToRemove = categories.find(cat => cat.id === id); // Kept as it's used in showSuccess
+    const categoryToRemove = categories.find(cat => cat.id === id);
 
     const { error } = await supabase
       .from("categories")

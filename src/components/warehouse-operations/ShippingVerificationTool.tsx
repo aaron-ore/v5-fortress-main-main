@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
 
 interface ShippingVerificationToolProps {

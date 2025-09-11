@@ -19,7 +19,6 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
   movements,
   dateRange,
   allProfiles,
-  structuredLocations,
 }) => {
   const { profile } = useProfile();
 
@@ -35,12 +34,6 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
   };
-
-  // Removed unused getLocationDisplayName as it's not directly used in the PDF content
-  // const getLocationDisplayName = (fullLocationString: string) => {
-  //   const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-  //   return foundLoc?.displayName || fullLocationString;
-  // };
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">

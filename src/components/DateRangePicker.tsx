@@ -27,7 +27,7 @@ export function DateRangePicker({
   const handleSelect: SelectRangeEventHandler = (range, selectedDay, activeModifiers, e) => {
     const from = range?.from && isValid(range.from) ? startOfDay(range.from) : undefined;
     const to = range?.to && isValid(range.to) ? endOfDay(range.to) : undefined;
-    onSelect({ from, to }, selectedDay, activeModifiers || {}, e); // Pass {} for activeModifiers if undefined
+    onSelect({ from, to }, selectedDay, activeModifiers || {}, e);
   };
 
   const handleQuickSelect = (days: number) => {
@@ -45,7 +45,7 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    onSelect({ from: fromDate, to: toDate }, undefined, {}, undefined); // Fixed: Changed null to undefined for selectedDay and e
+    onSelect({ from: fromDate, to: toDate }, undefined, {}, undefined);
   };
 
   const quickSelectButtons = (
@@ -61,13 +61,13 @@ export function DateRangePicker({
     <Calendar
       initialFocus
       mode="range"
-      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()} // Fixed TS2345: default to new Date() if invalid
+      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()}
       selected={dateRange}
       onSelect={handleSelect}
       numberOfMonths={isMobile ? 1 : 2}
-      disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")} // Explicitly type 'date'
-      className="p-3" // Added className prop
-      classNames={{}} // Added classNames prop
+      disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")}
+      className="p-3"
+      classNames={{}}
     />
   );
 

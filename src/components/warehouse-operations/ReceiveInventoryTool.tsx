@@ -26,7 +26,7 @@ import {
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation?: string; // fullLocationString
+  suggestedPutawayLocation: string; // fullLocationString
   lotNumber?: string;
   expirationDate?: string;
   serialNumber?: string; // Added for future use
@@ -248,9 +248,6 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           showError(`Inventory item for ${item.itemName} not found.`);
           updatesSuccessful = false;
         }
-      }
-      if (item.receivedQuantity < item.quantity) {
-        // allItemsReceived = false; // Removed unused variable
       }
     }
 

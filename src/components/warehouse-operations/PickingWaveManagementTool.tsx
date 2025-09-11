@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ListOrdered, Printer, Package, Truck, CheckCircle } from "lucide-react";
+import { Truck, Printer, Package, CheckCircle } from "lucide-react"; // Removed ListOrdered
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
@@ -124,15 +124,15 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.companyName, // Corrected access
-      companyAddress: companyProfile.companyAddress, // Corrected access
-      companyContact: companyProfile.companyCurrency, // Corrected access
-      companyLogoUrl: companyProfile.companyLogoUrl || undefined, // Corrected access
+      companyName: companyProfile.name,
+      companyAddress: companyProfile.address,
+      companyContact: companyProfile.currency,
+      companyLogoUrl: companyProfile.companyLogoUrl || undefined,
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),
       ordersInWave: ordersInWaveDetails,
       pickListItems: generatedPickList,
-      pickerName: companyProfile.companyName, // Corrected access
+      pickerName: companyProfile.name,
     };
 
     initiatePrint({ type: "picking-wave", props: pdfProps });

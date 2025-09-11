@@ -61,7 +61,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
 
     const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
     const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
-    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
     const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
 
     const recentSalesOrders = filteredOrders

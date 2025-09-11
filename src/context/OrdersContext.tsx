@@ -6,7 +6,6 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-// Removed isValid as it's not used
 
 export interface POItem {
   id: number;
@@ -210,8 +209,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       showError("You must be logged in and have an organization ID to archive orders.");
       return;
     }
-
-    const orderToArchive = orders.find(o => o.id === orderId);
 
     const { error } = await supabase
       .from("orders")

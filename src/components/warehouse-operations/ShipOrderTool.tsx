@@ -113,7 +113,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
     }
   };
 
-  const handleScanItem = () => {
+  const handleScanItemClick = () => {
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
@@ -174,7 +174,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
       setSelectedSO(null);
       setPickedItems([]);
     } else {
-      showError("Some items could not be updated. Please check the console for details.");
+      showError("Some items could not be updated. Check console for details.");
     }
   };
 
@@ -203,7 +203,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-          onClick={handleScanItem}
+          onClick={handleScanItemClick}
           disabled={isScanning}
         >
           <Barcode className="h-6 w-6" />

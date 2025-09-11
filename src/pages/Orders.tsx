@@ -129,7 +129,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
   };
 
   const handleAddItem = () => {
-    form.setValue("items", [...form.getValues("items"), { itemName: "", quantity: 1, unitPrice: 0, inventoryItemId: "" }]);
+    form.setValue("items", [...form.getValues("items"), { id: Date.now(), itemName: "", quantity: 1, unitPrice: 0, inventoryItemId: "" }]);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -292,8 +292,8 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           )}
         />
         <h3 className="text-lg font-semibold mt-6">Items</h3>
-        {form.watch("items").map((currentItem, index) => (
-          <div key={index} className="border p-4 rounded-md space-y-2">
+        {form.watch("items").map((item, index) => (
+          <div key={item.id} className="border p-4 rounded-md space-y-2">
             <div className="flex justify-between items-center">
               <h4 className="font-medium">Item #{index + 1}</h4>
               <Button type="button" variant="destructive" size="sm" onClick={() => handleRemoveItem(index)}>

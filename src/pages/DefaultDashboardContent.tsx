@@ -5,7 +5,7 @@ import AddInventoryDialog from "@/components/AddInventoryDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
-import { isValid, startOfDay, endOfDay } from "date-fns";
+import { isValid } from "date-fns";
 
 // Import new dashboard components
 import WalletCard from "@/components/dashboard/WalletCard";
@@ -22,7 +22,6 @@ import TopSellingProductsCard from "@/components/dashboard/TopSellingProductsCar
 import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
 import { FilterX } from "lucide-react";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
 // NEW: Import the new cards for the 4th row
 import OpenPurchaseOrdersCard from "@/components/dashboard/OpenPurchaseOrdersCard";

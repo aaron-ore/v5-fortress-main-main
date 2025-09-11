@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -90,7 +90,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
         totalOverallValue += item.quantity * item.unitCost;
         totalOverallQuantity += item.quantity;
       });
-      groupedData = Object.entries(locationMap).map(([key, data]) => ({ // Fixed: Changed 'name' to 'key' in destructuring
+      groupedData = Object.entries(locationMap).map(([_key, data]) => ({
         name: data.displayName, // Use displayName for the report
         totalValue: data.totalValue,
         totalQuantity: data.totalQuantity,

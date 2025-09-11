@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-// Removed Input
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react"; // Removed Barcode
+import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -33,7 +32,7 @@ interface PutawayToolProps {
 }
 
 const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
-  const { orders, fetchOrders, updateOrder } = useOrders();
+  const { orders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
   const { locations: structuredLocations } = useOnboarding();
@@ -155,7 +154,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
 
     const inventoryItem = itemToPutAway.inventoryItemDetails;
-    // Removed oldLocation as it's not used
     const newLocation = scannedLocation;
 
     // Update inventory item's location

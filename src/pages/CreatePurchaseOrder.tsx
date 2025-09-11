@@ -21,14 +21,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react"; // Removed Archive, QrCode
+import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
-import { usePrint } from "@/context/PrintContext"; // Re-added usePrint
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Re-added generateQrCodeSvg
+import { usePrint } from "@/context/PrintContext";
+import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useProfile } from "@/context/ProfileContext";
 
 import {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react"; // Added useEffect
+import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -142,7 +142,7 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
               <p className="text-3xl font-bold text-green-500">${totalOverallRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg">Total Units Sold</h3>
+              <h3 className="font-semibold text-lg">Total Items Sold</h3>
               <p className="text-3xl font-bold">{totalOverallUnits.toLocaleString()}</p>
             </div>
           </div>

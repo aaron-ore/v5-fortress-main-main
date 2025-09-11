@@ -40,7 +40,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  // Removed duplicateAction as it's not used
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
@@ -61,7 +60,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       setJsonDataToProcess(null);
       setDuplicateCustomersInCsv([]);
       setIsDuplicateCustomersWarningDialogOpen(false);
-      // setDuplicateAction("skip"); // Removed
     }
   }, [isOpen]);
 
@@ -188,7 +186,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName]; // Corrected XLSX.Sheets access
+        const worksheet = workbook.Sheets[sheetName];
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {

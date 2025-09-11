@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Imported Button
 import {
   Search,
   Package,
@@ -31,6 +31,7 @@ import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { showSuccess, showError } from "@/utils/toast"; // Keeping these as they are used
 
 interface GlobalSearchDialogProps {
   isOpen: boolean;

@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
-// Removed unused import: useOnboarding
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, FileText } from "lucide-react"; // Removed Truck, DollarSign
+import { Loader2, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -93,7 +92,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
     );
   }
 
-  const { orders: ordersToDisplay, statusFilter: currentStatusFilter } = currentReportData;
+  const { orders: ordersToDisplay } = currentReportData;
   const totalOrders = ordersToDisplay.length;
   const totalAmount = ordersToDisplay.reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
 

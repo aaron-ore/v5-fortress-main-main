@@ -156,7 +156,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
   // Effect for initial data fetch
   useEffect(() => {
-    if (!isLoadingProfile && profile?.organizationId) {
+    if (!isLoadingProfile) {
       fetchInventoryItems();
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setInventoryItems([]);
@@ -289,6 +289,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       throw new Error("You must be logged in and have an organization ID to update inventory items.");
+      return;
     }
 
     const totalQuantity = updatedItem.pickingBinQuantity + updatedItem.overstockQuantity;
@@ -342,8 +343,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       showError("You must be logged in and have an organization ID to delete inventory items.");
       return;
     }
-
-    const itemToDelete = inventoryItems.find(item => item.id === itemId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("inventory_items")

@@ -85,12 +85,6 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  // Removed unused getLocationDisplayName as it's not directly used in the PDF content
-  // const getLocationDisplayName = (fullLocationString: string) => {
-  //   const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-  //   return foundLoc?.displayName || fullLocationString;
-  // };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
