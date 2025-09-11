@@ -1,16 +1,16 @@
-import { useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { supabase } from "@/lib/supabaseClient";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, AlertTriangle, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
+import { Label } from "@/components/ui/label";
 import { showError } from "@/utils/toast";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 

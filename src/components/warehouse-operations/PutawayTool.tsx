@@ -1,8 +1,11 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
+import { Barcode, CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -19,7 +22,7 @@ import {
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation: string;
+  suggestedPutawayLocation: string; // fullLocationString
   isPutAway: boolean;
 }
 
@@ -38,7 +41,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
-  const [scannedLocation, setScannedLocation] = useState<string | null>(null);
+  const [scannedLocation, setScannedLocation] = useState<string | null>(null); // Stores the fullLocationString of the scanned location
   const [isScanning, setIsScanning] = useState(false);
   const [currentScanMode, setCurrentScanMode] = useState<"po" | "location" | "item">("po");
 
@@ -119,8 +122,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   const handlePoSelect = async (orderId: string) => {
-    await fetchOrders(); // Ensure orders are up-to-date
-
     const foundPO = orders.find(
       (order) => order.id === orderId && order.type === "Purchase" && order.putawayStatus === "Pending"
     );
@@ -154,6 +155,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
 
     const inventoryItem = itemToPutAway.inventoryItemDetails;
+    const oldLocation = inventoryItem.location;
     const newLocation = scannedLocation;
 
     // Update inventory item's location

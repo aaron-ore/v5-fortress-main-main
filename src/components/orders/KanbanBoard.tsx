@@ -8,7 +8,7 @@ import {
   useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"; 
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"; // Removed arrayMove
 import KanbanColumn from "./KanbanColumn";
 import { OrderItem, useOrders } from "@/context/OrdersContext";
 import { showSuccess } from "@/utils/toast";

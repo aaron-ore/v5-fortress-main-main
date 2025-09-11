@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Trash2, MapPin, QrCode, Edit } from "lucide-react"; // NEW: Import Edit icon
-import { showSuccess, showError } from "@/utils/toast";
+import { PlusCircle, Trash2, MapPin, QrCode, Printer, Edit } from "lucide-react"; // NEW: Import Edit icon
+import { showError, showSuccess } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOnboarding, Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import LocationLabelGenerator from "@/components/LocationLabelGenerator"; // Import the new component
-import { parseLocationString } from "@/utils/locationParser"; // NEW: Import parseLocationString and LocationParts
+import { parseLocationString, LocationParts } from "@/utils/locationParser"; // NEW: Import parseLocationString and LocationParts
 import LocationInventoryViewDialog from "@/components/LocationInventoryViewDialog"; // NEW: Import LocationInventoryViewDialog
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"; // NEW: Import Dialog components
 

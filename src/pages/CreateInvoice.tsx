@@ -15,9 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
-import { showError } from "@/utils/toast";
-import { useOrders, POItem } from "@/context/OrdersContext";
+import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
+import InvoicePdfContent from "@/components/InvoicePdfContent";
+// Removed unused import: useOnboarding
+import { useOrders, POItem, OrderItem } from "@/context/OrdersContext";
+import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
@@ -31,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Use useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 import {
   DndContext,
@@ -145,7 +148,7 @@ const CreateInvoice: React.FC = () => {
   const { customers } = useCustomers(); // NEW: Use customers context
   const { profile } = useProfile(); // NEW: Use useProfile
 
-  const [invoiceNumber, setInvoiceNumber] = useState(""); // Removed initial generation, will be set after order creation
+  const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null); // NEW: State for selected customer ID
   const [customerName, setCustomerName] = useState(""); // Kept for manual input if no customer selected
   const [customerEmail, setCustomerEmail] = useState("");

@@ -5,22 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Barcode } from "lucide-react";
+import { CheckCircle, Package, MapPin, Barcode } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useStockMovement } from "@/context/StockMovementContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient"; // Import supabase
 
 interface CountedItem {
   id: string;
   name: string;
   sku: string;
-  systemPickingBinQuantity: number;
-  systemOverstockQuantity: number;
-  countedPickingBinQuantity: number;
-  countedOverstockQuantity: number;
-  location: string;
-  pickingBinLocation: string;
+  systemPickingBinQuantity: number; // Track system quantity for picking bin
+  systemOverstockQuantity: number; // Track system quantity for overstock
+  countedPickingBinQuantity: number; // User input for picking bin
+  countedOverstockQuantity: number; // User input for overstock
+  location: string; // Main location (fullLocationString)
+  pickingBinLocation: string; // Specific picking bin location (fullLocationString)
   isScanned: boolean;
   barcodeUrl?: string;
 }
@@ -33,9 +34,10 @@ interface CycleCountToolProps {
 
 const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, refreshInventory } = useInventory();
-  const { locations } = useOnboarding();
+  const { locations } = useOnboarding(); // Now contains Location[]
+  // Removed useStockMovement as updates will go through Edge Function
 
-  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all"); // This will be fullLocationString or "all"
   const [itemsToCount, setItemsToCount] = useState<CountedItem[]>([]);
   const [isCounting, setIsCounting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -196,7 +198,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
       showSuccess("Cycle count completed. No discrepancies found.");
     }
     
-    refreshInventory();
+    refreshInventory(); // Refresh inventory to reflect changes
     setIsCounting(false);
     setItemsToCount([]);
     setSelectedLocation("all");

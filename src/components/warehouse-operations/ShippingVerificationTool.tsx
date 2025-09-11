@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
+import { Truck, Scan, CheckCircle, XCircle, Package, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";

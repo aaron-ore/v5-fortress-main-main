@@ -197,7 +197,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet); // Corrected: jsonData declared here
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
           showError("The CSV file is empty or contains no data rows.");

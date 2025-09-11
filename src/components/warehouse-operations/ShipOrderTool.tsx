@@ -40,7 +40,9 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   useEffect(() => {
     if (scannedDataFromGlobal && !isScanning) {
-      handleScannedBarcode(scannedDataFromGlobal);
+      if (selectedSO) {
+        handleScannedBarcode(scannedDataFromGlobal);
+      }
       onScannedDataProcessed();
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed, selectedSO]);
@@ -63,7 +65,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         const inventoryItem = inventoryItems.find(inv => inv.id === soItem.inventoryItemId);
         return {
           ...soItem,
-          pickedQuantity: 0, // Initialize picked quantity to 0
+          pickedQuantity: 0,
           inventoryItemDetails: inventoryItem,
         };
       });
@@ -85,7 +87,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
   };
 
   const handleScannedBarcode = (scannedData: string) => {
-    setIsScanning(false); // Scanning is complete
+    setIsScanning(false);
     if (!selectedSO) {
       showError("Please load a Sales Order before scanning items.");
       return;
@@ -163,7 +165,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
     }
 
     if (updatesSuccessful) {
-      const newStatus = allItemsPicked ? "Shipped" : "Packed"; // If partially fulfilled, keep as processing
+      const newStatus = allItemsPicked ? "Shipped" : "Packed";
       const updatedSO = { ...selectedSO, status: newStatus as OrderItem['status'] };
       await updateOrder(updatedSO);
       showSuccess(`Shipment for SO ${selectedSO.id} completed. Status updated to "${newStatus}".`);
@@ -202,7 +204,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanItem}
-          disabled={isScanning}
+          disabled={isScanning || !selectedSO}
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}
@@ -245,7 +247,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
             <ShoppingCart className="h-12 w-12 mb-4" />
-            <p className="text-lg">Enter a Sales Order number to begin shipping.</p>
+            <p className="text-lg">Enter a SO number to begin shipping.</p>
           </div>
         )}
       </div>

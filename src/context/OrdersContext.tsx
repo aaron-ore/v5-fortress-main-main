@@ -6,6 +6,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator"; // Import generateSequentialNumber
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { isValid } from "date-fns"; // Import isValid for date validation
 
 export interface POItem {
   id: number;

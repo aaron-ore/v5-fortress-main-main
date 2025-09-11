@@ -21,18 +21,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Archive, Printer } from "lucide-react";
+import { PlusCircle, Trash2, Archive, Printer, QrCode } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
-import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import PurchaseOrderPdfContent from "@/components/PurchaseOrderPdfContent";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Use useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const EditPurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
+  const { companyProfile } = useOnboarding();
   const { initiatePrint } = usePrint();
   const { profile } = useProfile(); // NEW: Use useProfile
   const [order, setOrder] = useState<OrderItem | null>(null);

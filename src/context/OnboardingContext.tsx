@@ -48,7 +48,7 @@ const getStoragePathFromUrl = (url: string): string | null => {
 };
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile } = useProfile(); // NEW: Get companyProfile from ProfileContext
+  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile: updateProfileCompanyProfileFromContext } = useProfile(); // NEW: Get companyProfile from ProfileContext
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("onboarding_skipped") === "true";
@@ -93,7 +93,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   });
 
   // Fetch locations from Supabase
-  const fetchLocations = useCallback(async () => {
+  const fetchLocations = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setLocations([]);
@@ -113,7 +113,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else {
       setLocations(data.map(mapSupabaseLocationToLocation));
     }
-  }, [profile?.organizationId]);
+  };
 
   // Effect to fetch locations on profile load or change
   useEffect(() => {
@@ -122,7 +122,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setLocations([]); // Clear locations if no organization
     }
-  }, [isLoadingProfile, profile?.organizationId, fetchLocations]);
+  }, [isLoadingProfile, profile?.organizationId]);
 
 
   const markOnboardingComplete = () => {

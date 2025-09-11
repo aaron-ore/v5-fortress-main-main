@@ -22,6 +22,23 @@ interface SubscriptionPlan {
   isPopular?: boolean;
 }
 
+const allFeatures = [
+  "Inventory Items",
+  "Users",
+  "Basic Reporting",
+  "Advanced Reporting",
+  "Kanban Board",
+  "PDF Export (PO/Invoice)",
+  "CSV Import/Export",
+  "Bulk Update",
+  "Auto-Reorder Settings",
+  "Global Search",
+  "Notifications",
+  "Priority Support",
+  "Dedicated Account Manager",
+  "Custom Integrations",
+];
+
 const plans: SubscriptionPlan[] = [
   {
     id: "free",

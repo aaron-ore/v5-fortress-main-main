@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, Users } from "lucide-react";
-import * as XLSX from 'xlsx'; // Import as * as XLSX
+import * as XLSX from 'xlsx';
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateCustomerCsvTemplate } from "@/utils/csvGenerator";
@@ -40,7 +40,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); 
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Keeping this as it is used
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
@@ -191,8 +191,8 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet); // Corrected: jsonData declared here
+        const worksheet = XLSX.Sheets[sheetName];
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
           showError("The CSV file is empty or contains no data rows.");
@@ -205,7 +205,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const duplicates: CsvDuplicateCustomer[] = [];
         const seenDuplicates = new Set<string>();
 
-        jsonData.forEach((row: any) => { // Explicitly type row as any
+        jsonData.forEach(row => {
           const name = String(row.name || '').trim();
           const email = String(row.email || '').trim();
 

@@ -23,10 +23,16 @@ import {
   HelpCircle,
   Sparkles,
   BookOpen,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  UserRound,
+  Plug,
   Zap, // NEW: Import Zap icon for Automation
-  Plug, // NEW: Import Plug icon for Integrations
   // Layout, // REMOVED: Import Layout icon for Floor Plan
 } from "lucide-react";
+// Removed unused import: React
 
 export interface NavItem {
   title: string;
@@ -44,7 +50,7 @@ export const mainNavItems: NavItem[] = [
   { title: "Reports", href: "/reports", icon: BarChart }, // Moved Reports here
   { title: "Inventory", href: "/inventory", icon: Package },
   { title: "Orders", href: "/orders", icon: Receipt },
-  { title: "Customers", href: "/customers", icon: User },
+  { title: "Customers", href: "/customers", icon: UserRound },
   { title: "Vendors", href: "/vendors", icon: Truck },
   { title: "Locations", href: "/locations", icon: MapPin },
   // { title: "Floor Plan", href: "/floor-plan", icon: Layout }, // REMOVED: Add Floor Plan NavItem

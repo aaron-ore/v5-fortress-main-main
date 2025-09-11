@@ -8,7 +8,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"; // Added missing import
+// Removed Input
+// Removed Label
 import {
   Search,
   Package,
@@ -26,12 +27,12 @@ import {
   Bell,
   FileText,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { showSuccess, showError } from "@/utils/toast"; // Keeping these as they are used
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useProfile } from "@/context/ProfileContext";
-import { Input } from "@/components/ui/input"; // Added missing Input import
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GlobalSearchDialogProps {
   isOpen: boolean;
@@ -241,7 +242,7 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
             <label htmlFor="globalSearch" className="text-right">
               Search Term
             </label>
-            <Input
+            <input
               id="globalSearch"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

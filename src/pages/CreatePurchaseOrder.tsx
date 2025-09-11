@@ -21,15 +21,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
-import { showError } from "@/utils/toast";
-import { useOrders, POItem } from "@/context/OrdersContext"; // NEW: Import OrderItem
+import { PlusCircle, Trash2, Archive, Printer, PackageOpen, QrCode } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
+import { useOrders, POItem, OrderItem } from "@/context/OrdersContext"; // NEW: Import OrderItem
+import ConfirmDialog from "@/components/ConfirmDialog";
+import PurchaseOrderPdfContent from "@/components/PurchaseOrderPdfContent";
+// Removed unused: useOnboarding
+import { usePrint } from "@/context/PrintContext";
+import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
-import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Use useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 import {
   DndContext,

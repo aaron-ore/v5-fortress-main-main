@@ -1,37 +1,37 @@
-import { useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, DollarSign, FileText } from "lucide-react";
+import { Loader2, DollarSign, Package, MapPin, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
+import { Label } from "@/components/ui/label"; // Added Label import
+import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // NEW: Import showError
 
 interface InventoryValuationReportProps {
-  dateRange: DateRange | undefined;
+  dateRange: DateRange | undefined; // NEW: dateRange prop
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
-  dateRange,
+  dateRange, // NEW: Destructure dateRange prop
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
-  const { locations: structuredLocations } = useOnboarding();
-  const { profile } = useProfile();
+  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { profile } = useProfile(); // NEW: Use useProfile
 
   const [groupBy, setGroupBy] = useState<"category" | "location">("category");
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -48,7 +48,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
 
     const filteredItems = inventoryItems.filter((item: InventoryItem) => {
       const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
-      if (!itemLastUpdated || !isValid(itemLastUpdated)) return false;
+      if (!itemLastUpdated || !isValid(itemLastUpdated)) return false; // Ensure valid date
       if (filterFrom && filterTo) {
         return isWithinInterval(itemLastUpdated, { start: filterFrom, end: filterTo });
       }
@@ -90,7 +90,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
         totalOverallValue += item.quantity * item.unitCost;
         totalOverallQuantity += item.quantity;
       });
-      groupedData = Object.entries(locationMap).map(([name, data]) => ({
+      groupedData = Object.entries(locationMap).map(([key, data]) => ({
         name: data.displayName, // Use displayName for the report
         totalValue: data.totalValue,
         totalQuantity: data.totalQuantity,
@@ -179,7 +179,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
 
           <h3 className="font-semibold text-xl mt-6">Details by {groupBy === "category" ? "Category" : "Location"}</h3>
           {groupedData.length > 0 ? (
-            <ScrollArea className="h-[400px] border rounded-md">
+            <ScrollArea className="h-[300px] border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>

@@ -26,16 +26,16 @@ import {
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation?: string;
+  suggestedPutawayLocation?: string; // fullLocationString
   lotNumber?: string;
   expirationDate?: string;
-  serialNumber?: string;
+  serialNumber?: string; // Added for future use
 }
 
 interface ReceiveInventoryToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
   scannedDataFromGlobal?: string | null;
-  onScannedDataProcessed: () => void;
+  onScannedDataProcessed: () => void; // Added this prop
 }
 
 const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
@@ -155,7 +155,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     const lowerCaseScannedData = scannedData.toLowerCase();
     const itemToReceive = receivedItems.find(item =>
       item.inventoryItemDetails?.sku.toLowerCase() === lowerCaseScannedData ||
-      (item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase().includes(lowerCaseScannedData))
+      (item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData) // Match against raw barcodeUrl
     );
 
     if (itemToReceive) {
@@ -204,7 +204,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         serialNumber: item.serialNumber,
         qrCodeSvg: qrCodeSvg,
         printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-        structuredLocations: structuredLocations,
+        structuredLocations: structuredLocations, // Pass structuredLocations to PDF
       };
 
       initiatePrint({ type: "putaway-label", props: labelProps });
@@ -250,7 +250,6 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           updatesSuccessful = false;
         }
       }
-      // Check if all expected quantity for this item has been received
       if (item.receivedQuantity < item.quantity) {
         allItemsReceived = false;
       }
@@ -261,12 +260,12 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
       const updatedPO = {
         ...selectedPO,
         status: "Shipped" as OrderItem['status'],
-        putawayStatus: "Pending" as OrderItem['putawayStatus'],
+        putawayStatus: "Pending" as OrderItem['putawayStatus'], // Fixed: Explicitly cast putawayStatus
         notes: selectedPO.notes
       };
       await updateOrder(updatedPO);
       showSuccess(`Shipment for PO ${selectedPO.id} received successfully! Inventory updated and ready for putaway.`);
-      refreshInventory();
+      refreshInventory(); // Ensure inventory context is refreshed
       setPoNumberInput("");
       setSelectedPO(null);
       setReceivedItems([]);
@@ -301,7 +300,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanClick}
-          disabled={isScanning}
+          disabled={isScanning || !selectedPO}
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}

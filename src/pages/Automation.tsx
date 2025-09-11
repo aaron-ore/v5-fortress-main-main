@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+// Removed Input, Label, CardDescription
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -12,13 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Zap } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Zap } from "lucide-react"; // Removed ToggleRight, ToggleLeft
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
+// Removed format
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react"; // Added Loader2 import
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();

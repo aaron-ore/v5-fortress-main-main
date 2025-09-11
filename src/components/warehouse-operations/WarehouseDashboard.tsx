@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BellRing, PackageMinus, Info, CheckCircle, XCircle, Package, Truck } from "lucide-react";
+import { BellRing, PackageMinus, Info, CheckCircle, XCircle, TrendingUp, Boxes, Package, Truck } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
@@ -29,7 +29,7 @@ const WarehouseDashboard: React.FC = () => {
   };
 
   return (
-    <ScrollArea className="h-full pb-4 flex-grow">
+    <ScrollArea className="h-full pb-4 flex-grow"> {/* Added flex-grow */}
       <div className="space-y-4">
         {/* Notifications Card */}
         <Card className="bg-card border-border shadow-sm">
@@ -71,10 +71,7 @@ const WarehouseDashboard: React.FC = () => {
           <CardContent className="space-y-2">
             {lowStockItems.length > 0 ? (
               lowStockItems.map(item => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center p-2 bg-muted/10 rounded-md"
-                >
+                <div key={item.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
                   <p className="text-sm font-medium text-foreground">{item.name}</p>
                   <span className="text-sm text-red-400">{item.quantity} units</span>
                 </div>
@@ -95,10 +92,7 @@ const WarehouseDashboard: React.FC = () => {
           <CardContent className="space-y-2">
             {outOfStockItems.length > 0 ? (
               outOfStockItems.map(item => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-center p-2 bg-muted/10 rounded-md"
-                >
+                <div key={item.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
                   <p className="text-sm font-medium text-foreground">{item.name}</p>
                   <span className="text-sm text-red-500">0 units</span>
                 </div>
@@ -119,10 +113,7 @@ const WarehouseDashboard: React.FC = () => {
           <CardContent className="space-y-2">
             {pendingReceives.length > 0 ? (
               pendingReceives.map(order => (
-                <div
-                  key={order.id}
-                  className="flex justify-between items-center p-2 bg-muted/10 rounded-md"
-                >
+                <div key={order.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
                   <p className="text-sm font-medium text-foreground">{order.id} - {order.customerSupplier}</p>
                   <span className="text-sm text-muted-foreground">Due: {order.dueDate}</span>
                 </div>
@@ -143,10 +134,7 @@ const WarehouseDashboard: React.FC = () => {
           <CardContent className="space-y-2">
             {pendingShipments.length > 0 ? (
               pendingShipments.map(order => (
-                <div
-                  key={order.id}
-                  className="flex justify-between items-center p-2 bg-muted/10 rounded-md"
-                >
+                <div key={order.id} className="flex justify-between items-center p-2 bg-muted/10 rounded-md">
                   <p className="text-sm font-medium text-foreground">{order.id} - {order.customerSupplier}</p>
                   <span className="text-sm text-muted-foreground">Due: {order.dueDate}</span>
                 </div>
