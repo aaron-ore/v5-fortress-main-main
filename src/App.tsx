@@ -6,6 +6,7 @@ import { OnboardingProvider } from "./context/OnboardingContext";
 import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
 import ThemedAppContent from "./components/ThemedAppContent";
+import { AuthProvider } from "./context/AuthContext"; // Import AuthProvider here
 
 const queryClient = new QueryClient();
 
@@ -19,15 +20,17 @@ const App = () => {
         closeButton
       />
       <BrowserRouter>
-        <ProfileProvider>
-            <OnboardingProvider>
-              <PrintProvider>
-                <TooltipProvider>
-                  <ThemedAppContent />
-                </TooltipProvider>
-              </PrintProvider>
-            </OnboardingProvider>
-        </ProfileProvider>
+        <AuthProvider> {/* AuthProvider now wraps ProfileProvider */}
+          <ProfileProvider>
+              <OnboardingProvider>
+                <PrintProvider>
+                  <TooltipProvider>
+                    <ThemedAppContent />
+                  </TooltipProvider>
+                </PrintProvider>
+              </OnboardingProvider>
+          </ProfileProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
