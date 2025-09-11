@@ -40,9 +40,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   useEffect(() => {
     if (scannedDataFromGlobal && !isScanning) {
-      if (selectedSO) {
-        handleScannedBarcode(scannedDataFromGlobal);
-      }
+      handleScannedBarcode(scannedDataFromGlobal);
       onScannedDataProcessed();
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed, selectedSO]);
@@ -247,7 +245,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
             <ShoppingCart className="h-12 w-12 mb-4" />
-            <p className="text-lg">Enter a SO number to begin shipping.</p>
+            <p className="text-lg">Enter a Sales Order number to begin shipping.</p>
           </div>
         )}
       </div>

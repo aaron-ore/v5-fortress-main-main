@@ -7,12 +7,12 @@ import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, DollarSign, Package, MapPin, FileText } from "lucide-react";
+import { Loader2, DollarSign, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label"; // Added Label import
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Use useProfile
 import { showError } from "@/utils/toast"; // NEW: Import showError
 
 interface InventoryValuationReportProps {
@@ -90,7 +90,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
         totalOverallValue += item.quantity * item.unitCost;
         totalOverallQuantity += item.quantity;
       });
-      groupedData = Object.entries(locationMap).map(([key, data]) => ({
+      groupedData = Object.entries(locationMap).map(([name, data]) => ({
         name: data.displayName, // Use displayName for the report
         totalValue: data.totalValue,
         totalQuantity: data.totalQuantity,

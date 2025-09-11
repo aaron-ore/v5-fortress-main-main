@@ -8,8 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-// Removed Input
-// Removed Label
+import { Button } from "@/components/ui/button"; // Added missing import
 import {
   Search,
   Package,
@@ -27,12 +26,11 @@ import {
   Bell,
   FileText,
 } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast"; // Keeping these as they are used
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useProfile } from "@/context/ProfileContext";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface GlobalSearchDialogProps {
   isOpen: boolean;

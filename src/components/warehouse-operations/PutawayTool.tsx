@@ -1,11 +1,9 @@
-"use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Barcode, CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
+import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -122,6 +120,8 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   const handlePoSelect = async (orderId: string) => {
+    await fetchOrders(); // Ensure orders are up-to-date
+
     const foundPO = orders.find(
       (order) => order.id === orderId && order.type === "Purchase" && order.putawayStatus === "Pending"
     );
@@ -155,7 +155,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
 
     const inventoryItem = itemToPutAway.inventoryItemDetails;
-    const oldLocation = inventoryItem.location;
     const newLocation = scannedLocation;
 
     // Update inventory item's location

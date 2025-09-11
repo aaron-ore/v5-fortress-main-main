@@ -22,10 +22,6 @@ interface DashboardSummaryPdfContentProps {
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
-  companyName,
-  companyAddress,
-  companyContact,
-  companyLogoUrl,
   totalStockValue,
   totalUnitsOnHand,
   lowStockItems,

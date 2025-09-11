@@ -40,7 +40,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Keeping this as it is used
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); 
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
@@ -191,8 +191,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = XLSX.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+        const worksheet = workbook.Sheets[sheetName]; // This line was causing the TS2339 error
 
         if (jsonData.length === 0) {
           showError("The CSV file is empty or contains no data rows.");

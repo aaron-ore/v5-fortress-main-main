@@ -250,6 +250,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           updatesSuccessful = false;
         }
       }
+      // Check if all expected quantity for this item has been received
       if (item.receivedQuantity < item.quantity) {
         allItemsReceived = false;
       }

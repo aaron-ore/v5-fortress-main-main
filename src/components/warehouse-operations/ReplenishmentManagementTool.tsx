@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Truck, Package, ArrowRight, CheckCircle, Clock, User } from "lucide-react";
+import { Truck, Package, ArrowRight, CheckCircle, User } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useReplenishment, ReplenishmentTask } from "@/context/ReplenishmentContext";
@@ -16,7 +15,7 @@ import { Badge } from "@/components/ui/badge"; // Import Badge
 const ReplenishmentManagementTool: React.FC = () => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { replenishmentTasks, addReplenishmentTask, updateReplenishmentTask, fetchReplenishmentTasks } = useReplenishment();
-  const { profile, allProfiles } = useProfile();
+  const { allProfiles } = useProfile();
 
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<ReplenishmentTask['status'] | "all">("Pending");
   const [selectedTask, setSelectedTask] = useState<ReplenishmentTask | null>(null);

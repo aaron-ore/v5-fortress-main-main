@@ -6,7 +6,7 @@ import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 // Removed unused import: useOnboarding
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Users, DollarSign, Receipt, FileText } from "lucide-react";
+import { Loader2, Users, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
