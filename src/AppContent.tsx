@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"; // Import useEffect and useRef
+import React, { useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -29,13 +29,17 @@ import Integrations from "./pages/Integrations";
 import OnboardingPage from "./pages/OnboardingPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
-import DashboardSummaryPdfContent from "./components/DashboardSummaryPdfContent";
+
+// Corrected imports for PDF content components
 import PurchaseOrderPdfContent from "./components/PurchaseOrderPdfContent";
 import InvoicePdfContent from "./components/InvoicePdfContent";
-import AdvancedDemandForecastPdfContent from "./components/AdvancedDemandForecastPdfContent";
-import PutawayLabelPdfContent from "./components/PutawayLabelPdfContent";
 import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
+
+// PDF content components from specific directories
+import DashboardSummaryPdfContent from "./components/dashboard/DashboardSummaryPdfContent"; // Corrected path
+import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent"; // Corrected path
+import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent"; // Corrected path
 
 // Import all new PDF content components
 import InventoryValuationPdfContent from "./components/reports/pdf/InventoryValuationPdfContent";
