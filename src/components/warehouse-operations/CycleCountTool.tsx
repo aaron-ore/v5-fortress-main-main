@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle, Package, MapPin, Barcode } from "lucide-react";
+import { MapPin, Barcode } from "lucide-react"; // Removed CheckCircle, Package
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
-import { useStockMovement } from "@/context/StockMovementContext";
+import { useOnboarding } from "@/context/OnboardingContext";
+// Removed useStockMovement as updates will go through Edge Function
 import { showError, showSuccess } from "@/utils/toast";
-import { supabase } from "@/lib/supabaseClient"; // Import supabase
+import { supabase } from "@/lib/supabaseClient";
 
 interface CountedItem {
   id: string;
@@ -34,7 +34,7 @@ interface CycleCountToolProps {
 
 const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, refreshInventory } = useInventory();
-  const { locations } = useOnboarding(); // Now contains Location[]
+  const { locations } = useOnboarding();
   // Removed useStockMovement as updates will go through Edge Function
 
   const [selectedLocation, setSelectedLocation] = useState("all"); // This will be fullLocationString or "all"

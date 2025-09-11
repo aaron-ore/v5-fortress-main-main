@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,29 +7,29 @@ import { useStockMovement, StockMovement } from "@/context/StockMovementContext"
 import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
 import { useProfile } from "@/context/ProfileContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Scale, FileText } from "lucide-react"; // Removed User, Clock
+import { Loader2, Scale, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
-import { showError } from "@/utils/toast"; // NEW: Import showError
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { Label } from "@/components/ui/label";
+import { showError } from "@/utils/toast";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface InventoryMovementReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { stockMovements, fetchStockMovements } = useStockMovement();
-  const { allProfiles, fetchAllProfiles, profile } = useProfile(); // NEW: Use useProfile
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations
+  const { allProfiles, fetchAllProfiles, profile } = useProfile();
+  const { locations: structuredLocations } = useOnboarding();
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
@@ -41,8 +41,8 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
       return;
     }
 
-    await fetchStockMovements(); // Ensure latest movements are fetched
-    await fetchAllProfiles(); // Ensure user profiles are loaded for names
+    await fetchStockMovements();
+    await fetchAllProfiles();
 
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
@@ -52,7 +52,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
         return false;
       }
       const movementTimestamp = parseAndValidateDate(movement.timestamp);
-      if (!movementTimestamp || !isValid(movementTimestamp)) return false; // Ensure valid date
+      if (!movementTimestamp || !isValid(movementTimestamp)) return false;
       if (filterFrom && filterTo) {
         return isWithinInterval(movementTimestamp, { start: filterFrom, end: filterTo });
       }
@@ -68,7 +68,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
       movements: filteredMovements,
       dateRange,
       allProfiles,
-      structuredLocations, // NEW: Pass structuredLocations to resolve display names
+      structuredLocations,
     };
 
     setCurrentReportData(reportProps);

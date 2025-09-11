@@ -123,8 +123,8 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
       await addOrder(values as Omit<OrderItem, "organizationId">);
       onClose();
       form.reset();
-    } catch (error: any) {
-      showError(`Failed to add order: ${error.message}`);
+    } catch (error) {
+      // Error handling is already in addOrder context function
     }
   };
 

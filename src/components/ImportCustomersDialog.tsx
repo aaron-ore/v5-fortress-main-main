@@ -40,7 +40,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   // States for Duplicate Customers Warning
   const [duplicateCustomersInCsv, setDuplicateCustomersInCsv] = useState<CsvDuplicateCustomer[]>([]);
   const [isDuplicateCustomersWarningDialogOpen, setIsDuplicateCustomersWarningDialogOpen] = useState(false);
-  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); 
+  const [duplicateAction, setDuplicateAction] = useState<"skip" | "update">("skip"); // Removed duplicateAction as it's not used
 
   // Memoize existing customers for efficient lookup
   const existingCustomersMap = useMemo(() => {
@@ -164,9 +164,6 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       showError(errorMessage);
       console.error("CSV Import Summary - Errors:", errors);
     }
-    if (successCount === 0 && errorCount === 0) {
-      showError("No valid data found in the CSV to import.");
-    }
     setIsUploading(false);
     onClose();
   };
@@ -192,7 +189,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const workbook = XLSX.read(binaryString, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet); // Corrected: jsonData declared here
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
           showError("The CSV file is empty or contains no data rows.");
@@ -205,7 +202,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const duplicates: CsvDuplicateCustomer[] = [];
         const seenDuplicates = new Set<string>();
 
-        jsonData.forEach((row: any) => { // Explicitly type row as any
+        jsonData.forEach((row: any) => {
           const name = String(row.name || '').trim();
           const email = String(row.email || '').trim();
 

@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button"; // Added Button import
 // Removed Input
 // Removed Label
 import {
@@ -27,7 +28,7 @@ import {
   Bell,
   FileText,
 } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast"; // Keeping these as they are used
+// Removed showSuccess, showError as they are not used in this component
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";

@@ -155,7 +155,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     const lowerCaseScannedData = scannedData.toLowerCase();
     const itemToReceive = receivedItems.find(item =>
       item.inventoryItemDetails?.sku.toLowerCase() === lowerCaseScannedData ||
-      (item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData) // Match against raw barcodeUrl
+      (item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData)
     );
 
     if (itemToReceive) {
@@ -204,7 +204,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         serialNumber: item.serialNumber,
         qrCodeSvg: qrCodeSvg,
         printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-        structuredLocations: structuredLocations, // Pass structuredLocations to PDF
+        structuredLocations: structuredLocations,
       };
 
       initiatePrint({ type: "putaway-label", props: labelProps });
@@ -260,12 +260,12 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
       const updatedPO = {
         ...selectedPO,
         status: "Shipped" as OrderItem['status'],
-        putawayStatus: "Pending" as OrderItem['putawayStatus'], // Fixed: Explicitly cast putawayStatus
+        putawayStatus: "Pending" as OrderItem['putawayStatus'],
         notes: selectedPO.notes
       };
       await updateOrder(updatedPO);
       showSuccess(`Shipment for PO ${selectedPO.id} received successfully! Inventory updated and ready for putaway.`);
-      refreshInventory(); // Ensure inventory context is refreshed
+      refreshInventory();
       setPoNumberInput("");
       setSelectedPO(null);
       setReceivedItems([]);

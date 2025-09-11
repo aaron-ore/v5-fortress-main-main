@@ -203,7 +203,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-          onClick={handleScanClick}
+          onClick={handleScanItem}
           disabled={isScanning}
         >
           <Barcode className="h-6 w-6" />

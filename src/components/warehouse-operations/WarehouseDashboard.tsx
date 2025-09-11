@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BellRing, PackageMinus, Info, CheckCircle, XCircle, TrendingUp, Boxes, Package, Truck } from "lucide-react";
+import { BellRing, PackageMinus, Info, CheckCircle, XCircle, Package, Truck } from "lucide-react"; // Removed TrendingUp, Boxes
 import { useNotifications } from "@/context/NotificationContext";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
@@ -20,16 +20,20 @@ const WarehouseDashboard: React.FC = () => {
 
   const getIconForNotificationType = (type: string) => {
     switch (type) {
-      case "warning": return <PackageMinus className="h-4 w-4 text-destructive" />;
-      case "success": return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "error": return <XCircle className="h-4 w-4 text-red-500" />;
+      case "warning":
+        return <PackageMinus className="h-4 w-4 text-destructive mt-1" />;
+      case "success":
+        return <CheckCircle className="h-4 w-4 text-green-500 mt-1" />;
+      case "error":
+        return <XCircle className="h-4 w-4 text-red-500 mt-1" />;
       case "info":
-      default: return <Info className="h-4 w-4 text-primary" />;
+      default:
+        return <Info className="h-4 w-4 text-primary mt-1" />;
     }
   };
 
   return (
-    <ScrollArea className="h-full pb-4 flex-grow"> {/* Added flex-grow */}
+    <ScrollArea className="h-full pb-4 flex-grow">
       <div className="space-y-4">
         {/* Notifications Card */}
         <Card className="bg-card border-border shadow-sm">

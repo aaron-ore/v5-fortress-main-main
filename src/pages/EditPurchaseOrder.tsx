@@ -34,7 +34,7 @@ const EditPurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
-  const { useProfile: useProfileOnboarding } = useOnboarding(); // Renamed to avoid conflict
+  const { companyProfile } = useOnboarding(); // Corrected destructuring
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
   const [order, setOrder] = useState<OrderItem | null>(null);
