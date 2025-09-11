@@ -33,7 +33,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from "@/context/ProfileContext";
 import { useInventory } from "@/context/InventoryContext";
