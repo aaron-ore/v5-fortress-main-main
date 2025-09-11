@@ -4,22 +4,18 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { Loader2, Palette, Settings as SettingsIcon, Image as ImageIcon, X } from "lucide-react";
-import { useOnboarding } from "@/context/OnboardingContext";
-import { Link } from "react-router-dom";
-import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // Import getFilePathFromPublicUrl
-import { supabase } from "@/lib/supabaseClient"; // Import supabase
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { supabase } from "@/lib/supabaseClient";
 
 const Settings: React.FC = () => {
   const { theme, setTheme } = useTheme();
-  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile, updateOrganizationTheme } = useProfile();
-  const { setCompanyProfile } = useOnboarding(); // Keep this for now, but will transition to updateCompanyProfile from ProfileContext
+  const { profile, updateCompanyProfile, updateOrganizationTheme } = useProfile();
 
   const [companyName, setCompanyName] = useState(profile?.companyProfile?.companyName || "");
   const [companyAddress, setCompanyAddress] = useState(profile?.companyProfile?.companyAddress || "");
@@ -27,12 +23,12 @@ const Settings: React.FC = () => {
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
   const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyProfile?.companyLogoUrl || "");
   const [isSavingCompanyProfile, setIsSavingCompanyProfile] = useState(false);
-  const [organizationCodeInput, setOrganizationCodeInput] = useState(profile?.companyProfile?.organizationCode || "");
+  const [organizationCodeInput, setOrganizationCodeInput] = useState<string>(profile?.companyProfile?.organizationCode || "");
   const [isSavingOrganizationCode, setIsSavingOrganizationCode] = useState(false);
 
   const [selectedTheme, setSelectedTheme] = useState(profile?.companyProfile?.organizationTheme || "dark");
   const [isSavingTheme, setIsSavingTheme] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false); // Declare isUploadingImage state
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     if (profile?.companyProfile) {
@@ -81,9 +77,9 @@ const Settings: React.FC = () => {
     setIsSavingCompanyProfile(true);
     let finalCompanyLogoUrl = companyLogoUrlPreview;
 
-    if (companyLogoFile) { // Use companyLogoFile state
+    if (companyLogoFile) {
+      setIsUploadingImage(true);
       try {
-        setIsUploadingImage(true); // Use setIsUploadingImage
         if (profile?.companyProfile?.companyLogoUrl) {
           const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
           if (oldFilePath) {
@@ -91,16 +87,16 @@ const Settings: React.FC = () => {
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
           }
         }
-        finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // Use companyLogoFile
+        finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/');
         showSuccess("Company logo uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading company logo:", error);
         showError(`Failed to upload company logo: ${error.message}`);
         setIsSavingCompanyProfile(false);
-        setIsUploadingImage(false); // Use setIsUploadingImage
+        setIsUploadingImage(false);
         return;
       } finally {
-        setIsUploadingImage(false); // Use setIsUploadingImage
+        setIsUploadingImage(false);
       }
     } else if (companyLogoUrlPreview === "") {
       finalCompanyLogoUrl = undefined;
@@ -112,7 +108,7 @@ const Settings: React.FC = () => {
         companyAddress: companyAddress,
         companyCurrency: companyCurrency,
         companyLogoUrl: finalCompanyLogoUrl,
-      }, organizationCodeInput); // Pass organizationCodeInput here
+      }, organizationCodeInput);
     } catch (error: any) {
       showError(`Failed to update company profile: ${error.message}`);
     } finally {
@@ -241,8 +237,8 @@ const Settings: React.FC = () => {
               </div>
             )}
           </div>
-          <Button onClick={handleSaveCompanyProfile} disabled={isSavingCompanyProfile || !hasCompanyProfileChanges}>
-            {isSavingCompanyProfile ? (
+          <Button onClick={handleSaveCompanyProfile} disabled={isSavingCompanyProfile || !hasCompanyProfileChanges || isUploadingImage}>
+            {isSavingCompanyProfile || isUploadingImage ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
               </>

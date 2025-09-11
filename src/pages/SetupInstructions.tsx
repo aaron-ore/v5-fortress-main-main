@@ -1,8 +1,7 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Package, MapPin, Truck, FileText, BarChart } from "lucide-react";
+import { CheckCircle, Package, Truck, FileText, BarChart } from "lucide-react";
 
 const SetupInstructions: React.FC = () => {
   return (

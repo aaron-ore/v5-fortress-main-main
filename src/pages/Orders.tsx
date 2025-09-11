@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable } from "@/components/ui/data-table";
-import { useForm } from "react-hook-form"; // Corrected import path
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -56,11 +56,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/lib/supabaseClient"; // Import supabase
-import { isValid, format } from "date-fns"; // Import isValid and format from date-fns
-import { ColumnDef } from "@tanstack/react-table"; // NEW: Import ColumnDef
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { cn } from "@/lib/utils"; // NEW: Import cn
+import { supabase } from "@/lib/supabaseClient";
+import { isValid, format } from "date-fns";
+import { ColumnDef } from "@tanstack/react-table";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   type: z.enum(["Sales", "Purchase"]),
@@ -122,7 +122,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await addOrder(values as Omit<OrderItem, "organizationId">); // Pass values directly, let context generate ID
+      await addOrder(values as Omit<OrderItem, "organizationId">);
       onClose();
       form.reset();
     } catch (error: any) {
@@ -143,7 +143,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
     const selectedItem = inventoryItems.find(item => item.id === inventoryItemId);
     if (selectedItem) {
       form.setValue(`items.${index}.itemName`, selectedItem.name);
-      form.setValue(`items.${index}.unitPrice`, selectedItem.retailPrice); // Or unitCost depending on order type
+      form.setValue(`items.${index}.unitPrice`, selectedItem.retailPrice);
       form.setValue(`items.${index}.inventoryItemId`, selectedItem.id);
     }
   };
@@ -408,7 +408,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
   );
 };
 
-export const createOrderColumns = (updateOrder: (order: OrderItem) => void, archiveOrder: (id: string) => void): ColumnDef<OrderItem>[] => [
+export const createOrderColumns = (archiveOrder: (id: string) => void): ColumnDef<OrderItem>[] => [
   {
     accessorKey: "id",
     header: "Order ID",
@@ -522,18 +522,14 @@ export const createOrderColumns = (updateOrder: (order: OrderItem) => void, arch
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, updateOrder, archiveOrder } = useOrders();
-  const { profile, fetchProfile } = useProfile(); // NEW: Get fetchProfile
+  const { profile, fetchProfile } = useProfile();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOrderDialogOpen, setIsAddOrderDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
-  // Removed dateRange state and related handlers
-  // const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  // const handleClearDateFilter = () => { setDateRange(undefined); };
-
   const [isOrderFulfillmentDialogOpen, setIsOrderFulfillmentDialogOpen] = useState(false);
   const [isOrderReceiveShipmentDialogOpen, setIsOrderReceiveShipmentDialogOpen] = useState(false);
-  const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false); // NEW: State for QuickBooks sync loading
+  const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -558,24 +554,11 @@ const Orders: React.FC = () => {
       order.status.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Removed dateRange filtering logic
-    // if (dateRange?.from) {
-    //   const filterFrom = new Date(dateRange.from);
-    //   const filterTo = dateRange.to ? new Date(dateRange.to) : new Date(dateRange.from);
-    //   filterFrom.setHours(0, 0, 0, 0);
-    //   filterTo.setHours(23, 59, 59, 999);
-    //   return searchFiltered.filter(order => {
-    //     const orderDate = new Date(order.date);
-    //     return isValid(orderDate) && orderDate >= filterFrom && orderDate <= filterTo;
-    //   });
-    // }
-
     return searchFiltered;
-  }, [orders, searchTerm, activeTab]); // Removed dateRange from dependencies
+  }, [orders, searchTerm, activeTab]);
 
-  const columns = useMemo(() => createOrderColumns(updateOrder, archiveOrder), [updateOrder, archiveOrder]);
+  const columns = useMemo(() => createOrderColumns(archiveOrder), [archiveOrder]);
 
-  // NEW: Handle Sync to QuickBooks
   const handleSyncSalesOrders = async () => {
     if (!profile?.quickbooksAccessToken || !profile?.quickbooksRealmId) {
       showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected in Settings.");
@@ -607,8 +590,8 @@ const Orders: React.FC = () => {
 
       showSuccess(data.message || "Sales orders synced successfully!");
       console.log("QuickBooks Sync Results:", data.results);
-      await fetchOrders(); // Refresh orders to show updated sync status
-      await fetchProfile(); // Refresh profile to ensure latest QuickBooks tokens/status
+      await fetchOrders();
+      await fetchProfile();
     } catch (error: any) {
       console.error("Error syncing sales orders to QuickBooks:", error);
       showError(`Failed to sync sales orders: ${error.message}`);
@@ -621,7 +604,7 @@ const Orders: React.FC = () => {
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <div className="flex flex-col space-y-6 p-6 flex-grow"> {/* Added flex-grow */}
+    <div className="flex flex-col space-y-6 p-6 flex-grow">
       <h1 className="text-3xl font-bold">Order Management</h1>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -632,7 +615,6 @@ const Orders: React.FC = () => {
           className="max-w-xs flex-grow"
         />
         <div className="flex items-center gap-2">
-          {/* Removed DateRangePicker and Clear Filter Button */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -654,7 +636,6 @@ const Orders: React.FC = () => {
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {/* NEW: Sync to QuickBooks Button */}
         {isAdmin && isQuickBooksConnected && (
           <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks}>
             {isSyncingQuickBooks ? (
@@ -687,29 +668,29 @@ const Orders: React.FC = () => {
         </Dialog>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all">All Active Orders</TabsTrigger>
           <TabsTrigger value="sales">Sales Orders</TabsTrigger>
           <TabsTrigger value="purchase">Purchase Orders</TabsTrigger>
           <TabsTrigger value="archived">Archived Orders</TabsTrigger>
         </TabsList>
-        <TabsContent value="all" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
-          <div className="h-full"> {/* Ensure DataTable container takes full height */}
-            <DataTable columns={columns} data={filteredOrders} />
-          </div>
-        </TabsContent>
-        <TabsContent value="sales" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+        <TabsContent value="all" className="flex-grow overflow-y-auto">
           <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>
-        <TabsContent value="purchase" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+        <TabsContent value="sales" className="flex-grow overflow-y-auto">
           <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>
         </TabsContent>
-        <TabsContent value="archived" className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+        <TabsContent value="purchase" className="flex-grow overflow-y-auto">
+          <div className="h-full">
+            <DataTable columns={columns} data={filteredOrders} />
+          </div>
+        </TabsContent>
+        <TabsContent value="archived" className="flex-grow overflow-y-auto">
           <div className="h-full">
             <DataTable columns={columns} data={filteredOrders} />
           </div>

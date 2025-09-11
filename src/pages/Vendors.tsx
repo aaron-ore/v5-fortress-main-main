@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Edit, Trash2, Search as SearchIcon } from "lucide-react";
+import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import AddEditVendorDialog from "@/components/AddEditVendorDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -21,12 +21,11 @@ const Vendors: React.FC = () => {
   const [vendorToEdit, setVendorToEdit] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // State for delete confirmation dialog
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [vendorToDelete, setVendorToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleAddVendorClick = () => {
-    setVendorToEdit(null); // Clear for new vendor
+    setVendorToEdit(null);
     setIsAddEditVendorDialogOpen(true);
   };
 

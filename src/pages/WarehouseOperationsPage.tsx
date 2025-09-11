@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import WarehouseDashboard from "@/components/warehouse-operations/WarehouseDashboard";
 import CameraScannerDialog from "@/components/CameraScannerDialog";
 import { cn } from "@/lib/utils";
-import { showError, showSuccess } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 import { useNavigate, useLocation } from "react-router-dom";
 
 // Import new dialog wrappers
@@ -22,20 +22,18 @@ import ReturnsProcessingDialog from "@/components/warehouse-operations/dialogs/R
 import StockTransferDialog from "@/components/warehouse-operations/dialogs/StockTransferDialog";
 import CycleCountDialog from "@/components/warehouse-operations/dialogs/CycleCountDialog";
 import IssueReportDialog from "@/components/warehouse-operations/dialogs/IssueReportDialog";
-import PutawayDialog from "@/components/warehouse-operations/dialogs/PutawayDialog"; // NEW: Import PutawayDialog
+import PutawayDialog from "@/components/warehouse-operations/dialogs/PutawayDialog";
 
 const WarehouseOperationsPage: React.FC = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState("dashboard"); // Only dashboard remains a tab
+  const [activeTab, setActiveTab] = useState("dashboard");
 
-  // State for CameraScannerDialog
   const [isCameraScannerDialogOpen, setIsCameraScannerDialogOpen] = useState(false);
   const [scanCallback, setScanCallback] = useState<((scannedData: string) => void) | null>(null);
-  const [scannedDataForTool, setScannedDataForTool] = useState<string | null>(null); // Data to pass to a tool's dialog
+  const [scannedDataForTool, setScannedDataForTool] = useState<string | null>(null);
 
-  // States for each tool's dialog visibility
   const [isItemLookupDialogOpen, setIsItemLookupDialogOpen] = useState(false);
   const [isReceiveInventoryDialogOpen, setIsReceiveInventoryDialogOpen] = useState(false);
   const [isFulfillOrderDialogOpen, setIsFulfillOrderDialogOpen] = useState(false);
@@ -47,7 +45,7 @@ const WarehouseOperationsPage: React.FC = () => {
   const [isStockTransferDialogOpen, setIsStockTransferDialogOpen] = useState(false);
   const [isCycleCountDialogOpen, setIsCycleCountDialogOpen] = useState(false);
   const [isIssueReportDialogOpen, setIsIssueReportDialogOpen] = useState(false);
-  const [isPutawayDialogOpen, setIsPutawayDialogOpen] = useState(false); // NEW: Add PutawayDialog state
+  const [isPutawayDialogOpen, setIsPutawayDialogOpen] = useState(false);
 
   const dialogStates = {
     "item-lookup": { isOpen: isItemLookupDialogOpen, setIsOpen: setIsItemLookupDialogOpen },
@@ -61,14 +59,14 @@ const WarehouseOperationsPage: React.FC = () => {
     "stock-transfer": { isOpen: isStockTransferDialogOpen, setIsOpen: setIsStockTransferDialogOpen },
     "cycle-count": { isOpen: isCycleCountDialogOpen, setIsOpen: setIsCycleCountDialogOpen },
     "issue-report": { isOpen: isIssueReportDialogOpen, setIsOpen: setIsIssueReportDialogOpen },
-    "putaway": { isOpen: isPutawayDialogOpen, setIsOpen: setIsPutawayDialogOpen }, // NEW: Add PutawayDialog state
+    "putaway": { isOpen: isPutawayDialogOpen, setIsOpen: setIsPutawayDialogOpen },
   };
 
   const operationButtons = [
     { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, type: "tab" },
     { value: "item-lookup", label: "Lookup", icon: SearchIcon, type: "dialog" },
     { value: "receive-inventory", label: "Receive", icon: Package, type: "dialog" },
-    { value: "putaway", label: "Putaway", icon: MapPin, type: "dialog" }, // NEW: Putaway button
+    { value: "putaway", label: "Putaway", icon: MapPin, type: "dialog" },
     { value: "fulfill-order", label: "Fulfill", icon: ShoppingCart, type: "dialog" },
     { value: "ship-order", label: "Ship", icon: Truck, type: "dialog" },
     { value: "picking-wave", label: "Pick Wave", icon: ListOrdered, type: "dialog" },
@@ -78,14 +76,11 @@ const WarehouseOperationsPage: React.FC = () => {
     { value: "stock-transfer", label: "Transfer", icon: Scan, type: "dialog" },
     { value: "cycle-count", label: "Count", icon: CheckCircle, type: "dialog" },
     { value: "issue-report", label: "Report Issue", icon: AlertTriangle, type: "dialog" },
-    // REMOVED: { value: "location-management", label: "Locations", icon: MapPin, type: "page-link" },
   ];
 
-  // Effect to handle URL hash changes for opening tabs/dialogs
   useEffect(() => {
     const hash = location.hash.replace("#", "");
 
-    // Close all dialogs first to ensure only one is open at a time, or none.
     Object.values(dialogStates).forEach(state => {
       if (state.isOpen) state.setIsOpen(false);
     });
@@ -96,65 +91,54 @@ const WarehouseOperationsPage: React.FC = () => {
       const dialogKey = hash as keyof typeof dialogStates;
       if (dialogStates[dialogKey]) {
         dialogStates[dialogKey].setIsOpen(true);
-        setActiveTab(""); // No tab active when a dialog is open
+        setActiveTab("");
       } else {
-        // If hash is invalid or empty, default to dashboard and clear hash
         setActiveTab("dashboard");
-        if (hash) { // Only clear if there was an invalid hash
+        if (hash) {
           navigate(location.pathname, { replace: true });
         }
       }
     }
-  }, [location.hash, navigate, location.pathname]); // Dependencies for useEffect
+  }, [location.hash, navigate, location.pathname]);
 
-  // Function to request a scan from a specific tool
   const requestScan = (callback: (scannedData: string) => void) => {
-    setScanCallback(() => callback); // Store the tool's callback
-    setIsCameraScannerDialogOpen(true); // Open the camera dialog
+    setScanCallback(() => callback);
+    setIsCameraScannerDialogOpen(true);
   };
 
-  // Handler for when CameraScannerDialog successfully scans a barcode
   const handleScanSuccessFromDialog = (decodedText: string) => {
     if (scanCallback) {
-      // If a specific tool requested the scan, call its callback
       scanCallback(decodedText);
-      setScanCallback(null); // Clear the callback
+      setScanCallback(null);
     } else {
-      // If it was a global scan (from the main "Scan Item" button),
-      // default to opening the Item Lookup dialog with the scanned data.
-      setScannedDataForTool(decodedText); // Store data to pass to dialog
-      // Ensure other dialogs are closed before opening Item Lookup
+      setScannedDataForTool(decodedText);
       Object.values(dialogStates).forEach(state => {
-        if (state.isOpen && state !== dialogStates["item-lookup"]) { // Exclude item-lookup itself
+        if (state.isOpen && state !== dialogStates["item-lookup"]) {
           state.setIsOpen(false);
         }
       });
-      dialogStates["item-lookup"].setIsOpen(true); // Open Item Lookup dialog
-      navigate(`${location.pathname}#item-lookup`, { replace: true }); // Update hash
-      setActiveTab(""); // No tab active when a dialog is open
+      dialogStates["item-lookup"].setIsOpen(true);
+      navigate(`${location.pathname}#item-lookup`, { replace: true });
+      setActiveTab("");
       showSuccess(`Scanned: ${decodedText}. Opening Item Lookup.`);
     }
-    setIsCameraScannerDialogOpen(false); // Close the camera dialog
+    setIsCameraScannerDialogOpen(false);
   };
 
   const handleCameraScannerDialogClose = () => {
     setIsCameraScannerDialogOpen(false);
-    setScanCallback(null); // Clear any pending callback
+    setScanCallback(null);
   };
 
-  // Callback for tools to signal they've processed the scanned data
   const handleScannedDataProcessed = () => {
-    setScannedDataForTool(null); // Clear the data once consumed
+    setScannedDataForTool(null);
   };
 
-  // Function to handle closing a dialog and clearing hash
   const closeDialogAndClearHash = (dialogKey: keyof typeof dialogStates) => {
     dialogStates[dialogKey].setIsOpen(false);
-    // Only clear the hash if it matches the dialog being closed
     if (location.hash === `#${dialogKey}`) {
       navigate(location.pathname, { replace: true });
     }
-    // After closing a dialog, default back to the dashboard tab
     setActiveTab("dashboard");
   };
 
@@ -182,7 +166,7 @@ const WarehouseOperationsPage: React.FC = () => {
 
       <Button
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 flex items-center justify-center gap-2 mb-4"
-        onClick={() => requestScan(() => {})} // Global scan button
+        onClick={() => requestScan(() => {})}
       >
         <Scan className="h-6 w-6" />
         Scan Item
@@ -195,9 +179,9 @@ const WarehouseOperationsPage: React.FC = () => {
             variant="ghost"
             className={cn(
               "flex flex-col items-center justify-center h-24 w-full aspect-square py-3 px-2 text-sm font-medium rounded-lg transition-colors text-center",
-              op.type === "tab" && op.value === activeTab // Highlight active tab
+              op.type === "tab" && op.value === activeTab
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : op.type === "dialog" && dialogStates[op.value as keyof typeof dialogStates]?.isOpen // Highlight open dialog
+                : op.type === "dialog" && dialogStates[op.value as keyof typeof dialogStates]?.isOpen
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-foreground hover:bg-muted/50 hover:text-primary"
             )}
@@ -208,7 +192,6 @@ const WarehouseOperationsPage: React.FC = () => {
               } else if (op.type === "dialog") {
                 const dialogKey = op.value as keyof typeof dialogStates;
                 if (dialogStates[dialogKey]) {
-                  // Close all other dialogs before opening this one
                   Object.values(dialogStates).forEach(state => {
                     if (state.isOpen && state !== dialogStates[dialogKey]) {
                       state.setIsOpen(false);
@@ -216,7 +199,7 @@ const WarehouseOperationsPage: React.FC = () => {
                   });
                   dialogStates[dialogKey].setIsOpen(true);
                   navigate(`${location.pathname}#${dialogKey}`, { replace: true });
-                  setActiveTab(""); // No tab active when a dialog is open
+                  setActiveTab("");
                 }
               } else if (op.type === "page-link") {
                 navigate(`/${op.value}`);
@@ -229,14 +212,12 @@ const WarehouseOperationsPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Only Dashboard remains as a TabsContent */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
-        <TabsContent value="dashboard" className="flex-grow min-h-0"> {/* Changed h-full to flex-grow */}
+        <TabsContent value="dashboard" className="flex-grow min-h-0">
           <WarehouseDashboard />
         </TabsContent>
       </Tabs>
 
-      {/* Render all dialogs, their visibility controlled by state */}
       <ItemLookupDialog
         isOpen={isItemLookupDialogOpen}
         onClose={() => closeDialogAndClearHash("item-lookup")}
@@ -251,7 +232,7 @@ const WarehouseOperationsPage: React.FC = () => {
         scannedDataFromGlobal={scannedDataForTool}
         onScannedDataProcessed={handleScannedDataProcessed}
       />
-      <PutawayDialog // NEW: Render PutawayDialog
+      <PutawayDialog
         isOpen={isPutawayDialogOpen}
         onClose={() => closeDialogAndClearHash("putaway")}
         onScanRequest={requestScan}

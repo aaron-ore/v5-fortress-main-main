@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Users as UsersIcon, Mail, UserPlus, Trash2, Copy, Settings as SettingsIcon } from "lucide-react";
+import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon } from "lucide-react";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
