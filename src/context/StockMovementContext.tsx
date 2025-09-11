@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { isValid } from "date-fns"; // Removed isValid as it's not used
+// Removed isValid as it's not used
 
 export interface StockMovement {
   id: string;

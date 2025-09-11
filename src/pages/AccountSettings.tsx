@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Settings as SettingsIcon, Lock, Globe, Palette } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useTheme } from "next-themes"; // Removed useTheme as it's not used
+// Removed useTheme as it's not used
 import { useProfile } from "@/context/ProfileContext";
 
 const AccountSettings: React.FC = () => {
