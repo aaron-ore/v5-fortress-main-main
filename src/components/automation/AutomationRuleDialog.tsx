@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
@@ -15,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Zap, AlertTriangle, BellRing, Package, Receipt, UserRound, MapPin, DollarSign, Repeat } from "lucide-react";
+import { Zap, AlertTriangle, BellRing, Package } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
@@ -34,11 +32,8 @@ interface AutomationRuleDialogProps {
 const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onClose, ruleToEdit }) => {
   const { addRule, updateRule } = useAutomation();
   const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
   const { categories } = useCategories();
   const { locations } = useOnboarding();
-  const { vendors } = useVendors();
-  const { customers } = useCustomers();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

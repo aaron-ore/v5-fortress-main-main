@@ -13,8 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, subMonths, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { format, subMonths } from "date-fns";
 
 const SalesInventoryTrendCard: React.FC = () => {
   const { inventoryItems } = useInventory();

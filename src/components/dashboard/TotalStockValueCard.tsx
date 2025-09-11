@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ArrowUp, ArrowDown } from "lucide-react";
 import MiniTrendChart from "@/components/dashboard/MiniTrendChart";
 import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths, isValid } from "date-fns"; // NEW: Import format, subMonths, isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { format, subMonths } from "date-fns"; // NEW: Import format, subMonths, isValid
 
 const TotalStockValueCard: React.FC = () => {
   const { inventoryItems } = useInventory();

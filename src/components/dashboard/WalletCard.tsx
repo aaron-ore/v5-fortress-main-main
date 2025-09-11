@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Settings, Edit, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";

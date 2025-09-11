@@ -1,5 +1,4 @@
 import React from "react";
-import { format } from "date-fns";
 import { Diamond } from "lucide-react";
 
 interface LocationLabelPdfContentProps {

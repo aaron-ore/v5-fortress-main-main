@@ -9,7 +9,6 @@ import {
   YAxis,
 } from "recharts";
 import { cn } from "@/lib/utils";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 
 interface MiniTrendChartProps {
   data: { name: string; value: number }[];

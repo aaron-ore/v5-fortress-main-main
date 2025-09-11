@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths, isValid, startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
-import { DateRange } from "react-day-picker";
+import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 
 interface MonthlyOverviewChartCardProps {

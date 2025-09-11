@@ -34,13 +34,13 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
   supplierName,
   supplierEmail,
   supplierAddress,
-  supplierContact,
+  supplierContact: _supplierContact, // Renamed to _ to mark as unused
   terms,
   dueDate,
   items,
   notes,
   taxRate,
-  companyLogoUrl,
+  companyLogoUrl: _companyLogoUrl, // Renamed to _ to mark as unused
   poQrCodeSvg,
 }) => {
   const { profile } = useProfile();

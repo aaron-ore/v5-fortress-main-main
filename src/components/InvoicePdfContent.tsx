@@ -40,7 +40,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
   items,
   notes,
   taxRate,
-  companyLogoUrl,
+  companyLogoUrl: _companyLogoUrl, // Renamed to _ to mark as unused
   invoiceQrCodeSvg,
 }) => {
   const { profile } = useProfile();

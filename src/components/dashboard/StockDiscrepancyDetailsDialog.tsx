@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, User, Clock, MapPin, Package, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";

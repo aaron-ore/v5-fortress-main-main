@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useOrders } from "@/context/OrdersContext";
-import { format, subDays, isValid } from "date-fns"; // Import isValid
+import { format, isValid } from "date-fns"; // Import isValid
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 
 const WeeklyRevenueBarChart: React.FC = () => {

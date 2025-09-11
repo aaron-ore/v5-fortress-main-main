@@ -64,7 +64,7 @@ const ProfitabilityMetricsCard: React.FC = () => {
         <div className="flex items-center w-full flex-grow">
           {/* Left side: Colored boxes with values */}
           <div className="w-1/3 flex flex-col items-center justify-around h-full">
-            {metricsData.map((entry, index) => (
+            {metricsData.map((entry) => (
               <div key={entry.name} className={cn("w-12 h-8 rounded-md flex items-center justify-center text-xs font-bold text-white")} style={{ backgroundColor: entry.color }}>
                 {entry.value}%
               </div>

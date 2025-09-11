@@ -204,28 +204,6 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     }
   };
 
-  const handleAutoReorderQuantityChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!currentItem) return;
-    const newQty = parseInt(e.target.value) || 0;
-    setAutoReorderQuantity(e.target.value);
-
-    if (newQty > 0) {
-      const updatedItem: Omit<InventoryItem, "quantity"> & { id: string } = {
-        ...currentItem,
-        autoReorderQuantity: newQty,
-        lastUpdated: new Date().toISOString().split('T')[0],
-      };
-      try {
-        await updateInventoryItem(updatedItem);
-        showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
-      } catch (error: any) {
-        console.error("Error updating auto-reorder quantity:", error);
-        showError(error.message || String(error));
-        setAutoReorderQuantity(currentItem.autoReorderQuantity?.toString() || "");
-      }
-    }
-  };
-
   const handleManualReorder = async () => {
     if (!currentItem || !currentItem.vendorId) {
       showError("Cannot manually reorder: Item or vendor not specified.");
@@ -477,7 +455,22 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                       id="autoReorderQuantity"
                       type="number"
                       value={autoReorderQuantity}
-                      onChange={(e) => setAutoReorderQuantity(e.target.value)}
+                      onChange={(e) => {
+                        const newQty = parseInt(e.target.value) || 0;
+                        setAutoReorderQuantity(e.target.value);
+                        if (newQty > 0) {
+                          // Only update if valid and positive
+                          if (currentItem) {
+                            const updatedItem: Omit<InventoryItem, "quantity"> & { id: string } = {
+                              ...currentItem,
+                              autoReorderQuantity: newQty,
+                              lastUpdated: new Date().toISOString().split('T')[0],
+                            };
+                            updateInventoryItem(updatedItem); // Update immediately
+                            showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
+                          }
+                        }
+                      }}
                       placeholder="e.g., 50"
                       min="1"
                     />

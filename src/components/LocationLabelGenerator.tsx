@@ -11,7 +11,7 @@ import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
 import LocationLabelPdfContent from "@/components/LocationLabelPdfContent";
 import html2canvas from 'html2canvas';
-import { buildLocationString, getUniqueLocationParts, parseLocationString } from "@/utils/locationParser";
+import { buildLocationString, getUniqueLocationParts } from "@/utils/locationParser";
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [

@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, ArrowUp, ArrowDown, Scale } from "lucide-react";
+import { ArrowUp, ArrowDown, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
 import { showError } from "@/utils/toast";
-import { format, startOfDay, endOfDay, subDays, isValid } from "date-fns";
+import { startOfDay, endOfDay, subDays, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import StockDiscrepancyDetailsDialog from "./StockDiscrepancyDetailsDialog";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate

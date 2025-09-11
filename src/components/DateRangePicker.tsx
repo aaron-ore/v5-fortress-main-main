@@ -1,4 +1,3 @@
-import React from "react";
 import { format, isValid, startOfDay, endOfDay, subDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { DateRange, SelectRangeEventHandler } from "react-day-picker";
@@ -62,7 +61,7 @@ export function DateRangePicker({
     <Calendar
       initialFocus
       mode="range"
-      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : undefined}
+      defaultMonth={dateRange?.from && isValid(dateRange.from) ? dateRange.from : new Date()} // Fixed TS2345: default to new Date() if invalid
       selected={dateRange}
       onSelect={handleSelect}
       numberOfMonths={isMobile ? 1 : 2}

@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths, isValid, startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
-import { DateRange } from "react-day-picker";
+import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 
 interface Last3MonthSalesCardProps {
@@ -107,6 +106,7 @@ const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = () => {
                 return [value.toLocaleString('en-US'), name];
               }}
             />
+            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 10 }} />
             <Bar dataKey="Sales Revenue" stackId="a" fill="#00C49F" />
             <Bar dataKey="New Inventory Added" stackId="a" fill="#00BFD8" />
             <Bar dataKey="Items Shipped" stackId="a" fill="#0088FE" />

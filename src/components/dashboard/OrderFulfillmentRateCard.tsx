@@ -4,7 +4,6 @@ import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { useOrders } from "@/context/OrdersContext"; // Import useOrders
 
 const OrderFulfillmentRateCard: React.FC = () => {

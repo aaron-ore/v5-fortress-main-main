@@ -112,7 +112,7 @@ const LocationStockHealthCard: React.FC = () => {
     });
 
     // Calculate health percentage and prepare for display
-    const healthData = Object.entries(locationMetrics).map(([locationString, metrics]) => {
+    const healthData = Object.entries(locationMetrics).map(([_locationString, metrics]) => {
       const totalActivity = metrics.totalMovements;
       const currentStock = metrics.currentStock;
       const netChange = metrics.netChange;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useProfile } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AppContent from "@/AppContent";
