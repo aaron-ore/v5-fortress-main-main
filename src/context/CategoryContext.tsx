@@ -77,7 +77,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       if (error.code === '23505') {
         console.warn(`Category "${trimmedName}" already exists in DB, likely added concurrently.`);
-        const { data: existingDbCategory, error: fetchErrorInner } = await supabase
+        const { data: existingDbCategory, error: _fetchErrorInner } = await supabase // Renamed to _fetchErrorInner
           .from("categories")
           .select("id, name, organization_id")
           .eq("name", trimmedName)

@@ -45,8 +45,8 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    // Pass fromDate as selectedDay to satisfy the stricter type requirement
-    onSelect({ from: fromDate, to: toDate }, fromDate, undefined, undefined);
+    // Pass fromDate as selectedDay and an empty object for activeModifiers
+    onSelect({ from: fromDate, to: toDate }, fromDate, {}, undefined);
   };
 
   const quickSelectButtons = (

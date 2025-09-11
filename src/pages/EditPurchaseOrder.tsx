@@ -25,7 +25,6 @@ import { PlusCircle, Trash2, Archive, Printer } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useProfile } from "@/context/ProfileContext";
@@ -139,6 +138,7 @@ const EditPurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
+  // Removed unused useOnboarding import
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
   const [order, setOrder] = useState<OrderItem | null>(null);

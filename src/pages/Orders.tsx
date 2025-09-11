@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { PlusCircle, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+
 } from "@/components/ui/form";
 import {
   Select,
@@ -33,7 +34,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from "@/context/ProfileContext";
 import { useInventory } from "@/context/InventoryContext";
