@@ -34,9 +34,10 @@ const DefaultDashboardContent: React.FC = () => {
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  const handleScanItem = () => {
-    setIsScanItemDialogOpen(true);
-  };
+  // Removed handleScanItem as it was unused.
+  // const handleScanItem = () => {
+  //   setIsScanItemDialogOpen(true);
+  // };
 
   const handleClearDateFilter = () => {
     setDateRange(undefined);

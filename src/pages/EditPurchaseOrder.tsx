@@ -304,6 +304,23 @@ const EditPurchaseOrder: React.FC = () => {
     initiatePrint({ type: "purchase-order", props: pdfProps });
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor)
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over?.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   if (!order) {
     return (
       <div className="flex justify-center items-center h-64 text-muted-foreground">

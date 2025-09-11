@@ -22,7 +22,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
   const [truckId, setTruckId] = useState("");
-  const [scannedItems, setScannedItems] = useState<Set<string>>(new Set()); // Corrected to useState with Set
+  // Removed unused scannedItems state
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "success" | "error">("idle");
   const [isScanning, setIsScanning] = useState(false);
 
@@ -70,9 +70,10 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
   }, [ordersForRoute, inventoryItems]);
 
   useEffect(() => {
-    setScannedItems(new Set());
+    // Reset scanned quantities in the map
+    expectedItemsMap.forEach(item => item.scannedQuantity = 0);
     setVerificationStatus("idle");
-  }, [selectedDeliveryRoute, truckId]);
+  }, [selectedDeliveryRoute, truckId, expectedItemsMap]);
 
   useEffect(() => {
     if (scannedDataFromGlobal && !isScanning) {
@@ -107,11 +108,6 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     }
 
     if (expectedItem.scannedQuantity < expectedItem.quantity) {
-      setScannedItems(prev => {
-        const newSet = new Set(prev);
-        newSet.add(foundItem.sku); // Add SKU to track scanned items
-        return newSet;
-      });
       expectedItem.scannedQuantity++; // Increment scanned quantity for this item
       expectedItemsMap.set(foundItem.sku, expectedItem); // Update map
       showSuccess(`Verified: ${foundItem.name}. Scanned ${expectedItem.scannedQuantity}/${expectedItem.quantity}.`);
@@ -148,7 +144,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     showSuccess(`Shipment for route ${selectedDeliveryRoute} (Truck: ${truckId}) completed! Orders updated to "Shipped".`);
     setSelectedDeliveryRoute("all");
     setTruckId("");
-    setScannedItems(new Set());
+    // No need to reset scannedItems, as it's not used directly anymore
     setVerificationStatus("idle");
     await fetchOrders(); // Refresh orders
   };

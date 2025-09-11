@@ -45,7 +45,8 @@ export function DateRangePicker({
       fromDate = startOfDay(subDays(today, days - 1));
       toDate = endOfDay(today);
     }
-    onSelect({ from: fromDate, to: toDate }, undefined as Date | undefined, {}, undefined);
+    // Correctly pass undefined for optional parameters
+    onSelect({ from: fromDate, to: toDate }, undefined, undefined, undefined);
   };
 
   const quickSelectButtons = (
