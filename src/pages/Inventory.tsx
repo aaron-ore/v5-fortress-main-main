@@ -116,8 +116,7 @@ const Inventory: React.FC = () => {
   const { categories } = useCategories();
   const { vendors } = useVendors();
   const { locations: structuredLocations } = useOnboarding();
-  const navigate = useNavigate(); // Keep navigate if used elsewhere, but remove if not.
-
+  // Removed unused navigate variable
   const { isCollapsed } = useSidebar();
 
   const [searchTerm, setSearchTerm] = useState("");

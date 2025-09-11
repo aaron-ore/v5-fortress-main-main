@@ -20,7 +20,7 @@ import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Users: React.FC = () => {
-  const { profile, allProfiles, updateUserRole, fetchAllProfiles } = useProfile();
+  const { profile, allProfiles, updateUserRole, fetchAllProfiles, isLoadingProfile } = useProfile();
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isManageCustomRolesDialogOpen, setIsManageCustomRolesDialogOpen] = useState(false);
@@ -76,7 +76,7 @@ const Users: React.FC = () => {
     }
   };
 
-  if (profile?.isLoadingProfile) { // Use profile.isLoadingProfile
+  if (isLoadingProfile) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -89,7 +89,7 @@ const Users: React.FC = () => {
     );
   }
 
-  const isAdmin = profile?.role === 'admin'; // Define isAdmin here
+  const isAdmin = profile?.role === 'admin';
 
   if (!isAdmin) {
     return (
