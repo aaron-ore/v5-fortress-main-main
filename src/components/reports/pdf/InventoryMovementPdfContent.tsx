@@ -1,4 +1,3 @@
-import React from "react";
 import { format, isValid } from "date-fns";
 import { StockMovement } from "@/context/StockMovementContext";
 import { UserProfile } from "@/context/ProfileContext";
@@ -108,7 +107,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
               })
             ) : (
               <tr className="border-b border-gray-200">
-                <td colSpan={8} className="py-2 px-4 text-center text-gray-600">No inventory movements found for this report.</td>
+                <td colSpan={8} className="py-2 px-4 text-center text-gray-600">No inventory movements found for the selected criteria.</td>
               </tr>
             )}
           </tbody>

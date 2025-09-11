@@ -1,4 +1,3 @@
-import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { useInventory } from "@/context/InventoryContext";
 import { useMemo } from "react";
@@ -45,7 +44,7 @@ const SalesByCategoryPieChart: React.FC = () => {
               dataKey="value"
               nameKey="name"
             >
-              {salesData.map((entry, index) => (
+              {salesData.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

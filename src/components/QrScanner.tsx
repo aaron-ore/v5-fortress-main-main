@@ -1,4 +1,4 @@
-import { useRef, useEffect, useImperativeHandle, forwardRef, useState, useCallback } from "react"; // Removed React
+import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState, useCallback } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats, Html5QrcodeFullConfig, Html5QrcodeCameraScanConfig } from "html5-qrcode";
 
 export interface QrScannerRef {
