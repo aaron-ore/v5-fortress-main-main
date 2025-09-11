@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BellRing, PackageMinus, Info, CheckCircle, XCircle, TrendingUp, Boxes, Package, Truck } from "lucide-react";
+import { BellRing, PackageMinus, Info, CheckCircle, XCircle, Package, Truck } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
@@ -29,7 +29,7 @@ const WarehouseDashboard: React.FC = () => {
   };
 
   return (
-    <ScrollArea className="h-full pb-4 flex-grow"> {/* Added flex-grow */}
+    <ScrollArea className="h-full pb-4 flex-grow">
       <div className="space-y-4">
         {/* Notifications Card */}
         <Card className="bg-card border-border shadow-sm">

@@ -343,7 +343,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
-    const itemToDelete = inventoryItems.find(item => item.id === itemId);
+    const itemToDelete = inventoryItems.find(item => item.id === itemId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("inventory_items")

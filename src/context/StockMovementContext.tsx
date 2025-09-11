@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+// Removed unused import: isValid
 
 export interface StockMovement {
   id: string;

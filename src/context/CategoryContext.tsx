@@ -82,7 +82,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       if (error.code === '23505') {
         console.warn(`Category "${trimmedName}" already exists in DB, likely added concurrently.`);
-        const { data: existingDbCategory, error: fetchError } = await supabase
+        const { data: existingDbCategory, error: fetchErrorInner } = await supabase // Renamed fetchError to fetchErrorInner
           .from("categories")
           .select("id, name, organization_id")
           .eq("name", trimmedName)
@@ -124,7 +124,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const categoryToRemove = categories.find(cat => cat.id === id);
+    const categoryToRemove = categories.find(cat => cat.id === id); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("categories")

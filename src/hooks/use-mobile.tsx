@@ -1,4 +1,3 @@
-import React from "react";
 import * as React_2 from "react";
 
 const MOBILE_BREAKPOINT = 1024; // Changed from 768 to 1024

@@ -35,6 +35,7 @@
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-table": "^8.21.3",
     "@types/qrcode": "^1.5.5",
+    "@types/xlsx": "^0.0.36",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

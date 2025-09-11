@@ -11,8 +11,8 @@ import { useTheme } from "next-themes";
 import { useProfile } from "@/context/ProfileContext";
 
 const AccountSettings: React.FC = () => {
+  const { profile } = useProfile(); // Removed theme as it's not used
   const { theme } = useTheme();
-  const { profile } = useProfile();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

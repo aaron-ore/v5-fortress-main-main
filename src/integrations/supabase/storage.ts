@@ -18,7 +18,7 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
   const fileName = `${uuidv4()}.${fileExtension}`; // Generate a unique file name
   const filePath = `${folderPath}${fileName}`; // This is the path within the bucket
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage // Removed data as it's not used
     .from(bucketName)
     .upload(filePath, file, {
       cacheControl: '3600',

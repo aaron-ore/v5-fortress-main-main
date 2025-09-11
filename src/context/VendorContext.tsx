@@ -168,7 +168,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return;
     }
 
-    const vendorToDelete = vendors.find(v => v.id === vendorId);
+    const vendorToDelete = vendors.find(v => v.id === vendorId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("vendors")

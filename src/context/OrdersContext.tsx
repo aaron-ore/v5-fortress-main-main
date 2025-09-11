@@ -6,7 +6,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator"; // Import generateSequentialNumber
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { isValid } from "date-fns"; // Import isValid for date validation
+// Removed unused import: isValid
 
 export interface POItem {
   id: number;
@@ -211,7 +211,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
-    const orderToArchive = orders.find(o => o.id === orderId);
+    const orderToArchive = orders.find(o => o.id === orderId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("orders")

@@ -93,7 +93,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   });
 
   // Fetch locations from Supabase
-  const fetchLocations = async () => {
+  const fetchLocations = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setLocations([]);
@@ -113,7 +113,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else {
       setLocations(data.map(mapSupabaseLocationToLocation));
     }
-  };
+  }, [profile?.organizationId]);
 
   // Effect to fetch locations on profile load or change
   useEffect(() => {
@@ -122,7 +122,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setLocations([]); // Clear locations if no organization
     }
-  }, [isLoadingProfile, profile?.organizationId]);
+  }, [isLoadingProfile, profile?.organizationId, fetchLocations]);
 
 
   const markOnboardingComplete = () => {
@@ -376,7 +376,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
-    const locationToRemove = locations.find(loc => loc.id === locationId);
+    const locationToRemove = locations.find(loc => loc.id === locationId); // Kept as it's used in showSuccess
 
     const { error } = await supabase
       .from("locations")
