@@ -16,13 +16,13 @@ import { showError, showSuccess } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface StockDiscrepancyDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
 interface DiscrepancyLog {
@@ -32,7 +32,7 @@ interface DiscrepancyLog {
   organizationId: string;
   itemId: string;
   itemName: string;
-  locationString: string; // This is the fullLocationString
+  locationString: string;
   locationType: string;
   originalQuantity: number;
   countedQuantity: number;
@@ -41,9 +41,9 @@ interface DiscrepancyLog {
   status: string;
 }
 
-const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps> = ({ isOpen, onClose, dateRange }) => { // NEW: Destructure dateRange
+const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps> = ({ isOpen, onClose, dateRange }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding();
   const [discrepancies, setDiscrepancies] = useState<DiscrepancyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -60,10 +60,9 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
       .from('discrepancies')
       .select('*')
       .eq('organization_id', profile.organizationId)
-      .eq('status', 'pending') // Only fetch pending discrepancies
+      .eq('status', 'pending')
       .order('timestamp', { ascending: false });
 
-    // Removed unused today variable
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
@@ -80,12 +79,11 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
     } else {
       const fetchedDiscrepancies: DiscrepancyLog[] = data.map((log: any) => ({
         id: log.id,
-        // Ensure timestamp is valid before storing
-        timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(), // NEW: Use parseAndValidateDate
+        timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
         userId: log.user_id,
         organizationId: log.organization_id,
         itemId: log.item_id,
-        itemName: log.item_name, // Assuming item_name is stored or can be joined
+        itemName: log.item_name,
         locationString: log.location_string,
         locationType: log.location_type,
         originalQuantity: log.original_quantity,
@@ -102,9 +100,9 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
   useEffect(() => {
     if (isOpen && profile?.organizationId) {
       fetchDiscrepancies();
-      fetchAllProfiles(); // Ensure all profiles are fetched to map user IDs to names
+      fetchAllProfiles();
     }
-  }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]); // NEW: Added dateRange to dependencies
+  }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]);
 
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
@@ -117,7 +115,6 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
   };
 
   const getDisplayDateRange = () => {
-    // Removed unused today variable
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? dateRange.from : new Date();
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? dateRange.to : new Date();
 
@@ -148,7 +145,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
       showError("Failed to resolve discrepancy.");
     } else {
       showSuccess(`Discrepancy ${discrepancyToResolve.id} marked as resolved.`);
-      fetchDiscrepancies(); // Refresh the list
+      fetchDiscrepancies();
     }
     setIsConfirmDialogOpen(false);
     setDiscrepancyToResolve(null);
@@ -176,7 +173,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
               <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
                 <div className="space-y-4">
                   {discrepancies.map((discrepancy) => {
-                    const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp); // NEW: Use parseAndValidateDate
+                    const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                     return (
                       <div key={discrepancy.id} className="bg-muted/20 p-3 rounded-md border border-border">
                         <div className="flex items-center justify-between text-sm mb-2">

@@ -15,7 +15,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useOnboarding } from "@/context/OnboardingContext";
+// Removed unused import: useOnboarding
 
 interface MobileDrawerContentProps {
   onLinkClick: () => void;
@@ -26,7 +26,6 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();
-  const {  } = useOnboarding();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut({ scope: 'local' });

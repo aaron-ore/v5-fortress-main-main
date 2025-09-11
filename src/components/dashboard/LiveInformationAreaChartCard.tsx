@@ -5,18 +5,17 @@ import { useOrders } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { format, subDays, isValid, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface LiveInformationAreaChartCardProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
-const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> = ({ dateRange }) => { // NEW: Destructure dateRange
+const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> = ({ dateRange }) => {
   const { orders } = useOrders();
   const { stockMovements } = useStockMovement();
 
   const data = useMemo(() => {
-    // Removed unused dataPoints variable
     const today = new Date();
 
     // Determine effective date range for filtering
@@ -40,8 +39,8 @@ const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> 
     }
 
     orders.forEach(order => {
-      const orderDate = parseAndValidateDate(order.date); // NEW: Use parseAndValidateDate
-      if (!orderDate || !isValid(orderDate)) return; // Ensure valid date
+      const orderDate = parseAndValidateDate(order.date);
+      if (!orderDate || !isValid(orderDate)) return;
       const dateKey = format(orderDate, "MMM dd");
       if (dailyMetrics[dateKey] && isWithinInterval(orderDate, { start: startDate, end: endDate })) {
         if (order.type === "Sales") {
@@ -53,8 +52,8 @@ const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> 
     });
 
     stockMovements.forEach(movement => {
-      const moveDate = parseAndValidateDate(movement.timestamp); // NEW: Use parseAndValidateDate
-      if (!moveDate || !isValid(moveDate)) return; // Ensure valid date
+      const moveDate = parseAndValidateDate(movement.timestamp);
+      if (!moveDate || !isValid(moveDate)) return;
       const dateKey = format(moveDate, "MMM dd");
       if (dailyMetrics[dateKey] && isWithinInterval(moveDate, { start: startDate, end: endDate })) {
         dailyMetrics[dateKey].adjustments += movement.amount;
@@ -62,9 +61,9 @@ const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> 
     });
 
     return Object.keys(dailyMetrics).sort((a, b) => {
-      const dateA = parseAndValidateDate(a); // NEW: Use parseAndValidateDate
-      const dateB = parseAndValidateDate(b); // NEW: Use parseAndValidateDate
-      if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0; // Ensure valid dates
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
       return dateA.getTime() - dateB.getTime();
     }).map(dateKey => {
       const totalDailyActivity = dailyMetrics[dateKey].salesVolume + dailyMetrics[dateKey].purchaseVolume + dailyMetrics[dateKey].adjustments;
@@ -73,7 +72,7 @@ const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> 
         "Total Daily Activity": totalDailyActivity,
       };
     });
-  }, [orders, stockMovements, dateRange]); // NEW: Added dateRange to dependencies
+  }, [orders, stockMovements, dateRange]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">

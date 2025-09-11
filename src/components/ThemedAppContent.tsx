@@ -5,7 +5,6 @@ import { useProfile } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AppContent from "@/AppContent";
 import ThemeInitializer from "@/components/ThemeInitializer";
-// REMOVED: import { AuthProvider } from "@/context/AuthContext"; // No longer needed here
 
 const ThemedAppContent: React.FC = () => {
   const { profile, isLoadingProfile } = useProfile();
@@ -19,11 +18,9 @@ const ThemedAppContent: React.FC = () => {
 
   return (
     <ThemeProvider defaultTheme={initialDefaultTheme}>
-      {/* REMOVED: <AuthProvider> */}
         <ThemeInitializer>
           <AppContent />
         </ThemeInitializer>
-      {/* REMOVED: </AuthProvider> */}
     </ThemeProvider>
   );
 };

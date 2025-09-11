@@ -1,8 +1,5 @@
 import React, { useEffect } from "react";
 
-// Corrected imports for PDF content components
-// Removed unused imports: PurchaseOrderPdfContent, InvoicePdfContent, LocationLabelPdfContent, PickingWavePdfContent, DashboardSummaryPdfContent, AdvancedDemandForecastPdfContent, PutawayLabelPdfContent, InventoryValuationPdfContent, LowStockPdfContent, InventoryMovementPdfContent, SalesByCustomerPdfContent, SalesByProductPdfContent, PurchaseOrderStatusPdfContent, ProfitabilityPdfContent, DiscrepancyPdfContent
-
 import { PrintContentData } from "@/context/PrintContext";
 
 interface PrintWrapperProps {

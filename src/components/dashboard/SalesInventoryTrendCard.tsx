@@ -13,7 +13,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-// Removed unused import: format, subMonths
 
 const SalesInventoryTrendCard: React.FC = () => {
   const { inventoryItems } = useInventory();
@@ -30,22 +29,21 @@ const SalesInventoryTrendCard: React.FC = () => {
     const totalCurrentSalesRevenue = orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0);
 
     for (let i = 0; i < 6; i++) {
-      const monthIndex = (currentMonthIndex - 5 + i + 12) % 12; // Get last 6 months
+      const monthIndex = (currentMonthIndex - 5 + i + 12) % 12;
       const monthName = months[monthIndex];
 
       let simulatedInventoryValue;
       let simulatedSalesRevenue;
 
-      if (i === 5) { // Current month
+      if (i === 5) {
         simulatedInventoryValue = totalCurrentInventoryValue;
         simulatedSalesRevenue = totalCurrentSalesRevenue;
       } else {
-        // Simulate values trending towards current values, with some fluctuation
-        const trendFactor = (i + 1) / 6; // Increases from 1/6 to 6/6
-        const baseValue = totalCurrentInventoryValue > 0 ? totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor)) : 0; // Starts lower, trends towards current
-        simulatedInventoryValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1)); // Add some random fluctuation
+        const trendFactor = (i + 1) / 6;
+        const baseValue = totalCurrentInventoryValue > 0 ? totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor)) : 0;
+        simulatedInventoryValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1));
         const baseSalesValue = totalCurrentSalesRevenue > 0 ? totalCurrentSalesRevenue * (0.7 + (0.3 * trendFactor)) : 0;
-        simulatedSalesRevenue = Math.max(0, baseSalesValue + (Math.random() - 0.5) * (totalCurrentSalesRevenue * 0.1)); // Add some random fluctuation
+        simulatedSalesRevenue = Math.max(0, baseSalesValue + (Math.random() - 0.5) * (totalCurrentSalesRevenue * 0.1));
       }
 
       dataPoints.push({

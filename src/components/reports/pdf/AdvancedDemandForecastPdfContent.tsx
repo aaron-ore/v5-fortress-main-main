@@ -1,9 +1,9 @@
 import React from "react";
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface ForecastDataPoint {
-  name: string; // Month name
+  name: string;
   "Historical Demand": number;
   "Forecasted Demand": number;
   "Upper Confidence": number;
@@ -14,7 +14,7 @@ interface ForecastDataPoint {
 interface AdvancedDemandForecastPdfContentProps {
   companyName: string;
   companyAddress: string;
-  companyContact: string; // e.g., currency or main contact
+  companyContact: string;
   companyLogoUrl?: string;
   reportDate: string;
   forecastData: ForecastDataPoint[];
@@ -30,9 +30,6 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
   forecastData,
   selectedItemName,
 }) => {
-  // dateRange is not directly used here, but if it were, it would need isValid checks.
-  // For now, assuming reportDate is the primary date for this PDF.
-
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
       {/* Header */}

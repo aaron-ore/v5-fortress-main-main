@@ -5,17 +5,11 @@ import { cn } from "@/lib/utils";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
 
-interface ProfitabilityMetric { // NEW: Define interface for clarity
-  name: string;
-  value: number;
-  color: string;
-}
-
 const ProfitabilityMetricsCard: React.FC = () => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
 
-  const metricsData: ProfitabilityMetric[] = useMemo(() => { // NEW: Use ProfitabilityMetric interface
+  const metricsData = useMemo(() => {
     let totalSalesRevenue = 0;
     let totalCostOfGoodsSold = 0;
 
@@ -43,10 +37,10 @@ const ProfitabilityMetricsCard: React.FC = () => {
     // Simulate losses (e.g., 5% of sales revenue for returns/damages)
     const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0;
 
-    const data: ProfitabilityMetric[] = [ // NEW: Use ProfitabilityMetric interface
-      { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" }, // Teal
-      { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(0)), color: "#00C49F" }, // Green
-      { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(0)), color: "#0088FE" }, // Blue
+    const data = [
+      { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
+      { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(0)), color: "#00C49F" },
+      { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(0)), color: "#0088FE" },
     ];
 
     return data;
@@ -90,7 +84,7 @@ const ProfitabilityMetricsCard: React.FC = () => {
                   labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: "0.75rem" }}
                   formatter={(value: number) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 />
-                <Bar dataKey="value" fill={((entry: ProfitabilityMetric) => entry.color) as any} radius={[4, 4, 0, 0]} label={{ position: 'insideRight', formatter: (value: number) => `${value}%`, fill: 'white', fontSize: 10 }} />
+                <Bar dataKey="value" fill={((entry: any) => entry.color) as any} radius={[4, 4, 0, 0]} label={{ position: 'insideRight', formatter: (value: number) => `${value}%`, fill: 'white', fontSize: 10 }} />
               </BarChart>
             </ResponsiveContainer>
           </div>

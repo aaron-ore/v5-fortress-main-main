@@ -19,14 +19,14 @@ const InventoryTurnoverRateCard: React.FC = () => {
     if (totalInventoryCost === 0) return "N/A";
 
     // Simulate turnover based on recent sales and inventory cost
-    const mockTurnover = (totalSalesRevenue * 0.6) / totalInventoryCost; // Using 0.6 as a cost of goods sold approximation
+    const mockTurnover = (totalSalesRevenue * 0.6) / totalInventoryCost;
     return `${mockTurnover.toFixed(1)}x`;
   }, [inventoryItems, orders]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-bold text-center text-foreground">Inventory Turnover Rate</CardTitle> {/* Increased title size */}
+        <CardTitle className="text-lg font-bold text-center text-foreground">Inventory Turnover Rate</CardTitle>
         <RefreshCw className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>

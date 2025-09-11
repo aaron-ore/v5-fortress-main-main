@@ -10,8 +10,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useOrders } from "@/context/OrdersContext";
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const WeeklyRevenueBarChart: React.FC = () => {
   const { orders } = useOrders();
@@ -27,7 +27,7 @@ const WeeklyRevenueBarChart: React.FC = () => {
     // Populate "This Week" revenue from actual sales orders
     orders.filter(order => order.type === "Sales").forEach(order => {
       const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return; // Ensure valid date
+      if (!orderDate || !isValid(orderDate)) return;
 
       const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -71,17 +71,17 @@ const WeeklyRevenueBarChart: React.FC = () => {
           left: 10,
           bottom: 5,
         }}
-        barCategoryGap="20%" // Keep this for bar spacing
-        barGap={0} // Ensure no gap between bars of the same category
+        barCategoryGap="20%"
+        barGap={0}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} vertical={false} />
         <XAxis
           dataKey="name"
           stroke="hsl(var(--muted-foreground))"
-          interval={0} // Ensure all labels are shown
-          tickLine={false} // Hide tick lines for cleaner look
-          axisLine={false} // Hide axis line
-          tickMargin={10} // Add margin between labels and bars
+          interval={0}
+          tickLine={false}
+          axisLine={false}
+          tickMargin={10}
         />
         <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`} />
         <Tooltip

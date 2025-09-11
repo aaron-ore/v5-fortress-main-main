@@ -15,7 +15,6 @@ interface MiniTrendChartProps {
   dataKey: string;
   color?: string;
   className?: string;
-  valueFormatter?: (value: number) => string;
 }
 
 const MiniTrendChart: React.FC<MiniTrendChartProps> = ({
@@ -23,11 +22,9 @@ const MiniTrendChart: React.FC<MiniTrendChartProps> = ({
   dataKey,
   color = "hsl(var(--primary))",
   className,
-  // Removed unused valueFormatter
 }) => {
   const maxDataValue = Math.max(...data.map(d => d.value));
   const roundedMax = Math.ceil(maxDataValue / 500) * 500;
-  // const yAxisTicks = Array.from({ length: roundedMax / 500 + 1 }, (_, i) => i * 500); // Removed for now
 
   return (
     <ResponsiveContainer width="100%" height={150} className={cn(className)}>
@@ -49,7 +46,6 @@ const MiniTrendChart: React.FC<MiniTrendChartProps> = ({
         <YAxis
           stroke="hsl(var(--muted-foreground))"
           domain={[0, roundedMax]}
-          // ticks={yAxisTicks} // Removed for now
           tickFormatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
           tickLine={false}
           axisLine={false}

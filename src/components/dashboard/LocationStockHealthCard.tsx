@@ -5,14 +5,13 @@ import { ArrowUp, ArrowDown, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInventory } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { useOnboarding } from "@/context/OnboardingContext";
 
-// Define a consistent set of colors for the locations
 const LOCATION_COLORS = [
-  "hsl(var(--primary))", // Blue/Purple
-  "hsl(var(--accent))",  // Lighter primary
-  "hsl(142.1 76.2% 36.3%)", // Tailwind green-500 equivalent
-  "hsl(47.9 95.8% 53.1%)",  // Tailwind yellow-500 equivalent
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(142.1 76.2% 36.3%)",
+  "hsl(47.9 95.8% 53.1%)",
 ];
 
 interface MiniDonutProps {
@@ -23,7 +22,7 @@ interface MiniDonutProps {
 
 const MiniDonut: React.FC<MiniDonutProps> = ({ percentage, isPositive, color }) => {
   const data = [{ name: "Achieved", value: percentage }, { name: "Remaining", value: 100 - percentage }];
-  const remainingColor = "hsl(var(--muted))"; // Changed to theme-aware muted color
+  const remainingColor = "hsl(var(--muted))";
 
   return (
     <div className="relative w-16 h-16 flex flex-col items-center justify-center">
@@ -58,7 +57,7 @@ const MiniDonut: React.FC<MiniDonutProps> = ({ percentage, isPositive, color }) 
 const LocationStockHealthCard: React.FC = () => {
   const { inventoryItems } = useInventory();
   const { stockMovements } = useStockMovement();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding();
 
   const locationStockHealthData = useMemo(() => {
     if (inventoryItems.length === 0 || stockMovements.length === 0 || structuredLocations.length === 0) return [];
@@ -68,7 +67,7 @@ const LocationStockHealthCard: React.FC = () => {
         totalMovements: number;
         currentStock: number;
         netChange: number;
-        displayName: string; // NEW: Add displayName
+        displayName: string;
       };
     } = {};
 
@@ -89,7 +88,7 @@ const LocationStockHealthCard: React.FC = () => {
       }
       // Also consider pickingBinLocation if it's different and a recognized location
       if (item.pickingBinLocation && item.pickingBinLocation !== item.location && locationMetrics[item.pickingBinLocation]) {
-        locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity; // Only add picking bin quantity
+        locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity;
       }
     });
 
@@ -99,7 +98,7 @@ const LocationStockHealthCard: React.FC = () => {
       if (item) {
         // Determine which location the movement is associated with for this card's purpose
         // For simplicity, we'll associate movements with the item's primary location
-        const movementLocation = item.location; 
+        const movementLocation = item.location;
         if (locationMetrics[movementLocation]) {
           locationMetrics[movementLocation].totalMovements += movement.amount;
           if (movement.type === "add") {
@@ -124,7 +123,7 @@ const LocationStockHealthCard: React.FC = () => {
       const isPositive = netChange >= 0 || percentage > 50;
 
       return {
-        label: metrics.displayName, // Use displayName
+        label: metrics.displayName,
         percentage,
         isPositive,
         movementScore: totalActivity,

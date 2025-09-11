@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ArrowUp, ArrowDown } from "lucide-react";
 import MiniTrendChart from "@/components/dashboard/MiniTrendChart";
 import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths } from "date-fns"; // NEW: Import format, subMonths, isValid
+import { format, subMonths } from "date-fns";
 
 const TotalStockValueCard: React.FC = () => {
   const { inventoryItems } = useInventory();
@@ -27,13 +27,11 @@ const TotalStockValueCard: React.FC = () => {
   // Data for the MiniTrendChart (line chart) - now for the last 6 months
   const chartData = useMemo(() => {
     const dataPoints = [];
-    // Removed unused months and currentMonthIndex variables
 
     const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    // const totalCurrentSalesRevenue = orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0); // This line was commented out or removed in previous steps
 
     for (let i = 0; i < 6; i++) {
-      const month = subMonths(new Date(), 5 - i); // Get the actual month for the data point
+      const month = subMonths(new Date(), 5 - i);
       const monthName = format(month, "MMM");
 
       // Simulate stock value for each month, with current month being actual totalStockValue
@@ -43,9 +41,9 @@ const TotalStockValueCard: React.FC = () => {
       } else {
         // Generate values that fluctuate around a base, ensuring they don't go below 0
         // The base value trends towards the current totalStockValue
-        const trendFactor = (i + 1) / 6; // Increases from 1/6 to 6/6
-        const baseValue = totalStockValue * (0.7 + (0.3 * trendFactor)); // Starts lower, trends towards current
-        simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1)); // Add some random fluctuation
+        const trendFactor = (i + 1) / 6;
+        const baseValue = totalStockValue * (0.7 + (0.3 * trendFactor));
+        simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1));
       }
       dataPoints.push({ name: monthName, value: parseFloat(simulatedValue.toFixed(2)) });
     }
@@ -70,7 +68,6 @@ const TotalStockValueCard: React.FC = () => {
             data={chartData}
             dataKey="value"
             color="hsl(var(--primary))"
-            valueFormatter={(value) => `$${value.toFixed(0)}`}
             className="mt-6"
           />
         ) : (

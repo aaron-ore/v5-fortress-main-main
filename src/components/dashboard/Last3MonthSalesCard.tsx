@@ -4,13 +4,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } fro
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
 import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
-interface Last3MonthSalesCardProps {
-  // Removed dateRange prop
-}
-
-const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = () => {
+const Last3MonthSalesCard: React.FC = () => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
 
@@ -37,8 +33,8 @@ const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = () => {
     }
 
     orders.filter(order => order.type === "Sales").forEach(order => {
-      const orderDate = parseAndValidateDate(order.date); // NEW: Use parseAndValidateDate
-      if (!orderDate || !isValid(orderDate)) return; // Ensure valid date
+      const orderDate = parseAndValidateDate(order.date);
+      if (!orderDate || !isValid(orderDate)) return;
       const monthKey = format(orderDate, "MMM yyyy");
       if (monthlyData[monthKey] && orderDate >= startDate && orderDate <= endDate) {
         monthlyData[monthKey].salesRevenue += order.totalAmount;
@@ -47,8 +43,8 @@ const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = () => {
     });
 
     inventoryItems.forEach(item => {
-      const itemDate = parseAndValidateDate(item.lastUpdated); // NEW: Use parseAndValidateDate
-      if (!itemDate || !isValid(itemDate)) return; // Ensure valid date
+      const itemDate = parseAndValidateDate(item.lastUpdated);
+      if (!itemDate || !isValid(itemDate)) return;
       const monthKey = format(itemDate, "MMM yyyy");
       if (monthlyData[monthKey] && itemDate >= startDate && itemDate <= endDate) {
         monthlyData[monthKey].newInventory += Math.floor(item.quantity * 0.2);
@@ -56,17 +52,17 @@ const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = () => {
     });
 
     return Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a); // NEW: Use parseAndValidateDate
-      const dateB = parseAndValidateDate(b); // NEW: Use parseAndValidateDate
-      if (!dateA || !dateB) return 0; // Handle null dates
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB) return 0;
       return dateA.getTime() - dateB.getTime();
     }).map(monthKey => ({
-      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"), // Assert non-null after sorting, fallback for format
+      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
       "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
       "New Inventory Added": parseFloat(monthlyData[monthKey].newInventory.toFixed(0)),
       "Items Shipped": parseFloat(monthlyData[monthKey].itemsShipped.toFixed(0)),
     }));
-  }, [orders, inventoryItems]); // Removed dateRange from dependencies
+  }, [orders, inventoryItems]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">

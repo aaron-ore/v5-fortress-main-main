@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { ArrowUp } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
-// Removed unused import: parseAndValidateDate
 
 const IncomeCard: React.FC = () => {
   const { orders } = useOrders();
@@ -18,13 +17,13 @@ const IncomeCard: React.FC = () => {
 
   // Generate dynamic data for the mini trend chart (upward trend)
   const data = useMemo(() => {
-    if (totalIncome === 0) return [{ name: "A", value: 0 }]; // Ensure at least one data point for chart to render
+    if (totalIncome === 0) return [{ name: "A", value: 0 }];
 
-    const baseValue = totalIncome / 0.9; // Start lower than current income
+    const baseValue = totalIncome / 0.9;
     return Array.from({ length: 7 }, (_, i) => {
-      const value = baseValue * (1 + (i / 10)) + (Math.random() - 0.5) * (baseValue * 0.02); // Increasing trend with slight fluctuation
+      const value = baseValue * (1 + (i / 10)) + (Math.random() - 0.5) * (baseValue * 0.02);
       return { name: String.fromCharCode(65 + i), value: Math.max(0, value) };
-    }).reverse(); // Reverse to show trend from left to right
+    }).reverse();
   }, [totalIncome]);
 
   return (

@@ -25,7 +25,7 @@ const SalesByCategoryPieChart: React.FC = () => {
     return Object.entries(categorySalesMap).map(([category, revenue]) => ({
       name: category,
       value: parseFloat(revenue.toFixed(2)),
-    })).filter(entry => entry.value > 0).sort((a, b) => b.value - a.value); // Filter out categories with 0 sales
+    })).filter(entry => entry.value > 0).sort((a, b) => b.value - a.value);
   }, [inventoryItems]);
 
   return (

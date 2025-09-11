@@ -1,8 +1,6 @@
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-// REMOVED: import { InventoryItem } from "@/context/InventoryContext";
-// REMOVED: import { OrderItem } from "@/context/OrdersContext";
 
 interface InvoiceItem {
   id: number;
@@ -33,13 +31,11 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
   customerName,
   customerEmail,
   customerAddress,
-  customerContact, // Kept as it is used in the JSX
   terms,
   dueDate,
   items,
   notes,
   taxRate,
-  companyLogoUrl: _companyLogoUrl, // Renamed to _ to mark as unused
   invoiceQrCodeSvg,
 }) => {
   const { profile } = useProfile();

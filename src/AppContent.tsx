@@ -37,9 +37,9 @@ import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
 // PDF content components from specific directories
-import DashboardSummaryPdfContent from "./components/dashboard/DashboardSummaryPdfContent"; // Corrected path
-import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent"; // Corrected path
-import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent"; // Corrected path
+import DashboardSummaryPdfContent from "./components/dashboard/DashboardSummaryPdfContent";
+import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent";
+import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent";
 
 // Import all new PDF content components
 import InventoryValuationPdfContent from "./components/reports/pdf/InventoryValuationPdfContent";
@@ -74,7 +74,7 @@ import { Loader2 } from "lucide-react";
 
 // Moved AuthenticatedApp definition here
 const AuthenticatedApp = () => {
-  const {  } = useOnboarding(); // Removed isOnboardingComplete as it's not directly used here
+  const {  } = useOnboarding();
 
   return (
     <SidebarProvider>
@@ -134,8 +134,6 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  // Removed unused destructured variables from useOnboarding
-  // const {  } = useOnboarding(); 
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
@@ -171,7 +169,7 @@ const AppContent = () => {
       shopifyCallbackProcessedRef.current = true;
       navigate('/integrations', { replace: true });
     }
-  }, [location.search, navigate]);
+  }, [location.search, location.pathname, navigate]);
 
   useEffect(() => {
     if (isPrinting && printContentData?.type === "location-label") {

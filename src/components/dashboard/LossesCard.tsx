@@ -4,7 +4,6 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { ArrowDown } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-// Removed unused import: parseAndValidateDate
 
 const LossesCard: React.FC = () => {
   const { orders } = useOrders();
@@ -28,13 +27,13 @@ const LossesCard: React.FC = () => {
 
   // Generate dynamic data for the mini trend chart (downward trend)
   const data = useMemo(() => {
-    if (totalLosses === 0) return [{ name: "A", value: 0 }]; // Ensure at least one data point for chart to render
+    if (totalLosses === 0) return [{ name: "A", value: 0 }];
 
-    const baseValue = totalLosses / 0.9; // Start higher than current losses
+    const baseValue = totalLosses / 0.9;
     return Array.from({ length: 7 }, (_, i) => {
-      const value = baseValue * (1 - (i / 10)) + (Math.random() - 0.5) * (baseValue * 0.02); // Decreasing trend with slight fluctuation
+      const value = baseValue * (1 - (i / 10)) + (Math.random() - 0.5) * (baseValue * 0.02);
       return { name: String.fromCharCode(65 + i), value: Math.max(0, value) };
-    }).reverse(); // Reverse to show trend from left to right
+    }).reverse();
   }, [totalLosses]);
 
   return (

@@ -11,7 +11,6 @@ const DemandForecastCard: React.FC = () => {
 
   const forecastData = useMemo(() => {
     const today = new Date();
-    // Removed unused months variable
 
     const historicalSales: { [key: string]: number } = {};
     for (let i = 5; i >= 0; i--) {

@@ -1,15 +1,15 @@
 import React from "react";
 import { InventoryItem } from "@/context/InventoryContext";
 import { OrderItem } from "@/context/OrdersContext";
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { DateRange } from "react-day-picker"; // NEW: Import DateRange
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
 
 interface DashboardSummaryPdfContentProps {
   companyName: string;
   companyAddress: string;
-  companyContact: string; // e.g., currency or main contact
+  companyContact: string;
   companyLogoUrl?: string;
   totalStockValue: number;
   totalUnitsOnHand: number;
@@ -18,7 +18,7 @@ interface DashboardSummaryPdfContentProps {
   recentSalesOrders: OrderItem[];
   recentPurchaseOrders: OrderItem[];
   reportDate: string;
-  dateRange?: DateRange; // NEW: Add dateRange prop
+  dateRange?: DateRange;
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
@@ -33,7 +33,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
   recentSalesOrders,
   recentPurchaseOrders,
   reportDate,
-  dateRange, // NEW: Destructure dateRange
+  dateRange,
 }) => {
   const { profile } = useProfile();
 

@@ -87,7 +87,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
 
       {/* Company Info */}
       <div className="mb-8">
-        <p className="font-bold mb-2">REPORT FOR:</p>
+        <p className="font-bold mb-2">SUMMARY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>

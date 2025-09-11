@@ -2,8 +2,6 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-// REMOVED: import { InventoryItem } from "@/context/InventoryContext";
-// REMOVED: import { OrderItem } from "@/context/OrdersContext";
 
 interface POItem {
   id: number;
@@ -34,13 +32,11 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
   supplierName,
   supplierEmail,
   supplierAddress,
-  supplierContact: _supplierContact, // Renamed to _ to mark as unused
   terms,
   dueDate,
   items,
   notes,
   taxRate,
-  companyLogoUrl: _companyLogoUrl, // Renamed to _ to mark as unused
   poQrCodeSvg,
 }) => {
   const { profile } = useProfile();

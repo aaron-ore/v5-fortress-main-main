@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import {
-  AreaChart, // Changed to AreaChart
-  Area,       // Changed to Area
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -10,8 +10,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useOrders } from "@/context/OrdersContext";
-import { format, subMonths, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { format, subMonths, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const SalesOverviewChart: React.FC = () => {
   const { orders } = useOrders();
@@ -25,9 +25,9 @@ const SalesOverviewChart: React.FC = () => {
 
     orders.filter(order => order.type === "Sales").forEach(order => {
       const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return; // Skip invalid dates
+      if (!orderDate || !isValid(orderDate)) return;
 
-      const monthKey = format(orderDate, "MMM"); // e.g., "Jan"
+      const monthKey = format(orderDate, "MMM");
 
       if (!monthlySales[monthKey]) {
         monthlySales[monthKey] = { revenue: 0, units: 0 };
@@ -51,8 +51,8 @@ const SalesOverviewChart: React.FC = () => {
       if (actualRevenue === 0 && actualUnits === 0) {
         // If no actual sales for this month, simulate a value relative to the most recent actual sales
         const baseRevenue = orders.length > 0 ? orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0) / orders.filter(o => o.type === "Sales").length : 1000;
-        simulatedRevenue = Math.max(0, baseRevenue * (0.5 + Math.random() * 1.5)); // Wide range for simulation
-        simulatedUnits = Math.max(0, Math.floor(simulatedRevenue / (Math.random() * 50 + 50))); // Units based on simulated revenue
+        simulatedRevenue = Math.max(0, baseRevenue * (0.5 + Math.random() * 1.5));
+        simulatedUnits = Math.max(0, Math.floor(simulatedRevenue / (Math.random() * 50 + 50)));
       }
 
       dataPoints.push({
@@ -66,7 +66,7 @@ const SalesOverviewChart: React.FC = () => {
 
   return (
     <ResponsiveContainer width="100%" height={250}>
-      <AreaChart // Changed to AreaChart
+      <AreaChart
         data={salesData}
         margin={{
           top: 5,

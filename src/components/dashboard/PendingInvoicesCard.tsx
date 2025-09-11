@@ -4,7 +4,7 @@ import { ReceiptText } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { format, isValid, isPast, subDays } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const PendingInvoicesCard: React.FC = () => {
   const { orders } = useOrders();
@@ -20,7 +20,7 @@ const PendingInvoicesCard: React.FC = () => {
           order.status !== "Archived" &&
           order.status !== "Packed" &&
           orderDueDate && isValid(orderDueDate) && isPast(orderDueDate) &&
-          orderDueDate < thirtyDaysAgo // More than 30 days late
+          orderDueDate < thirtyDaysAgo
         );
       })
       .sort((a, b) => {
@@ -48,7 +48,7 @@ const PendingInvoicesCard: React.FC = () => {
                   <li key={invoice.id} className="flex justify-between items-center text-destructive">
                     <span>{invoice.id} - {invoice.customerSupplier}</span>
                     <span className="text-xs">
-                      Due: {dueDate && isValid(dueDate) ? format(dueDate, "MMM dd") : "N/A"}
+                      {dueDate && isValid(dueDate) ? format(dueDate, "MMM dd") : "N/A"}
                     </span>
                   </li>
                 );

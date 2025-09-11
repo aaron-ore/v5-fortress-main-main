@@ -20,7 +20,7 @@ const App = () => {
         closeButton
       />
       <BrowserRouter>
-        <AuthProvider> {/* AuthProvider now wraps ProfileProvider */}
+        <AuthProvider>
           <ProfileProvider>
               <OnboardingProvider>
                 <PrintProvider>

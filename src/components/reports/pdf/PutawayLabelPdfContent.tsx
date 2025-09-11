@@ -1,19 +1,19 @@
 import React from "react";
-import { format, isValid } from "date-fns"; // Import isValid
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
+import { format, isValid } from "date-fns";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { Location } from "@/context/OnboardingContext";
 
 interface PutawayLabelPdfContentProps {
   itemName: string;
   itemSku: string;
   receivedQuantity: number;
-  suggestedLocation: string; // This is the fullLocationString
+  suggestedLocation: string;
   lotNumber?: string;
   expirationDate?: string;
-  serialNumber?: string; // Added for future use, but not actively populated in this iteration
-  qrCodeSvg: string; // SVG string for the QR code
+  serialNumber?: string;
+  qrCodeSvg: string;
   printDate: string;
-  structuredLocations: Location[]; // NEW: Add structuredLocations prop
+  structuredLocations: Location[];
 }
 
 const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
@@ -26,7 +26,7 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
   serialNumber,
   qrCodeSvg,
   printDate,
-  structuredLocations, // NEW: Destructure structuredLocations
+  structuredLocations,
 }) => {
   const expirationDateObj = expirationDate ? parseAndValidateDate(expirationDate) : null;
   const printDateObj = parseAndValidateDate(printDate);
@@ -64,7 +64,7 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
             <span className="font-bold">Exp:</span> {format(expirationDateObj, "MM/yy")}
           </div>
         )}
-        {serialNumber && ( // Placeholder for serial number
+        {serialNumber && (
           <div>
             <span className="font-bold">SN:</span> {serialNumber}
           </div>

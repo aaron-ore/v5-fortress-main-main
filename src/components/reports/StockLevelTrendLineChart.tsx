@@ -13,7 +13,7 @@ const StockLevelTrendLineChart: React.FC = () => {
     const currentMonth = new Date().getMonth();
 
     for (let i = 0; i < 12; i++) {
-      const monthIndex = (currentMonth - 11 + i + 12) % 12; // Get last 12 months
+      const monthIndex = (currentMonth - 11 + i + 12) % 12;
       const monthName = months[monthIndex];
 
       // Simulate stock based on current inventory, with some fluctuation

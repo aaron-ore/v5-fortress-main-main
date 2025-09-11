@@ -15,14 +15,12 @@ interface SalesByCustomerPdfContentProps {
   reportDate: string;
   customerSales: CustomerSalesData[];
   dateRange?: DateRange;
-  // Removed: groupBy?: string; // Added groupBy prop
 }
 
 const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
   reportDate,
   customerSales,
   dateRange,
-  // Removed: groupBy, // Destructure groupBy
 }) => {
   const { profile } = useProfile();
 

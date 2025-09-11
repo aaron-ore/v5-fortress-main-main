@@ -23,17 +23,17 @@ const TopStockBulletGraph: React.FC = () => {
     if (inventoryItems.length === 0) return [];
 
     return inventoryItems
-      .sort((a, b) => b.quantity - a.quantity) // Sort by quantity descending
-      .slice(0, 4) // Get top 4 items
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 4)
       .map(item => ({
         name: item.name,
         quantity: item.quantity,
-        reorderLevel: item.reorderLevel, // Keep reorderLevel in data for potential future use or other calculations, but not for rendering here
+        reorderLevel: item.reorderLevel,
       }));
   }, [inventoryItems]);
 
   const maxQuantity = useMemo(() => {
-    return Math.max(...data.map(item => item.quantity), 100); // Ensure a reasonable max for scaling, no longer considering reorderLevel for max
+    return Math.max(...data.map(item => item.quantity), 100);
   }, [data]);
 
   return (
@@ -48,7 +48,7 @@ const TopStockBulletGraph: React.FC = () => {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} horizontal={false} />
             <XAxis type="number" hide domain={[0, maxQuantity * 1.1]} />
-            <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} /> {/* Increased width */}
+            <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
@@ -64,7 +64,6 @@ const TopStockBulletGraph: React.FC = () => {
               }}
             />
             <Bar dataKey="quantity" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-            {/* Removed ReferenceLine for reorderLevel */}
           </BarChart>
         </ResponsiveContainer>
       ) : (

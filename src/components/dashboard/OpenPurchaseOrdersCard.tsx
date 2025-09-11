@@ -4,7 +4,7 @@ import { ShoppingBag } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const OpenPurchaseOrdersCard: React.FC = () => {
   const { orders } = useOrders();

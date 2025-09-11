@@ -10,7 +10,6 @@ interface PurchaseOrderStatusPdfContentProps {
   orders: OrderItem[];
   statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
   dateRange?: DateRange;
-  // Removed: groupBy?: string; // Added groupBy prop
 }
 
 const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps> = ({
@@ -18,7 +17,6 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
   orders,
   statusFilter,
   dateRange,
-  // Removed: groupBy, // Destructure groupBy
 }) => {
   const { profile } = useProfile();
 

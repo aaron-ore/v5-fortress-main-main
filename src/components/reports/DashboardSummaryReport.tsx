@@ -3,32 +3,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
-import { useInventory, InventoryItem } from "@/context/InventoryContext"; // Import InventoryItem
-import { useOrders, OrderItem } from "@/context/OrdersContext"; // Import OrderItem
-// Removed unused import: useOnboarding
+import { useInventory, InventoryItem } from "@/context/InventoryContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Package, Receipt, AlertTriangle, DollarSign, FileText } from "lucide-react"; // Added FileText
+import { Loader2, Package, Receipt, AlertTriangle, DollarSign, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { showError } from "@/utils/toast"; // NEW: Import showError
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { showError } from "@/utils/toast";
 
 interface DashboardSummaryReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { profile } = useProfile();
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
@@ -70,7 +69,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       .sort((a: OrderItem, b: OrderItem) => {
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB) return 0; // Handle null dates
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
         return dateB.getTime() - dateA.getTime();
       })
       .slice(0, 5);
@@ -80,7 +79,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
       .sort((a: OrderItem, b: OrderItem) => {
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB) return 0;
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
         return dateB.getTime() - dateB.getTime();
       })
       .slice(0, 5);
@@ -106,7 +105,6 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
   }, [inventoryItems, orders, onGenerateReport, dateRange, profile]);
 
   useEffect(() => {
-    // Regenerate report if dependencies change
     generateReport();
   }, [generateReport]);
 
@@ -129,7 +127,6 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
     );
   }
 
-  // Access properties directly from currentReportData
   const {
     totalStockValue,
     totalUnitsOnHand,

@@ -55,9 +55,9 @@ const LiveMetricsCard: React.FC = () => {
 
   const barData = [
     { label: metrics.lowStockItemsCount, value: (metrics.lowStockItemsCount / metrics.maxCount) * 100, color: "hsl(var(--primary))" },
-    { label: metrics.ordersDueTodayCount, value: (metrics.ordersDueTodayCount / metrics.maxCount) * 100, color: "hsl(var(--accent))" }, // Changed color
-    { label: metrics.incomingShipmentsCount, value: (metrics.incomingShipmentsCount / metrics.maxCount) * 100, color: "hsl(var(--secondary))" }, // Changed color
-    { label: metrics.recentAdjustmentsCount, value: (metrics.recentAdjustmentsCount / metrics.maxCount) * 100, color: "hsl(var(--muted))" }, // Changed color
+    { label: metrics.ordersDueTodayCount, value: (metrics.ordersDueTodayCount / metrics.maxCount) * 100, color: "hsl(var(--accent))" },
+    { label: metrics.incomingShipmentsCount, value: (metrics.incomingShipmentsCount / metrics.maxCount) * 100, color: "hsl(var(--secondary))" },
+    { label: metrics.recentAdjustmentsCount, value: (metrics.recentAdjustmentsCount / metrics.maxCount) * 100, color: "hsl(var(--muted))" },
   ];
 
   const buttonData = [
@@ -68,12 +68,12 @@ const LiveMetricsCard: React.FC = () => {
   ];
 
   return (
-    <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]"> {/* Added flex-col h-[310px] */}
+    <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">
         <CardTitle className="text-2xl font-bold text-foreground">Key Operational Metrics</CardTitle>
         <p className="text-sm text-muted-foreground">Real-time snapshot of key activities</p>
       </CardHeader>
-      <CardContent className="flex-grow space-y-3 p-4 pt-0 flex flex-col justify-between"> {/* Changed to flex-grow */}
+      <CardContent className="flex-grow space-y-3 p-4 pt-0 flex flex-col justify-between">
         <div className="space-y-2">
           {barData.map((bar, index) => (
             <ProgressBar key={index} value={bar.value} color={bar.color} label={String(bar.label)} />

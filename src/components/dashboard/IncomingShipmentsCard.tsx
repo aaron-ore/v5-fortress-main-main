@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck } from "lucide-react";
 import { useOrders } from "@/context/OrdersContext";
 import { formatDistanceToNowStrict, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 const IncomingShipmentsCard: React.FC = () => {
   const { orders } = useOrders();

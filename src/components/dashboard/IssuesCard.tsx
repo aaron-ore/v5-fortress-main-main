@@ -8,13 +8,13 @@ import { showError } from "@/utils/toast";
 import { startOfDay, endOfDay, subDays, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import DailyIssuesDialog from "./DailyIssuesDialog";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface IssuesCardProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
-const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => { // NEW: Destructure dateRange
+const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => {
   const { profile } = useProfile();
   const [dailyIssuesCount, setDailyIssuesCount] = useState(0);
   const [previousPeriodIssuesCount, setPreviousPeriodIssuesCount] = useState(0);
@@ -80,7 +80,7 @@ const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => { // NEW: Destr
         },
         (payload) => {
           // Ensure timestamp is valid before creating a Date object
-          const newIssueDate = parseAndValidateDate(payload.new.timestamp); // NEW: Use parseAndValidateDate
+          const newIssueDate = parseAndValidateDate(payload.new.timestamp);
           const today = new Date();
           let currentPeriodStart: Date;
           let currentPeriodEnd: Date;
@@ -88,7 +88,7 @@ const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => { // NEW: Destr
           currentPeriodStart = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : startOfDay(today);
           currentPeriodEnd = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : endOfDay(today));
 
-          const isWithinCurrentPeriod = (newIssueDate && isValid(newIssueDate) && newIssueDate >= currentPeriodStart && newIssueDate <= currentPeriodEnd); // Check for null newIssueDate and isValid
+          const isWithinCurrentPeriod = (newIssueDate && isValid(newIssueDate) && newIssueDate >= currentPeriodStart && newIssueDate <= currentPeriodEnd);
 
           if (isWithinCurrentPeriod) {
             setDailyIssuesCount((prev) => prev + 1);
@@ -100,7 +100,7 @@ const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => { // NEW: Destr
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.organizationId, dateRange]); // NEW: Added dateRange to dependencies
+  }, [profile?.organizationId, dateRange]);
 
   const percentageChange = useMemo(() => {
     if (previousPeriodIssuesCount === 0) {
@@ -140,7 +140,7 @@ const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => { // NEW: Destr
       <DailyIssuesDialog
         isOpen={isDailyIssuesDialogOpen}
         onClose={() => setIsDailyIssuesDialogOpen(false)}
-        dateRange={dateRange} // Pass dateRange
+        dateRange={dateRange}
       />
     </>
   );

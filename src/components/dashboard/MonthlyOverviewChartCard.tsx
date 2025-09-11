@@ -4,13 +4,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } fro
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
 import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
-interface MonthlyOverviewChartCardProps {
-  // Removed dateRange prop
-}
-
-const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => {
+const MonthlyOverviewChartCard: React.FC = () => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
 
@@ -37,8 +33,8 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
     }
 
     orders.forEach(order => {
-      const orderDate = parseAndValidateDate(order.date); // NEW: Use parseAndValidateDate
-      if (!orderDate || !isValid(orderDate)) return; // Ensure valid date
+      const orderDate = parseAndValidateDate(order.date);
+      if (!orderDate || !isValid(orderDate)) return;
       const monthKey = format(orderDate, "MMM yyyy");
       if (monthlyData[monthKey] && orderDate >= startDate && orderDate <= endDate) {
         if (order.type === "Sales") {
@@ -52,12 +48,11 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
     const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
 
     Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a); // NEW: Use parseAndValidateDate
-      const dateB = parseAndValidateDate(b); // NEW: Use parseAndValidateDate
-      if (!dateA || !dateB) return 0; // Handle null dates
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB) return 0;
       return dateA.getTime() - dateB.getTime();
     }).forEach((monthKey, index, array) => {
-      // Removed unused monthName variable
       if (monthKey === format(endDate, "MMM yyyy")) {
         monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
       } else {
@@ -68,17 +63,17 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
     });
 
     return Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a); // NEW: Use parseAndValidateDate
-      const dateB = parseAndValidateDate(b); // NEW: Use parseAndValidateDate
-      if (!dateA || !dateB) return 0; // Handle null dates
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB) return 0;
       return dateA.getTime() - dateB.getTime();
     }).map(monthKey => ({
-      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"), // Assert non-null after sorting, fallback for format
+      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
       "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
       "Inventory Value": parseFloat(monthlyData[monthKey].inventoryValue.toFixed(2)),
       "Purchase Volume": parseFloat(monthlyData[monthKey].purchaseVolume.toFixed(0)),
     }));
-  }, [orders, inventoryItems]); // Removed dateRange from dependencies
+  }, [orders, inventoryItems]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 col-span-full flex flex-col h-[310px]">
@@ -96,8 +91,8 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = () => 
               left: 0,
               bottom: 5,
             }}
-            barCategoryGap="20%" // Keep this for bar spacing
-            barGap={0} // Ensure no gap between bars of the same category
+            barCategoryGap="20%"
+            barGap={0}
           >
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
             <YAxis

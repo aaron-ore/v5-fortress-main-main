@@ -8,13 +8,13 @@ import { showError } from "@/utils/toast";
 import { startOfDay, endOfDay, subDays, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import StockDiscrepancyDetailsDialog from "./StockDiscrepancyDetailsDialog";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface StockDiscrepancyCardProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
 }
 
-const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }) => { // NEW: Destructure dateRange
+const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }) => {
   const { profile } = useProfile();
   const [pendingDiscrepanciesCount, setPendingDiscrepanciesCount] = useState(0);
   const [previousPeriodDiscrepanciesCount, setPreviousPeriodDiscrepanciesCount] = useState(0);
@@ -80,7 +80,7 @@ const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }
         },
         (payload) => {
           // Ensure timestamp is valid before creating a Date object
-          const newDiscrepancyDate = parseAndValidateDate(payload.new.timestamp); // NEW: Use parseAndValidateDate
+          const newDiscrepancyDate = parseAndValidateDate(payload.new.timestamp);
           const today = new Date();
           let currentPeriodStart: Date;
           let currentPeriodEnd: Date;
@@ -88,7 +88,7 @@ const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }
           currentPeriodStart = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : startOfDay(today);
           currentPeriodEnd = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : endOfDay(today));
 
-          const isWithinCurrentPeriod = (newDiscrepancyDate && isValid(newDiscrepancyDate) && newDiscrepancyDate >= currentPeriodStart && newDiscrepancyDate <= currentPeriodEnd); // Check for null newDiscrepancyDate and isValid
+          const isWithinCurrentPeriod = (newDiscrepancyDate && isValid(newDiscrepancyDate) && newDiscrepancyDate >= currentPeriodStart && newDiscrepancyDate <= currentPeriodEnd);
 
           if (isWithinCurrentPeriod) {
             setPendingDiscrepanciesCount((prev) => prev + 1);
@@ -115,7 +115,7 @@ const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.organizationId, dateRange]); // NEW: Added dateRange to dependencies
+  }, [profile?.organizationId, dateRange]);
 
   const percentageChange = useMemo(() => {
     if (previousPeriodDiscrepanciesCount === 0) {
@@ -155,7 +155,7 @@ const StockDiscrepancyCard: React.FC<StockDiscrepancyCardProps> = ({ dateRange }
       <StockDiscrepancyDetailsDialog
         isOpen={isDiscrepancyDetailsDialogOpen}
         onClose={() => setIsDiscrepancyDetailsDialogOpen(false)}
-        dateRange={dateRange} // Pass dateRange
+        dateRange={dateRange}
       />
     </>
   );

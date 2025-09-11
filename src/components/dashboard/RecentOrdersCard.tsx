@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Receipt } from "lucide-react";
 import { formatDistanceToNowStrict, isValid } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useOrders } from "@/context/OrdersContext"; // Ensure useOrders is imported
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useOrders } from "@/context/OrdersContext";
 
 const RecentOrdersCard: React.FC = () => {
   const { orders } = useOrders();
@@ -50,7 +50,7 @@ const RecentOrdersCard: React.FC = () => {
           </TabsList>
           <TabsContent value="sales" className="mt-4">
             {recentSalesOrders.length > 0 ? (
-              <ScrollArea className="h-[120px] rounded-md border p-2"> {/* Added ScrollArea */}
+              <ScrollArea className="h-[120px] rounded-md border p-2">
                 <ul className="text-sm space-y-2">
                   {recentSalesOrders.map((order) => {
                     const orderDate = parseAndValidateDate(order.date);
@@ -71,7 +71,7 @@ const RecentOrdersCard: React.FC = () => {
           </TabsContent>
           <TabsContent value="purchases" className="mt-4">
             {recentPurchaseOrders.length > 0 ? (
-              <ScrollArea className="h-[120px] rounded-md border p-2"> {/* Added ScrollArea */}
+              <ScrollArea className="h-[120px] rounded-md border p-2">
                 <ul className="text-sm space-y-2">
                   {recentPurchaseOrders.map((order) => {
                     const orderDate = parseAndValidateDate(order.date);

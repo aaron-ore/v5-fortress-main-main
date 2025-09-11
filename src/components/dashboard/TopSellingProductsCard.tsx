@@ -3,8 +3,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-import { useInventory } from "@/context/InventoryContext"; // Corrected import path
-// Removed unused import: parseAndValidateDate
+import { useInventory } from "@/context/InventoryContext";
 
 const TopSellingProductsCard: React.FC = () => {
   const { inventoryItems } = useInventory();
@@ -15,11 +14,11 @@ const TopSellingProductsCard: React.FC = () => {
       .map(item => ({
         name: item.name,
         // Simulate units sold based on current quantity, making it dynamic
-        unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0, // 10-50% of current stock, plus 1, or 0 if no stock
+        unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
       }))
-      .filter(product => product.unitsSold > 0) // Filter out items with 0 units sold
+      .filter(product => product.unitsSold > 0)
       .sort((a, b) => b.unitsSold - a.unitsSold)
-      .slice(0, 5); // Display top 5 items
+      .slice(0, 5);
   }, [inventoryItems]);
 
   return (
