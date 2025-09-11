@@ -1,10 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -165,7 +161,6 @@ serve(async (req) => {
     };
 
     const getOrCreateQuickBooksCustomer = async (customerName: string, customerEmail?: string) => {
-      // Search for customer
       const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${customerName}'`)}&minorversion=69`;
       const searchResult = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
@@ -180,7 +175,6 @@ serve(async (req) => {
         return searchResult.QueryResponse.Customer[0].Id;
       }
 
-      // Create new customer if not found
       console.log(`QuickBooks customer ${customerName} not found, creating new...`);
       const newCustomerPayload = {
         DisplayName: customerName,
@@ -200,9 +194,7 @@ serve(async (req) => {
       return createResult.Customer.Id;
     };
 
-    // NEW: Function to get a suitable Income Account ID
     const getQuickBooksIncomeAccountId = async () => {
-      // Try to find a 'Sales' or 'Services' income account
       const querySalesAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' AND Name = 'Sales'`)}&minorversion=69`;
       const queryServicesAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' AND Name = 'Services'`)}&minorversion=69`;
 
@@ -232,7 +224,6 @@ serve(async (req) => {
         return servicesAccountResult.QueryResponse.Account[0].Id;
       }
 
-      // If no specific 'Sales' or 'Services' account found, try to find any Income account
       const queryAnyIncomeAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' MAXRESULTS 1`)}&minorversion=69`;
       let anyIncomeAccountResult = await makeQuickBooksApiCall(queryAnyIncomeAccountUrl, {
         method: 'GET',
@@ -251,7 +242,6 @@ serve(async (req) => {
     };
 
     const getOrCreateQuickBooksItem = async (itemName: string, unitPrice: number) => {
-      // Search for item
       const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Item WHERE Name = '${itemName}'`)}&minorversion=69`;
       const searchResult = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
@@ -266,10 +256,9 @@ serve(async (req) => {
         return searchResult.QueryResponse.Item[0].Id;
       }
 
-      // If not found, create new service item
       console.log(`QuickBooks item ${itemName} not found, creating new service item...`);
 
-      const incomeAccountId = await getQuickBooksIncomeAccountId(); // Get the account ID
+      const incomeAccountId = await getQuickBooksIncomeAccountId();
 
       const newItemPayload = {
         Name: itemName,
@@ -277,7 +266,7 @@ serve(async (req) => {
         Active: true,
         UnitPrice: unitPrice,
         IncomeAccountRef: {
-          value: incomeAccountId, // Use the fetched ID
+          value: incomeAccountId,
         },
       };
       const createUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/item?minorversion=69`;
@@ -322,10 +311,8 @@ serve(async (req) => {
       try {
         console.log(`Processing order ${order.id} for QuickBooks sync...`);
 
-        // 1. Get or Create Customer in QuickBooks
-        const customerId = await getOrCreateQuickBooksCustomer(order.customer_supplier, order.customer_email); // Assuming customer_email might be available
+        const customerId = await getOrCreateQuickBooksCustomer(order.customer_supplier, order.customer_email);
 
-        // 2. Get or Create Items in QuickBooks
         const qbLineItems = [];
         for (const item of order.items) {
           const qbItemId = await getOrCreateQuickBooksItem(item.itemName, item.unitPrice);
@@ -343,7 +330,6 @@ serve(async (req) => {
           });
         }
 
-        // 3. Create SalesReceipt in QuickBooks
         const salesReceipt = {
           CustomerRef: {
             value: customerId,
@@ -368,7 +354,6 @@ serve(async (req) => {
         const quickbooksId = qbData.SalesReceipt.Id;
         console.log(`SalesReceipt created in QuickBooks for order ${order.id}. QuickBooks ID: ${quickbooksId}`);
 
-        // 4. Update Supabase order status
         const { error: updateOrderError } = await supabaseAdmin
           .from('orders')
           .update({

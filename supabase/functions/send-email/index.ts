@@ -1,13 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -22,13 +17,11 @@ serve(async (req) => {
       });
     }
 
-    // Create a Supabase client with the service_role key to access secrets
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authenticated user's session (the user making the request)
     const authHeader = req.headers.get('Authorization')!;
     const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
 
@@ -56,7 +49,7 @@ serve(async (req) => {
         'api-key': brevoApiKey,
       },
       body: JSON.stringify({
-        sender: { email: 'noreply@fortress.com', name: 'Fortress Inventory' }, // Replace with your sender email
+        sender: { email: 'noreply@fortress.com', name: 'Fortress Inventory' },
         to: [{ email: to }],
         subject: subject,
         htmlContent: htmlContent,

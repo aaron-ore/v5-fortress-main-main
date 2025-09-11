@@ -3,7 +3,6 @@ import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -11,14 +10,11 @@ serve(async (req) => {
   try {
     const { targetUserId, newRole, organizationId } = await req.json();
 
-    // Create a Supabase client with the service_role key
-    // This client bypasses RLS and can update any profile
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authenticated user's session (the admin making the request)
     const authHeader = req.headers.get('Authorization')!
     const { data: { user: adminUser } } = await supabaseAdmin.auth.getUser(authHeader)
 
@@ -29,7 +25,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch the admin's profile to verify their role and organization
     const { data: adminProfile, error: adminProfileError } = await supabaseAdmin
       .from('profiles')
       .select('role, organization_id')
@@ -44,7 +39,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch the target user's current profile to check their organization
     const { data: targetProfile, error: targetProfileError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
@@ -59,8 +53,6 @@ serve(async (req) => {
       });
     }
 
-    // Authorization check: Admin can only update users within their own organization
-    // OR assign an organization to a user with a NULL organization_id (newly invited user)
     if (targetProfile.organization_id !== adminProfile.organization_id && targetProfile.organization_id !== null) {
       return new Response(JSON.stringify({ error: 'Forbidden: Cannot update users outside your organization.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -68,15 +60,14 @@ serve(async (req) => {
       });
     }
 
-    // Perform the update using the service_role client
     const { data: updatedProfile, error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         role: newRole,
-        organization_id: organizationId, // Ensure organizationId is set/updated
+        organization_id: organizationId,
       })
       .eq('id', targetUserId)
-      .select('id, full_name, phone, address, avatar_url, role, organization_id, created_at, email, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id') // UPDATED: Select quickbooks_realm_id
+      .select('id, full_name, phone, address, avatar_url, role, organization_id, created_at, email, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id')
       .single();
 
     if (updateError) {

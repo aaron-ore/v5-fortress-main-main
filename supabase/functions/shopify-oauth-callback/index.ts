@@ -1,13 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -18,13 +13,13 @@ serve(async (req) => {
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
-    const shop = url.searchParams.get('shop'); // Shopify passes the shop domain here
+    const shop = url.searchParams.get('shop');
 
     console.log('Shopify OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
     let userId: string | null = null;
     let redirectToFrontend: string | null = null;
-    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app'; // Reverted to Vercel URL
+    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
 
     if (state) {
       try {
@@ -61,7 +56,6 @@ serve(async (req) => {
       });
     }
 
-    // The redirect_uri must exactly match what's registered in your Shopify Partner Dashboard
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
     console.log('Using redirectUri for token exchange:', redirectUri);
 
@@ -88,12 +82,11 @@ serve(async (req) => {
     console.log('Shopify OAuth Callback: Full tokens object received:', JSON.stringify(tokens, null, 2));
 
     const accessToken = tokens.access_token;
-    const refreshToken = tokens.refresh_token; // Shopify Admin API access tokens are long-lived and typically don't expire, so refresh_token might not be present or needed for Admin API. Store if provided.
-    const shopDomain = shop; // The .myshopify.com domain
+    const refreshToken = tokens.refresh_token;
+    const shopDomain = shop;
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fetch the user's profile to get their organization_id
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
@@ -111,7 +104,7 @@ serve(async (req) => {
       .from('organizations')
       .update({
         shopify_access_token: accessToken,
-        shopify_refresh_token: refreshToken, // Store if available
+        shopify_refresh_token: refreshToken,
         shopify_store_name: shopDomain,
       })
       .eq('id', organizationId)

@@ -1,13 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
-import * as XLSX from 'https://esm.sh/xlsx@0.18.5'; // Import XLSX for CSV parsing
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
-// Inlined corsHeaders to avoid module resolution issues
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { corsHeaders } from '../_shared/cors.ts';
 
-// Define an interface for existing inventory items to provide type safety
 interface ExistingInventoryItem {
   id: string;
   name: string;
@@ -18,7 +13,6 @@ interface ExistingInventoryItem {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -38,7 +32,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authenticated user's session (the user making the request)
     const authHeader = req.headers.get('Authorization')!;
     const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
 
@@ -49,9 +42,8 @@ serve(async (req) => {
       });
     }
 
-    // 1. Download CSV from Supabase Storage
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
-      .from('csv-uploads') // Assuming a bucket named 'csv-uploads'
+      .from('csv-uploads')
       .download(filePath);
 
     if (downloadError) {
@@ -62,7 +54,6 @@ serve(async (req) => {
       });
     }
 
-    // 2. Read and parse CSV
     const buffer = await fileData.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
@@ -80,7 +71,6 @@ serve(async (req) => {
     const itemsToUpdate: any[] = [];
     const errors: string[] = [];
 
-    // Fetch existing categories, locations, and inventory items for validation and updates
     const { data: existingCategories, error: catError } = await supabaseAdmin
       .from('categories')
       .select('id, name')
@@ -101,20 +91,17 @@ serve(async (req) => {
       .eq('organization_id', organizationId);
     if (invError) throw invError;
     
-    // Explicitly type existingInventoryMap
     const existingInventoryMap: Map<string, ExistingInventoryItem> = new Map(
       existingInventoryRaw.map((i: any) => [i.sku.toLowerCase(), i as ExistingInventoryItem])
     );
 
-    // Process each row
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i];
-      const rowNumber = i + 2; // Assuming header is row 1
+      const rowNumber = i + 2;
 
       const itemName = String(row.name || '').trim();
       const sku = String(row.sku || '').trim();
 
-      // --- Strict Validation for Required Fields ---
       if (!itemName) {
         errors.push(`Row ${rowNumber} (SKU: ${sku || 'N/A'}): Item Name is required.`);
         continue;
@@ -144,13 +131,11 @@ serve(async (req) => {
         errors.push(`Row ${rowNumber} (SKU: ${sku}): Retail Price is required and must be a non-negative number.`);
         continue;
       }
-      // --- End Strict Validation ---
 
-      // --- Optional Fields Handling ---
       const description = String(row.description || '').trim() || undefined;
       const imageUrl = String(row.imageUrl || '').trim() || undefined;
       const vendorId = String(row.vendorId || '').trim() || undefined;
-      const barcodeUrl = String(row.barcodeUrl || '').trim() || sku; // Default to SKU if not provided
+      const barcodeUrl = String(row.barcodeUrl || '').trim() || sku;
       const autoReorderEnabled = String(row.autoReorderEnabled || 'false').toLowerCase() === 'true';
       
       let reorderLevel = parseInt(String(row.reorderLevel || '0'));
@@ -165,11 +150,11 @@ serve(async (req) => {
       if (isNaN(autoReorderQuantity) || autoReorderQuantity < 0) autoReorderQuantity = 0;
 
       let categoryName = String(row.category || '').trim();
-      if (!categoryName) categoryName = 'Uncategorized'; // Default category
+      if (!categoryName) categoryName = 'Uncategorized';
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
           .from('categories')
-          .insert({ name: categoryName, organization_id: organizationId, user_id: user.id }) // Use user.id
+          .insert({ name: categoryName, organization_id: organizationId, user_id: user.id })
           .select('id, name')
           .single();
         if (insertCatError) {
@@ -180,18 +165,17 @@ serve(async (req) => {
       }
 
       let mainLocationString = String(row.location || '').trim();
-      if (!mainLocationString) mainLocationString = 'Unassigned'; // Default location
+      if (!mainLocationString) mainLocationString = 'Unassigned';
       if (!locationMap.has(mainLocationString.toLowerCase())) {
-        // Simplified creation for locations in Edge Function, assuming basic structure
         const { data: newLoc, error: insertLocError } = await supabaseAdmin
           .from('locations')
           .insert({
             full_location_string: mainLocationString,
             display_name: mainLocationString,
-            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
+            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A',
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: user.id, // Use user.id
+            user_id: user.id,
           })
           .select('id, full_location_string')
           .single();
@@ -203,17 +187,17 @@ serve(async (req) => {
       }
 
       let pickingBinLocationString = String(row.pickingBinLocation || '').trim();
-      if (!pickingBinLocationString) pickingBinLocationString = mainLocationString; // Default to main location if not provided
+      if (!pickingBinLocationString) pickingBinLocationString = mainLocationString;
       if (!locationMap.has(pickingBinLocationString.toLowerCase())) {
         const { data: newLoc, error: insertLocError } = await supabaseAdmin
           .from('locations')
           .insert({
             full_location_string: pickingBinLocationString,
             display_name: pickingBinLocationString,
-            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
+            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A',
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: user.id, // Use user.id
+            user_id: user.id,
           })
           .select('id, full_location_string')
           .single();
@@ -248,7 +232,7 @@ serve(async (req) => {
         image_url: imageUrl,
         vendor_id: vendorId,
         barcode_url: barcodeUrl,
-        user_id: user.id, // Safely access user.id here
+        user_id: user.id,
         organization_id: organizationId,
         auto_reorder_enabled: autoReorderEnabled,
         auto_reorder_quantity: autoReorderQuantity,
@@ -259,18 +243,16 @@ serve(async (req) => {
           errors.push(`Row ${rowNumber} (SKU: ${sku}): Skipped due to duplicate entry confirmation.`);
           continue;
         } else if (actionForDuplicates === "add_to_stock") {
-          // Add quantities to existing stock
           const updatedPickingBinQty = existingItem.picking_bin_quantity + pickingBinQuantity;
           const updatedOverstockQty = existingItem.overstock_quantity + overstockQuantity;
           itemsToUpdate.push({
             id: existingItem.id,
             picking_bin_quantity: updatedPickingBinQty,
             overstock_quantity: updatedOverstockQty,
-            quantity: updatedPickingBinQty + updatedOverstockQty, // Update total quantity
+            quantity: updatedPickingBinQty + updatedOverstockQty,
             status: (updatedPickingBinQty + updatedOverstockQty) > reorderLevel ? "In Stock" : ((updatedPickingBinQty + updatedOverstockQty) > 0 ? "Low Stock" : "Out of Stock"),
             last_updated: new Date().toISOString(),
           });
-          // Log stock movement for the addition
           await supabaseAdmin.from('stock_movements').insert({
             item_id: existingItem.id,
             item_name: existingItem.name,
@@ -279,22 +261,20 @@ serve(async (req) => {
             old_quantity: existingItem.quantity,
             new_quantity: updatedPickingBinQty + updatedOverstockQty,
             reason: 'CSV Bulk Import - Added to stock',
-            user_id: user.id, // Safely access user.id here
+            user_id: user.id,
             organization_id: organizationId,
           });
         } else if (actionForDuplicates === "update") {
-          // Overwrite existing item with new data from CSV
-          itemsToUpdate.push({ id: existingItem.id, ...itemPayload, quantity: totalQuantity }); // Ensure total quantity is updated
+          itemsToUpdate.push({ id: existingItem.id, ...itemPayload, quantity: totalQuantity });
         }
       } else {
-        newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity }); // Ensure total quantity is set for new items
+        newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity });
       }
     }
 
     let insertCount = 0;
     let updateCount = 0;
 
-    // Perform batched inserts
     if (newItemsToInsert.length > 0) {
       const { error: insertError } = await supabaseAdmin
         .from('inventory_items')
@@ -306,7 +286,6 @@ serve(async (req) => {
       }
     }
 
-    // Perform batched updates
     if (itemsToUpdate.length > 0) {
       for (const updateItem of itemsToUpdate) {
         const { error: updateError } = await supabaseAdmin
@@ -321,7 +300,6 @@ serve(async (req) => {
       }
     }
 
-    // Clean up the uploaded CSV file from storage
     const { error: deleteFileError } = await supabaseAdmin.storage
       .from('csv-uploads')
       .remove([filePath]);
@@ -339,13 +317,12 @@ serve(async (req) => {
       status: errors.length > 0 ? 400 : 200,
     });
 
-  } catch (error: any) { // Explicitly type as 'any' to allow flexible access
+  } catch (error: any) {
     console.error('Edge Function error:', error);
     let errorMessage = 'An unknown error occurred.';
     if (error instanceof Error) {
       errorMessage = error.message;
     } else if (error && typeof error === 'object' && 'message' in error) {
-      // This handles PostgrestError which has a 'message' property
       errorMessage = error.message;
     } else if (typeof error === 'string') {
       errorMessage = error;

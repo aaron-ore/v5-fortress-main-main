@@ -3,7 +3,6 @@ import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -18,14 +17,11 @@ serve(async (req) => {
       });
     }
 
-    // Create a Supabase client with the service_role key
-    // This client bypasses RLS and can update any profile
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authenticated user's session
     const authHeader = req.headers.get('Authorization')!;
     const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
 
@@ -36,7 +32,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch user's profile to get organization_id
     const { data: userProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id, full_name')
@@ -54,7 +49,6 @@ serve(async (req) => {
     const organization_id = userProfile.organization_id;
     const userName = userProfile.full_name || user.email;
 
-    // 1. Fetch the original_quantity for the given item_id and location_type
     const { data: itemData, error: itemError } = await supabaseAdmin
       .from('inventory_items')
       .select('name, sku, picking_bin_quantity, overstock_quantity')
@@ -86,11 +80,9 @@ serve(async (req) => {
       });
     }
 
-    // 2. Conditional Check: If physical_count is NOT equal to original_quantity
     if (physical_count !== original_quantity) {
       const difference = physical_count - original_quantity;
 
-      // 3. Create Discrepancy Record
       const { data: discrepancyData, error: discrepancyError } = await supabaseAdmin
         .from('discrepancies')
         .insert({
@@ -116,7 +108,6 @@ serve(async (req) => {
         });
       }
 
-      // 4. Update Inventory
       const { error: updateInventoryError } = await supabaseAdmin
         .from('inventory_items')
         .update(updatePayload)
@@ -125,16 +116,12 @@ serve(async (req) => {
 
       if (updateInventoryError) {
         console.error('Error updating inventory item quantity:', updateInventoryError);
-        // Potentially revert discrepancy record or mark as failed
         return new Response(JSON.stringify({ error: 'Failed to update inventory quantity.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500,
         });
       }
 
-      // 5. Alert: Trigger an in-app notification
-      // This is a simplified notification. In a real app, you might have a dedicated notifications table
-      // or a more robust system. For now, we'll log to activity_logs and rely on frontend polling/realtime.
       const notificationMessage = `Stock Discrepancy: ${itemData.name} (${itemData.sku}) at ${location_string} (${location_type}). Counted: ${physical_count}, System: ${original_quantity}. Difference: ${difference}. Reported by ${userName}.`;
 
       await supabaseAdmin

@@ -1,19 +1,6 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.55.0';
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-// Explicitly declare Deno global to resolve TS2304 errors for Deno.env
-declare global {
-  namespace Deno {
-    namespace env {
-      function get(key: string): string | undefined;
-    }
-  }
-}
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
   console.log('Full incoming request URL:', req.url);
@@ -27,13 +14,13 @@ serve(async (req) => {
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
-    const realmIdFromUrl = url.searchParams.get('realmId'); // Check URL parameters first
+    const realmIdFromUrl = url.searchParams.get('realmId');
 
     console.log('QuickBooks OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
     let userId: string | null = null;
     let redirectToFrontend: string | null = null;
-    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app'; // Reverted to Vercel URL
+    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
 
     if (state) {
       try {
@@ -96,17 +83,15 @@ serve(async (req) => {
     const accessToken = tokens.access_token;
     const refreshToken = tokens.refresh_token;
 
-    let finalRealmId: string | null = realmIdFromUrl; // Start with realmId from URL
+    let finalRealmId: string | null = realmIdFromUrl;
 
     console.log('QuickBooks OAuth Callback: Received Realm ID (from URL parameters):', realmIdFromUrl || 'null (missing from URL)');
-    // Log tokens.id_token directly (expected to be null with response_type="code")
     console.log('QuickBooks OAuth Callback: tokens.id_token value:', tokens.id_token || 'null (not present in token response)');
 
-    // If realmId is still not found, try fetching from userinfo endpoint
     if (!finalRealmId && accessToken) {
       console.log('QuickBooks OAuth Callback: Realm ID not found in URL. Attempting to fetch from userinfo endpoint...');
       try {
-        const userinfoResponse = await fetch('https://sandbox-accounts.platform.intuit.com/v1/openid_connect/userinfo', { // Use sandbox for testing, or production URL
+        const userinfoResponse = await fetch('https://sandbox-accounts.platform.intuit.com/v1/openid_connect/userinfo', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
             'Accept': 'application/json',
@@ -116,28 +101,15 @@ serve(async (req) => {
         if (!userinfoResponse.ok) {
           const userinfoErrorData = await userinfoResponse.json();
           console.error('Error fetching userinfo from QuickBooks:', userinfoErrorData);
-          // Don't fail the whole flow, just log and proceed without realmId
         } else {
           const userinfo = await userinfoResponse.json();
           console.log('QuickBooks OAuth Callback: Userinfo response:', JSON.stringify(userinfo, null, 2));
-          finalRealmId = userinfo.sub || null; // 'sub' field often contains realmId or a unique identifier
-          // NOTE: Intuit's userinfo endpoint might return 'sub' as the user ID, not realmId.
-          // The realmId is typically found in the 'id_token' or the redirect URL.
-          // Given the previous logs, the 'id_token' *did* contain realmId when response_type was 'code id_token'.
-          // Let's re-evaluate if 'id_token' is *ever* present with 'code' and 'openid' scope.
-          // If not, we might need to parse the 'id_token' from the *initial* token response if it's there.
-          // For now, let's assume 'sub' might contain it or we need to re-enable 'id_token' in response_type.
+          finalRealmId = userinfo.sub || null;
 
-          // Re-checking Intuit docs: realmId is in id_token. If response_type is 'code', id_token is NOT returned.
-          // So, the userinfo endpoint is the correct place to get user details, but realmId is not directly there.
-          // The 'sub' field is the user's unique identifier.
-          // The realmId is the company ID.
-
-          // Let's try to get the company info directly if realmId is still null
           if (!finalRealmId) {
             console.log('QuickBooks OAuth Callback: Realm ID still not found. Attempting to fetch company info...');
             try {
-              const companyInfoResponse = await fetch(`https://quickbooks.api.intuit.com/v3/company/${userinfo.realmId}/companyinfo/${userinfo.realmId}?minorversion=69`, { // This requires realmId
+              const companyInfoResponse = await fetch(`https://quickbooks.api.intuit.com/v3/company/${userinfo.realmId}/companyinfo/${userinfo.realmId}?minorversion=69`, {
                 method: 'GET',
                 headers: {
                   'Authorization': `Bearer ${accessToken}`,

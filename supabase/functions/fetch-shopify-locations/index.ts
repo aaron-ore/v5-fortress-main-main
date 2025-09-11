@@ -3,7 +3,6 @@ import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -50,7 +49,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch user's profile to get organization_id and Shopify credentials
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id, organizations(shopify_access_token, shopify_store_name)')
@@ -67,7 +65,7 @@ serve(async (req) => {
     const shopifyAccessToken = profileData.organizations.shopify_access_token;
     const shopifyStoreName = profileData.organizations.shopify_store_name;
 
-    const shopifyApiBaseUrl = `https://${shopifyStoreName}/admin/api/2024-07`; // Use a stable API version
+    const shopifyApiBaseUrl = `https://${shopifyStoreName}/admin/api/2024-07`;
     const headers = {
       'X-Shopify-Access-Token': shopifyAccessToken,
       'Content-Type': 'application/json',

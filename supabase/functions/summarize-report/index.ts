@@ -1,13 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 serve(async (req) => {
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -31,13 +26,11 @@ serve(async (req) => {
       });
     }
 
-    // Create a Supabase client with the service_role key to access secrets and perform admin actions
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the Authorization header from the incoming request
     const authHeader = req.headers.get('Authorization');
     console.log('Edge Function: Authorization header received:', authHeader);
 
@@ -49,8 +42,6 @@ serve(async (req) => {
       });
     }
 
-    // Create a new Supabase client using the ANON_KEY and the user's JWT
-    // This client will correctly validate the user's session and respect RLS
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -63,7 +54,6 @@ serve(async (req) => {
       }
     );
 
-    // Get the authenticated user from the token using the new client
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     console.log('Edge Function: User from supabase.auth.getUser():', user);
 
@@ -83,7 +73,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch the Gemini API key from Supabase Secrets (using supabaseAdmin as it's an environment variable)
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       console.error('Edge Function: Gemini API key not configured. Please ensure GEMINI_API_KEY is set in Supabase Secrets.');
