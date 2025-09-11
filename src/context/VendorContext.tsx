@@ -122,7 +122,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         name: updatedVendor.name,
         contact_person: updatedVendor.contactPerson,
         email: updatedVendor.email,
-        phone: updatedVendor.phone,
+        phone: updatedUpdatedVendor.phone,
         address: updatedVendor.address,
         notes: updatedVendor.notes,
       })

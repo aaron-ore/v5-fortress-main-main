@@ -76,7 +76,7 @@ const Users: React.FC = () => {
     }
   };
 
-  if (isLoadingProfile) {
+  if (isLoadingProfile) { // Use isLoadingProfile directly
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -89,7 +89,7 @@ const Users: React.FC = () => {
     );
   }
 
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = profile?.role === 'admin'; // Define isAdmin here
 
   if (!isAdmin) {
     return (
