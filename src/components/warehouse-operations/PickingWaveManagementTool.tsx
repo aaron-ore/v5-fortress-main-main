@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ListOrdered, Printer, Package, Truck, CheckCircle } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";

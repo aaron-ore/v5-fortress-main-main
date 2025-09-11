@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react";
+import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -271,6 +271,7 @@ const CreateInvoice: React.FC = () => {
       orderType: "Retail" as "Retail",
       shippingMethod: "Standard" as "Standard",
       items: items,
+      terms: terms,
     };
 
     try {

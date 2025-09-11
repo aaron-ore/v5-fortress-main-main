@@ -675,10 +675,10 @@ const Integrations: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!profile?.role || profile.role !== 'admin'}>
                               <Edit className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping}>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !profile?.role || profile.role !== 'admin'}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>

@@ -21,13 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react"; // Removed Archive
+import { PlusCircle, Trash2, Printer, PackageOpen, QrCode } from "lucide-react";
 import { showError } from "@/utils/toast";
-import { useOrders, POItem } from "@/context/OrdersContext"; // Removed OrderItem
-// Removed ConfirmDialog
-// Removed useOnboarding
-import { usePrint } from "@/context/PrintContext";
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
+import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
 import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
