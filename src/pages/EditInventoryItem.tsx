@@ -28,7 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { PlusCircle, Loader2, Image as ImageIcon, X } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";

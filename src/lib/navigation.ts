@@ -27,7 +27,6 @@ import {
   Plug, // NEW: Import Plug icon for Integrations
   // Layout, // REMOVED: Import Layout icon for Floor Plan
 } from "lucide-react";
-// Removed unused import: React
 
 export interface NavItem {
   title: string;

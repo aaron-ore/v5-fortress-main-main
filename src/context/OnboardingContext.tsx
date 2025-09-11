@@ -48,7 +48,7 @@ const getStoragePathFromUrl = (url: string): string | null => {
 };
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, updateCompanyProfile: updateProfileCompanyProfileFromContext } = useProfile(); // NEW: Get companyProfile from ProfileContext
+  const { profile, isLoadingProfile, fetchProfile } = useProfile(); // NEW: Get companyProfile from ProfileContext
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("onboarding_skipped") === "true";
@@ -376,7 +376,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
-    const locationToRemove = locations.find(loc => loc.id === locationId); // Kept as it's used in showSuccess
+    const locationToRemove = locations.find(loc => loc.id === locationId);
 
     const { error } = await supabase
       .from("locations")

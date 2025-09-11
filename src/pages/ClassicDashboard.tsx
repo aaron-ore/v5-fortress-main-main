@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, MapPin, DollarSign, Boxes, FilterX } from "lucide-react";
+import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, DollarSign, Boxes, FilterX } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { format, isValid, startOfDay, endOfDay } from "date-fns";

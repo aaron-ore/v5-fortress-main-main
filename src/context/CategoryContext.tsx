@@ -4,8 +4,6 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-// REMOVED: import { mockCategories } from "@/utils/mockData";
-// REMOVED: import { useActivityLogs } from "@/context/ActivityLogContext";
 
 export interface Category { // Exported interface
   id: string;
@@ -25,7 +23,6 @@ const CategoryContext = createContext<CategoryContextType | undefined>(undefined
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { profile, isLoadingProfile } = useProfile();
-  // REMOVED: const { addActivity } = useActivityLogs();
 
   const fetchCategories = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -70,7 +67,6 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     const trimmedName = name.trim();
     const existingCategory = categories.find(cat => cat.name.toLowerCase() === trimmedName.toLowerCase());
     if (existingCategory) {
-      // REMOVED: addActivity("Category Add Skipped", `Attempted to add existing category: ${trimmedName}.`, { categoryName: trimmedName });
       return existingCategory;
     }
 
@@ -82,7 +78,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       if (error.code === '23505') {
         console.warn(`Category "${trimmedName}" already exists in DB, likely added concurrently.`);
-        const { data: existingDbCategory, error: fetchErrorInner } = await supabase // Renamed fetchError to fetchErrorInner
+        const { data: existingDbCategory, error: fetchErrorInner } = await supabase
           .from("categories")
           .select("id, name, organization_id")
           .eq("name", trimmedName)
@@ -95,12 +91,10 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
             organizationId: existingDbCategory.organization_id,
           };
           setCategories((prev) => Array.from(new Set([...prev, mappedExistingCategory].map(c => JSON.stringify(c)))).map(s => JSON.parse(s)));
-          // REMOVED: addActivity("Category Add Concurrently", `Category "${trimmedName}" already exists, added concurrently.`, { categoryName: trimmedName });
           return mappedExistingCategory;
         }
       }
       console.error("Error adding category:", error);
-      // REMOVED: addActivity("Category Add Failed", `Failed to add category: ${trimmedName}.`, { error: error.message, categoryName: trimmedName });
       showError(`Failed to add category: ${error.message}`);
       return null;
     } else if (data && data.length > 0) {
@@ -110,7 +104,6 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
         organizationId: data[0].organization_id,
       };
       setCategories((prev) => [...prev, newCategory]);
-      // REMOVED: addActivity("Category Added", `Added new category: ${newCategory.name}.`, { categoryId: newCategory.id, categoryName: newCategory.name });
       showSuccess(`Category "${trimmedName}" added.`);
       return newCategory;
     }
@@ -124,7 +117,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       return;
     }
 
-    const categoryToRemove = categories.find(cat => cat.id === id); // Kept as it's used in showSuccess
+    const categoryToRemove = categories.find(cat => cat.id === id);
 
     const { error } = await supabase
       .from("categories")
@@ -134,11 +127,9 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       console.error("Error removing category:", error);
-      // REMOVED: addActivity("Category Remove Failed", `Failed to remove category: ${categoryToRemove?.name || id}.`, { error: error.message, categoryId: id });
       showError(`Failed to remove category: ${error.message}`);
     } else {
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      // REMOVED: addActivity("Category Removed", `Removed category: ${categoryToRemove?.name || id}.`, { categoryId: id });
       showSuccess("Category removed.");
     }
   };
