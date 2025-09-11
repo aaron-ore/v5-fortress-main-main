@@ -14,14 +14,14 @@ import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/s
 import { supabase } from "@/lib/supabaseClient";
 
 const Settings: React.FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
   const { profile, updateCompanyProfile, updateOrganizationTheme } = useProfile();
 
   const [companyName, setCompanyName] = useState(profile?.companyProfile?.companyName || "");
   const [companyAddress, setCompanyAddress] = useState(profile?.companyProfile?.companyAddress || "");
   const [companyCurrency, setCompanyCurrency] = useState(profile?.companyProfile?.companyCurrency || "USD");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
-  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState(profile?.companyProfile?.companyLogoUrl || "");
+  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl || undefined);
   const [isSavingCompanyProfile, setIsSavingCompanyProfile] = useState(false);
   const [organizationCodeInput, setOrganizationCodeInput] = useState<string>(profile?.companyProfile?.organizationCode || "");
   const [isSavingOrganizationCode, setIsSavingOrganizationCode] = useState(false);
@@ -35,7 +35,7 @@ const Settings: React.FC = () => {
       setCompanyName(profile.companyProfile.companyName || "");
       setCompanyAddress(profile.companyProfile.companyAddress || "");
       setCompanyCurrency(profile.companyProfile.companyCurrency || "USD");
-      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || undefined);
       setOrganizationCodeInput(profile.companyProfile.organizationCode || "");
       setSelectedTheme(profile.companyProfile.organizationTheme || "dark");
     }
@@ -54,17 +54,17 @@ const Settings: React.FC = () => {
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
-        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
+        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
       }
     } else {
       setCompanyLogoFile(null);
-      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || "");
+      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
     }
   };
 
   const handleClearLogo = () => {
     setCompanyLogoFile(null);
-    setCompanyLogoUrlPreview("");
+    setCompanyLogoUrlPreview(undefined);
     showSuccess("Logo cleared. Save changes to apply.");
   };
 
@@ -74,8 +74,7 @@ const Settings: React.FC = () => {
       return;
     }
 
-    setIsSavingCompanyProfile(true);
-    let finalCompanyLogoUrl = companyLogoUrlPreview;
+    let finalCompanyLogoUrl: string | undefined = companyLogoUrlPreview;
 
     if (companyLogoFile) {
       setIsUploadingImage(true);
@@ -166,7 +165,7 @@ const Settings: React.FC = () => {
     companyName !== (profile?.companyProfile?.companyName || "") ||
     companyAddress !== (profile?.companyProfile?.companyAddress || "") ||
     companyCurrency !== (profile?.companyProfile?.companyCurrency || "USD") ||
-    companyLogoUrlPreview !== (profile?.companyProfile?.companyLogoUrl || "") ||
+    companyLogoUrlPreview !== (profile?.companyProfile?.companyLogoUrl || undefined) ||
     companyLogoFile !== null;
 
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
@@ -186,7 +185,7 @@ const Settings: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
+              <Label htmlFor="companyName">Company Name <span className="text-red-500">*</span></Label>
               <Input
                 id="companyName"
                 value={companyName}

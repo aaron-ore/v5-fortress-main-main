@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircle, Search, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, RefreshCw, Loader2, Plug } from "lucide-react";
+import { PlusCircle, Search, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,8 +44,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { DateRangePicker } from "@/components/DateRangePicker";
-import { DateRange } from "react-day-picker";
 import OrderFulfillmentDialog from "@/components/orders/OrderFulfillmentDialog";
 import OrderReceiveShipmentDialog from "@/components/orders/OrderReceiveShipmentDialog";
 import {
@@ -191,7 +189,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Order Date</FormLabel>
+                <FormLabel>Order Date</Label>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -204,7 +202,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
             name="dueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Due Date</FormLabel>
+                <FormLabel>Due Date</Label>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -218,7 +216,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>Status</Label>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -243,7 +241,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="orderType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sales Order Type</FormLabel>
+              <FormLabel>Sales Order Type</Label>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -264,7 +262,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="shippingMethod"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Shipping Method</FormLabel>
+              <FormLabel>Shipping Method</Label>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -285,7 +283,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="deliveryRoute"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Delivery Route (Optional)</FormLabel>
+              <FormLabel>Delivery Route (Optional)</Label>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -312,7 +310,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an item" />
-                      </SelectTrigger>
+                    </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {inventoryItems.map((invItem) => (
@@ -331,7 +329,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
               name={`items.${index}.itemName`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Item Name</FormLabel>
+                  <FormLabel>Item Name</Label>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -345,7 +343,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
                 name={`items.${index}.quantity`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</FormLabel>
+                    <FormLabel>Quantity</Label>
                     <FormControl>
                       <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
                     </FormControl>
@@ -358,7 +356,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
                 name={`items.${index}.unitPrice`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit Price</FormLabel>
+                    <FormLabel>Unit Price</Label>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} />
                     </FormControl>
@@ -377,7 +375,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes (Optional)</FormLabel>
+              <FormLabel>Notes (Optional)</Label>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
@@ -390,7 +388,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="terms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Terms and Conditions (Optional)</FormLabel>
+              <FormLabel>Terms and Conditions (Optional)</Label>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
@@ -521,7 +519,7 @@ export const createOrderColumns = (archiveOrder: (id: string) => void): ColumnDe
 ];
 
 const Orders: React.FC = () => {
-  const { orders, fetchOrders, updateOrder, archiveOrder } = useOrders();
+  const { orders, fetchOrders, archiveOrder } = useOrders();
   const { profile, fetchProfile } = useProfile();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOrderDialogOpen, setIsAddOrderDialogOpen] = useState(false);
@@ -590,7 +588,6 @@ const Orders: React.FC = () => {
 
       showSuccess(data.message || "Sales orders synced successfully!");
       console.log("QuickBooks Sync Results:", data.results);
-      await fetchOrders();
       await fetchProfile();
     } catch (error: any) {
       console.error("Error syncing sales orders to QuickBooks:", error);

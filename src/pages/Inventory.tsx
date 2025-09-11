@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { PlusCircle, Search, Info, MoreHorizontal, Eye, Edit, Trash2, List, LayoutGrid, MapPin, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { PlusCircle, Search, List, LayoutGrid, MapPin, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,34 +12,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useOnboarding } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { showError, showSuccess } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import InventoryCard from "@/components/InventoryCard";
 import ManageLocationsDialog from "@/components/ManageLocationsDialog";
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
@@ -51,7 +41,7 @@ import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDia
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import { useSidebar } from "@/context/SidebarContext";
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, structuredLocations: any[]): ColumnDef<InventoryItem>[] => [ // NEW: Pass structuredLocations
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, structuredLocations: any[]): ColumnDef<InventoryItem>[] => [
   {
     accessorKey: "name",
     header: "Item Name",
@@ -85,7 +75,7 @@ export const createInventoryColumns = (handleQuickView: (item: InventoryItem) =>
   {
     accessorKey: "location",
     header: "Location",
-    cell: ({ row }) => { // NEW: Resolve display name for location
+    cell: ({ row }) => {
       const fullLocationString = row.original.location;
       const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
       return foundLoc?.displayName || fullLocationString;
@@ -126,7 +116,7 @@ const Inventory: React.FC = () => {
   const { inventoryItems, deleteInventoryItem, refreshInventory, isLoadingInventory } = useInventory();
   const { categories } = useCategories();
   const { vendors } = useVendors();
-  const { locations: structuredLocations } = useOnboarding(); // Now contains Location[]
+  const { locations: structuredLocations } = useOnboarding();
   const navigate = useNavigate();
   const { isCollapsed } = useSidebar();
 
@@ -146,7 +136,7 @@ const Inventory: React.FC = () => {
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
 
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
-  const [locationFilter, setLocationFilter] = useState("all"); // This will be fullLocationString or "all"
+  const [locationFilter, setLocationFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -215,10 +205,10 @@ const Inventory: React.FC = () => {
     showSuccess(`Create order for ${item.name} (placeholder)`);
   }, []);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, structuredLocations), [handleQuickView, structuredLocations]); // NEW: Pass structuredLocations
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, structuredLocations), [handleQuickView, structuredLocations]);
 
   return (
-    <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root"> {/* Added flex-grow */}
+    <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root">
       <h1 className="text-3xl font-bold">Inventory Management</h1>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -294,7 +284,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-md border flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+      <div className="rounded-md border flex flex-col flex-grow">
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Current Stock</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
@@ -304,7 +294,7 @@ const Inventory: React.FC = () => {
             <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
               Manage Categories
             </Button>
-            <Button variant="outline" onClick={() => navigate("/locations")} size="sm"> {/* Changed to navigate to /locations */}
+            <Button variant="outline" onClick={() => navigate("/locations")} size="sm">
               <MapPin className="h-4 w-4 mr-2" /> Manage Locations
             </Button>
             <DropdownMenu>
@@ -331,7 +321,7 @@ const Inventory: React.FC = () => {
             </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow overflow-y-auto"> {/* Added flex-grow overflow-y-auto */}
+        <CardContent className="flex-grow overflow-y-auto">
           {isLoadingInventory ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

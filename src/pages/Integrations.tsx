@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2, MapPin, Link as LinkIcon, Trash2, Edit } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
@@ -9,7 +9,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
-import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for Fortress locations
+import { useOnboarding } from "@/context/OnboardingContext";
 import {
   Select,
   SelectContent,
@@ -17,8 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ConfirmDialog from "@/components/ConfirmDialog"; // Import ConfirmDialog
-import { Label } from "@/components/ui/label"; // NEW: Import Label
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { Label } from "@/components/ui/label";
 
 interface ShopifyLocation {
   id: string;
@@ -42,7 +42,7 @@ interface ShopifyLocationMapping {
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
-  const { locations: fortressLocations, fetchLocations: fetchFortressLocations } = useOnboarding(); // Get Fortress locations
+  const { locations: fortressLocations, fetchLocations: fetchFortressLocations } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
@@ -271,8 +271,8 @@ const Integrations: React.FC = () => {
 
       await fetchProfile();
       showSuccess("Disconnected from Shopify.");
-      setShopifyLocations([]); // Clear Shopify locations on disconnect
-      setShopifyMappings([]); // Clear mappings on disconnect
+      setShopifyLocations([]);
+      setShopifyMappings([]);
     } catch (error: any) {
       console.error("Error disconnecting Shopify:", error);
       showError(`Failed to disconnect from Shopify: ${error.message}`);
@@ -310,7 +310,7 @@ const Integrations: React.FC = () => {
 
       showSuccess(data.message || "Shopify products synced successfully!");
       console.log("Shopify Product Sync Results:", data.results);
-      await fetchProfile(); // Refresh profile to ensure latest Shopify tokens/status
+      await fetchProfile();
     } catch (error: any) {
       console.error("Error syncing Shopify products:", error);
       showError(`Failed to sync Shopify products: ${error.message}`);
@@ -417,7 +417,7 @@ const Integrations: React.FC = () => {
         showSuccess(`Mapping for ${shopifyLoc.name} created successfully!`);
       }
       
-      await fetchShopifyLocationMappings(); // Refresh mappings
+      await fetchShopifyLocationMappings();
       setSelectedShopifyLocationId(null);
       setSelectedFortressLocationId(null);
       setMappingToEdit(null);

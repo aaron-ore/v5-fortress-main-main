@@ -1,18 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Trash2, MapPin, QrCode, Printer, Edit } from "lucide-react"; // NEW: Import Edit icon
-import { showError, showSuccess } from "@/utils/toast";
+import { PlusCircle, Trash2, MapPin, QrCode, Edit } from "lucide-react";
+import { showSuccess } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useOnboarding, Location } from "@/context/OnboardingContext"; // NEW: Import Location interface
+import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import LocationLabelGenerator from "@/components/LocationLabelGenerator"; // Import the new component
-import { parseLocationString, LocationParts } from "@/utils/locationParser"; // NEW: Import parseLocationString and LocationParts
-import LocationInventoryViewDialog from "@/components/LocationInventoryViewDialog"; // NEW: Import LocationInventoryViewDialog
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"; // NEW: Import Dialog components
+import LocationLabelGenerator from "@/components/LocationLabelGenerator";
+import LocationInventoryViewDialog from "@/components/LocationInventoryViewDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [
@@ -29,32 +27,32 @@ const Locations: React.FC = () => {
   const { initiatePrint } = usePrint();
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
-  const [locationToDelete, setLocationToDelete] = useState<Location | null>(null); // NEW: Store full Location object
+  const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
 
-  const [isLocationLabelGeneratorOpen, setIsLocationLabelGeneratorOpen] = useState(false); // NEW: State for generator dialog
-  const [locationToEdit, setLocationToEdit] = useState<Location | null>(null); // NEW: Store Location object for editing
+  const [isLocationLabelGeneratorOpen, setIsLocationLabelGeneratorOpen] = useState(false);
+  const [locationToEdit, setLocationToEdit] = useState<Location | null>(null);
 
   const [isLocationInventoryViewDialogOpen, setIsLocationInventoryViewDialogOpen] = useState(false);
   const [locationToViewInventory, setLocationToViewInventory] = useState<string | null>(null);
 
   const handleAddLocationClick = () => {
-    setLocationToEdit(null); // Clear for new location
+    setLocationToEdit(null);
     setIsLocationLabelGeneratorOpen(true);
   };
 
-  const handleEditLocationClick = (location: Location) => { // NEW: Pass full Location object
+  const handleEditLocationClick = (location: Location) => {
     setLocationToEdit(location);
     setIsLocationLabelGeneratorOpen(true);
   };
 
-  const handleDeleteLocationClick = (location: Location) => { // NEW: Pass full Location object
+  const handleDeleteLocationClick = (location: Location) => {
     setLocationToDelete(location);
     setIsConfirmDeleteDialogOpen(true);
   };
 
-  const confirmRemoveLocation = async () => { // NEW: Async function
+  const confirmRemoveLocation = async () => {
     if (locationToDelete) {
-      await removeLocation(locationToDelete.id); // NEW: Pass ID to removeLocation
+      await removeLocation(locationToDelete.id);
       if (locationToViewInventory === locationToDelete.fullLocationString) {
         setLocationToViewInventory(null);
         setIsLocationInventoryViewDialogOpen(false);
@@ -64,7 +62,7 @@ const Locations: React.FC = () => {
     setLocationToDelete(null);
   };
 
-  const handleViewInventoryClick = (locationString: string) => { // Now takes fullLocationString
+  const handleViewInventoryClick = (locationString: string) => {
     setLocationToViewInventory(locationString);
     setIsLocationInventoryViewDialogOpen(true);
   };
@@ -86,7 +84,7 @@ const Locations: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col flex-grow space-y-6 p-6"> {/* Changed h-full to flex-grow */}
+    <div className="flex flex-col flex-grow space-y-6 p-6">
       <h1 className="text-3xl font-bold">Location Management</h1>
       <p className="text-muted-foreground">Manage your inventory storage locations and generate QR code labels for them.</p>
 
@@ -106,7 +104,7 @@ const Locations: React.FC = () => {
             {locations.length > 0 ? (
               <div className="space-y-2 flex-grow flex flex-col">
                 <Label>Current Locations</Label>
-                <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20"> {/* Added flex-grow */}
+                <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20">
                   <ul className="space-y-1">
                     {locations.map((loc) => (
                       <li key={loc.id} className="flex items-center justify-between py-1 text-foreground">
@@ -182,7 +180,7 @@ const Locations: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <LocationLabelGenerator
-            initialLocation={locationToEdit} // Pass the full object
+            initialLocation={locationToEdit}
             onSave={handleSaveLocation}
             onGenerateAndPrint={handleGenerateAndPrintFromGenerator}
             onClose={() => setIsLocationLabelGeneratorOpen(false)}

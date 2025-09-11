@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BellRing, PackageMinus, Info, CheckCircle, XCircle } from "lucide-react";
+import { PackageMinus, Info, CheckCircle, XCircle } from "lucide-react";
 import { useNotifications } from "@/context/NotificationContext";
 import { formatDistanceToNowStrict } from "date-fns";
 
