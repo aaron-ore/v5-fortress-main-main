@@ -43,6 +43,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
   const [scannedLocation, setScannedLocation] = useState<string | null>(null); // Stores the fullLocationString of the scanned location
   const [isScanning, setIsScanning] = useState(false);
+  const [currentWaveId, setCurrentWaveId] = useState<string | null>(null);
   const [currentScanMode, setCurrentScanMode] = useState<"po" | "location" | "item">("po");
 
   const receivedPOs = useMemo(() => {

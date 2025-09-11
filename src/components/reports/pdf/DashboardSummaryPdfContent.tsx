@@ -4,6 +4,7 @@ import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns"; // Import isValid
 import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
 import { DateRange } from "react-day-picker"; // NEW: Import DateRange
+import { useProfile } from "@/context/ProfileContext";
 
 interface DashboardSummaryPdfContentProps {
   companyName: string;
@@ -34,6 +35,12 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
   reportDate,
   dateRange, // NEW: Destructure dateRange
 }) => {
+  const { profile } = useProfile();
+
+  if (!profile || !profile.companyProfile) {
+    return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
+  }
+
   const formattedDateRange = (dateRange?.from && isValid(dateRange.from))
     ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
     : "All Time";
@@ -43,10 +50,9 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          {companyLogoUrl ? (
-            <img src={companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          {profile.companyProfile.companyLogoUrl ? (
+            <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            // Removed "YOUR LOGO" placeholder
             <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
@@ -55,7 +61,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
-          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p> {/* NEW: Display data period */}
+          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p>
         </div>
       </div>
 
@@ -63,10 +69,10 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{companyName}</p>
-          <p>{companyContact}</p>
-          <p>{companyAddress.split('\n')[0]}</p>
-          <p>{companyAddress.split('\n')[1]}</p>
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
         </div>
       </div>
 

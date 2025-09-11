@@ -76,7 +76,7 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Historical Demand</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Forecasted Demand</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Lower Confidence</th>
-              <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Upper Confidence</th>
+              <th className="py-2 px-4 text-right font-semibold">Upper Confidence</th>
               <th className="py-2 px-4 text-right font-semibold">External Factor</th>
             </tr>
           </thead>

@@ -15,6 +15,13 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
@@ -28,14 +35,14 @@ interface ReceivedItemDisplay extends POItem {
 interface ReceiveInventoryToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
   scannedDataFromGlobal?: string | null;
-  onScannedDataProcessed: () => void;
+  onScannedDataProcessed: () => void; // Added this prop
 }
 
 const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
-  const { locations: structuredLocations } = useOnboarding(); // Fixed: Import structuredLocations
+  const { locations: structuredLocations } = useOnboarding();
   const { initiatePrint } = usePrint();
 
   const [poNumberInput, setPoNumberInput] = useState("");
@@ -296,7 +303,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           disabled={isScanning || !selectedPO}
         >
           <Barcode className="h-6 w-6" />
-          {isScanning ? "Scanning..." : "Scan Item Barcode"}
+          {isScanning ? "Scanning..." : "Scan Item"}
         </Button>
       </div>
 
@@ -304,58 +311,60 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         {selectedPO ? (
           <>
             <h3 className="text-lg font-semibold">Items for PO: {selectedPO.id}</h3>
-            <ScrollArea className="h-full">
+            <ScrollArea className="h-full max-h-[calc(100vh-400px)]">
               <div className="space-y-3 pr-2">
                 {receivedItems.map((item) => (
                   <Card key={item.id} className="bg-card border-border shadow-sm">
                     <CardContent className="p-4">
-                      <div className="flex justify-between items-center mb-2 flex-wrap gap-y-1">
+                      <div className="flex justify-between items-center mb-2">
                         <h4 className="font-semibold text-lg">{item.itemName}</h4>
                         <span className="text-sm text-muted-foreground">SKU: {item.inventoryItemDetails?.sku}</span>
                       </div>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <Package className="h-4 w-4" /> Expected: {item.quantity}
+                        <MapPin className="h-4 w-4" /> Suggested Putaway: {item.suggestedPutawayLocation || "N/A"}
                       </p>
-                      <div className="flex justify-between items-center mb-2 flex-wrap gap-y-1">
-                        <Label htmlFor={`received-qty-${item.id}`} className="font-semibold">Received Qty:</Label>
+                      <div className="flex justify-between items-center">
+                        <p className="text-muted-foreground text-sm">Expected: {item.quantity}</p>
                         <Input
-                          id={`received-qty-${item.id}`}
                           type="number"
                           value={item.receivedQuantity === 0 ? "" : item.receivedQuantity}
                           onChange={(e) => handleReceivedQuantityChange(item.id, e.target.value)}
-                          placeholder="Qty"
-                          min="0"
                           className="w-24 text-right"
+                          min="0"
+                          max={item.quantity}
                         />
                       </div>
-                      <div className="space-y-2 mb-2">
-                        <Label htmlFor={`lot-number-${item.id}`} className="font-semibold">Lot Number (Optional)</Label>
-                        <Input
-                          id={`lot-number-${item.id}`}
-                          value={item.lotNumber || ""}
-                          onChange={(e) => handleLotNumberChange(item.id, e.target.value)}
-                          placeholder="e.g., L12345"
-                        />
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="space-y-1">
+                          <Label htmlFor={`lot-${item.id}`} className="text-xs">Lot # (Optional)</Label>
+                          <Input
+                            id={`lot-${item.id}`}
+                            value={item.lotNumber || ""}
+                            onChange={(e) => handleLotNumberChange(item.id, e.target.value)}
+                            placeholder="Lot number"
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`exp-${item.id}`} className="text-xs">Exp. Date (Optional)</Label>
+                          <Input
+                            id={`exp-${item.id}`}
+                            type="date"
+                            value={item.expirationDate || ""}
+                            onChange={(e) => handleExpirationDateChange(item.id, e.target.value)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2 mb-2">
-                        <Label htmlFor={`exp-date-${item.id}`} className="font-semibold">Expiration Date (Optional)</Label>
-                        <Input
-                          id={`exp-date-${item.id}`}
-                          type="date"
-                          value={item.expirationDate || ""}
-                          onChange={(e) => handleExpirationDateChange(item.id, e.target.value)}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-2 flex-wrap gap-y-1">
-                        <p className="text-muted-foreground text-sm flex items-center gap-1 flex-grow min-w-0 truncate">
-                          <MapPin className="h-4 w-4 flex-shrink-0" /> Putaway: <span className="font-semibold text-primary flex-shrink-0">{structuredLocations.find(loc => loc.fullLocationString === item.suggestedPutawayLocation)?.displayName || item.suggestedPutawayLocation}</span>
-                        </p>
-                        {item.receivedQuantity > 0 && (
-                          <Button variant="outline" size="sm" onClick={() => handlePrintPutawayLabel(item)} className="flex-shrink-0">
-                            <Printer className="h-4 w-4 mr-2" /> Print Label
-                          </Button>
-                        )}
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => handlePrintPutawayLabel(item)}
+                        disabled={item.receivedQuantity === 0 || !item.suggestedPutawayLocation}
+                      >
+                        <Printer className="h-4 w-4 mr-2" /> Print Putaway Label
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -365,7 +374,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
             <Package className="h-12 w-12 mb-4" />
-            <p className="text-lg">Enter a PO number to begin receiving.</p>
+            <p className="text-lg">Enter a Purchase Order number to begin receiving.</p>
           </div>
         )}
       </div>
@@ -376,7 +385,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           onClick={handleCompleteReceive}
           disabled={isCompleteButtonDisabled}
         >
-          <CheckCircle className="h-6 w-6" /> Complete Receive
+          <CheckCircle className="h-6 w-6" /> Complete Receiving
         </Button>
       </div>
     </div>
