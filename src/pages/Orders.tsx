@@ -189,7 +189,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Order Date</Label>
+                <FormLabel>Order Date</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -202,7 +202,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
             name="dueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Due Date</Label>
+                <FormLabel>Due Date</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -216,7 +216,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</Label>
+              <FormLabel>Status</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -241,7 +241,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="orderType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sales Order Type</Label>
+              <FormLabel>Sales Order Type</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -262,7 +262,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="shippingMethod"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Shipping Method</Label>
+              <FormLabel>Shipping Method</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -283,7 +283,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="deliveryRoute"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Delivery Route (Optional)</Label>
+              <FormLabel>Delivery Route (Optional)</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -329,7 +329,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
               name={`items.${index}.itemName`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Item Name</Label>
+                  <FormLabel>Item Name</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -343,7 +343,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
                 name={`items.${index}.quantity`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity</Label>
+                    <FormLabel>Quantity</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
                     </FormControl>
@@ -356,7 +356,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
                 name={`items.${index}.unitPrice`}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit Price</Label>
+                    <FormLabel>Unit Price</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} />
                     </FormControl>
@@ -375,7 +375,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notes (Optional)</Label>
+              <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
@@ -388,7 +388,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
           name="terms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Terms and Conditions (Optional)</Label>
+              <FormLabel>Terms and Conditions (Optional)</FormLabel>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
