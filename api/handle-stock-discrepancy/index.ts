@@ -1,7 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -56,7 +57,7 @@ Deno.serve(async (req) => {
     // 1. Fetch the original_quantity for the given item_id and location_type
     const { data: itemData, error: itemError } = await supabaseAdmin
       .from('inventory_items')
-      .select('name, picking_bin_quantity, overstock_quantity')
+      .select('name, sku, picking_bin_quantity, overstock_quantity')
       .eq('id', item_id)
       .eq('organization_id', organization_id)
       .single();

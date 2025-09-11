@@ -13,10 +13,5 @@
     "noEmit": true,
     "isolatedModules": true,
     "types": ["@deno/types"]
-  },
-  "imports": {
-    "npm:@supabase/supabase-js": "npm:@supabase/supabase-js@2.55.0",
-    "npm:xlsx": "npm:xlsx@0.18.5",
-    "https://deno.land/std@0.200.0/http/server.ts": "https://deno.land/std@0.200.0/http/server.ts"
   }
 }

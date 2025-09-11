@@ -1,21 +1,12 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.55.0';
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Explicitly declare Deno global to resolve TS2304 errors for Deno.env
-declare global {
-  namespace Deno {
-    namespace env {
-      function get(key: string): string | undefined;
-    }
-  }
-}
-
-serve(async (req) => { // CHANGED: Deno.serve to serve
+serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });

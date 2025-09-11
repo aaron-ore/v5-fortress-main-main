@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5'; // Import XLSX for CSV parsing
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 // Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +17,7 @@ interface ExistingInventoryItem {
   quantity: number; // Total quantity
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -37,6 +38,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Get the authenticated user's session (the user making the request)
+    const authHeader = req.headers.get('Authorization')!;
+    const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
     // 1. Download CSV from Supabase Storage
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('csv-uploads') // Assuming a bucket named 'csv-uploads'
@@ -54,7 +66,7 @@ Deno.serve(async (req) => {
     const buffer = await fileData.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = XLSX.Sheets[sheetName];
     const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
     if (jsonData.length === 0) {
@@ -157,7 +169,7 @@ Deno.serve(async (req) => {
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
           .from('categories')
-          .insert({ name: categoryName, organization_id: organizationId, user_id: userId })
+          .insert({ name: categoryName, organization_id: organizationId, user_id: user.id }) // Use user.id
           .select('id, name')
           .single();
         if (insertCatError) {
@@ -179,7 +191,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: userId,
+            user_id: user.id, // Use user.id
           })
           .select('id, full_location_string')
           .single();
@@ -201,7 +213,7 @@ Deno.serve(async (req) => {
             area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A', // Default parts
             color: '#CCCCCC',
             organization_id: organizationId,
-            user_id: userId,
+            user_id: user.id, // Use user.id
           })
           .select('id, full_location_string')
           .single();
@@ -236,7 +248,7 @@ Deno.serve(async (req) => {
         image_url: imageUrl,
         vendor_id: vendorId,
         barcode_url: barcodeUrl,
-        user_id: userId,
+        user_id: user.id, // Safely access user.id here
         organization_id: organizationId,
         auto_reorder_enabled: autoReorderEnabled,
         auto_reorder_quantity: autoReorderQuantity,
@@ -254,6 +266,7 @@ Deno.serve(async (req) => {
             id: existingItem.id,
             picking_bin_quantity: updatedPickingBinQty,
             overstock_quantity: updatedOverstockQty,
+            quantity: updatedPickingBinQty + updatedOverstockQty, // Update total quantity
             status: (updatedPickingBinQty + updatedOverstockQty) > reorderLevel ? "In Stock" : ((updatedPickingBinQty + updatedOverstockQty) > 0 ? "Low Stock" : "Out of Stock"),
             last_updated: new Date().toISOString(),
           });
@@ -266,15 +279,15 @@ Deno.serve(async (req) => {
             old_quantity: existingItem.quantity,
             new_quantity: updatedPickingBinQty + updatedOverstockQty,
             reason: 'CSV Bulk Import - Added to stock',
-            user_id: userId,
+            user_id: user.id, // Safely access user.id here
             organization_id: organizationId,
           });
         } else if (actionForDuplicates === "update") {
           // Overwrite existing item with new data from CSV
-          itemsToUpdate.push({ id: existingItem.id, ...itemPayload });
+          itemsToUpdate.push({ id: existingItem.id, ...itemPayload, quantity: totalQuantity }); // Ensure total quantity is updated
         }
       } else {
-        newItemsToInsert.push(itemPayload);
+        newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity }); // Ensure total quantity is set for new items
       }
     }
 
