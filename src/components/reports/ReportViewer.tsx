@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import DashboardSummaryReport from "./DashboardSummaryReport"; // For the overvi
 
 interface ReportViewerProps {
   reportId: string;
-  dateRange: DateRange | undefined; // NEW: Accept dateRange prop
+  dateRange: DateRange | undefined;
 }
 
 // Map report IDs to their respective components
@@ -37,9 +37,9 @@ const reportComponents: { [key: string]: React.ElementType } = {
   "stock-discrepancy": DiscrepancyReport,
 };
 
-const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => { // NEW: Destructure dateRange
+const ReportViewer: React.FC<ReportViewerProps> = ({ reportId, dateRange }) => {
   const { initiatePrint } = usePrint();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { locations: structuredLocations } = useOnboarding();
   const { profile } = useProfile();
 
   const [reportData, setReportData] = useState<any>(null);

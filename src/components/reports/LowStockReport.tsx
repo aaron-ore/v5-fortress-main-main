@@ -1,35 +1,35 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useOnboarding } from "@/context/OnboardingContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, AlertTriangle, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { showError } from "@/utils/toast"; // NEW: Import showError
+import { Label } from "@/components/ui/label";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { showError } from "@/utils/toast";
 
 interface LowStockReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const LowStockReport: React.FC<LowStockReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { locations: structuredLocations } = useOnboarding();
+  const { profile } = useProfile();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "low-stock" | "out-of-stock">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -46,7 +46,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
 
     const filteredItems = inventoryItems.filter((item: InventoryItem) => {
       const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
-      if (!itemLastUpdated || !isValid(itemLastUpdated)) return false; // Ensure valid date
+      if (!itemLastUpdated || !isValid(itemLastUpdated)) return false;
       if (filterFrom && filterTo) {
         return isWithinInterval(itemLastUpdated, { start: filterFrom, end: filterTo });
       }
@@ -72,7 +72,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
       items: itemsToDisplay,
       statusFilter,
       dateRange,
-      structuredLocations, // NEW: Pass structuredLocations to resolve display names
+      structuredLocations,
     };
 
     setCurrentReportData(reportProps);

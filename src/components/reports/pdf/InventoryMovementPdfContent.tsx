@@ -36,10 +36,11 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
-  };
+  // Removed unused getLocationDisplayName as it's not directly used in the PDF content
+  // const getLocationDisplayName = (fullLocationString: string) => {
+  //   const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
+  //   return foundLoc?.displayName || fullLocationString;
+  // };
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">

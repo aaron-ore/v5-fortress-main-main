@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
@@ -20,7 +19,7 @@ import {
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation: string; // fullLocationString
+  suggestedPutawayLocation: string;
   isPutAway: boolean;
 }
 
@@ -39,7 +38,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
-  const [scannedLocation, setScannedLocation] = useState<string | null>(null); // Stores the fullLocationString of the scanned location
+  const [scannedLocation, setScannedLocation] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [currentScanMode, setCurrentScanMode] = useState<"po" | "location" | "item">("po");
 

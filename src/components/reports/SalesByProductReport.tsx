@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,9 +8,9 @@ import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, BarChart, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { showError } from "@/utils/toast"; // NEW: Import showError
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { showError } from "@/utils/toast";
 
 interface ProductSalesData {
   productName: string;
@@ -21,21 +21,21 @@ interface ProductSalesData {
 }
 
 interface SalesByProductReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { orders } = useOrders();
   const { inventoryItems } = useInventory();
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { profile } = useProfile();
 
   const [reportGenerated, setReportGenerated] = useState(false);
   const [currentReportData, setCurrentReportData] = useState<any>(null);
@@ -52,7 +52,7 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
     const filteredOrders = orders.filter((order: OrderItem) => {
       if (order.type !== "Sales") return false;
       const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false; // Ensure valid date
+      if (!orderDate || !isValid(orderDate)) return false;
       if (filterFrom && filterTo) {
         return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
       }

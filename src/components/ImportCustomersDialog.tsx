@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, Users } from "lucide-react";
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx'; // Import as * as XLSX
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateCustomerCsvTemplate } from "@/utils/csvGenerator";
@@ -205,7 +205,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const duplicates: CsvDuplicateCustomer[] = [];
         const seenDuplicates = new Set<string>();
 
-        jsonData.forEach(row => {
+        jsonData.forEach((row: any) => { // Explicitly type row as any
           const name = String(row.name || '').trim();
           const email = String(row.email || '').trim();
 

@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, Package, MapPin, MessageSquare, Barcode } from "lucide-react";
+import { AlertTriangle, MessageSquare, Barcode } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface IssueReportToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -24,11 +24,11 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const { inventoryItems } = useInventory();
   const { addNotification } = useNotifications();
   const { profile } = useProfile();
-  const { locations } = useOnboarding(); // NEW: Get locations from OnboardingContext
+  const { locations } = useOnboarding();
 
   const [issueType, setIssueType] = useState("");
   const [itemId, setItemId] = useState("");
-  const [location, setLocation] = useState(""); // This will be fullLocationString
+  const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -53,7 +53,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
     if (foundItem) {
       setItemId(foundItem.id);
-      setLocation(foundItem.location); // Pre-fill location if item found (fullLocationString)
+      setLocation(foundItem.location);
       showSuccess(`Scanned item: ${foundItem.name}. Item and location pre-filled.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
@@ -94,7 +94,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
           organization_id: profile.organizationId,
           activity_type: "Issue Reported",
           description: `Issue: ${issueType} - ${selectedItem?.name || 'N/A'}`,
-          details: reportDetails, // Store full details in JSONB
+          details: reportDetails,
         });
 
       if (logError) {

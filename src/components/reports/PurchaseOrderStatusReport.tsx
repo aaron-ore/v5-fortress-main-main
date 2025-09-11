@@ -1,34 +1,33 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRange } from "react-day-picker";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
-// Removed unused import: useOnboarding
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { Loader2, FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { showError } from "@/utils/toast"; // NEW: Import showError
+import { Label } from "@/components/ui/label";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
+import { showError } from "@/utils/toast";
 
 interface PurchaseOrderStatusReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
+  dateRange: DateRange | undefined;
   onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
   isLoading: boolean;
   reportContentRef: React.RefObject<HTMLDivElement>;
 }
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
+  dateRange,
   onGenerateReport,
   isLoading,
   reportContentRef,
 }) => {
   const { orders } = useOrders();
-  const { profile } = useProfile(); // NEW: Use useProfile
+  const { profile } = useProfile();
 
   const [statusFilter, setStatusFilter] = useState<"all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
@@ -47,7 +46,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
       if (order.type !== "Purchase") return false;
       if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
       const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false; // Ensure valid date
+      if (!orderDate || !isValid(orderDate)) return false;
       if (filterFrom && filterTo) {
         return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
       }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react"; 
+import React, { useState, useRef, useEffect } from "react"; 
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { XCircle, QrCode, Keyboard } from "lucide-react";
-import QrScanner, { QrScannerRef } from "@/components/QrScanner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { XCircle, QrCode, Keyboard } from "lucide-react";
+import QrScanner, { QrScannerRef } from "@/components/QrScanner";
 import { showSuccess, showError } from "@/utils/toast";
 
 interface CameraScannerDialogProps {

@@ -7,10 +7,6 @@ import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
 
 interface DashboardSummaryPdfContentProps {
-  companyName: string;
-  companyAddress: string;
-  companyContact: string;
-  companyLogoUrl?: string;
   totalStockValue: number;
   totalUnitsOnHand: number;
   lowStockItems: InventoryItem[];

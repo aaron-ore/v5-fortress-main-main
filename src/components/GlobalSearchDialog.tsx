@@ -31,6 +31,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useProfile } from "@/context/ProfileContext";
+import { Input } from "@/components/ui/input"; // Added missing Input import
 
 interface GlobalSearchDialogProps {
   isOpen: boolean;
@@ -240,7 +241,7 @@ const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({
             <label htmlFor="globalSearch" className="text-right">
               Search Term
             </label>
-            <input
+            <Input
               id="globalSearch"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

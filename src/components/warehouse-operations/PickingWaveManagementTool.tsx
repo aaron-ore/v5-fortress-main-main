@@ -124,15 +124,15 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.name, // Corrected access
-      companyAddress: companyProfile.address, // Corrected access
-      companyContact: companyProfile.currency, // Corrected access
+      companyName: companyProfile.companyName, // Corrected access
+      companyAddress: companyProfile.companyAddress, // Corrected access
+      companyContact: companyProfile.companyCurrency, // Corrected access
       companyLogoUrl: companyProfile.companyLogoUrl || undefined, // Corrected access
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),
       ordersInWave: ordersInWaveDetails,
       pickListItems: generatedPickList,
-      pickerName: companyProfile.name, // Corrected access
+      pickerName: companyProfile.companyName, // Corrected access
     };
 
     initiatePrint({ type: "picking-wave", props: pdfProps });
