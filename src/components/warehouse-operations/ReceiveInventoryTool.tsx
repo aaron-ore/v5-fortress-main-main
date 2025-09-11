@@ -220,7 +220,6 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
       return;
     }
 
-    let allItemsReceived = true;
     let updatesSuccessful = true;
 
     for (const item of receivedItems) {
@@ -251,7 +250,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         }
       }
       if (item.receivedQuantity < item.quantity) {
-        allItemsReceived = false;
+        // allItemsReceived = false; // Removed unused variable
       }
     }
 

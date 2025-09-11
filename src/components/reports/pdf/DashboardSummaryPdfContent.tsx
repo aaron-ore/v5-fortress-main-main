@@ -131,8 +131,8 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {lowStockItems.length > 0 ? (
-              lowStockItems.map((item) => (
+            {items.length > 0 ? (
+              items.map((item) => (
                 <tr key={item.id} className="border-b border-gray-200">
                   <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>

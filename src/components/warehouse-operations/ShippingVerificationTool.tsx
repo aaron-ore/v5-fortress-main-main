@@ -22,7 +22,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
   const [truckId, setTruckId] = useState("");
-  const [scannedItems, setScannedItems] = new Set<string>(); // Changed to a local variable
+  const [scannedItems, setScannedItems] = useState<Set<string>>(new Set()); // Corrected to useState with Set
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "success" | "error">("idle");
   const [isScanning, setIsScanning] = useState(false);
 

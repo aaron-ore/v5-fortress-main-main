@@ -65,7 +65,9 @@ export function DateRangePicker({
       selected={dateRange}
       onSelect={handleSelect}
       numberOfMonths={isMobile ? 1 : 2}
-      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+      disabled={(date: Date) => date > new Date() || date < new Date("1900-01-01")} // Explicitly type 'date'
+      className="p-3" // Added className prop
+      classNames={{}} // Added classNames prop
     />
   );
 
