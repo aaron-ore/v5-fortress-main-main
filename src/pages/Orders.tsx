@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusCircle, Search, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
+import { PlusCircle, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
