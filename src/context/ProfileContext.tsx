@@ -2,376 +2,138 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
-import { isValid } from 'date-fns';
+import { isValid }t React from "react";
+import { format, isValid } from "date-fns";
+import { OrderItem } from "@/context/OrdersContext";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { DateRange } from "react-day-picker";
+import { useProfile } from "@/context/ProfileContext";
 
-export interface CompanyProfile {
-  id: string;
-  organizationId: string;
-  companyName: string;
-  companyAddress?: string;
-  companyPhone?: string;
-  companyEmail?: string;
-  companyWebsite?: string;
-  companyCurrency: string;
-  companyLogoUrl?: string;
-  organizationTheme: string;
-  organizationCode?: string; // Added organizationCode to CompanyProfile
-  createdAt: string;
+interface PurchaseOrderStatusPdfContentProps {
+  reportDate: string;
+  orders: OrderItem[];
+  statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
+  dateRange?: DateRange;
+  // Removed: groupBy?: string; // Added groupBy prop
 }
 
-export interface UserProfile {
-  id: string;
-  fullName: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  avatarUrl?: string;
-  role: 'admin' | 'inventory_manager' | 'viewer';
-  organizationId?: string;
-  createdAt: string;
-  quickbooksAccessToken?: string;
-  quickbooksRefreshToken?: string;
-  quickbooksRealmId?: string;
-  shopifyAccessToken?: string;
-  shopifyStoreName?: string;
-  companyProfile?: CompanyProfile; // Added nested CompanyProfile for easier access
-}
+const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps> = ({
+  reportDate,
+  orders,
+  statusFilter,
+  dateRange,
+  // Removed: groupBy, // Destructure groupBy
+}) => {
+  const { profile } = useProfile();
 
-interface ProfileContextType {
-  profile: UserProfile | null;
-  isLoadingProfile: boolean;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
-  updateOrganizationTheme: (newTheme: string) => Promise<void>;
-  updateUserRole: (targetUserId: string, newRole: string, organizationId: string) => Promise<void>; // Added updateUserRole
-  fetchProfile: () => Promise<void>;
-  allProfiles: UserProfile[];
-  fetchAllProfiles: () => Promise<void>;
-}
+  if (!profile || !profile.companyProfile) {
+    return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
+  }
 
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
+  const formattedDateRange = (dateRange?.from && isValid(dateRange.from))
+    ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
+    : "All Time";
 
-export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
+  const reportTitle = statusFilter === "all"
+    ? "PURCHASE ORDER STATUS REPORT"
+    : `PURCHASE ORDERS (${statusFilter.replace(/-/g, ' ').toUpperCase()})`;
 
-  const fetchProfile = useCallback(async () => {
-    if (!user) {
-      setProfile(null);
-      setIsLoadingProfile(false);
-      return;
-    }
-
-    setIsLoadingProfile(true);
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          console.warn("Profile not found for user, likely new user.");
-          setProfile(null);
-        } else {
-          throw profileError;
-        }
-      } else if (profileData) {
-        let mappedProfile: UserProfile = {
-          id: profileData.id,
-          fullName: profileData.full_name,
-          email: user.email || '',
-          phone: profileData.phone,
-          address: profileData.address,
-          avatarUrl: profileData.avatar_url,
-          role: profileData.role,
-          organizationId: profileData.organization_id || undefined,
-          createdAt: profileData.created_at,
-          quickbooksAccessToken: profileData.quickbooks_access_token,
-          quickbooksRefreshToken: profileData.quickbooks_refresh_token,
-          quickbooksRealmId: profileData.quickbooks_realm_id,
-        };
-
-        if (profileData.organization_id) {
-          const { data: organizationData, error: organizationError } = await supabase
-            .from('organizations')
-            .select('*')
-            .eq('id', profileData.organization_id)
-            .single();
-
-          if (organizationError) {
-            throw organizationError;
-          }
-
-          if (organizationData) {
-            const mappedCompanyProfile: CompanyProfile = {
-              id: organizationData.id,
-              organizationId: organizationData.id,
-              companyName: organizationData.name,
-              companyAddress: organizationData.address || undefined,
-              companyPhone: organizationData.phone || undefined,
-              companyEmail: organizationData.email || undefined,
-              companyWebsite: organizationData.website || undefined,
-              companyCurrency: organizationData.currency,
-              companyLogoUrl: organizationData.company_logo_url || undefined,
-              organizationTheme: organizationData.default_theme || 'dark',
-              organizationCode: organizationData.unique_code || undefined,
-              createdAt: organizationData.created_at,
-            };
-            mappedProfile.companyProfile = mappedCompanyProfile;
-            mappedProfile.shopifyAccessToken = organizationData.shopify_access_token || undefined;
-            mappedProfile.shopifyStoreName = organizationData.shopify_store_name || undefined;
-          }
-        }
-        setProfile(mappedProfile);
-      }
-    } catch (error: any) {
-      console.error("Error fetching profile or company profile:", error);
-      showError("Failed to load user or company profile: " + error.message);
-      setProfile(null);
-    } finally {
-      setIsLoadingProfile(false);
-    }
-  }, [user]);
-
-  const fetchAllProfiles = useCallback(async () => {
-    if (!profile?.organizationId) {
-      setAllProfiles([]);
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('organization_id', profile.organizationId);
-
-      if (error) {
-        throw error;
-      }
-
-      const mappedProfiles: UserProfile[] = data.map((p: any) => ({
-        id: p.id,
-        fullName: p.full_name,
-        email: p.email,
-        phone: p.phone,
-        address: p.address,
-        avatarUrl: p.avatar_url,
-        role: p.role,
-        organizationId: p.organization_id || undefined,
-        createdAt: p.created_at,
-        quickbooksAccessToken: p.quickbooks_access_token,
-        quickbooksRefreshToken: p.quickbooks_refresh_token,
-        quickbooksRealmId: p.quickbooks_realm_id,
-      }));
-      setAllProfiles(mappedProfiles);
-    } catch (error: any) {
-      console.error("Error fetching all profiles:", error);
-      showError("Failed to load all user profiles: " + error.message);
-      setAllProfiles([]);
-    }
-  }, [profile?.organizationId]);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile, user]);
-
-  useEffect(() => {
-    if (profile?.organizationId) {
-      fetchAllProfiles();
-    }
-  }, [profile?.organizationId, fetchAllProfiles]);
-
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!profile) {
-      showError("No profile to update.");
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: updates.fullName,
-          phone: updates.phone,
-          address: updates.address,
-          avatar_url: updates.avatarUrl,
-          role: updates.role,
-          quickbooks_access_token: updates.quickbooksAccessToken,
-          quickbooks_refresh_token: updates.quickbooksRefreshToken,
-          quickbooks_realm_id: updates.quickbooksRealmId,
-        })
-        .eq('id', profile.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setProfile(prev => prev ? {
-          ...prev,
-          fullName: data.full_name,
-          phone: data.phone,
-          address: data.address,
-          avatarUrl: data.avatar_url,
-          role: data.role,
-          quickbooksAccessToken: data.quickbooks_access_token,
-          quickbooksRefreshToken: data.quickbooks_refresh_token,
-          quickbooksRealmId: data.quickbooks_realm_id,
-        } : null);
-        showSuccess("Profile updated successfully!");
-      }
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      showError("Failed to update profile: " + error.message);
-    }
-  };
-
-  const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
-    if (!profile?.organizationId) {
-      showError("No organization found to update company profile.");
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .update({
-          name: updates.companyName,
-          address: updates.companyAddress,
-          phone: updates.companyPhone,
-          email: updates.companyEmail,
-          website: updates.companyWebsite,
-          currency: updates.companyCurrency,
-          company_logo_url: updates.companyLogoUrl,
-          default_theme: updates.organizationTheme,
-          unique_code: uniqueCode,
-        })
-        .eq('id', profile.organizationId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setProfile(prev => prev ? {
-          ...prev,
-          companyProfile: {
-            ...prev.companyProfile,
-            id: data.id,
-            organizationId: data.id,
-            companyName: data.name,
-            companyAddress: data.address || undefined,
-            companyPhone: data.phone || undefined,
-            companyEmail: data.email || undefined,
-            companyWebsite: data.website || undefined,
-            companyCurrency: data.currency,
-            companyLogoUrl: data.company_logo_url || undefined,
-            organizationTheme: data.default_theme || 'dark',
-            organizationCode: data.unique_code || undefined,
-            createdAt: data.created_at,
-          }
-        } : null);
-        showSuccess("Company profile updated successfully!");
-      }
-    } catch (error: any) {
-      console.error("Error updating company profile:", error);
-      showError("Failed to update company profile: " + error.message);
-    }
-  };
-
-  const updateOrganizationTheme = async (newTheme: string) => {
-    if (!profile?.organizationId) {
-      showError("No organization found to update theme.");
-      return;
-    }
-    try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .update({ default_theme: newTheme })
-        .eq('id', profile.organizationId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setProfile(prev => prev ? {
-          ...prev,
-          companyProfile: prev.companyProfile ? { ...prev.companyProfile, organizationTheme: data.default_theme } : undefined
-        } : null);
-        showSuccess("Organization theme updated successfully!");
-      }
-    } catch (error: any) {
-      console.error("Error updating organization theme:", error);
-      showError("Failed to update organization theme: " + error.message);
-    }
-  };
-
-  const updateUserRole = async (targetUserId: string, newRole: string, organizationId: string) => {
-    if (!profile?.id || profile.role !== 'admin') {
-      showError("Only administrators can update user roles.");
-      return;
-    }
-
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
-      }
-
-      const { data, error } = await supabase.functions.invoke('update-user-profile', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-        body: JSON.stringify({ targetUserId, newRole, organizationId }),
-      });
-
-      if (error) {
-        throw error;
-      }
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      showSuccess(`User role updated to ${newRole} successfully!`);
-      fetchAllProfiles(); // Refresh the list of all profiles
-    } catch (error: any) {
-      console.error("Error updating user role:", error);
-      showError(`Failed to update user role: ${error.message}`);
-    }
-  };
+  const totalOrders = orders.length;
+  const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
 
   return (
-    <ProfileContext.Provider
-      value={{
-        profile,
-        isLoadingProfile,
-        updateProfile,
-        updateCompanyProfile,
-        updateOrganizationTheme,
-        updateUserRole,
-        fetchProfile,
-        allProfiles,
-        fetchAllProfiles,
-      }}
-    >
-      {children}
-    </ProfileContext.Provider>
+    <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          {profile.companyProfile.companyLogoUrl ? (
+            <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          ) : (
+            <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
+          )}
+          <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
+            {reportTitle}
+          </h1>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
+          <p className="text-sm font-semibold">DATA PERIOD: {formattedDateRange}</p>
+        </div>
+      </div>
+
+      {/* Company Info */}
+      <div className="mb-8">
+        <p className="font-bold mb-2">REPORT FOR:</p>
+        <div className="bg-gray-50 p-3 border border-gray-200 rounded">
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
+          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+        </div>
+      </div>
+
+      {/* Summary Metrics */}
+      <div className="grid grid-cols-2 gap-8 mb-8">
+        <div>
+          <p className="font-bold mb-2">OVERALL SUMMARY:</p>
+          <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
+            <div className="flex justify-between">
+              <span className="font-semibold">Total Purchase Orders:</span>
+              <span>{totalOrders.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold">Total Value of Orders:</span>
+              <span>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Orders Table */}
+      <div className="mb-8">
+        <p className="font-bold mb-2">DETAILED PURCHASE ORDERS:</p>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100 border border-gray-300">
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Order ID</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Supplier</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Order Date</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Due Date</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Status</th>
+              <th className="py-2 px-4 text-right font-semibold">Total Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.length > 0 ? (
+              orders.map((order) => {
+                const orderDate = parseAndValidateDate(order.date);
+                const dueDate = parseAndValidateDate(order.dueDate);
+                return (
+                  <tr key={order.id} className="border-b border-gray-200">
+                    <td className="py-2 px-4 border-r border-gray-200">{order.id}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{orderDate ? format(orderDate, "MMM dd, yyyy") : "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{dueDate ? format(dueDate, "MMM dd, yyyy") : "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.status}</td>
+                    <td className="py-2 px-4 text-right">${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr className="border-b border-gray-200">
+                <td colSpan={6} className="py-2 px-4 text-center text-gray-600">No purchase orders found for this report.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div className="text-xs text-gray-500 mt-12 text-right">
+        <p>Generated by Fortress on {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
+      </div>
+    </div>
   );
 };
 
-export const useProfile = () => {
-  const context = useContext(ProfileContext);
-  if (context === undefined) {
-    throw new Error('useProfile must be used within a ProfileProvider');
-  }
-  return context;
-};
+export default PurchaseOrderStatusPdfContent;

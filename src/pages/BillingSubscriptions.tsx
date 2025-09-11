@@ -233,14 +233,8 @@ const BillingSubscriptions: React.FC = () => {
                   "Custom"
                 ) : (
                   <>
-                    {getPriceDisplay(plan.monthlyPrice).startsWith('$') ? (
-                      <>
                         {getPriceDisplay(plan.monthlyPrice).split('/')[0]}
                         <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice).split('/')[1]}</span>
-                      </>
-                    ) : (
-                      getPriceDisplay(plan.monthlyPrice)
-                    )}
                   </>
                 )}
               </div>

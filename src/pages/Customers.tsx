@@ -32,8 +32,7 @@ const Customers: React.FC = () => {
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<{ id: string; name: string } | null>(null);
-
-  const [isImportCustomersDialogOpen, setIsImportCustomersDialogOpen] = useState(false); // NEW: State for import dialog
+  const [isImportCustomersDialogOpen, setIsImportCustomersDialogOpen] = useState(false); // ADDED: State for ImportCustomersDialog
 
   const handleAddCustomerClick = () => {
     setCustomerToEdit(null);
