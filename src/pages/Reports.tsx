@@ -83,8 +83,8 @@ const Reports: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeReportId, setActiveReportId] = useState<string>("");
-  const [reportViewMode, setReportViewMode] = useState<"simple" | "detailed">("simple"); // 'simple' for sidebar, 'detailed' for dropdown
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // NEW: dateRange state
+  // Removed reportViewMode state
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   // Flatten all reports for the dropdown menu
   const allReports = useMemo(() => {
@@ -118,104 +118,66 @@ const Reports: React.FC = () => {
   }, [activeReportId, allReports]);
 
   return (
-    <div className="flex flex-col flex-grow"> {/* Changed h-full to flex-grow */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col flex-grow">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-        <div className="flex items-center gap-4">
-          <ToggleGroup
-            type="single"
-            value={reportViewMode}
-            onValueChange={(value: "simple" | "detailed") => value && setReportViewMode(value)}
-            aria-label="Report view mode"
-            className="bg-muted rounded-md p-1"
-          >
-            <ToggleGroupItem value="simple" aria-label="Simple view" className="px-4 py-2 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm">
-              Simple View
-            </ToggleGroupItem>
-            <ToggleGroupItem value="detailed" aria-label="Detailed view" className="px-4 py-2 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm">
-              Detailed View
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
       </div>
       <p className="text-muted-foreground mb-6">
         Generate detailed reports to gain actionable insights into your inventory, sales, and operations.
       </p>
 
       <Card className="mb-4 bg-card border-border shadow-sm">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between"> {/* Added flex-row and justify-between */}
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold">Report Configuration</CardTitle>
-          <div className="flex items-center gap-2"> {/* Wrapped date picker and button in a div */}
-            <DateRangePicker dateRange={dateRange} onSelect={setDateRange} className="w-[240px]" /> {/* Added fixed width */}
-            {dateRange?.from && isValid(dateRange.from) && ( // Only show clear button if a valid 'from' date exists
+          <div className="flex items-center gap-2">
+            <DateRangePicker dateRange={dateRange} onSelect={setDateRange} className="w-[240px]" />
+            {dateRange?.from && isValid(dateRange.from) && (
               <Button variant="outline" onClick={handleClearDateFilter} size="icon">
                 <FilterX className="h-4 w-4" />
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-4">
-          {/* Content moved to CardHeader */}
-        </CardContent>
       </Card>
 
-      {reportViewMode === "simple" ? (
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="flex-grow rounded-lg border"
-        >
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="flex h-full flex-col p-4">
-              <h2 className="mb-4 text-lg font-semibold text-foreground">Report Categories</h2>
-              <ReportSidebar onReportSelect={handleReportSelect} reportCategories={reportCategories} />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={80}>
-            <div className="flex h-full flex-col p-4">
-              <ReportViewer reportId={activeReportId} dateRange={dateRange} /> {/* Pass dateRange */}
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      ) : (
-        <Card className="flex-grow rounded-lg border flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between pb-4">
-            <CardTitle className="text-xl font-semibold">
-              {currentReportTitle}
-            </CardTitle>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <BarChart className="h-4 w-4" /> {currentReportTitle} <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                {reportCategories.map(category => (
-                  <React.Fragment key={category.title}>
-                    <DropdownMenuLabel className="flex items-center gap-2">
-                      <category.icon className="h-4 w-4" /> {category.title}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {category.reports.map(report => (
-                      <DropdownMenuItem
-                        key={report.id}
-                        onClick={() => handleReportSelect(report.id)}
-                        className={cn(activeReportId === report.id && "bg-muted text-primary")}
-                      >
-                        {report.title}
-                      </DropdownMenuItem>
-                    ))}
-                    {reportCategories.indexOf(category) < reportCategories.length - 1 && <DropdownMenuSeparator />}
-                  </React.Fragment>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </CardHeader>
-          <CardContent className="flex-grow p-4 pt-0">
-            <ReportViewer reportId={activeReportId} dateRange={dateRange} /> {/* Pass dateRange */}
-          </CardContent>
-        </Card>
-      )}
+      {/* Always render the detailed view structure */}
+      <Card className="flex-grow rounded-lg border flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="text-xl font-semibold">
+            {currentReportTitle}
+          </CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <BarChart className="h-4 w-4" /> {currentReportTitle} <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {reportCategories.map(category => (
+                <React.Fragment key={category.title}>
+                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-primary-foreground bg-primary rounded-md mx-2 my-1 cursor-default">
+                    <category.icon className="h-4 w-4" /> {category.title}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="mx-2" />
+                  {category.reports.map(report => (
+                    <DropdownMenuItem
+                      key={report.id}
+                      onClick={() => handleReportSelect(report.id)}
+                      className={cn("mx-2", activeReportId === report.id && "bg-muted text-primary")}
+                    >
+                      {report.title}
+                    </DropdownMenuItem>
+                  ))}
+                  {reportCategories.indexOf(category) < reportCategories.length - 1 && <DropdownMenuSeparator className="mx-2" />}
+                </React.Fragment>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardHeader>
+        <CardContent className="flex-grow p-4 pt-0">
+          <ReportViewer reportId={activeReportId} dateRange={dateRange} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
