@@ -15,15 +15,45 @@ const WhatsNew: React.FC = () => {
   // Mock release notes data
   const releaseNotes: ReleaseNote[] = [
     {
+      version: "1.3.0",
+      date: "2024-09-01",
+      features: [
+        "**Full Supabase Integration:** Robust backend for authentication, database, storage, and serverless Edge Functions.",
+        "**Advanced Inventory Management:** Split quantities into Picking Bin and Overstock, with separate reorder levels. Item images, QR codes, and detailed history tracking.",
+        "**Comprehensive Warehouse Operations:** Dedicated mobile-optimized tools for Item Lookup, Receive Inventory, Putaway, Fulfill Order, Ship Order, Picking Wave Management, Replenishment, Shipping Verification, Returns Processing, Stock Transfer, Cycle Count, and Issue Reporting.",
+        "**AI-Powered Report Summaries:** Generate concise AI summaries for any report using Gemini Edge Functions.",
+        "**QuickBooks Integration:** Connect your QuickBooks account to sync sales orders and financial data.",
+        "**Shopify Integration:** Connect your Shopify store to sync products and map locations for inventory management.",
+        "**Automated Reordering & Notifications:** System to automatically generate purchase orders for low-stock items and send email notifications via Brevo Edge Function.",
+        "**Customizable Theming:** Choose from multiple vibrant themes (Ocean Breeze, Sunset Glow, Forest Whisper, Emerald, Deep Forest, Natural Light) for your organization.",
+        "**Customer Management:** Dedicated section to manage customer profiles and contact information.",
+        "**Location Management:** Structured location setup (Area-Row-Bay-Level-Pos) with QR code label generation and inventory view by location.",
+        "**New Reports:** Added Inventory Valuation, Low/Out of Stock, Inventory Movement, Sales by Customer, Sales by Product, Purchase Order Status, Profitability, and Stock Discrepancy reports.",
+        "**Global Search:** Quickly find inventory items, orders, vendors, and navigate to app pages.",
+      ],
+      improvements: [
+        "Enhanced User Role Management: Granular control over user permissions with 'Viewer', 'Inventory Manager', and 'Admin' roles.",
+        "Improved Order Management: Drag-and-drop reordering of items within orders, and more detailed order statuses.",
+        "Real-time Data Sync: Instant updates across the application thanks to Supabase Realtime subscriptions.",
+        "Refined UI/UX: Numerous visual and usability enhancements across all pages for a smoother experience.",
+        "Robust Error Handling: Improved error messages and an application-wide Error Boundary for stability.",
+      ],
+      bugFixes: [
+        "Resolved various minor display and data consistency issues.",
+        "Fixed email confirmation redirect and improved authentication flow.",
+      ],
+    },
+    {
       version: "1.2.0",
       date: "2024-08-15",
       features: [
         "Kanban Board for Order Management: Visually track order statuses with drag-and-drop functionality.",
-        "PDF Export for Purchase Orders: Generate professional PDF documents directly from the PO creation page.",
+        "PDF Export for Purchase Orders & Invoices: Generate professional PDF documents directly from order pages.",
       ],
       improvements: [
         "Enhanced Inventory Filtering: Added more filter options for better inventory overview.",
         "Improved Dashboard Performance: Faster loading times for key metrics.",
+        "CSV Import/Export for Inventory: Bulk upload and download inventory data.",
       ],
       bugFixes: [
         "Fixed an issue where certain inventory items were not saving correctly.",
@@ -34,12 +64,12 @@ const WhatsNew: React.FC = () => {
       version: "1.1.0",
       date: "2024-07-20",
       features: [
-        "Multi-Location Inventory Support: Track items across different warehouses or storage areas.",
         "Basic User Role Management: Assign 'Admin', 'Inventory Manager', and 'Viewer' roles.",
+        "Company Profile & Onboarding Wizard: Guided setup for new organizations.",
       ],
       improvements: [
         "Updated UI for Add/Edit Inventory Dialogs.",
-        "Better error handling for CSV imports.",
+        "Better error handling for data operations.",
       ],
       bugFixes: [
         "Corrected calculation for total stock value on dashboard.",
@@ -84,7 +114,7 @@ const WhatsNew: React.FC = () => {
                   </h3>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
                     {release.features.map((feature, index) => (
-                      <li key={index}>{feature}</li>
+                      <li key={index} dangerouslySetInnerHTML={{ __html: feature }} />
                     ))}
                   </ul>
                 </div>
@@ -97,7 +127,7 @@ const WhatsNew: React.FC = () => {
                   </h3>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
                     {release.improvements.map((improvement, index) => (
-                      <li key={index}>{improvement}</li>
+                      <li key={index} dangerouslySetInnerHTML={{ __html: improvement }} />
                     ))}
                   </ul>
                 </div>
@@ -110,7 +140,7 @@ const WhatsNew: React.FC = () => {
                   </h3>
                   <ul className="list-disc list-inside text-muted-foreground space-y-1">
                     {release.bugFixes.map((fix, index) => (
-                      <li key={index}>{fix}</li>
+                      <li key={index} dangerouslySetInnerHTML={{ __html: fix }} />
                     ))}
                   </ul>
                 </div>
