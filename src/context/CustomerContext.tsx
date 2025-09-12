@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
+import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
 
 export interface Customer {
   id: string;
@@ -45,6 +46,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       console.error("Error fetching customers:", error);
       showError("Failed to load customers.");
+      await logActivity("Customer Fetch Failed", `Failed to load customers for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setCustomers([]);
     } else {
       const fetchedCustomers: Customer[] = data.map((customer: any) => ({
@@ -60,7 +62,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       }));
       setCustomers(fetchedCustomers);
     }
-  }, [profile?.organizationId]);
+  }, [profile?.organizationId, profile]); // Added profile to dependency array
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -71,7 +73,9 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
   const addCustomer = async (customer: Omit<Customer, "id" | "createdAt" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to add customers.");
+      const errorMessage = "You must be logged in and have an organization ID to add customers.";
+      await logActivity("Add Customer Failed", errorMessage, profile, { customer_name: customer.name }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -91,6 +95,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       console.error("Error adding customer:", error);
+      await logActivity("Add Customer Failed", `Failed to add customer: ${customer.name}.`, profile, { error_message: error.message, customer_details: customer }, true);
       showError(`Failed to add customer: ${error.message}`);
     } else if (data && data.length > 0) {
       const newCustomer: Customer = {
@@ -106,13 +111,16 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       };
       setCustomers((prevCustomers) => [...prevCustomers, newCustomer]);
       showSuccess(`Customer "${customer.name}" added successfully!`);
+      await logActivity("Add Customer Success", `Added new customer: ${customer.name}.`, profile, { customer_id: data[0].id, customer_name: customer.name });
     }
   };
 
   const updateCustomer = async (updatedCustomer: Customer) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to update customers.");
+      const errorMessage = "You must be logged in and have an organization ID to update customers.";
+      await logActivity("Update Customer Failed", errorMessage, profile, { customer_id: updatedCustomer.id, customer_name: updatedCustomer.name }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -132,6 +140,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       console.error("Error updating customer:", error);
+      await logActivity("Update Customer Failed", `Failed to update customer: ${updatedCustomer.name} (ID: ${updatedCustomer.id}).`, profile, { error_message: error.message, customer_id: updatedCustomer.id, customer_name: updatedCustomer.name, updated_fields: updatedCustomer }, true);
       showError(`Failed to update customer: ${error.message}`);
     } else if (data && data.length > 0) {
       const updatedCustomerFromDB: Customer = {
@@ -151,13 +160,16 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
         ),
       );
       showSuccess(`Customer "${updatedCustomer.name}" updated successfully!`);
+      await logActivity("Update Customer Success", `Updated customer: ${updatedCustomer.name} (ID: ${updatedCustomer.id}).`, profile, { customer_id: updatedCustomer.id, customer_name: updatedCustomer.name, updated_fields: updatedCustomer });
     }
   };
 
   const deleteCustomer = async (customerId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to delete customers.");
+      const errorMessage = "You must be logged in and have an organization ID to delete customers.";
+      await logActivity("Delete Customer Failed", errorMessage, profile, { customer_id: customerId }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -169,10 +181,12 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     if (error) {
       console.error("Error deleting customer:", error);
+      await logActivity("Delete Customer Failed", `Failed to delete customer with ID: ${customerId}.`, profile, { error_message: error.message, customer_id: customerId }, true);
       showError(`Failed to delete customer: ${error.message}`);
     } else {
       setCustomers((prevCustomers) => prevCustomers.filter(customer => customer.id !== customerId));
       showSuccess("Customer deleted successfully!");
+      await logActivity("Delete Customer Success", `Deleted customer with ID: ${customerId}.`, profile, { customer_id: customerId });
     }
   };
 

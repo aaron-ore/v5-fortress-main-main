@@ -18,6 +18,7 @@ import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
 
 export interface InventoryItem {
   id: string;
@@ -119,7 +120,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const fetchInventoryItems = useCallback(async (): Promise<InventoryItem[]> => {
-    // Only set loading to true if it's the initial load
     if (!isInitialLoadComplete.current) {
       setIsLoadingInventory(true);
     }
@@ -128,7 +128,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     if (!session || !profile?.organizationId) {
       setInventoryItems([]);
       setIsLoadingInventory(false);
-      isInitialLoadComplete.current = true; // Mark initial load complete even if no data
+      isInitialLoadComplete.current = true;
       return [];
     }
 
@@ -136,36 +136,35 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       .from("inventory_items")
       .select("*")
       .eq("organization_id", profile.organizationId)
-      .order("name", { ascending: true }); // Order by name for consistent display
+      .order("name", { ascending: true });
 
     if (error) {
       console.error("Error fetching inventory items:", error);
       setInventoryItems([]);
       showError("Failed to load inventory items.");
+      await logActivity("Inventory Fetch Failed", `Failed to load inventory items for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setIsLoadingInventory(false);
-      isInitialLoadComplete.current = true; // Mark initial load complete on error
+      isInitialLoadComplete.current = true;
       return [];
     } else {
       const fetchedItems: InventoryItem[] = data.map(mapSupabaseItemToInventoryItem);
       setInventoryItems(fetchedItems);
       setIsLoadingInventory(false);
-      isInitialLoadComplete.current = true; // Mark initial load complete on success
+      isInitialLoadComplete.current = true;
       return fetchedItems;
     }
-  }, [profile?.organizationId]);
+  }, [profile?.organizationId, profile]); // Added profile to dependency array
 
-  // Effect for initial data fetch
   useEffect(() => {
     if (!isLoadingProfile) {
       fetchInventoryItems();
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setInventoryItems([]);
       setIsLoadingInventory(false);
-      isInitialLoadComplete.current = true; // Ensure initial load is marked complete
+      isInitialLoadComplete.current = true;
     }
   }, [fetchInventoryItems, isLoadingProfile, profile?.organizationId]);
 
-  // Realtime subscription for inventory items
   useEffect(() => {
     if (!profile?.organizationId) return;
 
@@ -188,13 +187,13 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
             switch (payload.eventType) {
               case 'INSERT':
                 if (!prevItems.some(item => item.id === newItem.id)) {
-                  return [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name)); // Sort on insert
+                  return [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name));
                 }
                 return prevItems;
               case 'UPDATE':
-                return prevItems.map(item => item.id === newItem.id ? newItem : item).sort((a, b) => a.name.localeCompare(b.name)); // Sort on update
+                return prevItems.map(item => item.id === newItem.id ? newItem : item).sort((a, b) => a.name.localeCompare(b.name));
               case 'DELETE':
-                return prevItems.filter(item => item.id !== newItem.id).sort((a, b) => a.name.localeCompare(b.name)); // Sort on delete
+                return prevItems.filter(item => item.id !== newItem.id).sort((a, b) => a.name.localeCompare(b.name));
               default:
                 return prevItems;
             }
@@ -209,35 +208,33 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [profile?.organizationId]);
 
-  // Effect to trigger auto-reorder logic when inventory or vendors change
   useEffect(() => {
     const isAutoReorderGloballyEnabled = typeof window !== 'undefined' 
       ? localStorage.getItem("enableAutoReorder") === "true" 
       : false;
 
     if (!isAutoReorderGloballyEnabled) {
-      // Only log if it hasn't been logged since the last time it was enabled (or component mount)
       if (!hasLoggedDisabledRef.current) {
         console.log("[InventoryContext] Auto-reorder is globally disabled. Skipping auto-reorder check.");
-        hasLoggedDisabledRef.current = true; // Set flag to true after logging
+        hasLoggedDisabledRef.current = true;
       }
-      return; // Exit early if globally disabled
+      return;
     }
 
-    // If auto-reorder is enabled, reset the flag for next time it might be disabled
     hasLoggedDisabledRef.current = false;
 
-    // Only run auto-reorder logic if initial load is complete, and there's an organization
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
       console.log("[InventoryContext] Auto-reorder is globally enabled. Triggering check due to inventory/vendor/profile change.");
       processAutoReorder(inventoryItems, addOrder, vendors, profile.organizationId, addNotification);
     }
-  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification]);
+  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification, profile]); // Added profile to dependency array
 
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      throw new Error("You must be logged in and have an organization ID to add inventory items.");
+      const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
+      await logActivity("Add Inventory Item Failed", errorMessage, profile, { item_name: item.name, sku: item.sku }, true);
+      throw new Error(errorMessage);
     }
 
     const totalQuantity = item.pickingBinQuantity + item.overstockQuantity;
@@ -275,12 +272,15 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error adding inventory item:", error);
+      await logActivity("Add Inventory Item Failed", `Failed to add inventory item: ${item.name} (SKU: ${item.sku}).`, profile, { error_message: error.message, item_details: item }, true);
       throw new Error(error.message || 'Failed to add item: Unknown error.');
     } else if (data && data.length > 0) {
       showSuccess(`Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
+      await logActivity("Add Inventory Item Success", `Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`, profile, { item_id: data[0].id, item_name: data[0].name, sku: data[0].sku });
     } else {
       const errorMessage = "Failed to add item: No data returned after insert.";
       console.error(errorMessage);
+      await logActivity("Add Inventory Item Failed", errorMessage, profile, { item_name: item.name, sku: item.sku }, true);
       throw new Error(errorMessage);
     }
   };
@@ -288,8 +288,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity"> & { id: string }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      throw new Error("You must be logged in and have an organization ID to update inventory items.");
-      return;
+      const errorMessage = "You must be logged in and have an organization ID to update inventory items.";
+      await logActivity("Update Inventory Item Failed", errorMessage, profile, { item_id: updatedItem.id, item_name: updatedItem.name, sku: updatedItem.sku }, true);
+      throw new Error(errorMessage);
     }
 
     const totalQuantity = updatedItem.pickingBinQuantity + updatedItem.overstockQuantity;
@@ -327,12 +328,15 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error updating inventory item:", error);
+      await logActivity("Update Inventory Item Failed", `Failed to update inventory item: ${updatedItem.name} (SKU: ${updatedItem.sku}).`, profile, { error_message: error.message, item_id: updatedItem.id, item_name: updatedItem.name, sku: updatedItem.sku, updated_fields: updatedItem }, true);
       throw new Error(error.message || 'Failed to update item: Unknown error.');
     } else if (data && data.length > 0) {
       showSuccess(`Updated inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
+      await logActivity("Update Inventory Item Success", `Updated inventory item: ${data[0].name} (SKU: ${data[0].sku}).`, profile, { item_id: data[0].id, item_name: data[0].name, sku: data[0].sku, updated_fields: updatedItem });
     } else {
       const errorMessage = "Update might not have been saved. Check database permissions.";
       console.error(errorMessage);
+      await logActivity("Update Inventory Item Failed", errorMessage, profile, { item_id: updatedItem.id, item_name: updatedItem.name, sku: updatedItem.sku }, true);
       throw new Error(errorMessage);
     }
   };
@@ -340,8 +344,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const deleteInventoryItem = async (itemId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to delete inventory items.");
-      return;
+      const errorMessage = "You must be logged in and have an organization ID to delete inventory items.";
+      await logActivity("Delete Inventory Item Failed", errorMessage, profile, { item_id: itemId }, true);
+      throw new Error(errorMessage);
     }
 
     const { error } = await supabase
@@ -352,9 +357,11 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (error) {
       console.error("Error deleting inventory item:", error);
+      await logActivity("Delete Inventory Item Failed", `Failed to delete inventory item with ID: ${itemId}.`, profile, { error_message: error.message, item_id: itemId }, true);
       throw new Error(error.message || 'Failed to delete item: Unknown error.');
     } else {
       showSuccess("Item deleted successfully!");
+      await logActivity("Delete Inventory Item Success", `Deleted inventory item with ID: ${itemId}.`, profile, { item_id: itemId });
     }
   };
 

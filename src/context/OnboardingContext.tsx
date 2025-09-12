@@ -3,6 +3,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
 import { generateUniqueCode } from "@/utils/numberGenerator";
+import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
 
 export interface CompanyProfile {
   name: string;
@@ -108,11 +109,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     if (error) {
       console.error("Error fetching locations:", error);
       showError("Failed to load locations.");
+      await logActivity("Location Fetch Failed", `Failed to load locations for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setLocations([]);
     } else {
       setLocations(data.map(mapSupabaseLocationToLocation));
     }
-  }, [profile?.organizationId]);
+  }, [profile?.organizationId, profile]); // Added profile to dependency array
 
   // Effect to fetch locations on profile load or change
   useEffect(() => {
@@ -124,10 +126,11 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   }, [isLoadingProfile, profile?.organizationId, fetchLocations]);
 
 
-  const markOnboardingComplete = () => {
+  const markOnboardingComplete = async () => {
     setIsOnboardingComplete(true);
     localStorage.setItem("onboarding_skipped", "true"); // Mark as skipped if user completes it
     showSuccess("Onboarding complete! Welcome to Fortress.");
+    await logActivity("Onboarding Complete", "User completed the onboarding wizard.", profile);
   };
 
   const setCompanyProfile = async (profileData: CompanyProfile, newUniqueCode?: string) => {
@@ -135,7 +138,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (!profile) {
       console.warn("[OnboardingContext] Profile is null, cannot save company profile to Supabase.");
-      showError("User profile not loaded. Please log in again.");
+      const errorMessage = "User profile not loaded. Please log in again.";
+      await logActivity("Set Company Profile Failed", errorMessage, profile, { profile_data: profileData }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -168,6 +173,8 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         console.log("[OnboardingContext] Profile updated with new organization_id and role.");
 
         showSuccess(`Organization "${profileData.name}" created and assigned! You are now an admin. Your unique company code is: ${uniqueCodeToPersist}`);
+        await logActivity("Organization Created", `New organization "${profileData.name}" created with code: ${uniqueCodeToPersist}.`, profile, { organization_id: organizationIdToUse, organization_name: profileData.name, unique_code: uniqueCodeToPersist });
+
       } else {
         console.log("[OnboardingContext] User already has organization_id:", profile.organizationId);
 
@@ -214,7 +221,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         const oldCompanyLogoUrl = existingOrg?.company_logo_url;
         // If the new logo URL is null/undefined/empty AND an old one existed, delete the old file
         if ((profileData.companyLogoUrl === undefined || profileData.companyLogoUrl === null || profileData.companyLogoUrl === "") && oldCompanyLogoUrl) {
-            const oldFilePath = getStoragePathFromUrl(oldCompanyLogoUrl);
+            const oldFilePath = getStoragePathFromUrl(oldCompanyLogoUrl, 'company-logos'); // Pass bucket name
             if (oldFilePath) {
                 console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
                 const { error: deleteError } = await supabase.storage
@@ -224,8 +231,10 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
                 if (deleteError) {
                     console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
                     showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
+                    await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
                 } else {
                     console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
+                    await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
                 }
             }
         }
@@ -253,6 +262,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         console.log("[OnboardingContext] Organization updated successfully.");
         showSuccess(`Company profile for "${profileData.name}" updated successfully!`);
+        await logActivity("Company Profile Update Success", `Company profile for "${profileData.name}" updated.`, profile, { organization_id: profile.organizationId, updated_fields: updatePayload });
       }
       
       console.log("[OnboardingContext] Calling fetchProfile to refresh user data.");
@@ -261,6 +271,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     } catch (error: any) {
       console.error("[OnboardingContext] Error during organization setup/update:", error);
+      await logActivity("Set Company Profile Failed", `Failed to set up/update organization profile.`, profile, { error_message: error.message, profile_data: profileData }, true);
       showError(`Failed to set up/update organization: ${error.message || 'Unknown error'}`);
       throw error;
     }
@@ -270,7 +281,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const addLocation = async (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">): Promise<Location | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to add locations.");
+      const errorMessage = "You must be logged in and have an organization ID to add locations.";
+      await logActivity("Add Location Failed", errorMessage, profile, { location_name: location.displayName || location.fullLocationString }, true);
+      showError(errorMessage);
       return null;
     }
 
@@ -284,6 +297,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       console.error("Error checking for existing location:", fetchError);
+      await logActivity("Add Location Failed", `Failed to check for existing location: ${location.fullLocationString}.`, profile, { error_message: fetchError.message, location_details: location }, true);
       showError(`Failed to check for existing location: ${fetchError.message}`);
       return null;
     }
@@ -298,6 +312,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         return prev;
       });
+      await logActivity("Add Location Skipped", `Location "${location.fullLocationString}" already exists.`, profile, { location_id: mappedExistingLocation.id, location_name: mappedExistingLocation.displayName || mappedExistingLocation.fullLocationString });
       return mappedExistingLocation;
     }
 
@@ -320,12 +335,14 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error adding location:", error);
+      await logActivity("Add Location Failed", `Failed to add location: ${location.displayName || location.fullLocationString}.`, profile, { error_message: error.message, location_details: location }, true);
       showError(`Failed to add location: ${error.message}`);
       return null;
     } else if (data) {
       const newLocation = mapSupabaseLocationToLocation(data);
       setLocations((prev) => [...prev, newLocation]);
       showSuccess(`Location "${location.displayName || location.fullLocationString}" added.`);
+      await logActivity("Add Location Success", `Added new location: ${newLocation.displayName || newLocation.fullLocationString}.`, profile, { location_id: newLocation.id, location_name: newLocation.displayName || newLocation.fullLocationString });
       return newLocation;
     }
     return null;
@@ -335,7 +352,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const updateLocation = async (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to update locations.");
+      const errorMessage = "You must be logged in and have an organization ID to update locations.";
+      await logActivity("Update Location Failed", errorMessage, profile, { location_id: location.id, location_name: location.displayName || location.fullLocationString }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -358,12 +377,14 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error updating location:", error);
+      await logActivity("Update Location Failed", `Failed to update location: ${location.displayName || location.fullLocationString} (ID: ${location.id}).`, profile, { error_message: error.message, location_id: location.id, updated_fields: location }, true);
       showError(`Failed to update location: ${error.message}`);
     } else if (data) {
       setLocations((prev) =>
         prev.map((loc) => (loc.id === data.id ? mapSupabaseLocationToLocation(data) : loc))
       );
       showSuccess(`Location "${location.displayName || location.fullLocationString}" updated.`);
+      await logActivity("Update Location Success", `Updated location: ${location.displayName || location.fullLocationString} (ID: ${location.id}).`, profile, { location_id: location.id, updated_fields: location });
     }
   };
 
@@ -371,7 +392,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const removeLocation = async (locationId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to remove locations.");
+      const errorMessage = "You must be logged in and have an organization ID to remove locations.";
+      await logActivity("Remove Location Failed", errorMessage, profile, { location_id: locationId }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -385,10 +408,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error removing location:", error);
+      await logActivity("Remove Location Failed", `Failed to remove location: ${locationToRemove?.displayName || locationToRemove?.fullLocationString} (ID: ${locationId}).`, profile, { error_message: error.message, location_id: locationId }, true);
       showError(`Failed to remove location: ${error.message}`);
     } else {
       setLocations((prev) => prev.filter((loc) => loc.id !== locationId));
       showSuccess(`Location "${locationToRemove?.displayName || locationToRemove?.fullLocationString}" removed.`);
+      await logActivity("Remove Location Success", `Removed location: ${locationToRemove?.displayName || locationToRemove?.fullLocationString} (ID: ${locationId}).`, profile, { location_id: locationId });
     }
   };
 

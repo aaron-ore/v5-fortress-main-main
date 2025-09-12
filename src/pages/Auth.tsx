@@ -8,6 +8,8 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import { Loader2 } from "lucide-react"; // Import Loader2 for loading state
+import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile to get current profile
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,6 +20,7 @@ const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user, isLoading } = useAuth(); // Use useAuth to get user and loading state
+  const { profile } = useProfile(); // NEW: Get current profile for logging
 
   // Effect to redirect if user is already authenticated
   useEffect(() => {
@@ -35,8 +38,10 @@ const Auth: React.FC = () => {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         showError(error.message);
+        await logActivity("Login Failed", `User ${email} failed to log in.`, profile, { error_message: error.message }, true);
       } else {
         showSuccess("Logged in successfully!");
+        await logActivity("Login Success", `User ${email} logged in successfully.`, profile);
         // The useEffect above will handle the navigation to "/"
       }
     } else {
@@ -50,8 +55,10 @@ const Auth: React.FC = () => {
       const { error } = await supabase.auth.signUp({ email, password, options });
       if (error) {
         showError(error.message);
+        await logActivity("Signup Failed", `User ${email} failed to sign up.`, profile, { error_message: error.message, full_name: fullName, company_code: companyCode }, true);
       } else {
         showSuccess("Account created! Please check your email to confirm.");
+        await logActivity("Signup Success", `User ${email} signed up successfully.`, profile, { full_name: fullName, company_code: companyCode });
         setIsLogin(true); // Switch to login form after signup
         setFullName("");
         setCompanyCode("");
@@ -71,8 +78,10 @@ const Auth: React.FC = () => {
     });
     if (error) {
       showError(error.message);
+      await logActivity("Forgot Password Failed", `Password reset request failed for ${email}.`, profile, { error_message: error.message }, true);
     } else {
       showSuccess("Password reset email sent! Check your inbox.");
+      await logActivity("Forgot Password Request", `Password reset email sent to ${email}.`, profile);
     }
     setLoading(false);
   };

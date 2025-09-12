@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
+import { logActivity } from '@/utils/logActivity'; // NEW: Import logActivity
+import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage'; // NEW: Import getFilePathFromPublicUrl
 
 export interface CompanyProfile {
   companyName: string;
@@ -111,12 +113,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (error) {
       console.error('Error fetching profile:', error);
       showError('Failed to load user profile.');
+      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message }, true);
       setProfile(null);
     } else if (data) {
       setProfile(mapSupabaseProfileToUserProfile(data, data.organizations));
     }
     setIsLoadingProfile(false);
-  }, [user]);
+  }, [user, profile]); // Added profile to dependency array
 
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
@@ -133,12 +136,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (error) {
       console.error('Error fetching all profiles:', error);
       showError('Failed to load all user profiles.');
+      await logActivity("All Profiles Fetch Failed", `Failed to load all profiles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setAllProfiles([]);
     } else {
       const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
-  }, [profile?.organizationId]);
+  }, [profile?.organizationId, profile]); // Added profile to dependency array
 
   useEffect(() => {
     if (!isLoadingAuth) {
@@ -148,7 +152,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => {
     if (!profile) {
-      showError('User profile not loaded.');
+      const errorMessage = 'User profile not loaded.';
+      await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -164,17 +170,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error updating profile:', error);
+      await logActivity("Update User Profile Failed", `Failed to update user profile for ${profile.email}.`, profile, { error_message: error.message, updated_fields: updates }, true);
       showError(`Failed to update profile: ${error.message}`);
       throw error;
     } else {
       showSuccess('Profile updated successfully!');
+      await logActivity("Update User Profile Success", `User profile for ${profile.email} updated.`, profile, { updated_fields: updates });
       await fetchProfile();
     }
   };
 
   const updateUserRole = async (userId: string, newRole: string, organizationId: string) => {
     if (!profile || profile.role !== 'admin' || profile.organizationId !== organizationId) {
-      showError('You do not have permission to update user roles in this organization.');
+      const errorMessage = 'You do not have permission to update user roles in this organization.';
+      await logActivity("Update User Role Failed", errorMessage, profile, { target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -191,9 +201,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (data.error) throw new Error(data.error);
 
       showSuccess(`User role updated to ${newRole} for ${userId}.`);
+      await logActivity("Update User Role Success", `User ${userId} role updated to ${newRole}.`, profile, { target_user_id: userId, new_role: newRole, organization_id: organizationId });
       await fetchAllProfiles();
     } catch (error: any) {
       console.error('Error updating user role:', error);
+      await logActivity("Update User Role Failed", `Failed to update user role for ${userId}.`, profile, { error_message: error.message, target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
       showError(`Failed to update user role: ${error.message}`);
       throw error;
     }
@@ -201,7 +213,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
     if (!profile || !profile.organizationId) {
-      showError('Organization not found. Cannot update company profile.');
+      const errorMessage = 'Organization not found. Cannot update company profile.';
+      await logActivity("Update Company Profile Failed", errorMessage, profile, { updated_fields: updates, unique_code: uniqueCode }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -216,6 +230,20 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       payload.unique_code = uniqueCode;
     }
 
+    // Handle logo deletion if companyLogoUrl is explicitly set to null/undefined/empty
+    if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && profile.companyProfile?.companyLogoUrl) {
+      const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
+      if (oldFilePath) {
+        const { error: deleteError } = await supabase.storage.from('company-logos').remove([oldFilePath]);
+        if (deleteError) {
+          console.warn("Failed to delete old company logo from storage:", deleteError);
+          await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: profile.companyProfile.companyLogoUrl }, true);
+        } else {
+          await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: profile.companyProfile.companyLogoUrl });
+        }
+      }
+    }
+
     const { error } = await supabase
       .from('organizations')
       .update(payload)
@@ -223,17 +251,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error updating company profile:', error);
+      await logActivity("Update Company Profile Failed", `Failed to update company profile for organization ${profile.organizationId}.`, profile, { error_message: error.message, updated_fields: updates, unique_code: uniqueCode }, true);
       showError(`Failed to update company profile: ${error.message}`);
       throw error;
     } else {
       showSuccess('Company profile updated successfully!');
+      await logActivity("Update Company Profile Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { updated_fields: updates, unique_code: uniqueCode });
       await fetchProfile();
     }
   };
 
   const updateOrganizationTheme = async (newTheme: string) => {
     if (!profile || profile.role !== 'admin' || !profile.organizationId) {
-      showError('You do not have permission to update the organization theme.');
+      const errorMessage = 'You do not have permission to update the organization theme.';
+      await logActivity("Update Organization Theme Failed", errorMessage, profile, { new_theme: newTheme }, true);
+      showError(errorMessage);
       return;
     }
 
@@ -244,10 +276,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error updating organization theme:', error);
+      await logActivity("Update Organization Theme Failed", `Failed to update organization theme for organization ${profile.organizationId}.`, profile, { error_message: error.message, new_theme: newTheme }, true);
       showError(`Failed to update theme: ${error.message}`);
       throw error;
     } else {
       showSuccess('Organization theme updated successfully!');
+      await logActivity("Update Organization Theme Success", `Organization theme updated to ${newTheme} for organization ${profile.organizationId}.`, profile, { new_theme: newTheme });
       await fetchProfile();
     }
   };
