@@ -5,7 +5,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 import { showError } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity'; // NEW: Import logActivity
-import { useProfile } from './ProfileContext'; // NEW: Import useProfile
+// Removed: import { useProfile } from './ProfileContext'; // No longer needed here
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +19,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { profile } = useProfile(); // NEW: Get current profile for logging
+  // Removed: const { profile } = useProfile(); // This caused the context order error
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
@@ -32,10 +32,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       setIsLoading(false);
 
+      // For logging in AuthContext, we don't have the full profile, so we pass null.
+      // The logActivity utility is designed to handle this gracefully.
       if (event === 'SIGNED_OUT') {
         localStorage.removeItem("onboarding_skipped");
         console.log("User signed out. Local storage cleared.");
-        await logActivity("Logout Success", `User ${user?.email || 'unknown'} signed out.`, profile);
+        await logActivity("Logout Success", `User ${user?.email || 'unknown'} signed out.`, null); // Pass null for profile
       }
     });
 
@@ -44,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error) {
         console.error("Error getting initial session:", error);
         showError("Failed to load session: " + error.message);
-        await logActivity("Session Load Failed", `Failed to load initial session.`, profile, { error_message: error.message }, true);
+        await logActivity("Session Load Failed", `Failed to load initial session.`, null, { error_message: error.message }, true); // Pass null for profile
       }
       if (initialSession) {
         setSession(initialSession);
@@ -54,7 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => subscription.unsubscribe();
-  }, [profile]); // Added profile to dependency array
+  }, [user]); // Dependency array updated to only include `user` if needed, or empty if not.
 
   return (
     <AuthContext.Provider value={{ user, session, isLoading }}>
