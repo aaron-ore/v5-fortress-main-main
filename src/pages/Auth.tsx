@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { Loader2 } from "lucide-react"; // Import Loader2 for loading state
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +17,15 @@ const Auth: React.FC = () => {
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth(); // Use useAuth to get user and loading state
+
+  // Effect to redirect if user is already authenticated
+  useEffect(() => {
+    if (!isLoading && user) {
+      console.log("[Auth.tsx] User already authenticated, redirecting to dashboard.");
+      navigate("/");
+    }
+  }, [user, isLoading, navigate]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +37,7 @@ const Auth: React.FC = () => {
         showError(error.message);
       } else {
         showSuccess("Logged in successfully!");
-        navigate("/");
+        // The useEffect above will handle the navigation to "/"
       }
     } else {
       const options = {
@@ -34,14 +45,14 @@ const Auth: React.FC = () => {
           full_name: fullName.trim() || null,
           company_code: companyCode.trim() || null,
         },
-        redirectTo: window.location.origin + '/auth',
+        redirectTo: window.location.origin + '/auth', // This is correct for sending back to the app's auth route
       };
       const { error } = await supabase.auth.signUp({ email, password, options });
       if (error) {
         showError(error.message);
       } else {
         showSuccess("Account created! Please check your email to confirm.");
-        setIsLogin(true);
+        setIsLogin(true); // Switch to login form after signup
         setFullName("");
         setCompanyCode("");
       }
@@ -66,6 +77,25 @@ const Auth: React.FC = () => {
     setLoading(false);
   };
 
+  // If still loading auth state, show a loading indicator
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        <Card className="w-full max-w-md text-center">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Loading...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <p className="text-muted-foreground mt-2">Checking authentication status.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If user is already authenticated, the useEffect will handle redirection, so this part won't be reached.
+  // If not authenticated, render the auth form.
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
       <Card className="w-full max-w-md">
