@@ -15,12 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
-  TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
+import { PlusCircle, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -49,131 +47,10 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  useSortable,
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
-const formSchema = z.object({
-  type: z.enum(["Sales", "Purchase"]),
-  customerSupplier: z.string().min(1, "Customer/Supplier name is required"),
-  date: z.string().min(1, "Date is required"),
-  status: z.enum(["New Order", "Processing", "Packed", "Shipped", "On Hold / Problem", "Archived"]),
-  totalAmount: z.number().min(0, "Total amount must be non-negative"),
-  dueDate: z.string().min(1, "Due date is required"),
-  itemCount: z.number().min(1, "At least one item is required"),
-  notes: z.string().optional(),
-  orderType: z.enum(["Retail", "Wholesale"]),
-  shippingMethod: z.enum(["Standard", "Express"]),
-  deliveryRoute: z.string().optional(),
-  items: z.array(z.object({
-    id: z.number(), // Added id to POItem schema
-    itemName: z.string().min(1, "Item name is required"),
-    quantity: z.number().min(1, "Quantity must be at least 1"),
-    unitPrice: z.number().min(0, "Unit price must be non-negative"),
-    inventoryItemId: z.string().optional(),
-  })).min(1, "At least one item is required"),
-  terms: z.string().optional(),
-});
-
-// Sortable Row Component
-interface SortableItemRowProps {
-  item: POItem;
-  handleItemChange: (id: number, field: keyof POItem, value: string | number) => void;
-  handleRemoveItem: (id: number) => void;
-}
-
-const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChange, handleRemoveItem }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 0,
-    position: 'relative' as const,
-    opacity: isDragging ? 0.8 : 1,
-  };
-
-  return (
-    <TableRow ref={setNodeRef} style={style} {...attributes} className="relative group">
-      <TableCell className="w-[20px] cursor-grab" {...listeners}>
-        <span className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>
-      </TableCell>
-      <TableCell>
-        <Input
-          value={item.itemName}
-          onChange={(e) =>
-            handleItemChange(item.id, "itemName", e.target.value)
-          }
-          placeholder="Product Name"
-          className="min-w-[120px]"
-        />
-      </TableCell>
-      <TableCell className="text-right w-[100px]">
-        <Input
-          type="number"
-          value={item.quantity === 0 ? "" : String(item.quantity)}
-          onChange={(e) =>
-            handleItemChange(
-              item.id,
-              "quantity",
-              parseInt(e.target.value || '0'),
-            )
-          }
-          min="0"
-          className="min-w-[60px]"
-        />
-      </TableCell>
-      <TableCell className="text-right w-[120px]">
-        <Input
-          type="number"
-          value={item.unitPrice === 0 ? "" : String(item.unitPrice)}
-          onChange={(e) =>
-            handleItemChange(
-              item.id,
-              "unitPrice",
-              parseFloat(e.target.value || '0'),
-            )
-          }
-          step="0.01"
-          min="0"
-          className="min-w-[80px]"
-        />
-      </TableCell>
-      <TableCell className="text-right font-semibold w-[120px]">
-        ${(item.quantity * item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </TableCell>
-      <TableCell className="w-[50px]">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleRemoveItem(item.id)}
-        >
-          <Trash2 className="h-4 w-4 text-destructive" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-};
+import SortableItemRow from "./SortableItemRow"; // NEW: Import SortableItemRow
 
 interface AddOrderFormProps {
   onClose: () => void;
