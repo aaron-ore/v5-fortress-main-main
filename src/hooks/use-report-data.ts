@@ -173,20 +173,13 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "low-stock-out-of-stock": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const statusFilter: 'all' | 'low-stock' | 'out-of-stock' = 'all'; // Explicitly type statusFilter
-
-          let itemsToDisplay: InventoryItem[] = [];
-          if (statusFilter === "low-stock") {
-            itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
-          } else if (statusFilter === "out-of-stock") {
-            itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
-          } else { // "all"
-            itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
-          }
-
+          // The PDF component will receive the statusFilter as a prop and filter internally.
+          // For the data prepared by useReportData, we'll just pass all relevant items.
+          const itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel || item.quantity === 0); // Fetch all low/out of stock
+          
           currentProcessedData = {
             items: itemsToDisplay,
-            statusFilter,
+            statusFilter: 'all', // Default to 'all' for PDF props, actual filtering in PDF component
             structuredLocations,
           };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
@@ -264,7 +257,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         case "purchase-order-status": {
           const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all'; // Explicitly type statusFilter
           const filteredOrders = filterDataByDateRange(orders, 'date').filter((order: OrderItem) => {
-            return order.type === "Purchase" && (statusFilter === "all" || order.status.toLowerCase() === statusFilter.toLowerCase());
+            return order.type === "Purchase" && (statusFilter === "all" || (order.status && order.status.toLowerCase() === statusFilter.toLowerCase()));
           });
 
           currentProcessedData = { orders: filteredOrders, statusFilter };

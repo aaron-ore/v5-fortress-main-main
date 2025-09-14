@@ -18,6 +18,7 @@ export interface Vendor {
 
 interface VendorContextType {
   vendors: Vendor[];
+  isLoadingVendors: boolean; // NEW: Add isLoadingVendors
   addVendor: (vendor: Omit<Vendor, "id" | "createdAt" | "organizationId">) => Promise<void>;
   updateVendor: (updatedVendor: Vendor) => Promise<void>;
   deleteVendor: (vendorId: string) => Promise<void>;
@@ -28,12 +29,15 @@ const VendorContext = createContext<VendorContextType | undefined>(undefined);
 
 export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [isLoadingVendors, setIsLoadingVendors] = useState(true); // NEW: State for loading
   const { profile, isLoadingProfile } = useProfile();
 
   const fetchVendors = useCallback(async () => {
+    setIsLoadingVendors(true); // NEW: Set loading to true
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setVendors([]);
+      setIsLoadingVendors(false); // NEW: Set loading to false
       return;
     }
 
@@ -62,6 +66,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }));
       setVendors(fetchedVendors);
     }
+    setIsLoadingVendors(false); // NEW: Set loading to false
   }, [profile?.organizationId, profile]); // Added profile to dependency array
 
   useEffect(() => {
@@ -195,7 +200,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   };
 
   return (
-    <VendorContext.Provider value={{ vendors, addVendor, updateVendor, deleteVendor, refreshVendors }}>
+    <VendorContext.Provider value={{ vendors, isLoadingVendors, addVendor, updateVendor, deleteVendor, refreshVendors }}>
       {children}
     </VendorContext.Provider>
   );

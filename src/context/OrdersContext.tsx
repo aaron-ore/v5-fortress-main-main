@@ -37,6 +37,7 @@ export interface OrderItem {
 
 interface OrdersContextType {
   orders: OrderItem[];
+  isLoadingOrders: boolean; // NEW: Add isLoadingOrders
   updateOrder: (updatedOrder: OrderItem) => void;
   addOrder: (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => Promise<void>;
   archiveOrder: (orderId: string) => void;
@@ -51,6 +52,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [orders, setOrders] = useState<OrderItem[]>(initialOrders);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true); // NEW: State for loading
   const { profile, isLoadingProfile } = useProfile();
 
   const mapSupabaseOrderItemToOrderItem = (order: any): OrderItem => {
@@ -92,9 +94,11 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const fetchOrders = useCallback(async () => {
+    setIsLoadingOrders(true); // NEW: Set loading to true
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setOrders([]);
+      setIsLoadingOrders(false); // NEW: Set loading to false
       return;
     }
 
@@ -113,6 +117,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       const fetchedOrders: OrderItem[] = data.map(mapSupabaseOrderItemToOrderItem);
       setOrders(fetchedOrders);
     }
+    setIsLoadingOrders(false); // NEW: Set loading to false
   }, [profile?.organizationId, profile]); // Added profile to dependency array
 
   useEffect(() => {
@@ -244,7 +249,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   return (
-    <OrdersContext.Provider value={{ orders, updateOrder, addOrder, archiveOrder, fetchOrders }}>
+    <OrdersContext.Provider value={{ orders, isLoadingOrders, updateOrder, addOrder, archiveOrder, fetchOrders }}>
       {children}
     </OrdersContext.Provider>
   );

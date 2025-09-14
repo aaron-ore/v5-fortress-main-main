@@ -20,6 +20,7 @@ export interface StockMovement {
 
 interface StockMovementContextType {
   stockMovements: StockMovement[];
+  isLoadingStockMovements: boolean; // NEW: Add isLoadingStockMovements
   addStockMovement: (movement: Omit<StockMovement, "id" | "timestamp" | "organizationId" | "userId">) => Promise<void>;
   fetchStockMovements: (itemId?: string) => Promise<void>;
 }
@@ -28,6 +29,7 @@ const StockMovementContext = createContext<StockMovementContextType | undefined>
 
 export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [isLoadingStockMovements, setIsLoadingStockMovements] = useState(true); // NEW: State for loading
   const { profile, isLoadingProfile } = useProfile();
 
   const mapSupabaseMovementToStockMovement = (movement: any): StockMovement => {
@@ -55,9 +57,11 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   const fetchStockMovements = useCallback(async (itemId?: string) => {
+    setIsLoadingStockMovements(true); // NEW: Set loading to true
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setStockMovements([]);
+      setIsLoadingStockMovements(false); // NEW: Set loading to false
       return;
     }
 
@@ -80,6 +84,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
       const fetchedMovements: StockMovement[] = data.map(mapSupabaseMovementToStockMovement);
       setStockMovements(fetchedMovements);
     }
+    setIsLoadingStockMovements(false); // NEW: Set loading to false
   }, [profile?.organizationId]);
 
   useEffect(() => {
@@ -120,7 +125,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   return (
-    <StockMovementContext.Provider value={{ stockMovements, addStockMovement, fetchStockMovements }}>
+    <StockMovementContext.Provider value={{ stockMovements, isLoadingStockMovements, addStockMovement, fetchStockMovements }}>
       {children}
     </StockMovementContext.Provider>
   );

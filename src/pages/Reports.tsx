@@ -180,7 +180,7 @@ const Reports: React.FC = () => {
   const CurrentPdfComponent = pdfContentComponents[activeReportId];
 
   // NEW: Destructure the hook here
-  const { data: reportData, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
+  const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
 
   // Function to generate the text content of the report for AI summarization
   const generateReportTextContent = useCallback(() => {

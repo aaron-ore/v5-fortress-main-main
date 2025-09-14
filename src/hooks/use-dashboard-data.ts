@@ -66,10 +66,10 @@ interface UseDashboardHookResult {
 }
 
 export const useDashboardData = (dateRange: DateRange | undefined): UseDashboardHookResult => {
-  const { inventoryItems, isLoading: isLoadingInventory, refreshInventory } = useInventory();
-  const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
-  const { stockMovements, isLoading: isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoading: isLoadingVendors, refreshVendors } = useVendors();
+  const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
+  const { orders, isLoadingOrders, fetchOrders } = useOrders();
+  const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
   const { profile, isLoadingProfile, fetchAllProfiles, allProfiles } = useProfile();
   const { locations: structuredLocations, fetchLocations } = useOnboarding();
 
