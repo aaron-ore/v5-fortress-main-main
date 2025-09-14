@@ -1,30 +1,14 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw } from "lucide-react";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
 
-const InventoryTurnoverRateCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
+interface InventoryTurnoverRateCardProps {
+  inventoryTurnoverRate: string;
+}
 
-  const inventoryTurnoverRate = useMemo(() => {
-    if (inventoryItems.length === 0 || orders.length === 0) return "0x";
-
-    const totalInventoryCost = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    const totalSalesRevenue = orders
-      .filter(order => order.type === "Sales")
-      .reduce((sum, order) => sum + order.totalAmount, 0);
-
-    if (totalInventoryCost === 0) return "N/A";
-
-    // Simulate turnover based on recent sales and inventory cost
-    const mockTurnover = (totalSalesRevenue * 0.6) / totalInventoryCost;
-    return `${mockTurnover.toFixed(1)}x`;
-  }, [inventoryItems, orders]);
-
+const InventoryTurnoverRateCard: React.FC<InventoryTurnoverRateCardProps> = ({ inventoryTurnoverRate }) => {
   return (
-    <Card className="bg-card border-border rounded-lg shadow-sm">
+    <Card className="bg-card border-border rounded-lg shadow-sm p-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-bold text-center text-foreground">Inventory Turnover Rate</CardTitle>
         <RefreshCw className="h-4 w-4 text-muted-foreground" />

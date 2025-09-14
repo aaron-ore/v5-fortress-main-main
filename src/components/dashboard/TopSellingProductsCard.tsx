@@ -1,26 +1,14 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
-import { useInventory } from "@/context/InventoryContext";
 
-const TopSellingProductsCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface TopSellingProductsCardProps {
+  topSellingProducts: { name: string; unitsSold: number }[];
+}
 
-  const topSellingProducts = useMemo(() => {
-    if (inventoryItems.length === 0) return [];
-    return inventoryItems
-      .map(item => ({
-        name: item.name,
-        // Simulate units sold based on current quantity, making it dynamic
-        unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
-      }))
-      .filter(product => product.unitsSold > 0)
-      .sort((a, b) => b.unitsSold - a.unitsSold)
-      .slice(0, 5);
-  }, [inventoryItems]);
-
+const TopSellingProductsCard: React.FC<TopSellingProductsCardProps> = ({ topSellingProducts }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

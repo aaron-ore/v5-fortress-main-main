@@ -1,8 +1,6 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart } from "lucide-react";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
 import {
   AreaChart,
   Area,
@@ -14,47 +12,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const SalesInventoryTrendCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
+interface SalesInventoryTrendCardProps {
+  data: any[];
+}
 
-  const trendData = useMemo(() => {
-    if (inventoryItems.length === 0 && orders.length === 0) return [];
-
-    const dataPoints = [];
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const currentMonthIndex = new Date().getMonth();
-
-    const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    const totalCurrentSalesRevenue = orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0);
-
-    for (let i = 0; i < 6; i++) {
-      const monthIndex = (currentMonthIndex - 5 + i + 12) % 12;
-      const monthName = months[monthIndex];
-
-      let simulatedInventoryValue;
-      let simulatedSalesRevenue;
-
-      if (i === 5) {
-        simulatedInventoryValue = totalCurrentInventoryValue;
-        simulatedSalesRevenue = totalCurrentSalesRevenue;
-      } else {
-        const trendFactor = (i + 1) / 6;
-        const baseValue = totalCurrentInventoryValue > 0 ? totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor)) : 0;
-        simulatedInventoryValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1));
-        const baseSalesValue = totalCurrentSalesRevenue > 0 ? totalCurrentSalesRevenue * (0.7 + (0.3 * trendFactor)) : 0;
-        simulatedSalesRevenue = Math.max(0, baseSalesValue + (Math.random() - 0.5) * (totalCurrentSalesRevenue * 0.1));
-      }
-
-      dataPoints.push({
-        name: monthName,
-        "Sales Revenue": parseFloat(simulatedSalesRevenue.toFixed(2)),
-        "Inventory Value": parseFloat(simulatedInventoryValue.toFixed(2)),
-      });
-    }
-    return dataPoints;
-  }, [inventoryItems, orders]);
-
+const SalesInventoryTrendCard: React.FC<SalesInventoryTrendCardProps> = ({ data: trendData }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm col-span-full p-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

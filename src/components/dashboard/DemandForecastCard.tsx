@@ -1,68 +1,13 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, Lightbulb } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
-import { format, subMonths, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const DemandForecastCard: React.FC = () => {
-  const { orders } = useOrders();
+interface DemandForecastCardProps {
+  data: any[];
+}
 
-  const forecastData = useMemo(() => {
-    const today = new Date();
-
-    const historicalSales: { [key: string]: number } = {};
-    for (let i = 5; i >= 0; i--) {
-      const month = subMonths(today, i);
-      const monthKey = format(month, "MMM yyyy");
-      historicalSales[monthKey] = 0;
-    }
-
-    orders.filter(order => order.type === "Sales").forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-      const monthKey = format(orderDate, "MMM yyyy");
-      if (historicalSales.hasOwnProperty(monthKey)) {
-        historicalSales[monthKey] += order.totalAmount;
-      }
-    });
-
-    const chartData = [];
-    const historicalKeys = Object.keys(historicalSales).sort((a, b) => {
-      const dateA = parseAndValidateDate(a);
-      const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB) return 0;
-      return dateA.getTime() - dateB.getTime();
-    });
-
-    historicalKeys.forEach(monthKey => {
-      chartData.push({
-        name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
-        "Actual Sales": parseFloat(historicalSales[monthKey].toFixed(2)),
-        "Projected Demand": null,
-      });
-    });
-
-    const lastThreeMonthsSales = historicalKeys.slice(-3).map(key => historicalSales[key]);
-    const averageSales = lastThreeMonthsSales.length > 0
-      ? lastThreeMonthsSales.reduce((sum, val) => sum + val, 0) / lastThreeMonthsSales.length
-      : 0;
-
-    for (let i = 1; i <= 3; i++) {
-      const futureMonth = subMonths(today, -i);
-      const futureMonthName = format(futureMonth, "MMM");
-      const projectedValue = averageSales > 0 ? Math.max(0, averageSales * (1 + (Math.random() - 0.5) * 0.1)) : 0;
-      chartData.push({
-        name: futureMonthName,
-        "Actual Sales": null,
-        "Projected Demand": parseFloat(projectedValue.toFixed(2)),
-      });
-    }
-
-    return chartData;
-  }, [orders]);
-
+const DemandForecastCard: React.FC<DemandForecastCardProps> = ({ data: forecastData }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm col-span-full p-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

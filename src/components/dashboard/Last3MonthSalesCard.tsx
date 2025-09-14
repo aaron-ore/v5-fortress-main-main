@@ -1,69 +1,12 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const Last3MonthSalesCard: React.FC = () => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
+interface Last3MonthSalesCardProps {
+  data: any[];
+}
 
-  const data = useMemo(() => {
-    const today = new Date();
-    const monthlyData: { [key: string]: { salesRevenue: number; newInventory: number; itemsShipped: number } } = {};
-
-    // Default to last 3 months if no dateRange is provided
-    const effectiveFrom = subMonths(today, 2);
-    const effectiveTo = today;
-
-    let startDate = startOfMonth(effectiveFrom);
-    let endDate = endOfMonth(effectiveTo);
-
-    if (startDate.getTime() > endDate.getTime()) {
-      [startDate, endDate] = [endDate, startDate];
-    }
-
-    let currentDate = new Date(startDate);
-    while (currentDate.getTime() <= endDate.getTime()) {
-      const monthKey = format(currentDate, "MMM yyyy");
-      monthlyData[monthKey] = { salesRevenue: 0, newInventory: 0, itemsShipped: 0 };
-      currentDate = subMonths(currentDate, -1);
-    }
-
-    orders.filter(order => order.type === "Sales").forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-      const monthKey = format(orderDate, "MMM yyyy");
-      if (monthlyData[monthKey] && orderDate >= startDate && orderDate <= endDate) {
-        monthlyData[monthKey].salesRevenue += order.totalAmount;
-        monthlyData[monthKey].itemsShipped += order.itemCount;
-      }
-    });
-
-    inventoryItems.forEach(item => {
-      const itemDate = parseAndValidateDate(item.lastUpdated);
-      if (!itemDate || !isValid(itemDate)) return;
-      const monthKey = format(itemDate, "MMM yyyy");
-      if (monthlyData[monthKey] && itemDate >= startDate && itemDate <= endDate) {
-        monthlyData[monthKey].newInventory += Math.floor(item.quantity * 0.2);
-      }
-    });
-
-    return Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a);
-      const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB) return 0;
-      return dateA.getTime() - dateB.getTime();
-    }).map(monthKey => ({
-      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
-      "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
-      "New Inventory Added": parseFloat(monthlyData[monthKey].newInventory.toFixed(0)),
-      "Items Shipped": parseFloat(monthlyData[monthKey].itemsShipped.toFixed(0)),
-    }));
-  }, [orders, inventoryItems]);
-
+const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = ({ data }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">

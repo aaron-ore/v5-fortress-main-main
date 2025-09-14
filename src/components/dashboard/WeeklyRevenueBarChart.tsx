@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   BarChart,
   Bar,
@@ -9,58 +9,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useOrders } from "@/context/OrdersContext";
-import { format, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const WeeklyRevenueBarChart: React.FC = () => {
-  const { orders } = useOrders();
+interface WeeklyRevenueBarChartProps {
+  data: any[];
+}
 
-  const weeklyData = useMemo(() => {
-    const today = new Date();
-    const dataPoints = [];
-
-    // Initialize revenue for "This Week" and "Last Week" for each day
-    const thisWeekRevenue: { [key: string]: number } = {};
-    const lastWeekRevenue: { [key: string]: number } = {};
-
-    // Populate "This Week" revenue from actual sales orders
-    orders.filter(order => order.type === "Sales").forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-
-      const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (diffDays >= 0 && diffDays < 7) { // This week (0-6 days ago)
-        const dayName = format(orderDate, "E"); // Mon, Tue, etc.
-        thisWeekRevenue[dayName] = (thisWeekRevenue[dayName] || 0) + order.totalAmount;
-      } else if (diffDays >= 7 && diffDays < 14) { // Last week (7-13 days ago)
-        const dayName = format(orderDate, "E");
-        lastWeekRevenue[dayName] = (lastWeekRevenue[dayName] || 0) + order.totalAmount;
-      }
-    });
-
-    // Generate data for the last 7 days (Mon-Sun or current day backwards)
-    const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const currentDayIndex = today.getDay(); // 0 for Sun, 1 for Mon
-
-    for (let i = 0; i < 7; i++) {
-      const dayIndex = (currentDayIndex + i) % 7; // Start from current day, wrap around
-      const dayName = daysOfWeek[dayIndex];
-
-      const thisWeekVal = thisWeekRevenue[dayName] || 0;
-      const lastWeekVal = lastWeekRevenue[dayName] || 0;
-
-      dataPoints.push({
-        name: dayName,
-        "This Week": parseFloat(thisWeekVal.toFixed(2)),
-        "Last Week": parseFloat(lastWeekVal.toFixed(2)),
-      });
-    }
-
-    return dataPoints;
-  }, [orders]);
-
+const WeeklyRevenueBarChart: React.FC<WeeklyRevenueBarChartProps> = ({ data: weeklyData }) => {
   return (
     <ResponsiveContainer width="100%" height={180}>
       <BarChart

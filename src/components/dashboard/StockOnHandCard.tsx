@@ -2,15 +2,13 @@ import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Boxes, ArrowUp, ArrowDown } from "lucide-react";
 import TopStockBulletGraph from "@/components/dashboard/TopStockBulletGraph";
-import { useInventory } from "@/context/InventoryContext";
 
-const StockOnHandCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface StockOnHandCardProps {
+  totalUnitsOnHand: number;
+  topStockBulletGraphData: any[];
+}
 
-  const totalUnitsOnHand = useMemo(() => {
-    return inventoryItems.reduce((sum, item) => sum + item.quantity, 0);
-  }, [inventoryItems]);
-
+const StockOnHandCard: React.FC<StockOnHandCardProps> = ({ totalUnitsOnHand, topStockBulletGraphData }) => {
   // Mock previous week's units on hand for comparison
   const previousWeekUnitsOnHand = useMemo(() => {
     // Simulate a plausible previous week value based on current totalUnitsOnHand
@@ -36,7 +34,7 @@ const StockOnHandCard: React.FC = () => {
           </p>
         </div>
         {totalUnitsOnHand > 0 ? (
-          <TopStockBulletGraph />
+          <TopStockBulletGraph data={topStockBulletGraphData} />
         ) : (
           <div className="h-24 flex items-center justify-center text-muted-foreground text-xs mt-6">No stock on hand data.</div>
         )}

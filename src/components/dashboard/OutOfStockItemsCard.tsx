@@ -1,17 +1,15 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useInventory } from "@/context/InventoryContext";
+import { InventoryItem } from "@/context/InventoryContext";
 
-const OutOfStockItemsCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface OutOfStockItemsCardProps {
+  outOfStockItems: InventoryItem[];
+}
 
-  const outOfStockItems = useMemo(() => {
-    return inventoryItems.filter(item => item.quantity === 0);
-  }, [inventoryItems]);
-
+const OutOfStockItemsCard: React.FC<OutOfStockItemsCardProps> = ({ outOfStockItems }) => {
   const handleNotifySupplier = (item: string) => {
     showSuccess(`Notifying supplier for ${item} (placeholder)`);
   };

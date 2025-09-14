@@ -2,105 +2,17 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabaseClient";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
-import { startOfDay, endOfDay, subDays, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import DailyIssuesDialog from "./DailyIssuesDialog";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface IssuesCardProps {
+  dailyIssuesCount: number;
+  previousPeriodIssuesCount: number;
   dateRange: DateRange | undefined;
 }
 
-const IssuesCard: React.FC<IssuesCardProps> = ({ dateRange }) => {
-  const { profile } = useProfile();
-  const [dailyIssuesCount, setDailyIssuesCount] = useState(0);
-  const [previousPeriodIssuesCount, setPreviousPeriodIssuesCount] = useState(0);
+const IssuesCard: React.FC<IssuesCardProps> = ({ dailyIssuesCount, previousPeriodIssuesCount, dateRange }) => {
   const [isDailyIssuesDialogOpen, setIsDailyIssuesDialogOpen] = useState(false);
-
-  const fetchIssuesCounts = async () => {
-    if (!profile?.organizationId) {
-      setDailyIssuesCount(0);
-      setPreviousPeriodIssuesCount(0);
-      return;
-    }
-
-    const today = new Date();
-    let currentPeriodStart: Date;
-    let currentPeriodEnd: Date;
-    let previousPeriodStart: Date;
-    let previousPeriodEnd: Date;
-
-    // Determine current period based on dateRange prop
-    currentPeriodStart = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : startOfDay(today);
-    currentPeriodEnd = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : endOfDay(today));
-
-    const durationMs = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
-    previousPeriodEnd = subDays(currentPeriodStart, 1);
-    previousPeriodStart = new Date(previousPeriodEnd.getTime() - durationMs);
-
-    const fetchCount = async (start: Date, end: Date) => {
-      const { count, error } = await supabase
-        .from('activity_logs')
-        .select('id', { count: 'exact' })
-        .eq('organization_id', profile.organizationId)
-        .eq('activity_type', 'Issue Reported')
-        .gte('timestamp', start.toISOString())
-        .lte('timestamp', end.toISOString());
-
-      if (error) {
-        console.error("Error fetching issues count:", error);
-        showError("Failed to load issues count.");
-        return 0;
-      }
-      return count || 0;
-    };
-
-    const currentCount = await fetchCount(currentPeriodStart, currentPeriodEnd);
-    const prevCount = await fetchCount(previousPeriodStart, previousPeriodEnd);
-
-    setDailyIssuesCount(currentCount);
-    setPreviousPeriodIssuesCount(prevCount);
-  };
-
-  useEffect(() => {
-    fetchIssuesCounts();
-    // Set up real-time listener for new issues
-    const channel = supabase
-      .channel('daily_issues_channel')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activity_logs',
-          filter: `organization_id=eq.${profile?.organizationId}&activity_type=eq.Issue Reported`,
-        },
-        (payload) => {
-          // Ensure timestamp is valid before creating a Date object
-          const newIssueDate = parseAndValidateDate(payload.new.timestamp);
-          const today = new Date();
-          let currentPeriodStart: Date;
-          let currentPeriodEnd: Date;
-
-          currentPeriodStart = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : startOfDay(today);
-          currentPeriodEnd = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : endOfDay(today));
-
-          const isWithinCurrentPeriod = (newIssueDate && isValid(newIssueDate) && newIssueDate >= currentPeriodStart && newIssueDate <= currentPeriodEnd);
-
-          if (isWithinCurrentPeriod) {
-            setDailyIssuesCount((prev) => prev + 1);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [profile?.organizationId, dateRange]);
 
   const percentageChange = useMemo(() => {
     if (previousPeriodIssuesCount === 0) {

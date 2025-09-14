@@ -1,21 +1,15 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Archive } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useInventory } from "@/context/InventoryContext";
+import { InventoryItem } from "@/context/InventoryContext";
 
-const SlowMovingDeadstockCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface SlowMovingDeadstockCardProps {
+  slowMovingItems: InventoryItem[];
+}
 
-  const slowMovingItems = useMemo(() => {
-    if (inventoryItems.length === 0) return [];
-    // Simulate slow-moving items: high quantity, low reorder level, and random chance
-    return inventoryItems
-      .filter(item => item.quantity > 50 && item.reorderLevel < 10 && Math.random() > 0.5)
-      .slice(0, 2);
-  }, [inventoryItems]);
-
+const SlowMovingDeadstockCard: React.FC<SlowMovingDeadstockCardProps> = ({ slowMovingItems }) => {
   const handleCreatePromotion = (item: string) => {
     showSuccess(`Creating promotion for ${item} (placeholder)`);
   };

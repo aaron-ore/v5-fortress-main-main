@@ -1,13 +1,8 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
-import { useStockMovement } from "@/context/StockMovementContext";
-import { useVendors } from "@/context/VendorContext";
-import { format } from "date-fns";
 
 interface ProgressBarProps {
   value: number;
@@ -22,49 +17,42 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ value, color, label }) => (
   </div>
 );
 
-const LiveMetricsCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
-  const { stockMovements } = useStockMovement();
-  const { vendors } = useVendors();
+interface LiveMetricsCardProps {
+  lowStockItemsCount: number;
+  ordersDueTodayCount: number;
+  incomingShipmentsCount: number;
+  recentAdjustmentsCount: number;
+  totalInventoryItems: number;
+  totalOrders: number;
+  totalVendors: number;
+  totalStockMovements: number;
+}
 
-  const metrics = useMemo(() => {
-    const today = new Date();
-    const todayString = format(today, "yyyy-MM-dd");
-
-    const lowStockItemsCount = inventoryItems.filter(item => item.quantity <= item.reorderLevel).length;
-    const ordersDueTodayCount = orders.filter(
-      order => format(new Date(order.dueDate), "yyyy-MM-dd") === todayString && order.status !== "Shipped" && order.status !== "Packed"
-    ).length;
-    const incomingShipmentsCount = orders.filter(order => order.type === "Purchase" && order.status !== "Shipped").length;
-    const recentAdjustmentsCount = stockMovements.filter(
-      movement => format(new Date(movement.timestamp), "yyyy-MM-dd") === todayString
-    ).length;
-
-    const allCounts = [lowStockItemsCount, ordersDueTodayCount, incomingShipmentsCount, recentAdjustmentsCount];
-    const maxCount = Math.max(...allCounts, 1);
-
-    return {
-      lowStockItemsCount,
-      ordersDueTodayCount,
-      incomingShipmentsCount,
-      recentAdjustmentsCount,
-      maxCount,
-    };
-  }, [inventoryItems, orders, stockMovements]);
+const LiveMetricsCard: React.FC<LiveMetricsCardProps> = ({
+  lowStockItemsCount,
+  ordersDueTodayCount,
+  incomingShipmentsCount,
+  recentAdjustmentsCount,
+  totalInventoryItems,
+  totalOrders,
+  totalVendors,
+  totalStockMovements,
+}) => {
+  const allCounts = [lowStockItemsCount, ordersDueTodayCount, incomingShipmentsCount, recentAdjustmentsCount];
+  const maxCount = Math.max(...allCounts, 1);
 
   const barData = [
-    { label: metrics.lowStockItemsCount, value: (metrics.lowStockItemsCount / metrics.maxCount) * 100, color: "hsl(var(--primary))" },
-    { label: metrics.ordersDueTodayCount, value: (metrics.ordersDueTodayCount / metrics.maxCount) * 100, color: "hsl(var(--accent))" },
-    { label: metrics.incomingShipmentsCount, value: (metrics.incomingShipmentsCount / metrics.maxCount) * 100, color: "hsl(var(--secondary))" },
-    { label: metrics.recentAdjustmentsCount, value: (metrics.recentAdjustmentsCount / metrics.maxCount) * 100, color: "hsl(var(--muted))" },
+    { label: lowStockItemsCount, value: (lowStockItemsCount / maxCount) * 100, color: "hsl(var(--primary))" },
+    { label: ordersDueTodayCount, value: (ordersDueTodayCount / maxCount) * 100, color: "hsl(var(--accent))" },
+    { label: incomingShipmentsCount, value: (incomingShipmentsCount / maxCount) * 100, color: "hsl(var(--secondary))" },
+    { label: recentAdjustmentsCount, value: (recentAdjustmentsCount / maxCount) * 100, color: "hsl(var(--muted))" },
   ];
 
   const buttonData = [
-    { value: inventoryItems.length, label: "Items", variant: "default" as const },
-    { value: orders.length, label: "Orders", variant: "secondary" as const },
-    { value: vendors.length, label: "Vendors", variant: "outline" as const },
-    { value: stockMovements.length, label: "Adjustments", variant: "ghost" as const },
+    { value: totalInventoryItems, label: "Items", variant: "default" as const },
+    { value: totalOrders, label: "Orders", variant: "secondary" as const },
+    { value: totalVendors, label: "Vendors", variant: "outline" as const },
+    { value: totalStockMovements, label: "Adjustments", variant: "ghost" as const },
   ];
 
   return (

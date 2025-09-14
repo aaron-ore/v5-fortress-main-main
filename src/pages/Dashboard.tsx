@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import DefaultDashboardContent from "./DefaultDashboardContent";
 import ClassicDashboard from "./ClassicDashboard";
+import { DateRange } from "react-day-picker"; // Import DateRange
 
 const Dashboard: React.FC = () => {
   const [dashboardView, setDashboardView] = useState<"default" | "classic">("default");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // State for date range
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -16,7 +18,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      {dashboardView === "classic" ? <ClassicDashboard /> : <DefaultDashboardContent />}
+      {dashboardView === "classic" ? (
+        <ClassicDashboard />
+      ) : (
+        <DefaultDashboardContent />
+      )}
     </>
   );
 };

@@ -1,22 +1,21 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bell, ArrowRight } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 import SupplierInfoDialog from "@/components/SupplierInfoDialog";
 import { useNotifications } from "@/context/NotificationContext";
-import { useInventory } from "@/context/InventoryContext";
+import { InventoryItem } from "@/context/InventoryContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const LowStockAlertsCard: React.FC = () => {
+interface LowStockAlertsCardProps {
+  lowStockItems: InventoryItem[];
+}
+
+const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }) => {
   const { addNotification } = useNotifications();
-  const { inventoryItems } = useInventory();
   const [isSupplierInfoDialogOpen, setIsSupplierInfoDialogOpen] = useState(false);
   const [selectedItemForSupplier, setSelectedItemForSupplier] = useState<{ name: string; sku: string } | null>(null);
-
-  const lowStockItems = useMemo(() => {
-    return inventoryItems.filter(item => item.quantity <= item.reorderLevel);
-  }, [inventoryItems]);
 
   const handleReorder = (itemName: string, itemSku: string) => {
     setSelectedItemForSupplier({ name: itemName, sku: itemSku });

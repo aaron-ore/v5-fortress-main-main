@@ -2,29 +2,12 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line } from "recharts";
 import { ArrowDown } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
 
-const LossesCard: React.FC = () => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
+interface LossesCardProps {
+  totalLosses: number;
+}
 
-  const totalLosses = useMemo(() => {
-    let simulatedLosses = 0;
-
-    // Simulate losses from sales (e.g., returns, discounts, damages)
-    const totalSalesRevenue = orders
-      .filter(order => order.type === "Sales")
-      .reduce((sum, order) => sum + order.totalAmount, 0);
-    simulatedLosses += totalSalesRevenue * 0.05; // 5% of sales revenue as losses
-
-    // Simulate losses from inventory (e.g., shrinkage, obsolescence)
-    const totalInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    simulatedLosses += totalInventoryValue * 0.02; // 2% of inventory value as losses
-
-    return simulatedLosses;
-  }, [orders, inventoryItems]);
-
+const LossesCard: React.FC<LossesCardProps> = ({ totalLosses }) => {
   // Generate dynamic data for the mini trend chart (downward trend)
   const data = useMemo(() => {
     if (totalLosses === 0) return [{ name: "A", value: 0 }];

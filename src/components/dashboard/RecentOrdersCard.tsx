@@ -1,41 +1,18 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Receipt } from "lucide-react";
 import { formatDistanceToNowStrict, isValid } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useOrders } from "@/context/OrdersContext";
+import { OrderItem } from "@/context/OrdersContext";
 
-const RecentOrdersCard: React.FC = () => {
-  const { orders } = useOrders();
+interface RecentOrdersCardProps {
+  recentSalesOrders: OrderItem[];
+  recentPurchaseOrders: OrderItem[];
+}
 
-  const recentSalesOrders = useMemo(() => {
-    return orders
-      .filter(order => order.type === "Sales")
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        // Ensure dates are valid before comparison
-        if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 3);
-  }, [orders]);
-
-  const recentPurchaseOrders = useMemo(() => {
-    return orders
-      .filter(order => order.type === "Purchase")
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        // Ensure dates are valid before comparison
-        if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 3);
-  }, [orders]);
-
+const RecentOrdersCard: React.FC<RecentOrdersCardProps> = ({ recentSalesOrders, recentPurchaseOrders }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

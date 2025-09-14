@@ -1,15 +1,19 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Settings, Edit, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import { useInventory } from "@/context/InventoryContext";
 import EditWalletBalanceDialog from "./EditWalletBalanceDialog"; // Import the new dialog
 
-const WalletCard: React.FC = () => {
+interface WalletCardProps {
+  totalStockValue: number;
+  totalIncome: number;
+  totalLosses: number;
+}
+
+const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue, totalIncome, totalLosses }) => {
   const navigate = useNavigate();
-  const { inventoryItems } = useInventory();
 
   // Initial simulated cash balance if nothing is in local storage
   const initialSimulatedCashBalance = 0; // Changed to 0 for fresh account
@@ -31,12 +35,6 @@ const WalletCard: React.FC = () => {
       localStorage.setItem("fortress_cash_balance", String(editableCashBalance));
     }
   }, [editableCashBalance]);
-
-  const totalStockValue = useMemo(() => {
-    // NOTE: If your Supabase inventory_items table is empty, this will fall back to mock data.
-    // Ensure your inventory is populated in Supabase for real values.
-    return inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-  }, [inventoryItems]);
 
   const totalWalletValue = totalStockValue + editableCashBalance;
 

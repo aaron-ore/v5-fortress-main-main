@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   AreaChart,
   Area,
@@ -9,65 +9,16 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useOrders } from "@/context/OrdersContext";
-import { format, subMonths, isValid } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const SalesOverviewChart: React.FC = () => {
-  const { orders } = useOrders();
+interface SalesOverviewChartProps {
+  data: any[];
+}
 
-  const salesData = useMemo(() => {
-    const dataPoints = [];
-    const today = new Date();
-
-    // Aggregate sales data by month
-    const monthlySales: { [key: string]: { revenue: number; units: number } } = {};
-
-    orders.filter(order => order.type === "Sales").forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-
-      const monthKey = format(orderDate, "MMM");
-
-      if (!monthlySales[monthKey]) {
-        monthlySales[monthKey] = { revenue: 0, units: 0 };
-      }
-      monthlySales[monthKey].revenue += order.totalAmount;
-      monthlySales[monthKey].units += order.itemCount;
-    });
-
-    // Generate data for the last 12 months, ensuring current month reflects actual data
-    for (let i = 11; i >= 0; i--) {
-      const month = subMonths(today, i);
-      const monthName = format(month, "MMM");
-
-      const actualRevenue = monthlySales[monthName]?.revenue || 0;
-      const actualUnits = monthlySales[monthName]?.units || 0;
-
-      // For past months, if no actual data, simulate based on a plausible trend
-      let simulatedRevenue = actualRevenue;
-      let simulatedUnits = actualUnits;
-
-      if (actualRevenue === 0 && actualUnits === 0) {
-        // If no actual sales for this month, simulate a value relative to the most recent actual sales
-        const baseRevenue = orders.length > 0 ? orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0) / orders.filter(o => o.type === "Sales").length : 1000;
-        simulatedRevenue = Math.max(0, baseRevenue * (0.5 + Math.random() * 1.5));
-        simulatedUnits = Math.max(0, Math.floor(simulatedRevenue / (Math.random() * 50 + 50)));
-      }
-
-      dataPoints.push({
-        name: monthName,
-        "Sales Revenue": parseFloat(simulatedRevenue.toFixed(2)),
-        "Units Sold": parseFloat(simulatedUnits.toFixed(0)),
-      });
-    }
-    return dataPoints;
-  }, [orders]);
-
+const SalesOverviewChart: React.FC<SalesOverviewChartProps> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <AreaChart
-        data={salesData}
+        data={data}
         margin={{
           top: 5,
           right: 30,

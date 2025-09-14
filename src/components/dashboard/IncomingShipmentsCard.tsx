@@ -1,25 +1,15 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
+import { OrderItem } from "@/context/OrdersContext";
 import { formatDistanceToNowStrict, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const IncomingShipmentsCard: React.FC = () => {
-  const { orders } = useOrders();
+interface IncomingShipmentsCardProps {
+  incomingPurchaseOrders: OrderItem[];
+}
 
-  const incomingPurchaseOrders = useMemo(() => {
-    return orders
-      .filter(order => order.type === "Purchase" && order.status !== "Shipped")
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.dueDate);
-        const dateB = parseAndValidateDate(b.dueDate);
-        if (!dateA || !dateB) return 0;
-        return dateA.getTime() - dateB.getTime();
-      })
-      .slice(0, 3);
-  }, [orders]);
-
+const IncomingShipmentsCard: React.FC<IncomingShipmentsCardProps> = ({ incomingPurchaseOrders }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

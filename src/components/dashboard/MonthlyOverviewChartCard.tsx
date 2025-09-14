@@ -1,80 +1,12 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths, isValid, startOfMonth, endOfMonth } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const MonthlyOverviewChartCard: React.FC = () => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
+interface MonthlyOverviewChartCardProps {
+  data: any[];
+}
 
-  const data = useMemo(() => {
-    const today = new Date();
-    const monthlyData: { [key: string]: { salesRevenue: number; inventoryValue: number; purchaseVolume: number } } = {};
-
-    // Default to last 12 months
-    const effectiveFrom = subMonths(today, 11);
-    const effectiveTo = today;
-
-    let startDate = startOfMonth(effectiveFrom);
-    let endDate = endOfMonth(effectiveTo);
-
-    if (startDate.getTime() > endDate.getTime()) {
-      [startDate, endDate] = [endDate, startDate];
-    }
-
-    let currentDate = new Date(startDate);
-    while (currentDate.getTime() <= endDate.getTime()) {
-      const monthKey = format(currentDate, "MMM yyyy");
-      monthlyData[monthKey] = { salesRevenue: 0, inventoryValue: 0, purchaseVolume: 0 };
-      currentDate = subMonths(currentDate, -1);
-    }
-
-    orders.forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-      const monthKey = format(orderDate, "MMM yyyy");
-      if (monthlyData[monthKey] && orderDate >= startDate && orderDate <= endDate) {
-        if (order.type === "Sales") {
-          monthlyData[monthKey].salesRevenue += order.totalAmount;
-        } else if (order.type === "Purchase") {
-          monthlyData[monthKey].purchaseVolume += order.itemCount;
-        }
-      }
-    });
-
-    const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-
-    Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a);
-      const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB) return 0;
-      return dateA.getTime() - dateB.getTime();
-    }).forEach((monthKey, index, array) => {
-      if (monthKey === format(endDate, "MMM yyyy")) {
-        monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
-      } else {
-        const trendFactor = (index + 1) / array.length;
-        const baseValue = totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor));
-        monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue > 0 ? Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1)) : 0;
-      }
-    });
-
-    return Object.keys(monthlyData).sort((a, b) => {
-      const dateA = parseAndValidateDate(a);
-      const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB) return 0;
-      return dateA.getTime() - dateB.getTime();
-    }).map(monthKey => ({
-      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
-      "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
-      "Inventory Value": parseFloat(monthlyData[monthKey].inventoryValue.toFixed(2)),
-      "Purchase Volume": parseFloat(monthlyData[monthKey].purchaseVolume.toFixed(0)),
-    }));
-  }, [orders, inventoryItems]);
-
+const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = ({ data }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 col-span-full flex flex-col h-[310px]">
       <CardHeader className="pb-2">

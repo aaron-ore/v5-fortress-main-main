@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   AreaChart,
   Area,
@@ -9,46 +9,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
-import { format } from "date-fns";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const OverviewBarChart: React.FC = () => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
+interface OverviewBarChartProps {
+  data: any[];
+}
 
-  const data = useMemo(() => {
-    const today = new Date();
-    const dataPoints = [];
-
-    // Generate data for the last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const formattedDate = format(date, "MMM dd");
-
-      // Simulate inventory value for the day
-      const totalInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-      // Simulate a slight fluctuation around the current inventory value
-      const simulatedInventory = totalInventoryValue > 0 ? Math.max(0, totalInventoryValue * (0.9 + Math.random() * 0.2)) : 0; // +/- 10%
-
-      // Simulate sales for the day
-      const dailySales = orders
-        .filter(order => order.type === "Sales" && (parseAndValidateDate(order.date) && format(parseAndValidateDate(order.date) || new Date(), "MMM dd")) === formattedDate)
-        .reduce((sum, order) => sum + order.totalAmount, 0);
-      // If no actual sales, simulated sales should also be 0
-      const simulatedSales = dailySales > 0 ? dailySales : 0;
-
-      dataPoints.push({
-        name: formattedDate,
-        Sales: parseFloat(simulatedSales.toFixed(2)),
-        Inventory: parseFloat(simulatedInventory.toFixed(2)),
-      });
-    }
-    return dataPoints;
-  }, [inventoryItems, orders]);
-
+const OverviewBarChart: React.FC<OverviewBarChartProps> = ({ data }) => {
   return (
     <ResponsiveContainer width="100%" height={200}>
       <AreaChart

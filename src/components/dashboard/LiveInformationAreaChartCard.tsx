@@ -1,79 +1,12 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { useOrders } from "@/context/OrdersContext";
-import { useStockMovement } from "@/context/StockMovementContext";
-import { format, subDays, isValid, startOfDay, endOfDay, isWithinInterval } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface LiveInformationAreaChartCardProps {
-  dateRange: DateRange | undefined;
+  data: any[];
 }
 
-const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> = ({ dateRange }) => {
-  const { orders } = useOrders();
-  const { stockMovements } = useStockMovement();
-
-  const data = useMemo(() => {
-    const today = new Date();
-
-    // Determine effective date range for filtering
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : subDays(startOfDay(today), 6);
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : endOfDay(today));
-
-    let startDate = filterFrom;
-    let endDate = filterTo;
-
-    if (startDate.getTime() > endDate.getTime()) {
-      [startDate, endDate] = [endDate, startDate];
-    }
-
-    const dailyMetrics: { [key: string]: { salesVolume: number; purchaseVolume: number; adjustments: number } } = {};
-
-    let currentDate = new Date(startDate);
-    while (currentDate.getTime() <= endDate.getTime()) {
-      const dateKey = format(currentDate, "MMM dd");
-      dailyMetrics[dateKey] = { salesVolume: 0, purchaseVolume: 0, adjustments: 0 };
-      currentDate = subDays(currentDate, -1);
-    }
-
-    orders.forEach(order => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return;
-      const dateKey = format(orderDate, "MMM dd");
-      if (dailyMetrics[dateKey] && isWithinInterval(orderDate, { start: startDate, end: endDate })) {
-        if (order.type === "Sales") {
-          dailyMetrics[dateKey].salesVolume += order.itemCount;
-        } else if (order.type === "Purchase") {
-          dailyMetrics[dateKey].purchaseVolume += order.itemCount;
-        }
-      }
-    });
-
-    stockMovements.forEach(movement => {
-      const moveDate = parseAndValidateDate(movement.timestamp);
-      if (!moveDate || !isValid(moveDate)) return;
-      const dateKey = format(moveDate, "MMM dd");
-      if (dailyMetrics[dateKey] && isWithinInterval(moveDate, { start: startDate, end: endDate })) {
-        dailyMetrics[dateKey].adjustments += movement.amount;
-      }
-    });
-
-    return Object.keys(dailyMetrics).sort((a, b) => {
-      const dateA = parseAndValidateDate(a);
-      const dateB = parseAndValidateDate(b);
-      if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
-      return dateA.getTime() - dateB.getTime();
-    }).map(dateKey => {
-      const totalDailyActivity = dailyMetrics[dateKey].salesVolume + dailyMetrics[dateKey].purchaseVolume + dailyMetrics[dateKey].adjustments;
-      return {
-        name: dateKey,
-        "Total Daily Activity": totalDailyActivity,
-      };
-    });
-  }, [orders, stockMovements, dateRange]);
-
+const LiveInformationAreaChartCard: React.FC<LiveInformationAreaChartCardProps> = ({ data }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">

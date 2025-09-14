@@ -2,19 +2,18 @@ import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOrders } from "@/context/OrdersContext"; // Import useOrders
 
-const OrderFulfillmentRateCard: React.FC = () => {
-  const { orders } = useOrders();
+interface OrderFulfillmentRateCardProps {
+  fulfillmentPercentage: number;
+  pendingPercentage: number;
+  totalOrders: number;
+}
 
-  const totalOrders = orders.length;
-  const fulfilledOrders = orders.filter(
-    (order) => order.status === "Shipped" || order.status === "Packed"
-  ).length;
-
-  const fulfillmentPercentage = totalOrders > 0 ? Math.round((fulfilledOrders / totalOrders) * 100) : 0;
-  const pendingPercentage = 100 - fulfillmentPercentage;
-
+const OrderFulfillmentRateCard: React.FC<OrderFulfillmentRateCardProps> = ({
+  fulfillmentPercentage,
+  pendingPercentage,
+  totalOrders,
+}) => {
   const data = [
     { name: "Fulfilled", value: fulfillmentPercentage },
     { name: "Pending", value: pendingPercentage },

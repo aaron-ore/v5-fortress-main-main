@@ -2,16 +2,13 @@ import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ArrowUp, ArrowDown } from "lucide-react";
 import MiniTrendChart from "@/components/dashboard/MiniTrendChart";
-import { useInventory } from "@/context/InventoryContext";
-import { format, subMonths } from "date-fns";
 
-const TotalStockValueCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface TotalStockValueCardProps {
+  totalStockValue: number;
+  totalStockValueTrendData: any[];
+}
 
-  const totalStockValue = useMemo(() => {
-    return inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-  }, [inventoryItems]);
-
+const TotalStockValueCard: React.FC<TotalStockValueCardProps> = ({ totalStockValue, totalStockValueTrendData }) => {
   // Mock previous month's stock value for comparison
   const previousMonthStockValue = useMemo(() => {
     // Simulate a plausible previous month value based on current totalStockValue
@@ -23,32 +20,6 @@ const TotalStockValueCard: React.FC = () => {
     (((totalStockValue - previousMonthStockValue) / previousMonthStockValue) * 100).toFixed(1) :
     (((previousMonthStockValue - totalStockValue) / previousMonthStockValue) * 100).toFixed(1);
   const isPositiveChange = totalStockValue >= previousMonthStockValue;
-
-  // Data for the MiniTrendChart (line chart) - now for the last 6 months
-  const chartData = useMemo(() => {
-    const dataPoints = [];
-
-    const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-
-    for (let i = 0; i < 6; i++) {
-      const month = subMonths(new Date(), 5 - i);
-      const monthName = format(month, "MMM");
-
-      // Simulate stock value for each month, with current month being actual totalStockValue
-      let simulatedValue;
-      if (i === 5) { // Current month
-        simulatedValue = totalStockValue;
-      } else {
-        // Generate values that fluctuate around a base, ensuring they don't go below 0
-        // The base value trends towards the current totalStockValue
-        const trendFactor = (i + 1) / 6;
-        const baseValue = totalStockValue * (0.7 + (0.3 * trendFactor));
-        simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1));
-      }
-      dataPoints.push({ name: monthName, value: parseFloat(simulatedValue.toFixed(2)) });
-    }
-    return dataPoints;
-  }, [totalStockValue, inventoryItems]);
 
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4">
@@ -63,9 +34,9 @@ const TotalStockValueCard: React.FC = () => {
             {isPositiveChange ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />} {percentageChange}% from last month
           </p>
         </div>
-        {totalStockValue > 0 || chartData.length > 0 ? (
+        {totalStockValue > 0 || totalStockValueTrendData.length > 0 ? (
           <MiniTrendChart
-            data={chartData}
+            data={totalStockValueTrendData}
             dataKey="value"
             color="hsl(var(--primary))"
             className="mt-6"

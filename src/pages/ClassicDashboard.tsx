@@ -1,12 +1,17 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, DollarSign, Boxes, FilterX } from "lucide-react";
-import { useInventory } from "@/context/InventoryContext";
-import { useOrders } from "@/context/OrdersContext";
-import { format, isValid, startOfDay, endOfDay } from "date-fns";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, DollarSign, Boxes, FilterX, Loader2, AlertTriangle } from "lucide-react";
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import {
@@ -19,63 +24,52 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
-import { parseAndValidateDate } from "@/utils/dateUtils";
+import { isValid } from "date-fns";
+import { useDashboardData } from "@/hooks/use-dashboard-data"; // NEW: Import the new hook
 
 const ClassicDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
 
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Helper function to check if a date falls within the selected range
-  const isDateInRange = (dateString: string) => {
-    if (!dateRange?.from || !isValid(dateRange.from)) return true;
-
-    const date = parseAndValidateDate(dateString);
-    if (!date) return false;
-
-    const from = startOfDay(dateRange.from);
-    const to = dateRange.to && isValid(dateRange.to) ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
-
-    return date >= from && date <= to;
-  };
-
-  // Key Metrics
-  const totalStockValue = useMemo(() => {
-    return inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-  }, [inventoryItems]);
-
-  const totalUnitsOnHand = useMemo(() => {
-    return inventoryItems.reduce((sum, item) => sum + item.quantity, 0);
-  }, [inventoryItems]);
-
-  const lowStockItems = useMemo(() => {
-    return inventoryItems.filter(item => item.quantity <= item.reorderLevel);
-  }, [inventoryItems]);
-
-  const outOfStockItems = useMemo(() => {
-    return inventoryItems.filter(item => item.quantity === 0);
-  }, [inventoryItems]);
-
-  // Recent Orders (last 5, excluding archived)
-  const recentOrders = useMemo(() => {
-    return orders
-      .filter(order => order.status !== "Archived" && isDateInRange(order.date))
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 5);
-  }, [orders, isDateInRange, dateRange]);
+  const { data: dashboardData, isLoading, error, refresh } = useDashboardData(dateRange);
 
   const handleCreatePO = () => navigate("/create-po");
   const handleCreateInvoice = () => navigate("/create-invoice");
   const handleClearDateFilter = () => { setDateRange(undefined); };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading dashboard data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-destructive">
+        <AlertTriangle className="h-16 w-16 mb-4" />
+        <p className="text-lg">Error loading dashboard: {error}</p>
+        <Button onClick={refresh} className="mt-4">Retry Loading Dashboard</Button>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground">
+        <AlertTriangle className="h-16 w-16 mb-4" />
+        <p className="text-lg">No dashboard data available.</p>
+        <Button onClick={refresh} className="mt-4">Load Dashboard</Button>
+      </div>
+    );
+  }
+
+  const { metrics, lists } = dashboardData;
 
   return (
     <div className="space-y-6">
@@ -102,7 +96,7 @@ const ClassicDashboard: React.FC = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div className="text-2xl font-bold">${metrics.totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <p className="text-xs text-muted-foreground">Value of all items in stock</p>
           </CardContent>
         </Card>
@@ -112,7 +106,7 @@ const ClassicDashboard: React.FC = () => {
             <Boxes className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUnitsOnHand.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{metrics.totalUnitsOnHand.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Total quantity of all items</p>
           </CardContent>
         </Card>
@@ -122,7 +116,7 @@ const ClassicDashboard: React.FC = () => {
             <AlertCircle className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-500">{lowStockItems.length}</div>
+            <div className="text-2xl font-bold text-yellow-500">{metrics.lowStockItemsCount}</div>
             <p className="text-xs text-muted-foreground">Items below reorder level</p>
           </CardContent>
         </Card>
@@ -132,7 +126,7 @@ const ClassicDashboard: React.FC = () => {
             <AlertCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{outOfStockItems.length}</div>
+            <div className="text-2xl font-bold text-destructive">{metrics.outOfStockItemsCount}</div>
             <p className="text-xs text-muted-foreground">Items with zero quantity</p>
           </CardContent>
         </Card>
@@ -179,7 +173,7 @@ const ClassicDashboard: React.FC = () => {
             <CardTitle className="text-xl font-semibold">Low Stock Items</CardTitle>
           </CardHeader>
           <CardContent>
-            {lowStockItems.length > 0 ? (
+            {lists.lowStockItems.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -190,7 +184,7 @@ const ClassicDashboard: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lowStockItems.slice(0, 5).map((item) => (
+                    {lists.lowStockItems.slice(0, 5).map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell className="text-right text-destructive">{item.quantity}</TableCell>
@@ -203,7 +197,7 @@ const ClassicDashboard: React.FC = () => {
             ) : (
               <p className="text-center text-muted-foreground py-4">No items currently at low stock levels.</p>
             )}
-            {lowStockItems.length > 5 && (
+            {lists.lowStockItems.length > 5 && (
               <div className="text-center mt-4">
                 <Button variant="link" onClick={() => navigate("/inventory?statusFilter=Low Stock")}>
                   View All Low Stock Items
@@ -218,7 +212,7 @@ const ClassicDashboard: React.FC = () => {
             <CardTitle className="text-xl font-semibold">Recent Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentOrders.length > 0 ? (
+            {lists.recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -230,13 +224,13 @@ const ClassicDashboard: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentOrders.map((order) => (
+                    {lists.recentOrders.map((order) => (
                       <TableRow key={order.id} onClick={() => navigate(`/orders/${order.id}`)} className="cursor-pointer hover:bg-muted/20">
                         <TableCell className="font-medium">{order.id}</TableCell>
                         <TableCell>{order.type}</TableCell>
                         <TableCell className="truncate max-w-[150px]">{order.customerSupplier}</TableCell>
                         <TableCell className="text-right">
-                          {parseAndValidateDate(order.date) ? format(parseAndValidateDate(order.date)!, "MMM dd, yyyy") : "N/A"}
+                          {order.date}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -246,7 +240,7 @@ const ClassicDashboard: React.FC = () => {
             ) : (
               <p className="text-center text-muted-foreground py-4">No recent orders to display.</p>
             )}
-            {recentOrders.length > 0 && (
+            {lists.recentOrders.length > 0 && (
               <div className="text-center mt-4">
                 <Button variant="link" onClick={() => navigate("/orders")}>
                   View All Orders

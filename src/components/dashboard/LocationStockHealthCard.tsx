@@ -1,11 +1,8 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ArrowUp, ArrowDown, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useInventory } from "@/context/InventoryContext";
-import { useStockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext";
 
 const LOCATION_COLORS = [
   "hsl(var(--primary))",
@@ -54,88 +51,11 @@ const MiniDonut: React.FC<MiniDonutProps> = ({ percentage, isPositive, color }) 
   );
 };
 
-const LocationStockHealthCard: React.FC = () => {
-  const { inventoryItems } = useInventory();
-  const { stockMovements } = useStockMovement();
-  const { locations: structuredLocations } = useOnboarding();
+interface LocationStockHealthCardProps {
+  locationStockHealthData: any[];
+}
 
-  const locationStockHealthData = useMemo(() => {
-    if (inventoryItems.length === 0 || stockMovements.length === 0 || structuredLocations.length === 0) return [];
-
-    const locationMetrics: {
-      [key: string]: {
-        totalMovements: number;
-        currentStock: number;
-        netChange: number;
-        displayName: string;
-      };
-    } = {};
-
-    // Initialize metrics for all existing structured locations
-    structuredLocations.forEach(loc => {
-      locationMetrics[loc.fullLocationString] = {
-        totalMovements: 0,
-        currentStock: 0,
-        netChange: 0,
-        displayName: loc.displayName || loc.fullLocationString,
-      };
-    });
-
-    // Aggregate current stock for each location
-    inventoryItems.forEach(item => {
-      if (locationMetrics[item.location]) {
-        locationMetrics[item.location].currentStock += item.quantity;
-      }
-      // Also consider pickingBinLocation if it's different and a recognized location
-      if (item.pickingBinLocation && item.pickingBinLocation !== item.location && locationMetrics[item.pickingBinLocation]) {
-        locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity;
-      }
-    });
-
-    // Aggregate stock movements
-    stockMovements.forEach(movement => {
-      const item = inventoryItems.find(inv => inv.id === movement.itemId);
-      if (item) {
-        // Determine which location the movement is associated with for this card's purpose
-        // For simplicity, we'll associate movements with the item's primary location
-        const movementLocation = item.location;
-        if (locationMetrics[movementLocation]) {
-          locationMetrics[movementLocation].totalMovements += movement.amount;
-          if (movement.type === "add") {
-            locationMetrics[movementLocation].netChange += movement.amount;
-          } else {
-            locationMetrics[movementLocation].netChange -= movement.amount;
-          }
-        }
-      }
-    });
-
-    // Calculate health percentage and prepare for display
-    const healthData = Object.entries(locationMetrics).map(([_locationString, metrics]) => {
-      const totalActivity = metrics.totalMovements;
-      const currentStock = metrics.currentStock;
-      const netChange = metrics.netChange;
-
-      const percentage = totalActivity + currentStock > 0
-        ? Math.min(100, Math.round((totalActivity / (totalActivity + currentStock)) * 100))
-        : 0;
-
-      const isPositive = netChange >= 0 || percentage > 50;
-
-      return {
-        label: metrics.displayName,
-        percentage,
-        isPositive,
-        movementScore: totalActivity,
-      };
-    });
-
-    // Sort by movement score and take top 4
-    return healthData.sort((a, b) => b.movementScore - a.movementScore).slice(0, 4);
-  }, [inventoryItems, stockMovements, structuredLocations]);
-
-  const displayData = locationStockHealthData;
-
+const LocationStockHealthCard: React.FC<LocationStockHealthCardProps> = ({ locationStockHealthData: displayData }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">

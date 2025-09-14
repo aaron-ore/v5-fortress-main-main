@@ -1,51 +1,13 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
-import { useOrders } from "@/context/OrdersContext";
-import { useInventory } from "@/context/InventoryContext";
 
-const ProfitabilityMetricsCard: React.FC = () => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
+interface ProfitabilityMetricsCardProps {
+  metricsData: { name: string; value: number; color: string }[];
+}
 
-  const metricsData = useMemo(() => {
-    let totalSalesRevenue = 0;
-    let totalCostOfGoodsSold = 0;
-
-    orders.filter(order => order.type === "Sales").forEach(order => {
-      totalSalesRevenue += order.totalAmount;
-      order.items.forEach(orderItem => {
-        const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
-        if (inventoryItem) {
-          totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
-        } else {
-          // Fallback if inventory item not found, use orderItem's unitPrice as cost (less accurate)
-          totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Assume 70% of sales price is cost
-        }
-      });
-    });
-
-    const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
-    const grossProfitMargin = totalSalesRevenue > 0 ? (grossProfit / totalSalesRevenue) * 100 : 0;
-
-    // Simulate operating expenses (e.g., 20% of sales revenue)
-    const simulatedOperatingExpenses = totalSalesRevenue * 0.20;
-    const netProfit = grossProfit - simulatedOperatingExpenses;
-    const netProfitMargin = totalSalesRevenue > 0 ? (netProfit / totalSalesRevenue) * 100 : 0;
-
-    // Simulate losses (e.g., 5% of sales revenue for returns/damages)
-    const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0;
-
-    const data = [
-      { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
-      { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(0)), color: "#00C49F" },
-      { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(0)), color: "#0088FE" },
-    ];
-
-    return data;
-  }, [orders, inventoryItems]);
-
+const ProfitabilityMetricsCard: React.FC<ProfitabilityMetricsCardProps> = ({ metricsData }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">

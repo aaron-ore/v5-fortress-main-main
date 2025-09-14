@@ -21,27 +21,68 @@ import MonthlyOverviewChartCard from "@/components/dashboard/MonthlyOverviewChar
 import TopSellingProductsCard from "@/components/dashboard/TopSellingProductsCard";
 import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
-import { FilterX } from "lucide-react";
-
-// NEW: Import the new cards for the 4th row
+import { FilterX, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2 and AlertTriangle
+import { useDashboardData } from "@/hooks/use-dashboard-data"; // NEW: Import the new hook
+import LiveMetricsCard from "@/components/dashboard/LiveMetricsCard"; // Import LiveMetricsCard
 import OpenPurchaseOrdersCard from "@/components/dashboard/OpenPurchaseOrdersCard";
 import PendingInvoicesCard from "@/components/dashboard/PendingInvoicesCard";
 import LowStockAlertsCard from "@/components/dashboard/LowStockAlertsCard";
 import RecentShipmentsCard from "@/components/dashboard/RecentShipmentsCard";
+import StockOnHandCard from "@/components/dashboard/StockOnHandCard";
+import SupplierPerformanceCard from "@/components/dashboard/SupplierPerformanceCard";
+import InventoryTurnoverRateCard from "@/components/dashboard/InventoryTurnoverRateCard";
+import SalesInventoryTrendCard from "@/components/dashboard/SalesInventoryTrendCard";
+import DemandForecastCard from "@/components/dashboard/DemandForecastCard";
+import ProfitabilityMetricsCard from "@/components/dashboard/ProfitabilityMetricsCard";
+import RecentOrdersCard from "@/components/dashboard/RecentOrdersCard";
+import OverviewBarChart from "@/components/dashboard/OverviewBarChart";
+import WeeklyRevenueBarChart from "@/components/dashboard/WeeklyRevenueBarChart";
+import SalesOverviewChart from "@/components/dashboard/SalesOverviewChart";
+import OutOfStockItemsCard from "@/components/dashboard/OutOfStockItemsCard";
+import SlowMovingDeadstockCard from "@/components/dashboard/SlowMovingDeadstockCard";
+
 
 const DefaultDashboardContent: React.FC = () => {
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Removed handleScanItem as it was unused.
-  // const handleScanItem = () => {
-  //   setIsScanItemDialogOpen(true);
-  // };
+  const { data: dashboardData, isLoading, error, refresh } = useDashboardData(dateRange);
 
   const handleClearDateFilter = () => {
     setDateRange(undefined);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading dashboard data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-destructive">
+        <AlertTriangle className="h-16 w-16 mb-4" />
+        <p className="text-lg">Error loading dashboard: {error}</p>
+        <Button onClick={refresh} className="mt-4">Retry Loading Dashboard</Button>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-muted-foreground">
+        <AlertTriangle className="h-16 w-16 mb-4" />
+        <p className="text-lg">No dashboard data available.</p>
+        <Button onClick={refresh} className="mt-4">Load Dashboard</Button>
+      </div>
+    );
+  }
+
+  const { metrics, charts, lists } = dashboardData;
 
   return (
     <div className="space-y-6">
@@ -61,46 +102,84 @@ const DefaultDashboardContent: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {/* Row 1: 3 cards + 1 column of 3 small cards */}
         <div className="col-span-full md:col-span-1">
-          <OrderFulfillmentRateCard />
+          <OrderFulfillmentRateCard
+            fulfillmentPercentage={metrics.fulfillmentPercentage}
+            pendingPercentage={metrics.pendingPercentage}
+            totalOrders={lists.recentSalesOrders.length + lists.recentPurchaseOrders.length}
+          />
         </div>
         <div className="col-span-full md:col-span-1">
-          <Last3MonthSalesCard />
+          <Last3MonthSalesCard
+            data={charts.last3MonthSalesData}
+          />
         </div>
         <div className="col-span-full md:col-span-1">
-          <IssuesCard dateRange={dateRange} />
+          <IssuesCard
+            dailyIssuesCount={lists.dailyIssuesCount}
+            previousPeriodIssuesCount={lists.previousPeriodIssuesCount}
+            dateRange={dateRange}
+          />
         </div>
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
-          <WalletCard />
-          <LossesCard />
-          <IncomeCard />
+          <WalletCard
+            totalStockValue={metrics.totalStockValue}
+            totalIncome={metrics.totalIncome}
+            totalLosses={metrics.totalLosses}
+          />
+          <LossesCard
+            totalLosses={metrics.totalLosses}
+          />
+          <IncomeCard
+            totalIncome={metrics.totalIncome}
+          />
           <GenerateReportButton dateRange={dateRange} />
         </div>
 
         {/* Row 2: 1 wide card + 2 regular cards */}
         <div className="col-span-full md:col-span-2 lg:col-span-2 xl:col-span-2">
-          <LiveInformationAreaChartCard dateRange={dateRange} />
+          <LiveInformationAreaChartCard
+            data={charts.liveActivityData}
+          />
         </div>
         <div className="col-span-full md:col-span-1">
-          <StockDiscrepancyCard dateRange={dateRange} />
+          <StockDiscrepancyCard
+            pendingDiscrepanciesCount={lists.pendingDiscrepanciesCount}
+            previousPeriodDiscrepanciesCount={lists.previousPeriodDiscrepanciesCount}
+            dateRange={dateRange}
+          />
         </div>
         <div className="col-span-full md:col-span-1">
-          <LocationStockHealthCard />
+          <LocationStockHealthCard
+            locationStockHealthData={charts.locationStockHealthData}
+          />
         </div>
 
         {/* Row 3: 1 very wide card + 1 regular card */}
         <div className="col-span-full md:col-span-2 lg:col-span-3 xl:col-span-3">
-          <MonthlyOverviewChartCard />
+          <MonthlyOverviewChartCard
+            data={charts.monthlyOverviewData}
+          />
         </div>
         <div className="col-span-full md:col-span-1">
-          <TopSellingProductsCard />
+          <TopSellingProductsCard
+            topSellingProducts={lists.topSellingProducts}
+          />
         </div>
 
         {/* NEW Row 4: Operational Overview Cards */}
         <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <OpenPurchaseOrdersCard />
-          <PendingInvoicesCard />
-          <LowStockAlertsCard />
-          <RecentShipmentsCard />
+          <OpenPurchaseOrdersCard
+            openPurchaseOrders={lists.openPurchaseOrders}
+          />
+          <PendingInvoicesCard
+            pendingInvoices={lists.pendingInvoices}
+          />
+          <LowStockAlertsCard
+            lowStockItems={lists.lowStockItems}
+          />
+          <RecentShipmentsCard
+            recentShipments={lists.recentShipments}
+          />
         </div>
       </div>
 

@@ -1,37 +1,16 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReceiptText } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
-import { format, isValid, isPast, subDays } from "date-fns";
+import { OrderItem } from "@/context/OrdersContext";
+import { format, isValid } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const PendingInvoicesCard: React.FC = () => {
-  const { orders } = useOrders();
+interface PendingInvoicesCardProps {
+  pendingInvoices: OrderItem[];
+}
 
-  const pendingInvoices = useMemo(() => {
-    const thirtyDaysAgo = subDays(new Date(), 30);
-    return orders
-      .filter(order => {
-        const orderDueDate = parseAndValidateDate(order.dueDate);
-        return (
-          order.type === "Sales" &&
-          order.status !== "Shipped" &&
-          order.status !== "Archived" &&
-          order.status !== "Packed" &&
-          orderDueDate && isValid(orderDueDate) && isPast(orderDueDate) &&
-          orderDueDate < thirtyDaysAgo
-        );
-      })
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.dueDate);
-        const dateB = parseAndValidateDate(b.dueDate);
-        if (!dateA || !dateB) return 0;
-        return dateA.getTime() - dateB.getTime(); // Sort by earliest due date first
-      })
-      .slice(0, 5); // Show top 5
-  }, [orders]);
-
+const PendingInvoicesCard: React.FC<PendingInvoicesCardProps> = ({ pendingInvoices }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

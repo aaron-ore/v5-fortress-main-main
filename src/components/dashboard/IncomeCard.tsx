@@ -2,19 +2,12 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line } from "recharts";
 import { ArrowUp } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
 
-const IncomeCard: React.FC = () => {
-  const { orders } = useOrders();
+interface IncomeCardProps {
+  totalIncome: number;
+}
 
-  const totalIncome = useMemo(() => {
-    const totalSalesRevenue = orders
-      .filter(order => order.type === "Sales")
-      .reduce((sum, order) => sum + order.totalAmount, 0);
-
-    return totalSalesRevenue;
-  }, [orders]);
-
+const IncomeCard: React.FC<IncomeCardProps> = ({ totalIncome }) => {
   // Generate dynamic data for the mini trend chart (upward trend)
   const data = useMemo(() => {
     if (totalIncome === 0) return [{ name: "A", value: 0 }];

@@ -1,26 +1,16 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
+import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const RecentShipmentsCard: React.FC = () => {
-  const { orders } = useOrders();
+interface RecentShipmentsCardProps {
+  recentShipments: OrderItem[];
+}
 
-  const recentShipments = useMemo(() => {
-    return orders
-      .filter(order => order.type === "Sales" && order.status === "Shipped")
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB) return 0;
-        return dateB.getTime() - dateA.getTime(); // Sort by most recent first
-      })
-      .slice(0, 5); // Show top 5
-  }, [orders]);
-
+const RecentShipmentsCard: React.FC<RecentShipmentsCardProps> = ({ recentShipments }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

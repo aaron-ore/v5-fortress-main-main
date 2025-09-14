@@ -8,7 +8,6 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { useInventory } from "@/context/InventoryContext";
 
 interface BulletGraphData {
   name: string;
@@ -16,22 +15,11 @@ interface BulletGraphData {
   reorderLevel: number;
 }
 
-const TopStockBulletGraph: React.FC = () => {
-  const { inventoryItems } = useInventory();
+interface TopStockBulletGraphProps {
+  data: BulletGraphData[];
+}
 
-  const data: BulletGraphData[] = useMemo(() => {
-    if (inventoryItems.length === 0) return [];
-
-    return inventoryItems
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 4)
-      .map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        reorderLevel: item.reorderLevel,
-      }));
-  }, [inventoryItems]);
-
+const TopStockBulletGraph: React.FC<TopStockBulletGraphProps> = ({ data }) => {
   const maxQuantity = useMemo(() => {
     return Math.max(...data.map(item => item.quantity), 100);
   }, [data]);

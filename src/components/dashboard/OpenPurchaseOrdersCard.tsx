@@ -1,26 +1,16 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingBag } from "lucide-react";
-import { useOrders } from "@/context/OrdersContext";
+import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-const OpenPurchaseOrdersCard: React.FC = () => {
-  const { orders } = useOrders();
+interface OpenPurchaseOrdersCardProps {
+  openPurchaseOrders: OrderItem[];
+}
 
-  const openPurchaseOrders = useMemo(() => {
-    return orders
-      .filter(order => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
-      .sort((a, b) => {
-        const dateA = parseAndValidateDate(a.dueDate);
-        const dateB = parseAndValidateDate(b.dueDate);
-        if (!dateA || !dateB) return 0;
-        return dateA.getTime() - dateB.getTime(); // Sort by earliest due date first
-      })
-      .slice(0, 5); // Show top 5
-  }, [orders]);
-
+const OpenPurchaseOrdersCard: React.FC<OpenPurchaseOrdersCardProps> = ({ openPurchaseOrders }) => {
   return (
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
