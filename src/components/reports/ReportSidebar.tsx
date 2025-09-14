@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// Removed LayoutDashboard, Package, Receipt, Truck, BarChart, Scale, FileText, DollarSign, Users, AlertTriangle
 
 interface ReportCategory {
   title: string;
@@ -17,11 +16,10 @@ interface ReportItem {
 }
 
 interface ReportSidebarProps {
-  onReportSelect: (reportId: string) => void;
   reportCategories: ReportCategory[]; // Now passed as a prop
 }
 
-const ReportSidebar: React.FC<ReportSidebarProps> = ({ onReportSelect, reportCategories }) => {
+const ReportSidebar: React.FC<ReportSidebarProps> = ({ reportCategories }) => {
   const location = useLocation();
   const activeReportId = location.hash.replace("#", "");
 
@@ -38,7 +36,6 @@ const ReportSidebar: React.FC<ReportSidebarProps> = ({ onReportSelect, reportCat
                 <Link
                   key={report.id}
                   to={`/reports#${report.id}`}
-                  onClick={() => onReportSelect(report.id)}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50",
                     activeReportId === report.id ? "bg-muted text-primary" : "text-foreground"

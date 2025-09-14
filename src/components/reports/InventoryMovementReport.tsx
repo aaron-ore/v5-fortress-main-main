@@ -1,113 +1,33 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
-import { useProfile } from "@/context/ProfileContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Scale, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { StockMovement } from "@/context/StockMovementContext";
+import { UserProfile } from "@/context/ProfileContext";
+import { Location } from "@/context/OnboardingContext";
+import { Scale } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { showError } from "@/utils/toast";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
+// Props now directly reflect the processed data from useReportData
 interface InventoryMovementReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  movements: StockMovement[];
+  allProfiles: UserProfile[];
+  structuredLocations: Location[];
 }
 
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  movements: movementsToDisplay,
+  allProfiles,
+  structuredLocations,
 }) => {
-  const { stockMovements, fetchStockMovements } = useStockMovement();
-  const { allProfiles, fetchAllProfiles, profile } = useProfile();
-  const { locations: structuredLocations } = useOnboarding();
-
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-  const [movementTypeFilter, setMovementTypeFilter] = useState<"all" | "add" | "subtract">("all");
-
-  const generateReport = useCallback(async () => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    await fetchStockMovements();
-    await fetchAllProfiles();
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredMovements = stockMovements.filter((movement: StockMovement) => {
-      if (movementTypeFilter !== "all" && movement.type !== movementTypeFilter) {
-        return false;
-      }
-      const movementTimestamp = parseAndValidateDate(movement.timestamp);
-      if (!movementTimestamp || !isValid(movementTimestamp)) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(movementTimestamp, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      movements: filteredMovements,
-      dateRange,
-      allProfiles,
-      structuredLocations,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "inventory-movement-report" });
-    setReportGenerated(true);
-  }, [stockMovements, movementTypeFilter, onGenerateReport, allProfiles, fetchStockMovements, fetchAllProfiles, dateRange, structuredLocations, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { movements: movementsToDisplay } = currentReportData;
-
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -118,25 +38,8 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="movementTypeFilter">Filter by Type:</Label>
-            <Select value={movementTypeFilter} onValueChange={(value: "all" | "add" | "subtract") => setMovementTypeFilter(value)}>
-              <SelectTrigger id="movementTypeFilter" className="w-[180px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="add">Additions</SelectItem>
-                <SelectItem value="subtract">Subtractions</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <h3 className="font-semibold text-xl mt-6">
-            {movementTypeFilter === "add" ? "Stock Additions" :
-             movementTypeFilter === "subtract" ? "Stock Subtractions" :
-             "All Stock Movements"} ({movementsToDisplay.length})
+            All Stock Movements ({movementsToDisplay.length})
           </h3>
           {movementsToDisplay.length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">

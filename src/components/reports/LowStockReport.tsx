@@ -1,112 +1,28 @@
-import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, AlertTriangle, FileText } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label"; // Added Label import
-import { parseAndValidateDate } from "@/utils/dateUtils"; // NEW: Import parseAndValidateDate
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { showError } from "@/utils/toast"; // NEW: Import showError
+import { Location } from "@/context/OnboardingContext";
 
+// Props now directly reflect the processed data from useReportData
 interface LowStockReportProps {
-  dateRange: DateRange | undefined; // NEW: dateRange prop
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  items: any[]; // Use 'any' for now, or define specific item types if needed
+  statusFilter: "all" | "low-stock" | "out-of-stock";
+  structuredLocations: Location[];
 }
 
 const LowStockReport: React.FC<LowStockReportProps> = ({
-  dateRange, // NEW: Destructure dateRange prop
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  items,
+  statusFilter: currentStatusFilter,
+  structuredLocations,
 }) => {
-  const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
-  const { profile } = useProfile(); // NEW: Use useProfile
-
-  const [statusFilter, setStatusFilter] = useState<"all" | "low-stock" | "out-of-stock">("all");
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredItems = inventoryItems.filter((item: InventoryItem) => {
-      const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
-      if (!itemLastUpdated || !isValid(itemLastUpdated)) return false; // Ensure valid date
-      if (filterFrom && filterTo) {
-        return isWithinInterval(itemLastUpdated, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    let itemsToDisplay: InventoryItem[] = [];
-
-    if (statusFilter === "low-stock") {
-      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
-    } else if (statusFilter === "out-of-stock") {
-      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity === 0);
-    } else { // "all"
-      itemsToDisplay = filteredItems.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
-    }
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      items: itemsToDisplay,
-      statusFilter,
-      dateRange,
-      structuredLocations, // NEW: Pass structuredLocations to resolve display names
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "low-stock-report" });
-    setReportGenerated(true);
-  }, [inventoryItems, structuredLocations, statusFilter, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { items: itemsToDisplay, statusFilter: currentStatusFilter } = currentReportData;
+  const getLocationDisplayName = (fullLocationString: string) => {
+    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
+    return foundLoc?.displayName || fullLocationString;
+  };
 
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -117,27 +33,12 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="statusFilter">Filter Status:</Label>
-            <Select value={statusFilter} onValueChange={(value: "all" | "low-stock" | "out-of-stock") => setStatusFilter(value)}>
-              <SelectTrigger id="statusFilter" className="w-[200px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Low/Out of Stock</SelectItem>
-                <SelectItem value="low-stock">Low Stock Only</SelectItem>
-                <SelectItem value="out-of-stock">Out of Stock Only</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <h3 className="font-semibold text-xl mt-6">
             {currentStatusFilter === "low-stock" ? "Low Stock Items" :
              currentStatusFilter === "out-of-stock" ? "Out of Stock Items" :
-             "Low & Out of Stock Items"} ({itemsToDisplay.length})
+             "Low & Out of Stock Items"} ({items.length})
           </h3>
-          {itemsToDisplay.length > 0 ? (
+          {items.length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -150,13 +51,13 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {itemsToDisplay.map((item: InventoryItem) => (
+                  {items.map((item: any) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>
                       <TableCell className="text-right text-destructive">{item.quantity}</TableCell>
                       <TableCell className="text-right">{item.reorderLevel}</TableCell>
-                      <TableCell>{structuredLocations.find(loc => loc.fullLocationString === item.location)?.displayName || item.location}</TableCell>
+                      <TableCell>{getLocationDisplayName(item.location)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

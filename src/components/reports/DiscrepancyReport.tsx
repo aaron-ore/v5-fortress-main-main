@@ -1,17 +1,11 @@
-import { useEffect, useState, useCallback } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
-import { supabase } from "@/lib/supabaseClient";
-import { format, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, AlertTriangle, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { UserProfile } from "@/context/ProfileContext";
+import { Location } from "@/context/OnboardingContext";
+import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { showError } from "@/utils/toast";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface DiscrepancyLog {
@@ -30,106 +24,20 @@ interface DiscrepancyLog {
   status: string;
 }
 
+// Props now directly reflect the processed data from useReportData
 interface DiscrepancyReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  discrepancies: DiscrepancyLog[];
+  statusFilter: "all" | "pending" | "resolved";
+  allProfiles: UserProfile[];
+  structuredLocations: Location[];
 }
 
 const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  discrepancies: itemsToDisplay,
+  statusFilter: currentStatusFilter,
+  allProfiles,
+  structuredLocations,
 }) => {
-  const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding();
-  // Removed companyProfile from useOnboarding() as it's not directly used here
-
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "resolved">("all");
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const fetchDiscrepancies = useCallback(async () => {
-    if (!profile?.organizationId) {
-      return [];
-    }
-
-    let query = supabase
-      .from('discrepancies')
-      .select('*')
-      .eq('organization_id', profile.organizationId)
-      .order('timestamp', { ascending: false });
-
-    if (statusFilter !== "all") {
-      query = query.eq('status', statusFilter);
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    if (filterFrom && filterTo) {
-      query = query.gte('timestamp', filterFrom.toISOString()).lte('timestamp', filterTo.toISOString());
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Error fetching discrepancies:", error);
-      showError("Failed to load discrepancies.");
-      return [];
-    } else {
-      const fetchedDiscrepancies: DiscrepancyLog[] = data.map((log: any) => ({
-        id: log.id,
-        timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
-        userId: log.user_id,
-        organizationId: log.organization_id,
-        itemId: log.item_id,
-        itemName: log.item_name,
-        locationString: log.location_string,
-        locationType: log.location_type,
-        originalQuantity: log.original_quantity,
-        countedQuantity: log.counted_quantity,
-        difference: log.difference,
-        reason: log.reason,
-        status: log.status,
-      }));
-      return fetchedDiscrepancies;
-    }
-  }, [profile?.organizationId, statusFilter, dateRange]);
-
-  const generateReport = useCallback(async () => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const itemsToDisplay = await fetchDiscrepancies();
-    await fetchAllProfiles(); // Ensure user profiles are loaded for names
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      discrepancies: itemsToDisplay,
-      statusFilter,
-      dateRange,
-      allProfiles, // Pass all profiles to resolve user names in PDF
-      structuredLocations, // NEW: Pass structuredLocations to resolve display names
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "discrepancy-report" });
-    setReportGenerated(true);
-  }, [fetchDiscrepancies, statusFilter, onGenerateReport, allProfiles, fetchAllProfiles, dateRange, structuredLocations, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
@@ -140,29 +48,8 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     return foundLoc?.displayName || fullLocationString;
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { discrepancies: itemsToDisplay, statusFilter: currentStatusFilter } = currentReportData;
-
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -173,21 +60,6 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="statusFilter">Filter Status:</Label>
-            <Select value={statusFilter} onValueChange={(value: "all" | "pending" | "resolved") => setStatusFilter(value)}>
-              <SelectTrigger id="statusFilter" className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <h3 className="font-semibold text-xl mt-6">
             {currentStatusFilter === "pending" ? "Pending Discrepancies" :
              currentStatusFilter === "resolved" ? "Resolved Discrepancies" :

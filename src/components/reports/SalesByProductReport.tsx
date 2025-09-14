@@ -1,16 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, BarChart, FileText } from "lucide-react";
+import { BarChart } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
 
 interface ProductSalesData {
   productName: string;
@@ -20,108 +12,19 @@ interface ProductSalesData {
   totalRevenue: number;
 }
 
+// Props now directly reflect the processed data from useReportData
 interface SalesByProductReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  productSales: ProductSalesData[];
 }
 
 const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  productSales,
 }) => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
-  const { profile } = useProfile();
-
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredOrders = orders.filter((order: OrderItem) => {
-      if (order.type !== "Sales") return false;
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
-
-    filteredOrders.forEach((order: OrderItem) => {
-      order.items.forEach((orderItem: POItem) => {
-        const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
-        const sku = inventoryItem?.sku || "N/A";
-        const category = inventoryItem?.category || "Uncategorized";
-        const productName = orderItem.itemName;
-
-        if (!productSalesMap[sku]) {
-          productSalesMap[sku] = { productName, sku, category, unitsSold: 0, totalRevenue: 0 };
-        }
-        productSalesMap[sku].unitsSold += orderItem.quantity;
-        productSalesMap[sku].totalRevenue += orderItem.quantity * orderItem.unitPrice;
-      });
-    });
-
-    const productSales: ProductSalesData[] = Object.values(productSalesMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      productSales,
-      dateRange,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "sales-by-product-report" });
-    setReportGenerated(true);
-  }, [orders, inventoryItems, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { productSales } = currentReportData;
   const totalOverallRevenue = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.totalRevenue, 0);
   const totalOverallUnits = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.unitsSold, 0);
 
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -132,10 +35,6 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Sales Revenue</h3>

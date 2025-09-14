@@ -1,143 +1,30 @@
-import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Package, Receipt, AlertTriangle, DollarSign, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { Package, Receipt, AlertTriangle, DollarSign } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
 
+// Props now directly reflect the processed data from useReportData
 interface DashboardSummaryReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  totalStockValue: number;
+  totalUnitsOnHand: number;
+  lowStockItems: any[]; // Use 'any' for now, or define specific item types if needed
+  outOfStockItems: any[]; // Use 'any' for now
+  recentSalesOrders: any[]; // Use 'any' for now
+  recentPurchaseOrders: any[]; // Use 'any' for now
 }
 
 const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  totalStockValue,
+  totalUnitsOnHand,
+  lowStockItems,
+  outOfStockItems,
+  recentSalesOrders,
+  recentPurchaseOrders,
 }) => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
-  const { profile } = useProfile();
-
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredInventory = inventoryItems.filter((item: InventoryItem) => {
-      const itemLastUpdated = parseAndValidateDate(item.lastUpdated);
-      if (!itemLastUpdated) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(itemLastUpdated, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const filteredOrders = orders.filter((order: OrderItem) => {
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
-    const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
-    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
-    const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
-
-    const recentSalesOrders = filteredOrders
-      .filter((order: OrderItem) => order.type === "Sales")
-      .sort((a: OrderItem, b: OrderItem) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 5);
-
-    const recentPurchaseOrders = filteredOrders
-      .filter((order: OrderItem) => order.type === "Purchase")
-      .sort((a: OrderItem, b: OrderItem) => {
-        const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
-        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
-        return dateB.getTime() - dateB.getTime();
-      })
-      .slice(0, 5);
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      totalStockValue,
-      totalUnitsOnHand,
-      lowStockItems,
-      outOfStockItems,
-      recentSalesOrders,
-      recentPurchaseOrders,
-      dateRange,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "dashboard-summary" });
-    setReportGenerated(true);
-  }, [inventoryItems, orders, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const {
-    totalStockValue,
-    totalUnitsOnHand,
-    lowStockItems,
-    outOfStockItems,
-    recentSalesOrders,
-    recentPurchaseOrders,
-  } = currentReportData;
-
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Dashboard Summary</CardTitle>
@@ -181,7 +68,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentSalesOrders.map((order: OrderItem) => (
+                  {recentSalesOrders.map((order: any) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
@@ -213,7 +100,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentPurchaseOrders.map((order: OrderItem) => (
+                  {recentPurchaseOrders.map((order: any) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>

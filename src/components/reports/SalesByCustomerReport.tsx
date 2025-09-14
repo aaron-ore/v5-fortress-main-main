@@ -1,15 +1,8 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, Users, FileText } from "lucide-react";
+import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
 
 interface CustomerSalesData {
   customerName: string;
@@ -18,109 +11,19 @@ interface CustomerSalesData {
   lastOrderDate: string;
 }
 
+// Props now directly reflect the processed data from useReportData
 interface SalesByCustomerReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  customerSales: CustomerSalesData[];
 }
 
 const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  customerSales,
 }) => {
-  const { orders } = useOrders();
-  const { profile } = useProfile();
-
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredOrders = orders.filter((order: OrderItem) => {
-      if (order.type !== "Sales") return false;
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: Date } } = {};
-
-    filteredOrders.forEach((order: OrderItem) => {
-      if (!customerSalesMap[order.customerSupplier]) {
-        customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: new Date(0) };
-      }
-      customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
-      customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
-      const currentOrderDate = parseAndValidateDate(order.date);
-      if (currentOrderDate && isValid(currentOrderDate) && currentOrderDate > customerSalesMap[order.customerSupplier].lastOrderDate) {
-        customerSalesMap[order.customerSupplier].lastOrderDate = currentOrderDate;
-      }
-    });
-
-    const customerSales: CustomerSalesData[] = Object.entries(customerSalesMap).map(([customerName, data]) => ({
-      customerName,
-      totalSales: data.totalSales,
-      totalItems: data.totalItems,
-      lastOrderDate: format(data.lastOrderDate, "MMM dd, yyyy"),
-    })).sort((a, b) => b.totalSales - a.totalSales);
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      customerSales,
-      dateRange,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "sales-by-customer-report" });
-    setReportGenerated(true);
-  }, [orders, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { customerSales } = currentReportData;
   const totalOverallSales = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalSales, 0);
   const totalOverallItems = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalItems, 0);
 
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -131,10 +34,6 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Sales Revenue</h3>

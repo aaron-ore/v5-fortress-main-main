@@ -1,103 +1,27 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, FileText } from "lucide-react";
+import { format } from "date-fns";
+import { OrderItem } from "@/context/OrdersContext";
+import { FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
 
+// Props now directly reflect the processed data from useReportData
 interface PurchaseOrderStatusReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  orders: OrderItem[];
+  statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
 }
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  orders: ordersToDisplay,
+  statusFilter: currentStatusFilter,
 }) => {
-  const { orders } = useOrders();
-  const { profile } = useProfile();
-
-  const [statusFilter, setStatusFilter] = useState<"all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived">("all");
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredOrders = orders.filter((order: OrderItem) => {
-      if (order.type !== "Purchase") return false;
-      if (statusFilter !== "all" && order.status.toLowerCase() !== statusFilter.toLowerCase()) return false;
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      orders: filteredOrders,
-      statusFilter,
-      dateRange,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "purchase-order-status-report" });
-    setReportGenerated(true);
-  }, [orders, statusFilter, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { orders: ordersToDisplay } = currentReportData;
   const totalOrders = ordersToDisplay.length;
   const totalAmount = ordersToDisplay.reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
 
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -108,25 +32,6 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="statusFilter">Filter Status:</Label>
-            <Select value={statusFilter} onValueChange={(value: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived") => setStatusFilter(value)}>
-              <SelectTrigger id="statusFilter" className="w-[200px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="new-order">New Order</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="packed">Packed</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="on-hold-problem">On Hold / Problem</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Purchase Orders</h3>

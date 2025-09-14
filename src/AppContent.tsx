@@ -37,7 +37,7 @@ import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
 // PDF content components from specific directories
-import DashboardSummaryPdfContent from "./components/dashboard/DashboardSummaryPdfContent";
+import DashboardSummaryPdfContent from "./components/reports/pdf/DashboardSummaryPdfContent";
 import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent";
 import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent";
 
@@ -203,59 +203,55 @@ const AppContent = () => {
     </Routes>
   );
 
+  // Helper to render the correct PDF component based on printContentData.type
+  const renderPdfComponent = () => {
+    if (!printContentData) return null;
+
+    switch (printContentData.type) {
+      case "purchase-order":
+        return <PurchaseOrderPdfContent {...printContentData.props} />;
+      case "invoice":
+        return <InvoicePdfContent {...printContentData.props} />;
+      case "dashboard-summary":
+        return <DashboardSummaryPdfContent {...printContentData.props} />;
+      case "advanced-demand-forecast":
+        return <AdvancedDemandForecastPdfContent {...printContentData.props} />;
+      case "putaway-label":
+        return <PutawayLabelPdfContent {...printContentData.props} />;
+      case "location-label":
+        return <LocationLabelPdfContent {...printContentData.props} />;
+      case "picking-wave":
+        return <PickingWavePdfContent {...printContentData.props} />;
+      case "inventory-valuation-report":
+        return <InventoryValuationPdfContent {...printContentData.props} />;
+      case "low-stock-report":
+        return <LowStockPdfContent {...printContentData.props} />;
+      case "inventory-movement-report":
+        return <InventoryMovementPdfContent {...printContentData.props} />;
+      case "sales-by-customer-report":
+        return <SalesByCustomerPdfContent {...printContentData.props} />;
+      case "sales-by-product-report":
+        return <SalesByProductPdfContent {...printContentData.props} />;
+      case "purchase-order-status-report":
+        return <PurchaseOrderStatusPdfContent {...printContentData.props} />;
+      case "profitability-report":
+        return <ProfitabilityPdfContent {...printContentData.props} />;
+      case "discrepancy-report":
+        return <DiscrepancyPdfContent {...printContentData.props} />;
+      default:
+        return <div>Unknown PDF Report Type</div>;
+    }
+  };
+
   return (
     <>
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
       </div>
 
-      {printContentData && (
+      {isPrinting && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
-          {printContentData.type === "purchase-order" && (
-            <PurchaseOrderPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "invoice" && (
-            <InvoicePdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "dashboard-summary" && (
-            <DashboardSummaryPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "advanced-demand-forecast" && (
-            <AdvancedDemandForecastPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "putaway-label" && (
-            <PutawayLabelPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "location-label" && (
-            <LocationLabelPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "picking-wave" && (
-            <PickingWavePdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "inventory-valuation-report" && (
-            <InventoryValuationPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "low-stock-report" && (
-            <LowStockPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "inventory-movement-report" && (
-            <InventoryMovementPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "sales-by-customer-report" && (
-            <SalesByCustomerPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "sales-by-product-report" && (
-            <SalesByProductPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "purchase-order-status-report" && (
-            <PurchaseOrderStatusPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "profitability-report" && (
-            <ProfitabilityPdfContent {...printContentData.props} />
-          )}
-          {printContentData.type === "discrepancy-report" && (
-            <DiscrepancyPdfContent {...printContentData.props} />
-          )}
+          {renderPdfComponent()}
         </PrintWrapper>
       )}
     </>

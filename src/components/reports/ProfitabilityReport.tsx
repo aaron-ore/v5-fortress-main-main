@@ -1,16 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DateRange } from "react-day-picker";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
-import { Loader2, BarChart, FileText } from "lucide-react";
+import { BarChart } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
-import { showError } from "@/utils/toast";
 
 interface ProfitabilityMetricsData {
   name: string;
@@ -18,120 +10,22 @@ interface ProfitabilityMetricsData {
   color: string;
 }
 
+// Props now directly reflect the processed data from useReportData
 interface ProfitabilityReportProps {
-  dateRange: DateRange | undefined;
-  onGenerateReport: (data: { pdfProps: any; printType: string }) => void;
-  isLoading: boolean;
-  reportContentRef: React.RefObject<HTMLDivElement>;
+  metricsData: ProfitabilityMetricsData[];
+  totalSalesRevenue: number;
+  totalCostOfGoodsSold: number;
 }
 
 const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
-  dateRange,
-  onGenerateReport,
-  isLoading,
-  reportContentRef,
+  metricsData,
+  totalSalesRevenue,
+  totalCostOfGoodsSold,
 }) => {
-  const { orders } = useOrders();
-  const { inventoryItems } = useInventory();
-  const { profile } = useProfile();
-
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState<any>(null);
-
-  const generateReport = useCallback(() => {
-    if (!profile?.companyProfile) {
-      showError("Company profile not loaded. Cannot generate report.");
-      return;
-    }
-
-    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
-
-    const filteredOrders = orders.filter((order: OrderItem) => {
-      if (order.type !== "Sales") return false;
-      const orderDate = parseAndValidateDate(order.date);
-      if (!orderDate || !isValid(orderDate)) return false;
-      if (filterFrom && filterTo) {
-        return isWithinInterval(orderDate, { start: filterFrom, end: filterTo });
-      }
-      return true;
-    });
-
-    let totalSalesRevenue = 0;
-    let totalCostOfGoodsSold = 0;
-
-    filteredOrders.forEach((order: OrderItem) => {
-      totalSalesRevenue += order.totalAmount;
-      order.items.forEach((orderItem: POItem) => {
-        const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
-        if (inventoryItem) {
-          totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
-        } else {
-          totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7;
-        }
-      });
-    });
-
-    const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
-    const grossProfitMargin = totalSalesRevenue > 0 ? (grossProfit / totalSalesRevenue) * 100 : 0;
-
-    const simulatedOperatingExpenses = totalSalesRevenue * 0.20;
-    const netProfit = grossProfit - simulatedOperatingExpenses;
-    const netProfitMargin = totalSalesRevenue > 0 ? (netProfit / totalSalesRevenue) * 100 : 0;
-
-    const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0;
-
-    const metricsData: ProfitabilityMetricsData[] = [
-      { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
-      { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(0)), color: "#00C49F" },
-      { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(0)), color: "#0088FE" },
-    ];
-
-    const reportProps = {
-      companyName: profile.companyProfile.companyName,
-      companyAddress: profile.companyProfile.companyAddress || "N/A",
-      companyContact: profile.companyProfile.companyCurrency || "N/A",
-      companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
-      reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-      metricsData,
-      totalSalesRevenue,
-      totalCostOfGoodsSold,
-      dateRange,
-    };
-
-    setCurrentReportData(reportProps);
-    onGenerateReport({ pdfProps: reportProps, printType: "profitability-report" });
-    setReportGenerated(true);
-  }, [orders, inventoryItems, onGenerateReport, dateRange, profile]);
-
-  useEffect(() => {
-    generateReport();
-  }, [generateReport]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Generating report...</span>
-      </div>
-    );
-  }
-
-  if (!reportGenerated || !currentReportData) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-        <FileText className="h-16 w-16 mb-4" />
-        <p className="text-lg">Configure filters and click "Generate Report".</p>
-        <Button onClick={generateReport} className="mt-4">Generate Report</Button>
-      </div>
-    );
-  }
-
-  const { metricsData, totalSalesRevenue, totalCostOfGoodsSold } = currentReportData;
   const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
 
   return (
-    <div ref={reportContentRef} className="space-y-6">
+    <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader>
           <CardTitle className="text-2xl font-bold flex items-center gap-2">
@@ -142,10 +36,6 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button onClick={generateReport}>Refresh Report</Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Sales Revenue</h3>
