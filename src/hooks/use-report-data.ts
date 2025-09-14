@@ -11,6 +11,7 @@ import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { showError } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
+import { PrintContentData } from "@/context/PrintContext"; // NEW: Import PrintContentData
 
 interface ReportDataResult {
   data: any; // The processed data specific to the report
@@ -72,7 +73,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
     let currentProcessedData: any = null;
     let currentPdfProps: any = { ...basePdfProps };
-    let printType: string = reportId;
+    let printType: PrintContentData['type'] = reportId as PrintContentData['type']; // Cast to valid type
 
     try {
       switch (reportId) {
@@ -172,7 +173,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "low-stock-out-of-stock": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const statusFilter = 'all'; // Default for now, can be dynamic
+          const statusFilter: 'all' | 'low-stock' | 'out-of-stock' = 'all'; // Explicitly type statusFilter
 
           let itemsToDisplay: InventoryItem[] = [];
           if (statusFilter === "low-stock") {
@@ -261,7 +262,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "purchase-order-status": {
-          const statusFilter = 'all'; // Default for now
+          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all'; // Explicitly type statusFilter
           const filteredOrders = filterDataByDateRange(orders, 'date').filter((order: OrderItem) => {
             return order.type === "Purchase" && (statusFilter === "all" || order.status.toLowerCase() === statusFilter.toLowerCase());
           });
@@ -311,7 +312,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "stock-discrepancy": {
           await fetchAllProfiles();
-          const statusFilter = 'all'; // Default for now
+          const statusFilter: 'all' | 'pending' | 'resolved' = 'all'; // Explicitly type statusFilter
 
           let query = supabase
             .from('discrepancies')

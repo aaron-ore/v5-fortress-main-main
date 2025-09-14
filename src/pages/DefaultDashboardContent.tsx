@@ -132,7 +132,15 @@ const DefaultDashboardContent: React.FC = () => {
           <IncomeCard
             totalIncome={metrics.totalIncome}
           />
-          <GenerateReportButton dateRange={dateRange} />
+          <GenerateReportButton
+            dateRange={dateRange}
+            totalStockValue={metrics.totalStockValue}
+            totalUnitsOnHand={metrics.totalUnitsOnHand}
+            lowStockItems={lists.lowStockItems}
+            outOfStockItems={lists.outOfStockItems}
+            recentSalesOrders={lists.recentSalesOrders}
+            recentPurchaseOrders={lists.recentPurchaseOrders}
+          />
         </div>
 
         {/* Row 2: 1 wide card + 2 regular cards */}

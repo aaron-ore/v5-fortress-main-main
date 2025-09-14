@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { DateRange } from "react-day-picker"; // NEW: Import DateRange
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useVendors } from "@/context/VendorContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { showError } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 
-interface DashboardDataResult {
+// NEW: Define the interface for the actual dashboard data content
+interface DashboardContentData {
   metrics: {
     totalStockValue: number;
     totalUnitsOnHand: number;
@@ -52,16 +54,22 @@ interface DashboardDataResult {
     dailyIssuesCount: number;
     previousPeriodIssuesCount: number;
   };
+}
+
+// NEW: Define the interface for the hook's return value
+interface UseDashboardHookResult {
+  data: DashboardContentData | null;
+  pdfProps: any; // Props formatted for the PDF content component
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
 }
 
-export const useDashboardData = (dateRange: DateRange | undefined): DashboardDataResult => {
+export const useDashboardData = (dateRange: DateRange | undefined): UseDashboardHookResult => {
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
-  const { orders, isLoading: isLoadingOrders, fetchOrders } = useOrders();
-  const { stockMovements, isLoading: isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoading: isLoadingVendors, refreshVendors } = useVendors();
+  const { orders, fetchOrders } = useOrders(); // REMOVED: isLoading from destructuring
+  const { stockMovements, fetchStockMovements } = useStockMovement(); // REMOVED: isLoading from destructuring
+  const { vendors, refreshVendors } = useVendors(); // REMOVED: isLoading from destructuring
   const { profile, isLoadingProfile, fetchAllProfiles, allProfiles } = useProfile();
   const { locations: structuredLocations, fetchLocations } = useOnboarding();
 
@@ -161,7 +169,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): DashboardDat
   }, [isLoadingProfile, profile?.organizationId, dateRange, fetchDiscrepancyAndIssueCounts]);
 
 
-  const dashboardData = useMemo(() => {
+  const dashboardData = useMemo<DashboardContentData | null>(() => {
     if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingVendors || isLoadingProfile) {
       return null;
     }
@@ -280,7 +288,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): DashboardDat
           monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
         } else {
           const trendFactor = (index + 1) / array.length;
-          const baseValue = totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor));
+          const baseValue = totalCurrentInventoryValue > 0 ? totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor)) : 0;
           monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue > 0 ? Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1)) : 0;
         }
       });
@@ -357,7 +365,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): DashboardDat
           simulatedValue = totalStockValue;
         } else {
           const trendFactor = (i + 1) / 6;
-          const baseValue = totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor));
+          const baseValue = totalCurrentInventoryValue > 0 ? totalCurrentInventoryValue * (0.7 + (0.3 * trendFactor)) : 0;
           simulatedValue = Math.max(0, baseValue + (Math.random() - 0.5) * (totalCurrentInventoryValue * 0.1));
         }
         dataPoints.push({ name: monthName, value: parseFloat(simulatedValue.toFixed(2)) });
@@ -708,9 +716,6 @@ export const useDashboardData = (dateRange: DateRange | undefined): DashboardDat
         dailyIssuesCount,
         previousPeriodIssuesCount,
       },
-      isLoading: false,
-      error: null,
-      refresh,
     };
   }, [
     isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingProfile,

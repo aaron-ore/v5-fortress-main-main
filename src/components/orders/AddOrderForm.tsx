@@ -15,8 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
+  TableCell, // NEW: Import TableCell
   TableHead,
   TableHeader,
+  TableRow, // NEW: Import TableRow
 } from "@/components/ui/table";
 import { PlusCircle, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";

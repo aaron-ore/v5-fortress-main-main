@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
-import { usePrint } from "@/context/PrintContext";
+import { usePrint, PrintContentData } from "@/context/PrintContext"; // NEW: Import PrintContentData
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -146,9 +146,6 @@ const Reports: React.FC = () => {
   // Ref to hold the report content for text extraction (for AI summary)
   const reportContentRef = useRef<HTMLDivElement>(null);
 
-  // Use the new centralized hook
-  const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
-
   // Flatten all reports for the dropdown menu
   const allReports = useMemo(() => {
     return reportCategories.flatMap(category => category.reports);
@@ -211,7 +208,7 @@ const Reports: React.FC = () => {
       structuredLocations: structuredLocations,
     };
 
-    initiatePrint({ type: activeReportId, props: finalPdfProps });
+    initiatePrint({ type: activeReportId as PrintContentData['type'], props: finalPdfProps });
     showSuccess("Report sent to printer!");
   }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
 
