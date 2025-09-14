@@ -56,7 +56,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => subscription.unsubscribe();
-  }, [user]); // Dependency array updated to only include `user` if needed, or empty if not.
+  }, []); // Dependency array changed from [user] to []
+  // This ensures the effect runs only once on mount, preventing re-subscription loops.
 
   return (
     <AuthContext.Provider value={{ user, session, isLoading }}>
