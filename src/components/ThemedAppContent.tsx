@@ -7,17 +7,12 @@ import AppContent from "@/AppContent";
 import ThemeInitializer from "@/components/ThemeInitializer";
 
 const ThemedAppContent: React.FC = () => {
-  const { profile, isLoadingProfile } = useProfile();
-
-  const initialDefaultTheme = useMemo(() => {
-    if (!isLoadingProfile && profile?.companyProfile?.organizationTheme) {
-      return profile.companyProfile.organizationTheme;
-    }
-    return "dark";
-  }, [profile?.companyProfile?.organizationTheme, isLoadingProfile]);
+  // Removed dynamic initialDefaultTheme useMemo
+  // The ThemeProvider will now always initialize with 'dark'
+  // ThemeInitializer will handle setting the actual theme from the profile once loaded.
 
   return (
-    <ThemeProvider defaultTheme={initialDefaultTheme}>
+    <ThemeProvider defaultTheme="dark"> {/* Set a static defaultTheme */}
         <ThemeInitializer>
           <AppContent />
         </ThemeInitializer>

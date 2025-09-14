@@ -119,7 +119,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(mapSupabaseProfileToUserProfile(data, data.organizations));
     }
     setIsLoadingProfile(false);
-  }, [user, profile]); // Added profile to dependency array
+  }, [user]); // Removed 'profile' from dependencies to prevent loop
 
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
