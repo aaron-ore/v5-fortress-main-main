@@ -255,11 +255,15 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "purchase-order-status": {
-          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all'; // Explicitly type statusFilter
+          // The statusFilter is passed to the report component for internal filtering.
+          // Here, we just fetch all purchase orders within the date range.
           const filteredOrders = filterDataByDateRange(orders, 'date').filter((order: OrderItem) => {
-            return order.type === "Purchase" && (statusFilter === "all" || (order.status && order.status.toLowerCase() === statusFilter.toLowerCase()));
+            return order.type === "Purchase";
           });
 
+          // The statusFilter prop for the PDF component will be 'all' by default,
+          // and the component itself will apply further filtering if needed.
+          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all';
           currentProcessedData = { orders: filteredOrders, statusFilter };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
           break;
