@@ -150,7 +150,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
-          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersabase, company_logo_url: profileData.companyLogoUrl })
+          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist, company_logo_url: profileData.companyLogoUrl })
           .select()
           .single();
 
