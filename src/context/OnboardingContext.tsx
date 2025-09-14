@@ -42,12 +42,6 @@ interface OnboardingContextType {
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
-// Helper function to extract storage path from URL (replicated from SQL function)
-const getStoragePathFromUrl = (url: string): string | null => {
-  const match = url.match(/public\/company-logos\/(.*)/);
-  return match ? match[1] : null;
-};
-
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
@@ -156,7 +150,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
-          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist, company_logo_url: profileData.companyLogoUrl })
+          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersabase, company_logo_url: profileData.companyLogoUrl })
           .select()
           .single();
 
