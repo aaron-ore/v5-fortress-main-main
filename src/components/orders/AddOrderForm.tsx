@@ -15,10 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
-  TableCell, // NEW: Import TableCell
+  TableCell,
   TableHead,
   TableHeader,
-  TableRow, // NEW: Import TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { PlusCircle, Printer, PackageOpen } from "lucide-react";
 import { showError } from "@/utils/toast";
@@ -113,7 +113,7 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
     setCalculatedTotalAmount(subtotal * (1 + taxRate));
   }, [items, taxRate]);
 
-  // Generate QR code for Invoice number (only if invoiceNumber is set, i..e., after order creation)
+  // Generate QR code for Invoice number (only if invoiceNumber is set, i.e., after order creation)
   React.useEffect(() => {
     const generateQr = async () => {
       if (invoiceNumber) {
@@ -453,4 +453,4 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
   );
 };
 
-export default CreateInvoice;
+export default AddOrderForm;
