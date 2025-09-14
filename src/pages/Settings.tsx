@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
   const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
 
-  const availableThemes = ['dark', 'ocean-breeze', 'sunset-glow', 'forest-whisper', 'emerald', 'deep-forest', 'natural-light'];
+  const availableThemes = ['dark', 'emerald', 'deep-forest'];
 
   return (
     <div className="flex flex-col space-y-6 p-6">
