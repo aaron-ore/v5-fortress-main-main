@@ -4,6 +4,7 @@ import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileCo
 import { supabase } from "@/lib/supabaseClient";
 import { generateUniqueCode } from "@/utils/numberGenerator";
 import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import getFilePathFromPublicUrl
 
 export interface CompanyProfile {
   name: string;
@@ -221,7 +222,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         const oldCompanyLogoUrl = existingOrg?.company_logo_url;
         // If the new logo URL is null/undefined/empty AND an old one existed, delete the old file
         if ((profileData.companyLogoUrl === undefined || profileData.companyLogoUrl === null || profileData.companyLogoUrl === "") && oldCompanyLogoUrl) {
-            const oldFilePath = getStoragePathFromUrl(oldCompanyLogoUrl, 'company-logos'); // Pass bucket name
+            const oldFilePath = getFilePathFromPublicUrl(oldCompanyLogoUrl, 'company-logos'); // Pass bucket name
             if (oldFilePath) {
                 console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
                 const { error: deleteError } = await supabase.storage
