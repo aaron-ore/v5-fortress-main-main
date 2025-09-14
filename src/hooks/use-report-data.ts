@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
@@ -328,7 +328,8 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
           if (filterFrom && filterTo) {
-            query = query.gte('timestamp', filterFrom.toISOString()).lte('timestamp', filterTo.toISOString());
+            query = query.gte('timestamp', filterFrom.toISOString())
+                         .lte('timestamp', filterTo.toISOString());
           }
 
           const { data: discrepanciesData, error: discrepanciesError } = await query;

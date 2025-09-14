@@ -453,4 +453,4 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
   );
 };
 
-export default AddOrderForm;
+export default CreateInvoice;

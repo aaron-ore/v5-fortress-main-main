@@ -71,6 +71,13 @@ const ClassicDashboard: React.FC = () => {
 
   const { metrics, lists } = dashboardData;
 
+  // Combine recent sales and purchase orders for a generic "Recent Orders" list
+  const recentOrders = [...lists.recentSalesOrders, ...lists.recentPurchaseOrders].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   return (
     <div className="space-y-6">
       {/* Header and Date Filter in the same row */}
@@ -212,7 +219,7 @@ const ClassicDashboard: React.FC = () => {
             <CardTitle className="text-xl font-semibold">Recent Orders</CardTitle>
           </CardHeader>
           <CardContent>
-            {lists.recentOrders.length > 0 ? (
+            {recentOrders.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -224,7 +231,7 @@ const ClassicDashboard: React.FC = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {lists.recentOrders.map((order) => (
+                    {recentOrders.map((order) => (
                       <TableRow key={order.id} onClick={() => navigate(`/orders/${order.id}`)} className="cursor-pointer hover:bg-muted/20">
                         <TableCell className="font-medium">{order.id}</TableCell>
                         <TableCell>{order.type}</TableCell>
@@ -240,7 +247,7 @@ const ClassicDashboard: React.FC = () => {
             ) : (
               <p className="text-center text-muted-foreground py-4">No recent orders to display.</p>
             )}
-            {lists.recentOrders.length > 0 && (
+            {recentOrders.length > 0 && (
               <div className="text-center mt-4">
                 <Button variant="link" onClick={() => navigate("/orders")}>
                   View All Orders
