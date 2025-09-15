@@ -4,17 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Trash2, Folder, QrCode, Edit } from "lucide-react"; // Changed MapPin to Folder
-import { showSuccess } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
-import { usePrint, PrintContentData } from "@/context/PrintContext";
+import { usePrint } from "@/context/PrintContext";
 import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // FIXED: Corrected import path
 import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // FIXED: Corrected import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Folders = () => { // Renamed component and removed React.FC
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding(); // Updated context functions
-  const { initiatePrint } = usePrint();
+  const {  } = usePrint();
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // Updated type
@@ -65,8 +64,6 @@ const Folders = () => { // Renamed component and removed React.FC
     }
     setIsFolderLabelGeneratorOpen(false);
   };
-
-  // Removed handleGenerateAndPrintFromGenerator as it's no longer used.
 
   return (
     <div className="flex flex-col flex-grow space-y-6 p-6">
