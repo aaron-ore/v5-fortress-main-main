@@ -6,11 +6,11 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
-import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile
-import { useOnboarding } from "@/context/OnboardingContext"; // Removed Location
-// Removed showError
-// Removed PrintContentData
+import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { parseAndValidateDate } from "@/utils/dateUtils"; // Corrected: Added import for parseAndValidateDate
 import { supabase } from "@/lib/supabaseClient";
+import { PrintContentData } from "@/context/PrintContext";
 
 interface ReportDataResult {
   data: any;
@@ -315,7 +315,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           }
 
           const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(date.from)) ? endOfDay(dateRange.from) : null);
+          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null); // Corrected: Changed 'date.from' to 'dateRange.from'
 
           if (filterFrom && filterTo) {
             query = query.gte('timestamp', filterFrom.toISOString())
