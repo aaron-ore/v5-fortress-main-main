@@ -63,10 +63,10 @@ const FolderCard: React.FC<FolderCardProps> = ({
         )}
         onClick={handleCardClick}
       >
-        <CardHeader className="p-0 pb-2 flex flex-row items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2">
+        <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
             <Folder className="h-6 w-6 text-primary" style={{ color: folder.color }} />
-            <CardTitle className="text-lg font-semibold text-foreground truncate max-w-[calc(100%-60px)]">
+            <CardTitle className="text-lg font-semibold text-foreground flex-1 min-w-0">
               {folder.name}
             </CardTitle>
           </div>
