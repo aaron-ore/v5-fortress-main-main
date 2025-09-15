@@ -96,7 +96,7 @@ const Folders = () => { // Renamed component and removed React.FC
                 <Label>Current Folders</Label> {/* Updated label */}
                 <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20">
                   <ul className="space-y-1">
-                    {inventoryFolders.map((folder) => ( {/* Iterate over InventoryFolder objects */}
+                    {inventoryFolders.map((folder) => ( // Iterate over InventoryFolder objects
                       <li key={folder.id} className="flex items-center justify-between py-1 text-foreground">
                         <Button
                           variant="ghost"
