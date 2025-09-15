@@ -3,7 +3,7 @@ import { format, isValid } from "date-fns";
 import { InventoryItem } from "@/context/InventoryContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { Location } from "@/context/OnboardingContext";
+import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { useProfile } from "@/context/ProfileContext";
 
 interface LowStockPdfContentProps {
@@ -11,7 +11,7 @@ interface LowStockPdfContentProps {
   items: InventoryItem[];
   statusFilter: "all" | "low-stock" | "out-of-stock";
   dateRange?: DateRange;
-  structuredLocations: Location[];
+  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
 }
 
 const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
@@ -38,8 +38,8 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
       : "LOW & OUT OF STOCK ITEMS";
 
   const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+    const foundLoc = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
+    return foundLoc?.name || fullLocationString; // Use folder name
   };
 
   return (
@@ -90,7 +90,7 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">SKU</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Quantity</th>
               <th className="py-2 px-4 text-right font-semibold">Reorder Level</th>
-              <th className="py-2 px-4 text-left font-semibold">Location</th>
+              <th className="py-2 px-4 text-left font-semibold">Folder</th> {/* Changed to Folder */}
             </tr>
           </thead>
           <tbody>
@@ -101,7 +101,7 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity}</td>
                   <td className="py-2 px-4 text-right">{item.reorderLevel}</td>
-                  <td className="py-2 px-4">{getLocationDisplayName(item.location)}</td>
+                  <td className="py-2 px-4">{getLocationDisplayName(item.folderId)}</td> {/* Updated to folderId */}
                 </tr>
               ))
             ) : (

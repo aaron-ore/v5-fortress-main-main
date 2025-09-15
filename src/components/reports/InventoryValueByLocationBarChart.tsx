@@ -16,7 +16,7 @@ const InventoryValueByLocationBarChart: React.FC = () => {
 
     const locationValueMap: { [key: string]: number } = {};
     inventoryItems.forEach(item => {
-      locationValueMap[item.location] = (locationValueMap[item.location] || 0) + (item.quantity * item.unitCost);
+      locationValueMap[item.folderId] = (locationValueMap[item.folderId] || 0) + (item.quantity * item.unitCost); // Updated to folderId
     });
 
     return Object.entries(locationValueMap).map(([location, value]) => ({

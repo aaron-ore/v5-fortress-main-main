@@ -121,62 +121,64 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6 text-destructive" /> Issues Reported ({getDisplayDateRange()})
-          </DialogTitle>
-          <DialogDescription>
-            List of operational issues reported today.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex-grow flex flex-col gap-4 py-4 overflow-hidden">
-          {isLoading ? (
-            <p className="text-center text-muted-foreground py-8">Loading issues...</p>
-          ) : issues.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No issues reported for this period. Great job!</p>
-          ) : (
-            <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
-              <div className="space-y-4">
-                {issues.map((issue) => {
-                  const issueTimestamp = parseAndValidateDate(issue.timestamp);
-                  return (
-                    <div key={issue.id} className="bg-muted/20 p-3 rounded-md border border-border">
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="font-semibold flex items-center gap-1">
-                          <User className="h-4 w-4 text-muted-foreground" /> {getUserName(issue.userId)}
-                        </span>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {issueTimestamp ? format(issueTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}
-                        </span>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-destructive" /> Issues Reported ({getDisplayDateRange()})
+            </DialogTitle>
+            <DialogDescription>
+              List of operational issues reported today.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-grow flex flex-col gap-4 py-4 overflow-hidden">
+            {isLoading ? (
+              <p className="text-center text-muted-foreground py-8">Loading issues...</p>
+            ) : issues.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No issues reported for this period. Great job!</p>
+            ) : (
+              <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
+                <div className="space-y-4">
+                  {issues.map((issue) => {
+                    const issueTimestamp = parseAndValidateDate(issue.timestamp);
+                    return (
+                      <div key={issue.id} className="bg-muted/20 p-3 rounded-md border border-border">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className="font-semibold flex items-center gap-1">
+                            <User className="h-4 w-4 text-muted-foreground" /> {getUserName(issue.userId)}
+                          </span>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {issueTimestamp ? format(issueTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}
+                          </span>
+                        </div>
+                        <p className="font-medium text-foreground mb-1 flex items-center gap-1">
+                          <AlertTriangle className="h-4 w-4 text-destructive" /> {issue.details.issueType}
+                        </p>
+                        {issue.details.itemName !== "N/A" && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Package className="h-4 w-4" /> Product: {issue.details.itemName} (ID: {issue.details.itemId})
+                          </p>
+                        )}
+                        {issue.details.folderId !== "N/A" && (
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-4 w-4" /> Folder: {getFolderName(issue.details.folderId)}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Description: {issue.details.description}
+                        </p>
+                        {issue.details.contactInfo !== "N/A" && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Contact: {issue.details.contactInfo}
+                          </p>
+                        )}
                       </div>
-                      <p className="font-medium text-foreground mb-1 flex items-center gap-1">
-                        <AlertTriangle className="h-4 w-4 text-destructive" /> {issue.details.issueType}
-                      </p>
-                      {issue.details.itemName !== "N/A" && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Package className="h-4 w-4" /> Product: {issue.details.itemName} (ID: {issue.details.itemId})
-                        </p>
-                      )}
-                      {issue.details.folderId !== "N/A" && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" /> Folder: {getFolderName(issue.details.folderId)}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Description: {issue.details.description}
-                      </p>
-                      {issue.details.contactInfo !== "N/A" && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Contact: {issue.details.contactInfo}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>

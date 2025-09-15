@@ -9,7 +9,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import LocationLabelGenerator from "@/components/LocationLabelGenerator"; // This component will remain for physical labels
-import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // Renamed import
+import FolderInventoryViewDialog from "@/components/LocationInventoryViewDialog"; // Renamed import
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Folders = () => { // Renamed component and removed React.FC
@@ -96,12 +96,12 @@ const Folders = () => { // Renamed component and removed React.FC
                 <Label>Current Folders</Label> {/* Updated label */}
                 <ScrollArea className="flex-grow border border-border rounded-md p-3 bg-muted/20">
                   <ul className="space-y-1">
-                    {inventoryFolders.map((folder) => ( // Iterate over InventoryFolder objects
+                    {inventoryFolders.map((folder) => (
                       <li key={folder.id} className="flex items-center justify-between py-1 text-foreground">
                         <Button
                           variant="ghost"
                           className="p-0 h-auto text-left font-normal text-foreground hover:underline"
-                          onClick={() => handleViewInventoryClick(folder.id)} {/* Updated to folder.id */}
+                          onClick={() => handleViewInventoryClick(folder.id)}
                         >
                           {folder.name} {/* Display folder name */}
                         </Button>
@@ -117,7 +117,7 @@ const Folders = () => { // Renamed component and removed React.FC
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteFolderClick(folder)} {/* Pass full InventoryFolder object */}
+                            onClick={() => handleDeleteFolderClick(folder)}
                             aria-label={`Remove folder ${folder.name}`}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -129,7 +129,7 @@ const Folders = () => { // Renamed component and removed React.FC
                 </ScrollArea>
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-8">No folders defined yet. Add your first folder!</p> {/* Updated text */}
+              <p className="text-center text-muted-foreground py-8">No folders defined yet. Add your first folder!</p>
             )}
           </CardContent>
         </Card>
@@ -154,7 +154,7 @@ const Folders = () => { // Renamed component and removed React.FC
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmRemoveFolder}
           title="Confirm Folder Deletion"
-          description={`Are you sure you want to delete the folder "${folderToDelete.name}"? This cannot be undone.`} {/* Updated text */}
+          description={`Are you sure you want to delete the folder "${folderToDelete.name}"? This cannot be undone.`}
           confirmText="Delete"
           cancelText="Cancel"
         />
@@ -170,7 +170,7 @@ const Folders = () => { // Renamed component and removed React.FC
             </DialogDescription>
           </DialogHeader>
           <LocationLabelGenerator
-            initialLocation={folderToEdit} // Still passing as Location type for now, will adapt generator
+            initialLocation={folderToEdit}
             onSave={handleSaveFolder}
             onGenerateAndPrint={handleGenerateAndPrintFromGenerator}
             onClose={() => setIsLocationLabelGeneratorOpen(false)}

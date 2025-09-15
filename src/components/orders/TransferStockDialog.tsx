@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { showSuccess, showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
 import { Truck } from "lucide-react";
 
@@ -25,12 +25,12 @@ interface TransferStockDialogProps {
 
 const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClose }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { locations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders
   const { addStockMovement } = useStockMovement();
 
   const [selectedItemId, setSelectedItemId] = useState("");
-  const [fromLocation, setFromLocation] = useState("");
-  const [toLocation, setToLocation] = useState("");
+  const [fromFolderId, setFromFolderId] = useState(""); // Changed from fromLocation to fromFolderId
+  const [toFolderId, setToFolderId] = useState(""); // Changed from toLocation to toFolderId
   const [transferQuantity, setTransferQuantity] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -39,8 +39,8 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
   React.useEffect(() => {
     if (isOpen) {
       setSelectedItemId("");
-      setFromLocation("");
-      setToLocation("");
+      setFromFolderId("");
+      setToFolderId("");
       setTransferQuantity("");
       setNotes("");
     }
@@ -48,19 +48,19 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
 
   React.useEffect(() => {
     if (selectedItem) {
-      setFromLocation(selectedItem.location);
+      setFromFolderId(selectedItem.folderId); // Use item's current folderId
     } else {
-      setFromLocation("");
+      setFromFolderId("");
     }
   }, [selectedItem]);
 
   const handleSubmit = async () => {
-    if (!selectedItemId || !fromLocation || !toLocation || !transferQuantity) {
+    if (!selectedItemId || !fromFolderId || !toFolderId || !transferQuantity) {
       showError("Please fill in all required fields.");
       return;
     }
-    if (fromLocation === toLocation) {
-      showError("Source and destination locations cannot be the same.");
+    if (fromFolderId === toFolderId) {
+      showError("Source and destination folders cannot be the same.");
       return;
     }
 
@@ -74,7 +74,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
       return;
     }
     if (selectedItem.quantity < quantity) {
-      showError(`Not enough stock at ${fromLocation}. Available: ${selectedItem.quantity}`);
+      showError(`Not enough stock at ${getFolderName(fromFolderId)}. Available: ${selectedItem.quantity}`);
       return;
     }
 
@@ -82,8 +82,8 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
     const newQuantity = selectedItem.quantity - quantity; // Deduct from source
     const updatedItem = {
       ...selectedItem,
-      quantity: newQuantity,
-      location: toLocation, // Update location to destination
+      quantity: newQuantity, // Update quantity at the source (conceptually, the item is moving)
+      folderId: toFolderId, // Update the item's primary folder to the destination
       lastUpdated: new Date().toISOString().split('T')[0],
     };
 
@@ -93,20 +93,27 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
     await addStockMovement({
       itemId: selectedItem.id,
       itemName: selectedItem.name,
-      type: "subtract", // Log as subtract from old location
+      type: "subtract", // Log as subtract from old folder
       amount: quantity,
       oldQuantity: oldQuantity,
       newQuantity: newQuantity,
-      reason: `Transferred from ${fromLocation} to ${toLocation}`,
+      reason: `Transferred from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}`,
+      folderId: fromFolderId, // Log the folder from which it was transferred
     });
 
-    // For a full transfer, you might also need to add to the destination location's stock.
-    // In this simplified model, we're just moving the item's location and updating its quantity.
-    // If items were truly separate entities per location, this would be more complex.
+    // For a full transfer, you might also need to add to the destination folder's stock.
+    // In this simplified model, we're just moving the item's folder and updating its quantity.
+    // If items were truly separate entities per folder, this would be more complex.
 
-    showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${fromLocation} to ${toLocation}.`);
+    showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}.`);
     refreshInventory(); // Ensure inventory context is refreshed
     onClose();
+  };
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
   };
 
   return (
@@ -117,7 +124,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
             <Truck className="h-6 w-6 text-primary" /> Transfer Stock
           </DialogTitle>
           <DialogDescription>
-            Move inventory items between different storage locations.
+            Move inventory items between different storage folders.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -145,19 +152,19 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fromLocation">From Location</Label>
-                  <Input id="fromLocation" value={fromLocation} disabled />
+                  <Label htmlFor="fromFolderId">From Folder</Label>
+                  <Input id="fromFolderId" value={getFolderName(fromFolderId)} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="toLocation">To Location</Label>
-                  <Select value={toLocation} onValueChange={setToLocation}>
-                    <SelectTrigger id="toLocation">
-                      <SelectValue placeholder="Select destination location" />
+                  <Label htmlFor="toFolderId">To Folder</Label>
+                  <Select value={toFolderId} onValueChange={setToFolderId}>
+                    <SelectTrigger id="toFolderId">
+                      <SelectValue placeholder="Select destination folder" />
                     </SelectTrigger>
                     <SelectContent>
-                      {locations.filter(loc => loc.fullLocationString !== fromLocation).map(loc => (
-                        <SelectItem key={loc.id} value={loc.fullLocationString}>
-                          {loc.displayName || loc.fullLocationString}
+                      {inventoryFolders.filter(folder => folder.id !== fromFolderId).map(folder => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          {folder.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -196,7 +203,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!selectedItemId || !fromLocation || !toLocation || !transferQuantity || fromLocation === toLocation}>
+          <Button onClick={handleSubmit} disabled={!selectedItemId || !fromFolderId || !toFolderId || !transferQuantity || fromFolderId === toFolderId}>
             Transfer Stock
           </Button>
         </DialogFooter>

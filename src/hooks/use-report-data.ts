@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
@@ -7,7 +7,7 @@ import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated to InventoryFolder
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 // Removed: import { PrintContentData } from "@/context/PrintContext";
@@ -27,7 +27,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { customers } = useCustomers();
   const { stockMovements, fetchStockMovements } = useStockMovement();
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // Updated to inventoryFolders
 
   const [processedData, setProcessedData] = useState<any>(null);
   const [pdfProps, setPdfProps] = useState<any>(null);
@@ -143,14 +143,14 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           } else {
             const locationMap: { [key: string]: { totalValue: number; totalQuantity: number, displayName: string } } = {};
             filteredInventory.forEach((item: InventoryItem) => {
-              const locationKey = item.location;
-              const display = structuredLocations.find(loc => loc.fullLocationString === locationKey)?.displayName || locationKey;
+              const folderIdKey = item.folderId; // Changed from locationKey to folderIdKey
+              const display = structuredLocations.find(folder => folder.id === folderIdKey)?.name || folderIdKey; // Find folder by ID and use its name
 
-              if (!locationMap[locationKey]) {
-                locationMap[locationKey] = { totalValue: 0, totalQuantity: 0, displayName: display };
+              if (!locationMap[folderIdKey]) {
+                locationMap[folderIdKey] = { totalValue: 0, totalQuantity: 0, displayName: display };
               }
-              locationMap[locationKey].totalValue += item.quantity * item.unitCost;
-              locationMap[locationKey].totalQuantity += item.quantity;
+              locationMap[folderIdKey].totalValue += item.quantity * item.unitCost;
+              locationMap[folderIdKey].totalQuantity += item.quantity;
               totalOverallValue += item.quantity * item.unitCost;
               totalOverallQuantity += item.quantity;
             });
@@ -333,7 +333,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             organizationId: log.organization_id,
             itemId: log.item_id,
             itemName: log.item_name,
-            locationString: log.location_string,
+            folderId: log.folder_id,
             locationType: log.location_type,
             originalQuantity: log.original_quantity,
             countedQuantity: log.counted_quantity,

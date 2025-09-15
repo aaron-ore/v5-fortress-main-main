@@ -110,7 +110,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
   };
 
   // Function to get folder display name
-  const getFolderDisplayName = (folderId: string) => {
+  const getFolderName = (folderId: string) => {
     const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
     return foundFolder?.name || "Unknown Folder";
   };
@@ -189,7 +189,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
                           <Package className="h-4 w-4 text-primary" /> {discrepancy.itemName} (ID: {discrepancy.itemId})
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" /> Folder: {getFolderDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')}) {/* Updated to folderId */}
+                          <MapPin className="h-4 w-4" /> Folder: {getFolderName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})
                         </p>
                         {discrepancy.reason && (
                           <p className="text-sm text-muted-foreground mt-1">
@@ -225,7 +225,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
           onClose={() => setIsConfirmDialogOpen(false)}
           onConfirm={confirmResolveDiscrepancy}
           title="Confirm Resolution"
-          description={`Are you sure you want to mark the discrepancy for "${discrepancyToResolve.itemName}" at "${getFolderDisplayName(discrepancyToResolve.folderId)}" as resolved?`} {/* Updated to folderId */}
+          description={`Are you sure you want to mark the discrepancy for "${discrepancyToResolve.itemName}" at "${getFolderName(discrepancyToResolve.folderId)}" as resolved?`}
           confirmText="Resolve"
           cancelText="Cancel"
         />

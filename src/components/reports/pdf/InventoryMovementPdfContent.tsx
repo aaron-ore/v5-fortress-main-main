@@ -3,6 +3,7 @@ import { StockMovement } from "@/context/StockMovementContext";
 import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
+import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { useProfile } from "@/context/ProfileContext";
 
 interface InventoryMovementPdfContentProps {
@@ -10,7 +11,7 @@ interface InventoryMovementPdfContentProps {
   movements: StockMovement[];
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: Location[];
+  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react-router-dom";
+import React, { useEffect, useRef } from "react"; // Corrected import for useEffect and useRef
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -105,7 +105,7 @@ const AuthenticatedApp = () => {
                             <Route path="users" element={<Users />} />
                             <Route path="setup-instructions" element={<SetupInstructions />} />
                             <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
-                            <Route path="folders" element={<Folders />} /> {/* Changed path from locations to folders */}
+                            <Route path="folders" element={<Folders />} />
                             <Route path="integrations" element={<Integrations />} />
                             <Route path="automation" element={<Automation />} />
                             <Route path="*" element={<NotFound />} />
@@ -244,7 +244,7 @@ const AppContent = () => {
         {mainAppRoutes}
       </div>
 
-      {isPrinting && printContentData && ( // Add check for printContentData
+      {isPrinting && printContentData && (
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
           {renderPdfComponent()}
         </PrintWrapper>

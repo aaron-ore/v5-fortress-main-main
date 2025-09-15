@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { showSuccess } from "@/utils/toast";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import ManageFoldersDialog from "@/components/ManageFoldersDialog"; // Renamed import
+import ManageFoldersDialog from "@/components/ManageLocationsDialog"; // Renamed import
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import BulkUpdateDialog from "@/components/BulkUpdateDialog";

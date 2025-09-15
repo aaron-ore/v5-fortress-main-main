@@ -3,7 +3,7 @@ import { format, isValid } from "date-fns";
 import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { Location } from "@/context/OnboardingContext";
+import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { useProfile } from "@/context/ProfileContext";
 
 interface DiscrepancyLog {
@@ -13,7 +13,7 @@ interface DiscrepancyLog {
   organizationId: string;
   itemId: string;
   itemName: string;
-  locationString: string;
+  folderId: string;
   locationType: string;
   originalQuantity: number;
   countedQuantity: number;
@@ -24,11 +24,11 @@ interface DiscrepancyLog {
 
 interface DiscrepancyPdfContentProps {
   reportDate: string;
-  discrepancies: DiscrepancyLog[];
+  discrepancies: DiscrecrepancyLog[];
   statusFilter: "all" | "pending" | "resolved";
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: Location[];
+  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
 }
 
 const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
@@ -61,8 +61,8 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
   };
 
   const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+    const foundFolder = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
+    return foundFolder?.name || fullLocationString; // Use folder name
   };
 
   return (
@@ -110,7 +110,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
           <thead>
             <tr className="bg-gray-100 border border-gray-300">
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
-              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Location</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Folder</th> {/* Changed to Folder */}
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Original Qty</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Counted Qty</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Diff</th>
@@ -127,7 +127,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
                 return (
                   <tr key={discrepancy.id} className="border-b border-gray-200">
                     <td className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getLocationDisplayName(discrepancy.locationString)} ({discrepancy.locationType.replace('_', ' ')})</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getLocationDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity}</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity}</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference}</td>

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
-import { CompanyProfileStepProps } from "./CompanyProfileStep"; // Import the interface
-import FolderSetupStep from "./FolderSetupStep"; // Renamed import
-import { FolderSetupStepProps } from "./FolderSetupStep"; // Renamed import
+import { CompanyProfileStepProps } from "./CompanyProfileStep";
+import FolderSetupStep from "./LocationSetupStep"; // Renamed import
+import { FolderSetupStepProps } from "./LocationSetupStep"; // Renamed import
 // import ProductImportStep from "./ProductImportStep"; // Removed
 import { useOnboarding } from "@/context/OnboardingContext";
 

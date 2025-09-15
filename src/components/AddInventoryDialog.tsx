@@ -37,7 +37,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   onClose,
 }) => {
   const { addInventoryItem } = useInventory();
-  const { locations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders
   const { categories } = useCategories();
   const { vendors } = useVendors();
   const { profile } = useProfile();
@@ -68,11 +68,11 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
   const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
 
-  const uniqueAreas = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'area');
-  const uniqueRows = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'row');
-  const uniqueBays = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'bay');
-  const uniqueLevels = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'level');
-  const uniquePositions = getUniqueLocationParts(locations.map(loc => loc.fullLocationString), 'pos');
+  const uniqueAreas = getUniqueLocationParts(inventoryFolders.map(loc => loc.name), 'area'); // Updated to inventoryFolders.name
+  const uniqueRows = getUniqueLocationParts(inventoryFolders.map(loc => loc.name), 'row'); // Updated to inventoryFolders.name
+  const uniqueBays = getUniqueLocationParts(inventoryFolders.map(loc => loc.name), 'bay'); // Updated to inventoryFolders.name
+  const uniqueLevels = getUniqueLocationParts(inventoryFolders.map(loc => loc.name), 'level'); // Updated to inventoryFolders.name
+  const uniquePositions = getUniqueLocationParts(inventoryFolders.map(loc => loc.name), 'pos'); // Updated to inventoryFolders.name
 
   useEffect(() => {
     if (isOpen) {
@@ -152,8 +152,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     let finalOverstockQuantity: number;
     let finalReorderLevel: number;
     let finalPickingReorderLevel: number;
-    let finalLocation: string;
-    let finalPickingBinLocation: string;
+    let finalFolderId: string; // Changed from finalLocation to finalFolderId
+    let finalPickingBinFolderId: string; // Changed from finalPickingBinLocation to finalPickingBinFolderId
     let finalCommittedStock = 0;
     let finalIncomingStock = 0;
 
@@ -163,15 +163,15 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       finalOverstockQuantity = 0;
       finalReorderLevel = parseInt(reorderLevel || '0');
       finalPickingReorderLevel = parseInt(reorderLevel || '0');
-      finalLocation = locations.length > 0 ? locations[0].fullLocationString : "Unassigned";
-      finalPickingBinLocation = locations.length > 0 ? locations[0].fullLocationString : "Unassigned";
+      finalFolderId = inventoryFolders.length > 0 ? inventoryFolders[0].id : "Unassigned"; // Use folder ID
+      finalPickingBinFolderId = inventoryFolders.length > 0 ? inventoryFolders[0].id : "Unassigned"; // Use folder ID
     } else {
       finalPickingBinQuantity = parseInt(pickingBinQuantity || '0');
       finalOverstockQuantity = parseInt(overstockQuantity || '0');
       finalReorderLevel = parseInt(reorderLevel || '0');
       finalPickingReorderLevel = parseInt(pickingReorderLevel || '0');
-      finalLocation = buildLocationString(mainLocationParts);
-      finalPickingBinLocation = buildLocationString(pickingBinLocationParts);
+      finalFolderId = inventoryFolders.find(f => f.name === buildLocationString(mainLocationParts))?.id || "Unassigned"; // Find folder ID by name
+      finalPickingBinFolderId = inventoryFolders.find(f => f.name === buildLocationString(pickingBinLocationParts))?.id || "Unassigned"; // Find folder ID by name
       finalCommittedStock = 0;
       finalIncomingStock = 0;
     }
@@ -194,13 +194,13 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
-    if (locations.length === 0) {
-      showError("You need to set up inventory locations first. Please go to Manage Locations.");
+    if (inventoryFolders.length === 0) {
+      showError("You need to set up inventory folders first. Please go to Manage Folders.");
       return;
     }
 
-    if (viewMode === "detailed" && (!finalLocation || !finalPickingBinLocation)) {
-      showError("Please select all parts for both Main Storage Location and Picking Bin Location.");
+    if (viewMode === "detailed" && (!finalFolderId || !finalPickingBinFolderId)) {
+      showError("Please select all parts for both Main Storage Folder and Picking Bin Folder.");
       return;
     }
 
@@ -220,7 +220,9 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       showError(`An item with SKU '${sku.trim()}' already exists in your organization. Please use a unique SKU.`);
       return;
     }
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError && fetchError.code === 'PGRST116') { // PGRST116 means "no rows found", which is expected for a non-duplicate
+      // No item found, proceed
+    } else if (fetchError) {
       console.error("Error checking for duplicate SKU:", fetchError);
       showError("Failed to check for duplicate SKU. Please try again.");
       return;
@@ -257,8 +259,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       incomingStock: finalIncomingStock,
       unitCost: parseFloat(unitCost),
       retailPrice: parseFloat(retailPrice),
-      location: finalLocation,
-      pickingBinLocation: finalPickingBinLocation,
+      folderId: finalFolderId, // Updated to folderId
+      pickingBinFolderId: finalPickingBinFolderId, // Added pickingBinFolderId
       imageUrl: finalImageUrl,
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId,
       barcodeUrl: barcodeValue || undefined,
@@ -298,7 +300,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     (viewMode === "detailed" && (isNaN(parsedPickingBinQuantity) || parsedPickingBinQuantity < 0 || isNaN(parsedOverstockQuantity) || parsedOverstockQuantity < 0)) ||
     isNaN(parsedReorderLevel) || parsedReorderLevel < 0 ||
     (viewMode === "detailed" && (isNaN(parsedPickingReorderLevel) || parsedPickingReorderLevel < 0)) ||
-    (viewMode === "detailed" && locations.length === 0) ||
+    (viewMode === "detailed" && inventoryFolders.length === 0) || // Updated to inventoryFolders
     (viewMode === "detailed" && areMainLocationPartsMissing) ||
     (viewMode === "detailed" && arePickingBinLocationPartsMissing) ||
     categories.length === 0 ||
@@ -445,42 +447,42 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               <div className="space-y-2">
                 <Label>Main Storage Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <Select value={mainLocationParts.area} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, area: val }))} disabled={locations.length === 0}>
+                  <Select value={mainLocationParts.area} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, area: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
                     <SelectContent>
                       {uniqueAreas.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={mainLocationParts.row} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, row: val }))} disabled={locations.length === 0}>
+                  <Select value={mainLocationParts.row} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, row: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Row" /></SelectTrigger>
                     <SelectContent>
                       {uniqueRows.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={mainLocationParts.bay} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, bay: val }))} disabled={locations.length === 0}>
+                  <Select value={mainLocationParts.bay} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, bay: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Bay" /></SelectTrigger>
                     <SelectContent>
                       {uniqueBays.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={mainLocationParts.level} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, level: val }))} disabled={locations.length === 0}>
+                  <Select value={mainLocationParts.level} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, level: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Level" /></SelectTrigger>
                     <SelectContent>
                       {uniqueLevels.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={mainLocationParts.pos} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, pos: val }))} disabled={locations.length === 0}>
+                  <Select value={mainLocationParts.pos} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, pos: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
                     <SelectContent>
                       {uniquePositions.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                {locations.length === 0 && (
+                {inventoryFolders.length === 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    You need to set up inventory locations first.
+                    You need to set up inventory folders first.
                     <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
-                      <Link to="/locations">Manage Locations</Link>
+                      <Link to="/folders">Manage Folders</Link>
                     </Button>
                   </p>
                 )}
@@ -488,31 +490,31 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               <div className="space-y-2">
                 <Label>Picking Bin Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <Select value={pickingBinLocationParts.area} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, area: val }))} disabled={locations.length === 0}>
+                  <Select value={pickingBinLocationParts.area} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, area: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
                     <SelectContent>
                       {uniqueAreas.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={pickingBinLocationParts.row} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, row: val }))} disabled={locations.length === 0}>
+                  <Select value={pickingBinLocationParts.row} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, row: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Row" /></SelectTrigger>
                     <SelectContent>
                       {uniqueRows.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={pickingBinLocationParts.bay} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, bay: val }))} disabled={locations.length === 0}>
+                  <Select value={pickingBinLocationParts.bay} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, bay: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Bay" /></SelectTrigger>
                     <SelectContent>
                       {uniqueBays.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={pickingBinLocationParts.level} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, level: val }))} disabled={locations.length === 0}>
+                  <Select value={pickingBinLocationParts.level} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, level: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Level" /></SelectTrigger>
                     <SelectContent>
                       {uniqueLevels.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={pickingBinLocationParts.pos} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, pos: val }))} disabled={locations.length === 0}>
+                  <Select value={pickingBinLocationParts.pos} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, pos: val }))} disabled={inventoryFolders.length === 0}>
                     <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
                     <SelectContent>
                       {uniquePositions.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}

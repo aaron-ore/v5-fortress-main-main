@@ -17,7 +17,7 @@ import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated to InventoryFolder
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
@@ -70,7 +70,7 @@ const reportCategories: ReportCategory[] = [
     title: "Inventory Reports",
     icon: Package,
     reports: [
-      { id: "inventory-valuation", title: "Inventory Valuation", description: "Value of all stock by category/location.", icon: DollarSign },
+      { id: "inventory-valuation", title: "Inventory Valuation", description: "Value of all stock by category/folder.", icon: DollarSign }, // Updated text
       { id: "low-stock-out-of-stock", title: "Low/Out of Stock", description: "Items needing replenishment.", icon: AlertTriangle },
       { id: "inventory-movement", title: "Inventory Movement", description: "Detailed log of stock changes.", icon: Scale },
       { id: "stock-discrepancy", title: "Stock Discrepancy", description: "Reported differences in stock counts.", icon: AlertTriangle },
@@ -133,7 +133,7 @@ const Reports: React.FC = () => {
   const navigate = useNavigate();
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // Updated to inventoryFolders
 
   const [activeReportId, setActiveReportId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);

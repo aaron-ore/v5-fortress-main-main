@@ -68,8 +68,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
   const { vendors, isLoadingVendors, refreshVendors } = useVendors();
-  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile(); // Removed allProfiles from destructuring
-  const { locations: structuredLocations, fetchLocations } = useOnboarding();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
+  const { inventoryFolders: structuredLocations, fetchInventoryFolders } = useOnboarding(); // Updated to inventoryFolders and fetchInventoryFolders
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,8 +82,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     fetchStockMovements();
     refreshVendors();
     fetchAllProfiles();
-    fetchLocations();
-  }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchLocations]);
+    fetchInventoryFolders(); // Updated to fetchInventoryFolders
+  }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
 
   const filterDataByDateRange = useCallback((items: any[], dateKey: string) => {
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
@@ -542,35 +542,35 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       } = {};
 
       structuredLocations.forEach(loc => {
-        locationMetrics[loc.fullLocationString] = {
+        locationMetrics[loc.id] = { // Use folder ID as key
           totalMovements: 0,
           currentStock: 0,
           netChange: 0,
-          displayName: loc.displayName || loc.fullLocationString,
+          displayName: loc.name, // Use folder name as display name
         };
       });
 
       stockMovements.forEach(movement => {
         const item = inventoryItems.find(inv => inv.id === movement.itemId);
         if (item) {
-          const movementLocation = item.location;
-          if (locationMetrics[movementLocation]) {
-            locationMetrics[movementLocation].totalMovements += movement.amount;
+          const movementFolderId = item.folderId; // Use item's folderId
+          if (locationMetrics[movementFolderId]) {
+            locationMetrics[movementFolderId].totalMovements += movement.amount;
             if (movement.type === "add") {
-              locationMetrics[movementLocation].netChange += movement.amount;
+              locationMetrics[movementFolderId].netChange += movement.amount;
             } else {
-              locationMetrics[movementLocation].netChange -= movement.amount;
+              locationMetrics[movementFolderId].netChange -= movement.amount;
             }
           }
         }
       });
 
       inventoryItems.forEach(item => {
-        if (locationMetrics[item.location]) {
-          locationMetrics[item.location].currentStock += item.quantity;
+        if (locationMetrics[item.folderId]) { // Use item's folderId
+          locationMetrics[item.folderId].currentStock += item.quantity;
         }
-        if (item.pickingBinLocation && item.pickingBinLocation !== item.location && locationMetrics[item.pickingBinLocation]) {
-          locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity;
+        if (item.pickingBinFolderId && item.pickingBinFolderId !== item.folderId && locationMetrics[item.pickingBinFolderId]) { // Use pickingBinFolderId and folderId
+          locationMetrics[item.pickingBinFolderId].currentStock += item.pickingBinQuantity;
         }
       });
 

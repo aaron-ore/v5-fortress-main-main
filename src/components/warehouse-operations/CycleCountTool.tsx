@@ -59,6 +59,12 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     }
   }, [scannedDataFromGlobal, isScanning, isCounting, onScannedDataProcessed]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const startCycleCount = () => {
     if (filteredInventory.length === 0) {
       showError("No items found for the selected folder to start a cycle count.");
@@ -255,12 +261,12 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                       <h3 className="font-semibold text-lg">{item.name}</h3>
                       <span className="text-sm text-muted-foreground">SKU: {item.sku}</span>
                     </div>
-                    <p className="text-muted-foreground text-sm mb-2">Folder: {getFolderName(item.folderId)}</p> {/* Updated to folder name */}
+                    <p className="text-muted-foreground text-sm mb-2">Folder: {getFolderName(item.folderId)}</p>
                     
                     {/* Picking Bin Quantity */}
                     <div className="flex items-center justify-between mb-2">
                       <Label htmlFor={`counted-picking-qty-${item.id}`} className="font-semibold">
-                        Picking Bin ({getFolderName(item.folderId)}): {/* Updated to folder name */}
+                        Picking Bin ({getFolderName(item.folderId)}):
                       </Label>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">System: {item.systemPickingBinQuantity}</span>

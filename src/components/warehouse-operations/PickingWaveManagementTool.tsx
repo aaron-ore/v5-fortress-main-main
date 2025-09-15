@@ -17,14 +17,14 @@ import { generateSequentialNumber } from "@/utils/numberGenerator";
 interface PickListItem {
   itemName: string;
   itemSku: string;
-  pickingBinLocation: string;
+  pickingBinFolderId: string; // Changed from pickingBinLocation to pickingBinFolderId
   quantityToPick: number;
 }
 
 const PickingWaveManagementTool: React.FC = () => {
   const { orders, updateOrder } = useOrders();
   const { inventoryItems } = useInventory();
-  const { companyProfile } = useOnboarding();
+  const { companyProfile, inventoryFolders } = useOnboarding(); // Added inventoryFolders
   const { initiatePrint } = usePrint();
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
@@ -58,6 +58,12 @@ const PickingWaveManagementTool: React.FC = () => {
     setCurrentWaveId(null);
   }, [selectedDeliveryRoute]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleCreatePickingWave = () => {
     if (selectedOrderIds.size === 0) {
       showError("Please select at least one order to create a picking wave.");
@@ -81,7 +87,7 @@ const PickingWaveManagementTool: React.FC = () => {
             pickListItemsMap.set(key, {
               itemName: inventoryItem.name,
               itemSku: inventoryItem.sku,
-              pickingBinLocation: inventoryItem.pickingBinLocation, // fullLocationString
+              pickingBinFolderId: inventoryItem.pickingBinFolderId, // Updated to pickingBinFolderId
               quantityToPick: orderItem.quantity,
             });
           }
@@ -91,9 +97,9 @@ const PickingWaveManagementTool: React.FC = () => {
       });
     });
 
-    // Sort pick list items by picking bin location for efficient path
+    // Sort pick list items by picking bin folder for efficient path
     const sortedPickList = Array.from(pickListItemsMap.values()).sort((a, b) =>
-      a.pickingBinLocation.localeCompare(b.pickingBinLocation)
+      getFolderName(a.pickingBinFolderId).localeCompare(getFolderName(b.pickingBinFolderId)) // Sort by folder name
     );
 
     setGeneratedPickList(sortedPickList);
@@ -133,6 +139,7 @@ const PickingWaveManagementTool: React.FC = () => {
       ordersInWave: ordersInWaveDetails,
       pickListItems: generatedPickList,
       pickerName: companyProfile.companyName,
+      inventoryFolders: inventoryFolders, // Pass inventoryFolders
     };
 
     initiatePrint({ type: "picking-wave", props: pdfProps });
@@ -217,14 +224,14 @@ const PickingWaveManagementTool: React.FC = () => {
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <p className="text-muted-foreground text-sm">
-              Consolidated pick list, sequenced by location for efficiency.
+              Consolidated pick list, sequenced by folder for efficiency.
             </p>
             <ScrollArea className="h-60 border border-border rounded-md p-3 bg-muted/20">
               <div className="space-y-2">
                 {generatedPickList.map((item, index) => (
                   <div key={index} className="flex justify-between items-center py-1 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-primary">{item.pickingBinLocation}</span>
+                      <span className="font-semibold text-primary">{getFolderName(item.pickingBinFolderId)}</span>
                       <span>{item.itemName} (SKU: {item.itemSku})</span>
                     </div>
                     <span className="font-bold">{item.quantityToPick} units</span>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { UserProfile } from "@/context/ProfileContext";
-import { Location } from "@/context/OnboardingContext";
+import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
@@ -29,7 +29,7 @@ interface DiscrepancyReportProps {
   discrepancies: DiscrepancyLog[];
   statusFilter: "all" | "pending" | "resolved";
   allProfiles: UserProfile[];
-  structuredLocations: Location[];
+  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
 }
 
 const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
@@ -44,8 +44,8 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
   };
 
   const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+    const foundLoc = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
+    return foundLoc?.name || fullLocationString; // Use folder name
   };
 
   return (
@@ -71,7 +71,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Item Name</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead>Folder</TableHead> {/* Changed to Folder */}
                     <TableHead className="text-right">Original Qty</TableHead>
                     <TableHead className="text-right">Counted Qty</TableHead>
                     <TableHead className="text-right">Difference</TableHead>

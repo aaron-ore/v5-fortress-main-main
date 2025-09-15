@@ -2,13 +2,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Location } from "@/context/OnboardingContext";
+import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 
 // Props now directly reflect the processed data from useReportData
 interface LowStockReportProps {
   items: any[]; // Use 'any' for now, or define specific item types if needed
   statusFilter: "all" | "low-stock" | "out-of-stock";
-  structuredLocations: Location[];
+  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
 }
 
 const LowStockReport: React.FC<LowStockReportProps> = ({
@@ -17,8 +17,8 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
   structuredLocations,
 }) => {
   const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+    const foundLoc = structuredLocations.find(loc => loc.id === fullLocationString); // Find by ID
+    return foundLoc?.name || fullLocationString; // Use folder name
   };
 
   return (
@@ -47,7 +47,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                     <TableHead>SKU</TableHead>
                     <TableHead className="text-right">Quantity</TableHead>
                     <TableHead className="text-right">Reorder Level</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead>Folder</TableHead> {/* Changed to Folder */}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -57,7 +57,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                       <TableCell>{item.sku}</TableCell>
                       <TableCell className="text-right text-destructive">{item.quantity}</TableCell>
                       <TableCell className="text-right">{item.reorderLevel}</TableCell>
-                      <TableCell>{getLocationDisplayName(item.location)}</TableCell>
+                      <TableCell>{getLocationDisplayName(item.folderId)}</TableCell> {/* Updated to folderId */}
                     </TableRow>
                   ))}
                 </TableBody>

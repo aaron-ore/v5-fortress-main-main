@@ -14,7 +14,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
-// Removed parseLocationString, buildLocationString as they are not directly used for generic folders
+import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
 
 interface ManageFoldersDialogProps { // Renamed interface
   isOpen: boolean;
@@ -26,7 +26,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   onClose,
 }) => {
   const { inventoryFolders, addInventoryFolder, removeInventoryFolder, updateInventoryFolder } = useOnboarding(); // Updated context functions
-  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderName, setNewFolderName] = useState(""); // Renamed from newLocationName
   const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null); // State for editing
   const [editingFolderName, setEditingFolderName] = useState("");
 
@@ -51,7 +51,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
     // Default color for new folders
     const defaultColor = "#4CAF50"; // Green
 
-    const newFolder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId"> = {
+    const newFolder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId"> = { // Create InventoryFolder object
       name: newFolderName.trim(),
       color: defaultColor,
       // parentId, description, imageUrl, tags can be added via a more detailed dialog
@@ -139,7 +139,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
               <Label>Existing Folders</Label> {/* Updated label */}
               <ScrollArea className="border border-border rounded-md p-3 bg-muted/20 max-h-40 overflow-y-auto">
                 <ul className="space-y-1">
-                  {inventoryFolders.map((folder) => ( // Iterate over InventoryFolder objects
+                  {inventoryFolders.map((folder) => (
                     <li key={folder.id} className="flex items-center justify-between py-1 text-foreground">
                       {folderToEdit?.id === folder.id ? (
                         <Input
@@ -168,19 +168,19 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveFolderClick(folder)} // Pass full InventoryFolder object
+                          onClick={() => handleDeleteFolderClick(folder)}
                           aria-label={`Remove folder ${folder.name}`}
                         >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </ScrollArea>
-            </div>
-          )}
-        </div>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close
@@ -202,4 +202,4 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   );
 };
 
-export default ManageFoldersDialog; // Renamed export
+export default ManageFoldersDialog;
