@@ -43,7 +43,7 @@ const OutOfStockItemsCard: React.FC<OutOfStockItemsCardProps> = ({ outOfStockIte
             )}
           </ul>
         ) : (
-          <p className="text-center text-muted-foreground text-sm py-4">No items currently out of stock. Excellent!</p>
+          <p className="text-center text-muted-foreground text-sm py-4">No slow-moving or deadstock items detected. Great!</p>
         )}
       </CardContent>
     </Card>

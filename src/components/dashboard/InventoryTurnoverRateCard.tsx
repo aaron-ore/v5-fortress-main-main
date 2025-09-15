@@ -13,7 +13,7 @@ const InventoryTurnoverRateCard: React.FC<InventoryTurnoverRateCardProps> = ({ i
         <CardTitle className="text-lg font-bold text-center text-foreground">Inventory Turnover Rate</CardTitle>
         <RefreshCw className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent>
+      <CardContent className="text-center p-4 pt-0 flex flex-col justify-between h-full">
         <div className="text-2xl font-bold">{inventoryTurnoverRate}</div>
         <p className="text-xs text-muted-foreground mt-1">Times inventory was sold and replaced in a period.</p>
         <p className="text-xs text-muted-foreground mt-1">Higher is generally better, indicating efficient sales.</p>

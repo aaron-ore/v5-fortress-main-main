@@ -31,7 +31,7 @@ const MonthlyOverviewChartCard: React.FC<MonthlyOverviewChartCardProps> = ({ dat
               tickFormatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
               domain={[0, 'auto']}
               axisLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+              tickLine={{ stroke: 'hsl(var(--muted-foreground))', }}
               tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
             />
             <Tooltip

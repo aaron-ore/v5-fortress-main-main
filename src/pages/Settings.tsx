@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { Loader2, Palette, Settings as SettingsIcon, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, Palette, Settings as SettingsIcon, ImageIcon, X } from "lucide-react";
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 
