@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"; // Corrected import for useEffect and useRef
+import { useEffect, useRef } from "react"; // Corrected import for useEffect and useRef
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";

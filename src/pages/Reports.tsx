@@ -17,7 +17,7 @@ import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated to InventoryFolder
+import { useOnboarding } from "@/context/OnboardingContext"; // Updated to InventoryFolder
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";

@@ -35,7 +35,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
-  const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
+  const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { initiatePrint } = usePrint();
 
   const [poNumberInput, setPoNumberInput] = useState("");

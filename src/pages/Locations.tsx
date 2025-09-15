@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -154,7 +154,7 @@ const Folders = () => { // Renamed component and removed React.FC
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmRemoveFolder}
           title="Confirm Folder Deletion"
-          description={`Are you sure you want to delete the folder "${folderToDelete.name}"? This cannot be undone.`}
+          description={`Are you sure you want to delete the folder "${folderToDelete.name}"? This cannot be undone and will unassign all items within it.`}
           confirmText="Delete"
           cancelText="Cancel"
         />
