@@ -27,7 +27,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
   pickerName,
 }) => {
   const { profile } = useProfile();
-  const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const { inventoryFolders } = useOnboarding(); // Get inventoryFolders
   const pickDateObj = parseAndValidateDate(pickDate);
 
   if (!profile || !profile.companyProfile) {

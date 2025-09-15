@@ -19,11 +19,17 @@ interface InventoryMovementReportProps {
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
   movements: movementsToDisplay,
   allProfiles,
-  // Removed structuredLocations as it's not used in this component
+  structuredLocations, // Added structuredLocations to destructuring
 }) => {
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
+  };
+
+  const getFolderName = (folderId: string | undefined) => {
+    if (!folderId) return "N/A";
+    const folder = structuredLocations.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
   };
 
   return (
@@ -53,6 +59,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                     <TableHead className="text-right">New Qty</TableHead>
                     <TableHead>Reason</TableHead>
                     <TableHead>User</TableHead>
+                    <TableHead>Folder</TableHead> {/* Added Folder column */}
                     <TableHead className="w-[180px]">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -68,6 +75,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                         <TableCell className="text-right">{movement.newQuantity}</TableCell>
                         <TableCell>{movement.reason}</TableCell>
                         <TableCell>{getUserName(movement.userId)}</TableCell>
+                        <TableCell>{getFolderName(movement.folderId)}</TableCell> {/* Display folder name */}
                         <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
                       </TableRow>
                     );

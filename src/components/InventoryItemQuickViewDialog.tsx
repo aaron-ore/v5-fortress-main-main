@@ -20,11 +20,12 @@ import { useStockMovement } from "@/context/StockMovementContext";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useNavigate } from "react-router-dom";
-import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat } from "lucide-react";
+import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const { stockMovements, addStockMovement, fetchStockMovements } = useStockMovement();
   const { addOrder } = useOrders();
   const { vendors } = useVendors();
+  const { inventoryFolders } = useOnboarding(); // Use inventoryFolders from OnboardingContext
   const navigate = useNavigate();
 
   const currentItem = useMemo(() => {
@@ -166,6 +168,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         oldQuantity: oldQuantity,
         newQuantity: newPickingBinQuantity + newOverstockQuantity,
         reason: `${adjustmentReason} (${adjustmentTarget === "pickingBin" ? "Picking Bin" : "Overstock"})`,
+        folderId: currentItem.folderId, // Pass the folderId
       });
 
       await refreshInventory();
@@ -288,6 +291,19 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     }
   };
 
+  const handleNavigateToFolder = () => {
+    if (currentItem?.folderId) {
+      navigate(`/folders/${currentItem.folderId}`);
+      onClose();
+    }
+  };
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unassigned";
+  };
+
   if (!currentItem) {
     return null;
   }
@@ -342,6 +358,13 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="font-semibold">Retail Price:</span> ${currentItem.retailPrice.toFixed(2)}
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold">Folder:</span>
+                <Button variant="link" className="p-0 h-auto text-sm" onClick={handleNavigateToFolder}>
+                  {getFolderName(currentItem.folderId)}
+                </Button>
               </div>
               <div className="flex items-center gap-2 col-span-2">
                 <span className="font-semibold text-lg text-foreground">Total Stock: {currentItem.quantity} units</span>

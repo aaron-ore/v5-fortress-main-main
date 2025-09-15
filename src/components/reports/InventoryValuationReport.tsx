@@ -13,7 +13,7 @@ interface GroupedDataItem {
 // Props now directly reflect the processed data from useReportData
 interface InventoryValuationReportProps {
   groupedData: GroupedDataItem[];
-  groupBy: "category" | "location";
+  groupBy: "category" | "folder"; // Changed from location to folder
   totalOverallValue: number;
   totalOverallQuantity: number;
 }
@@ -47,13 +47,13 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
             </div>
           </div>
 
-          <h3 className="font-semibold text-xl mt-6">Details by {groupBy === "category" ? "Category" : "Location"}</h3>
+          <h3 className="font-semibold text-xl mt-6">Details by {groupBy === "category" ? "Category" : "Folder"}</h3>
           {groupedData.length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{groupBy === "category" ? "Category" : "Location"}</TableHead>
+                    <TableHead>{groupBy === "category" ? "Category" : "Folder"}</TableHead>
                     <TableHead className="text-right">Total Quantity</TableHead>
                     <TableHead className="text-right">Total Value</TableHead>
                   </TableRow>

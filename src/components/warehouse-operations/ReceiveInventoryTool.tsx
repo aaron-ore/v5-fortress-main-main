@@ -197,13 +197,13 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         itemName: item.itemName,
         itemSku: item.inventoryItemDetails.sku,
         receivedQuantity: item.receivedQuantity,
-        suggestedFolder: getFolderName(item.suggestedPutawayFolderId), // Use folder name
+        suggestedLocation: getFolderName(item.suggestedPutawayFolderId), // Use folder name
         lotNumber: item.lotNumber,
         expirationDate: item.expirationDate,
         serialNumber: item.serialNumber,
         qrCodeSvg: qrCodeSvg,
         printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-        inventoryFolders: inventoryFolders, // Pass inventoryFolders
+        structuredLocations: inventoryFolders, // Pass inventoryFolders
       };
 
       initiatePrint({ type: "putaway-label", props: labelProps });

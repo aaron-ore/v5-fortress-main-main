@@ -19,6 +19,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
   movements,
   dateRange,
   allProfiles,
+  structuredLocations, // Added structuredLocations to destructuring
 }) => {
   const { profile } = useProfile();
 
@@ -33,6 +34,12 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
+  };
+
+  const getFolderName = (folderId: string | undefined) => {
+    if (!folderId) return "N/A";
+    const folder = structuredLocations.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
   };
 
   return (
@@ -76,6 +83,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">New Qty</th>
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Reason</th>
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">User</th>
+              <th className="py-2 px-4 text-left font-semibold">Folder</th> {/* Added Folder column */}
               <th className="py-2 px-4 text-left font-semibold">Timestamp</th>
             </tr>
           </thead>
@@ -92,13 +100,14 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
                     <td className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{movement.reason}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId)}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId)}</td> {/* Display folder name */}
                     <td className="py-2 px-4">{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
                   </tr>
                 );
               })
             ) : (
               <tr className="border-b border-gray-200">
-                <td colSpan={8} className="py-2 px-4 text-center text-gray-600">No inventory movements found for the selected criteria.</td>
+                <td colSpan={9} className="py-2 px-4 text-center text-gray-600">No inventory movements found for the selected criteria.</td>
               </tr>
             )}
           </tbody>

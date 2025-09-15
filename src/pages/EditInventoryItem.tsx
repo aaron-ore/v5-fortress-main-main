@@ -65,7 +65,7 @@ const EditInventoryItem: React.FC = () => {
   const { inventoryItems, updateInventoryItem } = useInventory();
   const { categories, addCategory } = useCategories();
   const { vendors } = useVendors();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { inventoryFolders } = useOnboarding(); // Now imports InventoryFolder
   const [itemNotFound, setItemNotFound] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -583,7 +583,7 @@ const EditInventoryItem: React.FC = () => {
                 name="folderId"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Folder <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>

@@ -37,9 +37,9 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
       ? "OUT OF STOCK ITEMS"
       : "LOW & OUT OF STOCK ITEMS";
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
-    return foundLoc?.name || fullLocationString; // Use folder name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    return foundLoc?.name || "Unassigned"; // Use folder name
   };
 
   return (
@@ -101,7 +101,7 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity}</td>
                   <td className="py-2 px-4 text-right">{item.reorderLevel}</td>
-                  <td className="py-2 px-4">{getLocationDisplayName(item.folderId)}</td> {/* Updated to folderId */}
+                  <td className="py-2 px-4">{getFolderDisplayName(item.folderId)}</td> {/* Updated to folderId */}
                 </tr>
               ))
             ) : (

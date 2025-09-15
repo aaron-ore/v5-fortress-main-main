@@ -15,7 +15,7 @@ interface DiscrepancyLog {
   organizationId: string;
   itemId: string;
   itemName: string;
-  locationString: string; // This is the fullLocationString
+  folderId: string; // This is the fullLocationString
   locationType: string;
   originalQuantity: number;
   countedQuantity: number;
@@ -43,9 +43,9 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
-    return foundLoc?.name || fullLocationString; // Use folder name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    return foundLoc?.name || "Unknown Folder"; // Use folder name
   };
 
   return (
@@ -87,7 +87,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
                     return (
                       <TableRow key={discrepancy.id}>
                         <TableCell className="font-medium">{discrepancy.itemName}</TableCell>
-                        <TableCell>{getLocationDisplayName(discrepancy.locationString)} ({discrepancy.locationType.replace('_', ' ')})</TableCell>
+                        <TableCell>{getFolderDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})</TableCell>
                         <TableCell className="text-right">{discrepancy.originalQuantity}</TableCell>
                         <TableCell className="text-right">{discrepancy.countedQuantity}</TableCell>
                         <TableCell className="text-right text-destructive">{discrepancy.difference}</TableCell>

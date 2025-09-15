@@ -16,9 +16,9 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
   statusFilter: currentStatusFilter,
   structuredLocations,
 }) => {
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.id === fullLocationString); // Find by ID
-    return foundLoc?.name || fullLocationString; // Use folder name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundLoc = structuredLocations.find(loc => loc.id === folderId); // Find by ID
+    return foundLoc?.name || "Unassigned"; // Use folder name
   };
 
   return (
@@ -57,7 +57,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                       <TableCell>{item.sku}</TableCell>
                       <TableCell className="text-right text-destructive">{item.quantity}</TableCell>
                       <TableCell className="text-right">{item.reorderLevel}</TableCell>
-                      <TableCell>{getLocationDisplayName(item.folderId)}</TableCell> {/* Updated to folderId */}
+                      <TableCell>{getFolderDisplayName(item.folderId)}</TableCell> {/* Updated to folderId */}
                     </TableRow>
                   ))}
                 </TableBody>

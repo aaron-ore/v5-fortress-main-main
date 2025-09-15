@@ -31,9 +31,9 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
   const expirationDateObj = expirationDate ? parseAndValidateDate(expirationDate) : null;
   const printDateObj = parseAndValidateDate(printDate);
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
-    return foundLoc?.name || fullLocationString; // Use folder name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    return foundLoc?.name || folderId; // Use folder name
   };
 
   return (
@@ -67,7 +67,7 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
           </div>
         )}
         <div className="col-span-2">
-          <span className="font-bold">Loc:</span> <span className="text-blue-700 font-extrabold">{getLocationDisplayName(suggestedLocation)}</span>
+          <span className="font-bold">Loc:</span> <span className="text-blue-700 font-extrabold">{getFolderDisplayName(suggestedLocation)}</span>
         </div>
       </div>
 

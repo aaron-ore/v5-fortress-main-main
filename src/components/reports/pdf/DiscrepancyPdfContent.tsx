@@ -60,9 +60,9 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundFolder = structuredLocations.find(folder => folder.id === fullLocationString); // Find by ID
-    return foundFolder?.name || fullLocationString; // Use folder name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    return foundFolder?.name || "Unknown Folder"; // Use folder name
   };
 
   return (
@@ -127,7 +127,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
                 return (
                   <tr key={discrepancy.id} className="border-b border-gray-200">
                     <td className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getLocationDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getFolderDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity}</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity}</td>
                     <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference}</td>

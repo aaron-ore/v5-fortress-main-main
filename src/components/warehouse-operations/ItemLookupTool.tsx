@@ -101,7 +101,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
   // Function to get folder display name
   const getFolderDisplayName = (folderId: string) => {
     const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
-    return foundFolder?.name || "Unknown Folder";
+    return foundFolder?.name || "Unassigned";
   };
 
   return (

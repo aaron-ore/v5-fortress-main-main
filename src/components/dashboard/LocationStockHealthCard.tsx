@@ -60,9 +60,9 @@ const LocationStockHealthCard: React.FC<LocationStockHealthCardProps> = ({ locat
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">
         <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <MapPin className="h-6 w-6 text-primary" /> Location Stock
+          <MapPin className="h-6 w-6 text-primary" /> Folder Stock {/* Changed title to Folder Stock */}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Top locations by stock movement</p>
+        <p className="text-sm text-muted-foreground">Top folders by stock movement</p> {/* Changed description to folders */}
       </CardHeader>
       <CardContent className="flex-grow p-4 pt-0 flex flex-col justify-between">
         {displayData.length > 0 ? (
@@ -88,7 +88,7 @@ const LocationStockHealthCard: React.FC<LocationStockHealthCardProps> = ({ locat
           </>
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-            No stock movement data available for locations.
+            No stock movement data available for folders. {/* Changed text to folders */}
           </div>
         )}
       </CardContent>

@@ -63,6 +63,12 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
   }, [scannedDataFromGlobal, onScannedDataProcessed]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleScannedData = (scannedData: string) => {
     setIsScanning(false);
     const lowerCaseScannedData = scannedData.toLowerCase();
@@ -104,7 +110,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
           confirmPutaway(itemToPutAway);
         } else {
           // Allow override, but warn
-          showError(`Scanned item ${itemToPutAway.itemName} is suggested for ${getFolderDisplayName(itemToPutAway.suggestedPutawayFolderId)}, but scanned folder is ${getFolderDisplayName(scannedFolderId)}. Confirm to override.`); // Updated text
+          showError(`Scanned item ${itemToPutAway.itemName} is suggested for ${getFolderName(itemToPutAway.suggestedPutawayFolderId)}, but scanned folder is ${getFolderName(scannedFolderId)}. Confirm to override.`); // Updated text
           // For now, we'll just confirm, but a real system might ask for explicit confirmation
           confirmPutaway(itemToPutAway);
         }
@@ -132,7 +138,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
         return {
           ...poItem,
           inventoryItemDetails: inventoryItem,
-          suggestedPutawayFolderId: inventoryItem?.folderId || "Unassigned", // Use item's current folderId as suggested
+          suggestedPutawayFolderId: inventoryItem ? getSuggestedPutawayFolderId(inventoryItem.category) : "Unassigned", // Use item's current folderId as suggested
           isPutAway: false,
         };
       });
@@ -172,14 +178,14 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       amount: itemToPutAway.quantity,
       oldQuantity: inventoryItem.quantity, // Total quantity before this putaway
       newQuantity: inventoryItem.quantity, // Total quantity remains same, only folder changes
-      reason: `Putaway from PO ${selectedPO.id} to ${getFolderDisplayName(newFolderId)}`, // Use folder name
+      reason: `Putaway from PO ${selectedPO.id} to ${getFolderName(newFolderId)}`, // Use folder name
       folderId: newFolderId, // Log the destination folder
     });
 
     setItemsToPutAway(prev => prev.map(item =>
       item.id === itemToPutAway.id ? { ...item, isPutAway: true } : item
     ));
-    showSuccess(`Put away ${itemToPutAway.itemName} to ${getFolderDisplayName(newFolderId)}.`); // Use folder name
+    showSuccess(`Put away ${itemToPutAway.itemName} to ${getFolderName(newFolderId)}.`); // Use folder name
 
     // Check if all items from the PO are put away
     const allItemsPutAway = itemsToPutAway.every(item => item.isPutAway || item.id === itemToPutAway.id);
@@ -196,9 +202,18 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   // Helper to get folder display name
-  const getFolderDisplayName = (folderId: string) => {
-    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
-    return foundFolder?.name || "Unknown Folder";
+  const getSuggestedPutawayFolderId = (itemCategory: string): string => {
+    if (inventoryFolders.length === 0) return "Unassigned";
+
+    const mainWarehouse = inventoryFolders.find(folder => folder.name === "Main Warehouse");
+    const coldStorage = inventoryFolders.find(folder => folder.name === "Cold Storage");
+    const storeFront = inventoryFolders.find(folder => folder.name === "Store Front");
+
+    if (itemCategory === "Electronics" && mainWarehouse) return mainWarehouse.id;
+    if (itemCategory === "Office Supplies" && storeFront) return storeFront.id;
+    if (itemCategory === "Perishables" && coldStorage) return coldStorage.id;
+
+    return inventoryFolders[Math.floor(Math.random() * inventoryFolders.length)].id;
   };
 
   const isCompleteButtonDisabled = !selectedPO || itemsToPutAway.some(item => !item.isPutAway);
@@ -255,7 +270,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
           </div>
           {scannedFolderId && (
             <p className="text-sm text-muted-foreground text-center">
-              Current Putaway Folder: <span className="font-semibold text-primary">{getFolderDisplayName(scannedFolderId)}</span> {/* Updated to folder name */}
+              Current Putaway Folder: <span className="font-semibold text-primary">{getFolderName(scannedFolderId)}</span> {/* Updated to folder name */}
             </p>
           )}
         </div>
@@ -278,7 +293,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                         <Package className="h-4 w-4" /> Quantity: {item.quantity}
                       </p>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <Folder className="h-4 w-4" /> Suggested: <span className="font-semibold text-primary">{getFolderDisplayName(item.suggestedPutawayFolderId)}</span> {/* Updated to folder name */}
+                        <Folder className="h-4 w-4" /> Suggested: <span className="font-semibold text-primary">{getFolderName(item.suggestedPutawayFolderId)}</span> {/* Updated to folder name */}
                       </p>
                       {item.isPutAway ? (
                         <div className="flex items-center text-green-500 font-semibold mt-2">
@@ -292,7 +307,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                           onClick={() => confirmPutaway(item)}
                           disabled={!scannedFolderId}
                         >
-                          Confirm Putaway to {scannedFolderId ? getFolderDisplayName(scannedFolderId) : "Scanned Folder"} {/* Updated to folder name */}
+                          Confirm Putaway to {scannedFolderId ? getFolderName(scannedFolderId) : "Scanned Folder"} {/* Updated to folder name */}
                         </Button>
                       )}
                     </CardContent>
