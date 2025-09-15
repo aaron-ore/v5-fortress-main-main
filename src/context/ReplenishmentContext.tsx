@@ -34,11 +34,9 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   const mapSupabaseTaskToReplenishmentTask = (task: any): ReplenishmentTask => {
     const quantity = parseInt(task.quantity || '0');
 
-    // Ensure createdAt is always a valid ISO string
     const validatedCreatedAt = parseAndValidateDate(task.created_at);
     const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
-    // Ensure completedAt is valid or keep undefined if not present
     const validatedCompletedAt = parseAndValidateDate(task.completed_at);
     const completedAtString = validatedCompletedAt ? validatedCompletedAt.toISOString() : undefined;
 

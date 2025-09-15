@@ -11,11 +11,11 @@ import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { showError } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
-import { PrintContentData } from "@/context/PrintContext"; // NEW: Import PrintContentData
+import { PrintContentData } from "@/context/PrintContext";
 
 interface ReportDataResult {
-  data: any; // The processed data specific to the report
-  pdfProps: any; // Props formatted for the PDF content component
+  data: any;
+  pdfProps: any;
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
@@ -73,7 +73,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
     let currentProcessedData: any = null;
     let currentPdfProps: any = { ...basePdfProps };
-    let printType: PrintContentData['type'] = reportId as PrintContentData['type']; // Cast to valid type
+    let printType: PrintContentData['type'] = reportId as PrintContentData['type'];
 
     try {
       switch (reportId) {
@@ -119,7 +119,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "inventory-valuation": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const groupBy = 'category'; // Default for now, can be made dynamic
+          const groupBy = 'category';
 
           let groupedData: { name: string; totalValue: number; totalQuantity: number }[] = [];
           let totalOverallValue = 0;
@@ -141,7 +141,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               totalValue: data.totalValue,
               totalQuantity: data.totalQuantity,
             })).sort((a, b) => b.totalValue - a.totalValue);
-          } else { // groupBy === "location"
+          } else {
             const locationMap: { [key: string]: { totalValue: number; totalQuantity: number, displayName: string } } = {};
             filteredInventory.forEach((item: InventoryItem) => {
               const locationKey = item.location;
@@ -173,13 +173,11 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "low-stock-out-of-stock": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          // The PDF component will receive the statusFilter as a prop and filter internally.
-          // For the data prepared by useReportData, we'll just pass all relevant items.
-          const itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel || item.quantity === 0); // Fetch all low/out of stock
+          const itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel || item.quantity === 0);
           
           currentProcessedData = {
             items: itemsToDisplay,
-            statusFilter: 'all', // Default to 'all' for PDF props, actual filtering in PDF component
+            statusFilter: 'all',
             structuredLocations,
           };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
@@ -188,7 +186,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         case "inventory-movement": {
           await fetchStockMovements();
           await fetchAllProfiles();
-          const movementTypeFilter = 'all'; // Default for now
+          const movementTypeFilter = 'all';
 
           const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: StockMovement) => {
             return movementTypeFilter === "all" || movement.type === movementTypeFilter;
@@ -255,14 +253,10 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "purchase-order-status": {
-          // The statusFilter is passed to the report component for internal filtering.
-          // Here, we just fetch all purchase orders within the date range.
           const filteredOrders = filterDataByDateRange(orders, 'date').filter((order: OrderItem) => {
             return order.type === "Purchase";
           });
 
-          // The statusFilter prop for the PDF component will be 'all' by default,
-          // and the component itself will apply further filtering if needed.
           const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all';
           currentProcessedData = { orders: filteredOrders, statusFilter };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
@@ -309,7 +303,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "stock-discrepancy": {
           await fetchAllProfiles();
-          const statusFilter: 'all' | 'pending' | 'resolved' = 'all'; // Explicitly type statusFilter
+          const statusFilter: 'all' | 'pending' | 'resolved' = 'all';
 
           let query = supabase
             .from('discrepancies')

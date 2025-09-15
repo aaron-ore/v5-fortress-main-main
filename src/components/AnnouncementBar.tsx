@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Re-added React
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ interface AnnouncementBarProps {
   linkText: string;
 }
 
-// Simple typing effect hook
 const useTypingEffect = (text: string, speed: number = 50) => {
   const [displayedText, setDisplayedText] = useState("");
   const [index, setIndex] = useState(0);

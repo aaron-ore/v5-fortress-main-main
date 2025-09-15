@@ -6,7 +6,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { logActivity } from "@/utils/logActivity";
 
 export interface POItem {
   id: number;
@@ -37,7 +37,7 @@ export interface OrderItem {
 
 interface OrdersContextType {
   orders: OrderItem[];
-  isLoadingOrders: boolean; // NEW: Add isLoadingOrders
+  isLoadingOrders: boolean;
   updateOrder: (updatedOrder: OrderItem) => void;
   addOrder: (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => Promise<void>;
   archiveOrder: (orderId: string) => void;
@@ -52,7 +52,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [orders, setOrders] = useState<OrderItem[]>(initialOrders);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(true); // NEW: State for loading
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const mapSupabaseOrderItemToOrderItem = (order: any): OrderItem => {
@@ -66,7 +66,6 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       inventoryItemId: item.inventoryItemId || undefined,
     }));
 
-    // Ensure created_at and due_date are always valid ISO strings
     const validatedCreatedAt = parseAndValidateDate(order.created_at);
     const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
@@ -94,11 +93,11 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const fetchOrders = useCallback(async () => {
-    setIsLoadingOrders(true); // NEW: Set loading to true
+    setIsLoadingOrders(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setOrders([]);
-      setIsLoadingOrders(false); // NEW: Set loading to false
+      setIsLoadingOrders(false);
       return;
     }
 
@@ -117,8 +116,8 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
       const fetchedOrders: OrderItem[] = data.map(mapSupabaseOrderItemToOrderItem);
       setOrders(fetchedOrders);
     }
-    setIsLoadingOrders(false); // NEW: Set loading to false
-  }, [profile?.organizationId, profile]); // Added profile to dependency array
+    setIsLoadingOrders(false);
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile) {

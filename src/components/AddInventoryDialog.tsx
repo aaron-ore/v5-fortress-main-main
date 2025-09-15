@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // Re-added React
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -434,7 +434,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   min="0"
                 />
               </div>
-              {/* Main Storage Location Dropdowns */}
               <div className="space-y-2">
                 <Label>Main Storage Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -478,7 +477,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   </p>
                 )}
               </div>
-              {/* Picking Bin Location Dropdowns */}
               <div className="space-y-2">
                 <Label>Picking Bin Location <span className="text-red-500">*</span></Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -623,7 +621,16 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   id="autoReorderQuantity"
                   type="number"
                   value={autoReorderQuantity}
-                  onChange={(e) => setAutoReorderQuantity(e.target.value)}
+                  onChange={(e) => {
+                        const newQty = parseInt(e.target.value) || 0;
+                        setAutoReorderQuantity(e.target.value);
+                        if (newQty > 0) {
+                          if (profile) {
+                            // This is a local state update, not a direct DB update
+                            // The actual DB update happens when the item is added/updated
+                          }
+                        }
+                      }}
                   placeholder="e.g., 50"
                   min="1"
                 />

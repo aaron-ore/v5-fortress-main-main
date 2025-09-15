@@ -18,7 +18,7 @@ import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { logActivity } from "@/utils/logActivity";
 
 export interface InventoryItem {
   id: string;
@@ -26,19 +26,17 @@ export interface InventoryItem {
   description: string;
   sku: string;
   category: string;
-  // NEW: Split quantity into pickingBinQuantity and overstockQuantity
   pickingBinQuantity: number;
   overstockQuantity: number;
-  // Derived total quantity
   quantity: number;
-  reorderLevel: number; // This will now be the overall reorder level
-  pickingReorderLevel: number; // NEW: Reorder level specifically for picking bins
+  reorderLevel: number;
+  pickingReorderLevel: number;
   committedStock: number;
   incomingStock: number;
   unitCost: number;
   retailPrice: number;
-  location: string; // Overall primary storage location (fullLocationString)
-  pickingBinLocation: string; // NEW: Specific location for picking bin (fullLocationString)
+  location: string;
+  pickingBinLocation: string;
   status: string;
   lastUpdated: string;
   imageUrl?: string;
@@ -72,9 +70,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const { vendors } = useVendors();
   const { addNotification } = useNotifications();
 
-  // NEW: Ref to track if the initial load is complete
   const isInitialLoadComplete = useRef(false);
-  // NEW: Ref to track if the "auto-reorder disabled" message has already been logged
   const hasLoggedDisabledRef = useRef(false);
 
   const mapSupabaseItemToInventoryItem = (item: any): InventoryItem => {
@@ -153,7 +149,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       isInitialLoadComplete.current = true;
       return fetchedItems;
     }
-  }, [profile?.organizationId, profile]); // Added profile to dependency array
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -227,7 +223,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       console.log("[InventoryContext] Auto-reorder is globally enabled. Triggering check due to inventory/vendor/profile change.");
       processAutoReorder(inventoryItems, addOrder, vendors, profile.organizationId, addNotification);
     }
-  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification, profile]); // Added profile to dependency array
+  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification, profile]);
 
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
     const { data: { session } } = await supabase.auth.getSession();

@@ -30,18 +30,15 @@ import OnboardingPage from "./pages/OnboardingPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 
-// Corrected imports for PDF content components
 import PurchaseOrderPdfContent from "./components/PurchaseOrderPdfContent";
 import InvoicePdfContent from "./components/InvoicePdfContent";
 import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
-// PDF content components from specific directories
 import DashboardSummaryPdfContent from "./components/reports/pdf/DashboardSummaryPdfContent";
 import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent";
 import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent";
 
-// Import all new PDF content components
 import InventoryValuationPdfContent from "./components/reports/pdf/InventoryValuationPdfContent";
 import LowStockPdfContent from "./components/reports/pdf/LowStockPdfContent";
 import InventoryMovementPdfContent from "./components/reports/pdf/InventoryMovementPdfContent";
@@ -56,7 +53,6 @@ import { useProfile } from "./context/ProfileContext";
 import { usePrint } from "./context/PrintContext";
 import { showSuccess, showError } from "./utils/toast";
 
-// Import all providers needed for AuthenticatedApp
 import { SidebarProvider } from "./context/SidebarContext";
 import { OrdersProvider } from "./context/OrdersContext";
 import { VendorProvider } from "./context/VendorContext";
@@ -72,7 +68,6 @@ import ItemHistoryPage from "./pages/ItemHistoryPage";
 import { Loader2 } from "lucide-react";
 
 
-// Moved AuthenticatedApp definition here
 const AuthenticatedApp = () => {
   const {  } = useOnboarding();
 
@@ -203,7 +198,6 @@ const AppContent = () => {
     </Routes>
   );
 
-  // Helper to render the correct PDF component based on printContentData.type
   const renderPdfComponent = () => {
     if (!printContentData) return null;
 

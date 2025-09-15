@@ -4,7 +4,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // Import parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface AutomationRule {
   id: string;
@@ -19,9 +19,9 @@ export interface AutomationRule {
     | 'ON_NEW_INVENTORY_ITEM'
     | 'ON_NEW_CUSTOMER_OR_VENDOR'
     | 'ON_REPLENISHMENT_TASK_STATUS_CHANGE'
-    | 'ON_DISCREPANCY_REPORTED'; // Expanded trigger types
-  conditionJson: any; // JSON object for conditions (more flexible structure)
-  actionJson: any; // JSON object for actions (more flexible structure)
+    | 'ON_DISCREPANCY_REPORTED';
+  conditionJson: any;
+  actionJson: any;
   createdAt: string;
 }
 
@@ -95,7 +95,6 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [fetchAutomationRules, isLoadingProfile, profile?.organizationId]);
 
-  // Realtime subscription for automation rules
   useEffect(() => {
     if (!profile?.organizationId) return;
 
@@ -118,7 +117,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
             switch (payload.eventType) {
               case 'INSERT':
                 if (!prevRules.some(rule => rule.id === newRule.id)) {
-                  return [newRule, ...prevRules]; // Add new rule to the top
+                  return [newRule, ...prevRules];
                 }
                 return prevRules;
               case 'UPDATE':
@@ -166,7 +165,6 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       showError(`Failed to add rule: ${error.message}`);
     } else if (data) {
       showSuccess(`Automation rule "${rule.name}" added successfully!`);
-      // Realtime subscription will update the state
     }
   };
 
@@ -197,7 +195,6 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       showError(`Failed to update rule: ${error.message}`);
     } else if (data) {
       showSuccess(`Automation rule "${updatedRule.name}" updated successfully!`);
-      // Realtime subscription will update the state
     }
   };
 
@@ -221,7 +218,6 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       showError(`Failed to delete rule: ${error.message}`);
     } else {
       showSuccess(`Automation rule "${ruleToDelete?.name || ruleId}" deleted.`);
-      // Realtime subscription will update the state
     }
   };
 

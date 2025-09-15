@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
-import { logActivity } from '@/utils/logActivity'; // NEW: Import logActivity
-import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage'; // NEW: Import getFilePathFromPublicUrl
+import { logActivity } from '@/utils/logActivity';
+import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
 
 export interface CompanyProfile {
   companyName: string;
@@ -119,7 +119,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(mapSupabaseProfileToUserProfile(data, data.organizations));
     }
     setIsLoadingProfile(false);
-  }, [user]); // Removed 'profile' from dependencies to prevent loop
+  }, [user]);
 
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
@@ -142,7 +142,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
-  }, [profile?.organizationId, profile]); // Added profile to dependency array
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingAuth) {
@@ -230,7 +230,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       payload.unique_code = uniqueCode;
     }
 
-    // Handle logo deletion if companyLogoUrl is explicitly set to null/undefined/empty
     if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && profile.companyProfile?.companyLogoUrl) {
       const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
       if (oldFilePath) {

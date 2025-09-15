@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { logActivity } from "@/utils/logActivity";
 
 export interface Vendor {
   id: string;
@@ -18,7 +18,7 @@ export interface Vendor {
 
 interface VendorContextType {
   vendors: Vendor[];
-  isLoadingVendors: boolean; // NEW: Add isLoadingVendors
+  isLoadingVendors: boolean;
   addVendor: (vendor: Omit<Vendor, "id" | "createdAt" | "organizationId">) => Promise<void>;
   updateVendor: (updatedVendor: Vendor) => Promise<void>;
   deleteVendor: (vendorId: string) => Promise<void>;
@@ -29,15 +29,15 @@ const VendorContext = createContext<VendorContextType | undefined>(undefined);
 
 export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [isLoadingVendors, setIsLoadingVendors] = useState(true); // NEW: State for loading
+  const [isLoadingVendors, setIsLoadingVendors] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const fetchVendors = useCallback(async () => {
-    setIsLoadingVendors(true); // NEW: Set loading to true
+    setIsLoadingVendors(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setVendors([]);
-      setIsLoadingVendors(false); // NEW: Set loading to false
+      setIsLoadingVendors(false);
       return;
     }
 
@@ -66,8 +66,8 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }));
       setVendors(fetchedVendors);
     }
-    setIsLoadingVendors(false); // NEW: Set loading to false
-  }, [profile?.organizationId, profile]); // Added profile to dependency array
+    setIsLoadingVendors(false);
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile) {

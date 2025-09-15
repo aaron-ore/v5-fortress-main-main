@@ -18,20 +18,20 @@ import { LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSidebar } from "@/context/SidebarContext"; // NEW: Import useSidebar
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // NEW: Import Tooltip components
+import { useSidebar } from "@/context/SidebarContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarProps {
   // isCollapsed: boolean; // REMOVED: No longer passed as prop
   // onToggleCollapse: () => void; // REMOVED: No longer passed as prop
 }
 
-const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function signature
+const Sidebar: React.FC<SidebarProps> = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();
-  const { isCollapsed, onToggleCollapse } = useSidebar(); // NEW: Use SidebarContext
+  const { isCollapsed, onToggleCollapse } = useSidebar();
 
   const handleLogout = async () => {
     const { data: { session } = { session: null } } = await supabase.auth.getSession();
@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
       return;
     }
 
-    const { error } = await supabase.auth.signOut({ scope: 'local' }); // Changed to perform a local logout
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
       showError("Failed to log out: " + error.message);
     } else {
@@ -54,17 +54,16 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
     navigate(path);
   };
 
-  const handleLogoClick = () => { // NEW: Handler for logo click
-    navigate("/"); // Navigate to dashboard
+  const handleLogoClick = () => {
+    navigate("/");
   };
 
   const baseButtonClass = "justify-start text-base font-medium transition-colors w-full";
-  // Simplified active and inactive link classes to rely on Button's ghost variant hover styles
   const activeLinkClass = "text-sidebar-active-foreground bg-sidebar-active-background rounded-md"; 
   const inactiveLinkClass = "text-sidebar-foreground rounded-md"; 
 
   const renderFortressLogo = (isCollapsedState: boolean) => (
-    <div className={cn("flex items-center space-x-2 cursor-pointer", isCollapsedState ? "justify-center" : "justify-start")} onClick={handleLogoClick}> {/* NEW: Add onClick */}
+    <div className={cn("flex items-center space-x-2 cursor-pointer", isCollapsedState ? "justify-center" : "justify-start")} onClick={handleLogoClick}>
       <svg
         width="24"
         height="24"
@@ -92,7 +91,6 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
   const renderNavItems = (items: NavItem[], isSubItem = false) => (
     <div className={cn("space-y-1", isSubItem && "ml-4 border-l border-sidebar-border pl-2")}>
       {items.map((item) => {
-        // Refined logic for active link detection
         const currentIsActive = item.href === "/" 
           ? location.pathname === "/" 
           : location.pathname.startsWith(item.href);
@@ -101,10 +99,9 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
           return null;
         }
 
-        // Special handling for "Warehouse Operations" dropdown when collapsed
         if (item.isParent && item.children && isCollapsed) {
           return (
-            <TooltipProvider key={item.title}> {/* NEW: TooltipProvider for collapsed items */}
+            <TooltipProvider key={item.title}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -112,14 +109,14 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
                     className={cn(
                       baseButtonClass,
                       currentIsActive ? activeLinkClass : inactiveLinkClass,
-                      "justify-center px-0 rounded-md" // Ensure rounded-md for collapsed parent
+                      "justify-center px-0 rounded-md"
                     )}
-                    onClick={() => handleNavigation(item.href)} // Navigate to parent link when collapsed
+                    onClick={() => handleNavigation(item.href)}
                   >
-                    <item.icon className="h-5 w-5 text-current" /> {/* Ensure icon inherits color */}
+                    <item.icon className="h-5 w-5 text-current" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="ml-2"> {/* NEW: TooltipContent */}
+                <TooltipContent side="right" className="ml-2">
                   {item.title}
                 </TooltipContent>
               </Tooltip>
@@ -133,14 +130,14 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
               <AccordionItem value={item.title} className="border-none">
                 <AccordionTrigger className={cn(
                   baseButtonClass,
-                  "py-2 px-3 flex items-center justify-between rounded-md", // Added rounded-md
+                  "py-2 px-3 flex items-center justify-between rounded-md",
                   currentIsActive ? activeLinkClass : inactiveLinkClass,
                   "hover:no-underline",
                   isCollapsed && "justify-center px-0"
                 )}>
                   <div className="flex items-center">
-                    <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} /> {/* Ensure icon inherits color */}
-                    {!isCollapsed && <span className="truncate text-current">{item.title}</span>} {/* Ensure text inherits color */}
+                    <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} />
+                    {!isCollapsed && <span className="truncate text-current">{item.title}</span>}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-1">
@@ -152,7 +149,7 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
         }
 
         return (
-          <TooltipProvider key={item.title}> {/* NEW: TooltipProvider for collapsed items */}
+          <TooltipProvider key={item.title}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -160,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
                   className={cn(
                     baseButtonClass,
                     currentIsActive ? activeLinkClass : inactiveLinkClass,
-                    isCollapsed && "justify-center px-0 rounded-md" // Ensure rounded-md for collapsed items
+                    isCollapsed && "justify-center px-0 rounded-md"
                   )}
                   onClick={() => {
                     if (item.action) {
@@ -170,8 +167,8 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
                     }
                   }}
                 >
-                  <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} /> {/* Ensure icon inherits color */}
-                  {!isCollapsed && <span className="truncate text-current">{item.title}</span>} {/* Ensure text inherits color */}
+                  <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} />
+                  {!isCollapsed && <span className="truncate text-current">{item.title}</span>}
                   {item.title === "Notifications" && unreadCount > 0 && !isCollapsed && (
                     <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-red-500 text-white rounded-full">
                       {unreadCount}
@@ -179,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
                   )}
                 </Button>
               </TooltipTrigger>
-              {isCollapsed && ( // NEW: TooltipContent for collapsed items
+              {isCollapsed && (
                 <TooltipContent side="right" className="ml-2">
                   {item.title}
                 </TooltipContent>
@@ -196,13 +193,12 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
       className={cn(
         "fixed top-0 left-0 h-screen flex flex-col bg-sidebar-background text-sidebar-foreground transition-all duration-200 z-30 border-r border-sidebar-border",
         isCollapsed ? "w-[80px]" : "w-[280px]",
-        "shadow-theme-glow" // NEW: Apply shadow-theme-glow
+        "shadow-theme-glow"
       )}
     >
-      {/* Header: Logo and Collapse Button (when expanded) */}
       <div className={cn("flex items-center h-[60px] px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
         {renderFortressLogo(isCollapsed)}
-        {!isCollapsed && ( // Collapse button only visible when expanded, to the right of the full logo
+        {!isCollapsed && (
           <Button
             variant="ghost"
             size="icon"
@@ -214,9 +210,8 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
         )}
       </div>
 
-      {/* Notch Expand Button - visible only when collapsed */}
       {isCollapsed && (
-        <TooltipProvider> {/* NEW: TooltipProvider for the toggle button */}
+        <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -235,7 +230,6 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
         </TooltipProvider>
       )}
 
-      {/* User Profile Section */}
       {!isCollapsed && profile && (
         <div className="flex items-center p-4 border-b border-sidebar-border flex-shrink-0">
           <Avatar className="h-9 w-9">
@@ -248,7 +242,7 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
           </div>
         </div>
       )}
-      {isCollapsed && profile && ( // NEW: Collapsed user profile tooltip
+      {isCollapsed && profile && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -266,7 +260,6 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
         </TooltipProvider>
       )}
 
-      {/* Navigation Links */}
       <ScrollArea className="flex-grow py-4 px-3">
         <nav className="flex flex-col space-y-4">
           {renderNavItems(mainNavItems)}
@@ -283,21 +276,20 @@ const Sidebar: React.FC<SidebarProps> = () => { // REMOVED: Props from function 
         </nav>
       </ScrollArea>
 
-      {/* Logout Button */}
       <div className="mt-auto p-3 border-t border-sidebar-border flex-shrink-0">
-        <TooltipProvider> {/* NEW: TooltipProvider for logout button */}
+        <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                className={cn(baseButtonClass, "text-destructive focus:bg-destructive/10 rounded-md", isCollapsed && "justify-center px-0")} // Added rounded-md
+                className={cn(baseButtonClass, "text-destructive focus:bg-destructive/10 rounded-md", isCollapsed && "justify-center px-0")}
                 onClick={handleLogout}
               >
                 <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
                 {!isCollapsed && "Logout"}
               </Button>
             </TooltipTrigger>
-            {isCollapsed && ( // NEW: TooltipContent for logout button
+            {isCollapsed && (
               <TooltipContent side="right" className="ml-2">
                 Logout
               </TooltipContent>

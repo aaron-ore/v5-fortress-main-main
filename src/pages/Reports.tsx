@@ -15,12 +15,12 @@ import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
-import { usePrint, PrintContentData } from "@/context/PrintContext"; // NEW: Import PrintContentData
+import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useReportData } from "@/hooks/use-report-data"; // NEW: Import the new hook
+import { useReportData } from "@/hooks/use-report-data";
 
 // Import all report content components
 import DashboardSummaryReportContent from "@/components/reports/DashboardSummaryReport";
@@ -43,8 +43,7 @@ import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdf
 import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
 import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
 import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
-import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent"; // Example for other PDF types
-import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent"; // Example for other PDF types
+// Removed unused imports: AdvancedDemandForecastPdfContent, PutawayLabelPdfContent
 
 interface ReportCategory {
   title: string;
@@ -53,7 +52,7 @@ interface ReportCategory {
 }
 
 interface ReportItem {
-  id: string; // Unique ID for the report, used in URL hash
+  id: string;
   title: string;
   description: string;
   icon: React.ElementType;
@@ -125,9 +124,7 @@ const pdfContentComponents: { [key: string]: React.ElementType } = {
   "purchase-order-status": PurchaseOrderStatusPdfContent,
   "profitability": ProfitabilityPdfContent,
   "stock-discrepancy": DiscrepancyPdfContent,
-  // Add other PDF content components here if they are distinct from reportContentComponents
-  "advanced-demand-forecast": AdvancedDemandForecastPdfContent,
-  "putaway-label": PutawayLabelPdfContent,
+  // Removed unused PDF content components
 };
 
 
@@ -136,17 +133,15 @@ const Reports: React.FC = () => {
   const navigate = useNavigate();
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
-  const { locations: structuredLocations } = useOnboarding(); // For passing to PDF content
+  const { locations: structuredLocations } = useOnboarding();
 
   const [activeReportId, setActiveReportId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [aiSummary, setAiSummary] = useState("");
   const [isSummarizing, setIsSummarizing] = useState(false);
 
-  // Ref to hold the report content for text extraction (for AI summary)
   const reportContentRef = useRef<HTMLDivElement>(null);
 
-  // Flatten all reports for the dropdown menu
   const allReports = useMemo(() => {
     return reportCategories.flatMap(category => category.reports);
   }, []);
@@ -164,7 +159,7 @@ const Reports: React.FC = () => {
   const handleReportSelect = (reportId: string) => {
     setActiveReportId(reportId);
     navigate(`/reports#${reportId}`);
-    setAiSummary(""); // Clear AI summary when changing report
+    setAiSummary("");
   };
 
   const handleClearDateFilter = () => {
@@ -179,10 +174,8 @@ const Reports: React.FC = () => {
   const CurrentReportComponent = reportContentComponents[activeReportId];
   const CurrentPdfComponent = pdfContentComponents[activeReportId];
 
-  // NEW: Destructure the hook here
   const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
 
-  // Function to generate the text content of the report for AI summarization
   const generateReportTextContent = useCallback(() => {
     if (reportContentRef.current) {
       const rawInnerText = reportContentRef.current.innerText;
@@ -205,7 +198,6 @@ const Reports: React.FC = () => {
       return;
     }
 
-    // Ensure structuredLocations is passed to PDF components that need it
     const finalPdfProps = {
       ...pdfProps,
       structuredLocations: structuredLocations,

@@ -38,15 +38,12 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
 
   return (
     <div className="bg-white text-gray-900 font-sans text-xs p-2 w-[50mm] h-[50mm] border border-black flex flex-col overflow-hidden">
-      {/* QR Code at the top */}
       <div className="flex justify-center mb-1 flex-shrink-0 p-1 bg-white">
         <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} className="w-[25mm] h-[25mm] object-contain" />
       </div>
 
-      {/* Item Name */}
       <p className="font-bold text-sm text-center mb-1 leading-tight flex-shrink-0 truncate">{itemName}</p>
 
-      {/* Details Grid */}
       <div className="grid grid-cols-2 gap-x-1 gap-y-0.5 text-[0.6rem] flex-grow overflow-hidden">
         <div>
           <span className="font-bold">SKU:</span> {itemSku}
@@ -74,7 +71,6 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
         </div>
       </div>
 
-      {/* Footer Date */}
       <div className="text-right text-[0.5rem] mt-1 flex-shrink-0">
         Date: {printDateObj && isValid(printDateObj) ? format(printDateObj, "MMM dd, yyyy HH:mm") : "N/A"}
       </div>

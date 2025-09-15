@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { DateRange } from "react-day-picker"; // NEW: Import DateRange
+import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useVendors } from "@/context/VendorContext";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
@@ -11,7 +11,6 @@ import { parseAndValidateDate } from "@/utils/dateUtils";
 import { showError } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 
-// NEW: Define the interface for the actual dashboard data content
 interface DashboardContentData {
   metrics: {
     totalStockValue: number;
@@ -56,10 +55,9 @@ interface DashboardContentData {
   };
 }
 
-// NEW: Define the interface for the hook's return value
 interface UseDashboardHookResult {
   data: DashboardContentData | null;
-  pdfProps: any; // Props formatted for the PDF content component
+  pdfProps: any;
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
@@ -181,7 +179,6 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     const filteredOrders = filterDataByDateRange(orders, 'date');
     const filteredStockMovements = filterDataByDateRange(stockMovements, 'timestamp');
 
-    // --- Metrics ---
     const totalStockValue = filteredInventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
     const totalUnitsOnHand = filteredInventory.reduce((sum, item) => sum + item.quantity, 0);
     const lowStockItemsCount = filteredInventory.filter(item => item.quantity <= item.reorderLevel).length;
@@ -196,8 +193,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
     const totalSalesRevenue = filteredOrders.filter(order => order.type === "Sales").reduce((sum, order) => sum + order.totalAmount, 0);
     const totalPurchaseCost = filteredOrders.filter(order => order.type === "Purchase").reduce((sum, order) => sum + order.totalAmount, 0);
-    const totalIncome = totalSalesRevenue; // Simplified for demo
-    const totalLosses = totalSalesRevenue * 0.05 + totalPurchaseCost * 0.02; // Simulated losses
+    const totalIncome = totalSalesRevenue;
+    const totalLosses = totalSalesRevenue * 0.05 + totalPurchaseCost * 0.02;
 
     const totalOrders = filteredOrders.length;
     const fulfilledOrders = filteredOrders.filter(
@@ -209,9 +206,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     const totalInventoryCost = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
     const inventoryTurnoverRate = totalInventoryCost > 0 ? `${((totalSalesRevenue * 0.6) / totalInventoryCost).toFixed(1)}x` : "N/A";
 
-    const supplierPerformanceScore: "good" | "average" | "bad" = "good"; // Placeholder
+    const supplierPerformanceScore: "good" | "average" | "bad" = "good";
 
-    // --- Charts Data ---
     const last3MonthSalesData = (() => {
       const monthlyData: { [key: string]: { salesRevenue: number; newInventory: number; itemsShipped: number } } = {};
       const effectiveFrom = subMonths(today, 2);
@@ -601,7 +597,6 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     })();
 
 
-    // --- Lists Data ---
     const lowStockItems = filteredInventory.filter(item => item.quantity <= item.reorderLevel);
     const outOfStockItems = filteredInventory.filter(item => item.quantity === 0);
 
@@ -737,7 +732,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
   return {
     data: dashboardData,
-    pdfProps: null, // Dashboard doesn't have a single PDF prop, handled by GenerateReportButton
+    pdfProps: null,
     isLoading,
     error,
     refresh,

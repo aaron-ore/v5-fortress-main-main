@@ -15,7 +15,6 @@ interface InvoicePdfContentProps {
   customerName: string;
   customerEmail?: string;
   customerAddress: string;
-  // customerContact?: string; // Removed
   terms: string;
   dueDate: string;
   items: InvoiceItem[];
@@ -53,7 +52,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
-      {/* Header */}
       <div className="flex justify-between items-start mb-8">
         <div>
           {profile.companyProfile.companyLogoUrl ? (
@@ -76,7 +74,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </div>
       </div>
 
-      {/* SOLD BY / BILL TO Section */}
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div>
           <p className="font-bold mb-2">SOLD BY:</p>
@@ -98,7 +95,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </div>
       </div>
 
-      {/* TERMS / DUE Section */}
       <div className="grid grid-cols-2 gap-8 mb-8">
         <div>
           <p className="font-bold mb-2">TERMS:</p>
@@ -114,7 +110,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </div>
       </div>
 
-      {/* Items Table */}
       <table className="w-full border-collapse mb-8">
         <thead>
           <tr className="bg-gray-100 border border-gray-300">
@@ -144,9 +139,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </tbody>
       </table>
 
-      {/* New container for Notes and Totals */}
       <div className="grid grid-cols-2 gap-8 mb-8">
-        {/* Left side: Notes */}
         <div>
           <p className="font-bold mb-2">Notes</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded min-h-[80px]">
@@ -154,7 +147,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
           </div>
         </div>
 
-        {/* Right side: Totals Summary */}
         <div className="flex flex-col items-end">
           <div className="w-full max-w-xs">
             <div className="flex justify-between py-1">
@@ -173,7 +165,6 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
       <div className="text-xs text-gray-500 mt-12 text-right">
         <p>eForms.com</p>
       </div>
