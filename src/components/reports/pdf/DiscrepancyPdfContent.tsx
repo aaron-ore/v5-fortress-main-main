@@ -24,7 +24,7 @@ interface DiscrepancyLog {
 
 interface DiscrepancyPdfContentProps {
   reportDate: string;
-  discrepancies: DiscrecrepancyLog[];
+  discrepancies: DiscrepancyLog[]; // Fixed typo here
   statusFilter: "all" | "pending" | "resolved";
   dateRange?: DateRange;
   allProfiles: UserProfile[];

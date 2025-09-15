@@ -168,7 +168,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteFolderClick(folder)}
+                          onClick={() => handleRemoveFolderClick(folder)}
                           aria-label={`Remove folder ${folder.name}`}
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />

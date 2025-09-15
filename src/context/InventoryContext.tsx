@@ -36,6 +36,7 @@ export interface InventoryItem {
   unitCost: number;
   retailPrice: number;
   folderId: string; // Changed from location to folderId
+  pickingBinFolderId: string; // NEW: Added pickingBinFolderId
   tags?: string[]; // Added tags
   notes?: string; // Added notes
   status: string;
@@ -104,6 +105,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       unitCost: isNaN(unitCost) ? 0 : unitCost,
       retailPrice: isNaN(retailPrice) ? 0 : retailPrice,
       folderId: item.folder_id || "", // Updated to folderId
+      pickingBinFolderId: item.picking_bin_folder_id || item.folder_id || "", // Added pickingBinFolderId, fallback to folder_id
       tags: item.tags || undefined, // Added tags
       notes: item.notes || undefined, // Added notes
       status: item.status || "In Stock",
@@ -254,7 +256,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: 0,
         unit_cost: item.unitCost,
         retail_price: item.retailPrice,
-        folder_id: item.folderId, // Updated to folder_id
+        folder_id: item.folderId, // Updated to folderId
+        picking_bin_folder_id: item.pickingBinFolderId, // NEW: Added picking_bin_folder_id
         tags: item.tags, // Added tags
         notes: item.notes, // Added notes
         status: status,
@@ -311,7 +314,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: updatedItem.incomingStock,
         unit_cost: updatedItem.unitCost,
         retail_price: updatedItem.retailPrice,
-        folder_id: updatedItem.folderId, // Updated to folder_id
+        folder_id: updatedItem.folderId, // Updated to folderId
+        picking_bin_folder_id: updatedItem.pickingBinFolderId, // NEW: Added picking_bin_folder_id
         tags: updatedItem.tags, // Added tags
         notes: updatedItem.notes, // Added notes
         status: newStatus,
