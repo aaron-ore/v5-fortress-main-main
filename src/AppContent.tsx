@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react-router-dom";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -23,7 +23,7 @@ import CreateInvoice from "./pages/CreateInvoice";
 import SetupInstructions from "./pages/SetupInstructions";
 import WarehouseOperationsPage from "./pages/WarehouseOperationsPage";
 import ResetPassword from "./pages/ResetPassword";
-import Locations from "./pages/Locations";
+import Folders from "./pages/Locations"; // Changed import from Locations to Folders
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -105,7 +105,7 @@ const AuthenticatedApp = () => {
                             <Route path="users" element={<Users />} />
                             <Route path="setup-instructions" element={<SetupInstructions />} />
                             <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
-                            <Route path="locations" element={<Locations />} />
+                            <Route path="folders" element={<Folders />} /> {/* Changed path from locations to folders */}
                             <Route path="integrations" element={<Integrations />} />
                             <Route path="automation" element={<Automation />} />
                             <Route path="*" element={<NotFound />} />

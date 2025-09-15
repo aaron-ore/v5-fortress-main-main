@@ -16,6 +16,7 @@ import { showError } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
 
 interface DailyIssuesDialogProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ interface IssueLog {
     issueType: string;
     itemId: string;
     itemName: string;
-    location: string;
+    folderId: string; // Changed from location to folderId
     contactInfo: string;
     description: string;
   };
@@ -42,6 +43,7 @@ interface IssueLog {
 
 const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, dateRange }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
+  const { inventoryFolders } = useOnboarding(); // Get inventory folders
   const [issues, setIssues] = useState<IssueLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -72,11 +74,18 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
           const fetchedIssues: IssueLog[] = data.map((log: any) => ({
             id: log.id,
             timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
-            userId: log.user_id,
+            userId: log.user_id, // Corrected: user_id is directly on the log object
             organizationId: log.organization_id,
             activityType: log.activity_type,
             description: log.description,
-            details: log.details,
+            details: {
+              issueType: log.details.issueType,
+              itemId: log.details.itemId,
+              itemName: log.details.itemName,
+              folderId: log.details.folderId || log.details.location || "N/A", // Map to folderId, fallback to old location if exists
+              contactInfo: log.details.contactInfo,
+              description: log.details.description,
+            },
           }));
           setIssues(fetchedIssues);
         }
@@ -91,6 +100,12 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
+  };
+
+  // Function to get folder display name
+  const getFolderName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   const getDisplayDateRange = () => {
@@ -144,9 +159,9 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
                           <Package className="h-4 w-4" /> Product: {issue.details.itemName} (ID: {issue.details.itemId})
                         </p>
                       )}
-                      {issue.details.location !== "N/A" && (
+                      {issue.details.folderId !== "N/A" && (
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" /> Location: {issue.details.location}
+                          <MapPin className="h-4 w-4" /> Folder: {getFolderName(issue.details.folderId)}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground mt-2">
@@ -162,15 +177,15 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
                 })}
               </div>
             </ScrollArea>
-          )}
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

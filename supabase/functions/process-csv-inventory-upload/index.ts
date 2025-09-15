@@ -57,7 +57,7 @@ serve(async (req) => {
     const buffer = await fileData.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: 'array' });
     const sheetName = workbook.SheetNames[0];
-    const worksheet = XLSX.Sheets[sheetName];
+    const worksheet = workbook.Sheets[sheetName];
     const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
     if (jsonData.length === 0) {
@@ -71,6 +71,7 @@ serve(async (req) => {
     const itemsToUpdate: any[] = [];
     const errors: string[] = [];
 
+    // Fetch existing categories, folders, and inventory items for validation and updates
     const { data: existingCategories, error: catError } = await supabaseAdmin
       .from('categories')
       .select('id, name')
@@ -78,12 +79,12 @@ serve(async (req) => {
     if (catError) throw catError;
     const categoryMap = new Map(existingCategories.map(c => [c.name.toLowerCase(), c.id]));
 
-    const { data: existingLocations, error: locError } = await supabaseAdmin
-      .from('locations')
-      .select('id, full_location_string, display_name')
+    const { data: existingFolders, error: folderError } = await supabaseAdmin // Changed to existingFolders
+      .from('inventory_folders') // Changed table name
+      .select('id, name')
       .eq('organization_id', organizationId);
-    if (locError) throw locError;
-    const locationMap = new Map(existingLocations.map(l => [l.full_location_string.toLowerCase(), l.id]));
+    if (folderError) throw folderError;
+    const folderMap = new Map(existingFolders.map(f => [f.name.toLowerCase(), f.id])); // Changed to folderMap
 
     const { data: existingInventoryRaw, error: invError } = await supabaseAdmin
       .from('inventory_items')
@@ -164,49 +165,32 @@ serve(async (req) => {
         categoryMap.set(newCat.name.toLowerCase(), newCat.id);
       }
 
-      let mainLocationString = String(row.location || '').trim();
-      if (!mainLocationString) mainLocationString = 'Unassigned';
-      if (!locationMap.has(mainLocationString.toLowerCase())) {
-        const { data: newLoc, error: insertLocError } = await supabaseAdmin
-          .from('locations')
+      let folderName = String(row.folderName || '').trim(); // Changed from mainLocationString to folderName
+      if (!folderName) folderName = 'Unassigned'; // Default folder
+      let folderId: string | undefined = folderMap.get(folderName.toLowerCase()); // Get folderId from map
+
+      if (!folderId) { // If folder doesn't exist, create it
+        const { data: newFolder, error: insertFolderError } = await supabaseAdmin // Changed to newFolder
+          .from('inventory_folders') // Changed table name
           .insert({
-            full_location_string: mainLocationString,
-            display_name: mainLocationString,
-            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A',
-            color: '#CCCCCC',
+            name: folderName,
+            color: '#CCCCCC', // Default color for new folders
             organization_id: organizationId,
             user_id: user.id,
           })
-          .select('id, full_location_string')
+          .select('id, name')
           .single();
-        if (insertLocError) {
-          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create location '${mainLocationString}': ${insertLocError.message}`);
+        if (insertFolderError) {
+          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create folder '${folderName}': ${insertFolderError.message}`); // Changed to folder
           continue;
         }
-        locationMap.set(newLoc.full_location_string.toLowerCase(), newLoc.id);
+        folderId = newFolder.id;
+        folderMap.set(newFolder.name.toLowerCase(), newFolder.id); // Add to map
       }
 
-      let pickingBinLocationString = String(row.pickingBinLocation || '').trim();
-      if (!pickingBinLocationString) pickingBinLocationString = mainLocationString;
-      if (!locationMap.has(pickingBinLocationString.toLowerCase())) {
-        const { data: newLoc, error: insertLocError } = await supabaseAdmin
-          .from('locations')
-          .insert({
-            full_location_string: pickingBinLocationString,
-            display_name: pickingBinLocationString,
-            area: 'N/A', row: 'N/A', bay: 'N/A', level: 'N/A', pos: 'N/A',
-            color: '#CCCCCC',
-            organization_id: organizationId,
-            user_id: user.id,
-          })
-          .select('id, full_location_string')
-          .single();
-        if (insertLocError) {
-          errors.push(`Row ${rowNumber} (SKU: ${sku}): Failed to create picking bin location '${pickingBinLocationString}': ${insertLocError.message}`);
-          continue;
-        }
-        locationMap.set(newLoc.full_location_string.toLowerCase(), newLoc.id);
-      }
+      // For simplicity, picking_bin_location will also use the same folder_id for now
+      // In a more complex system, picking_bin_location could be a sub-folder or a specific bin within a folder.
+      const pickingBinFolderId = folderId; 
 
       const existingItem = existingInventoryMap.get(sku.toLowerCase());
       const totalQuantity = pickingBinQuantity + overstockQuantity;
@@ -225,8 +209,8 @@ serve(async (req) => {
         incoming_stock: incomingStock,
         unit_cost: unitCost,
         retail_price: retailPrice,
-        location: mainLocationString,
-        picking_bin_location: pickingBinLocationString,
+        folder_id: folderId, // Changed to folder_id
+        picking_bin_location: pickingBinFolderId, // Still using this column for now, but it will store folder_id
         status: status,
         last_updated: new Date().toISOString(),
         image_url: imageUrl,
@@ -263,6 +247,7 @@ serve(async (req) => {
             reason: 'CSV Bulk Import - Added to stock',
             user_id: user.id,
             organization_id: organizationId,
+            folder_id: folderId, // Added folder_id to stock movement
           });
         } else if (actionForDuplicates === "update") {
           itemsToUpdate.push({ id: existingItem.id, ...itemPayload, quantity: totalQuantity });

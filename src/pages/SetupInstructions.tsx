@@ -16,17 +16,17 @@ const SetupInstructions: React.FC = () => {
         <Card className="bg-card border-border rounded-lg shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl font-semibold flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" /> Step 1: Company Profile & Locations
+              <CheckCircle className="h-5 w-5 text-green-500" /> Step 1: Company Profile & Folders
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-muted-foreground">
-              Start by defining your company's basic information and setting up your inventory storage locations (e.g., Main Warehouse, Shelf A, Store Front).
+              Start by defining your company's basic information and setting up your inventory organization folders (e.g., Main Warehouse, Shelf A, Store Front).
             </p>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
               <li>Go to <Link to="/settings" className="text-primary hover:underline">Settings</Link>.</li>
               <li>Fill in "Company Profile" details.</li>
-              <li>Click "Manage Locations" to add your warehouses or storage areas.</li>
+              <li>Click "Manage Folders" to add your warehouses or storage areas.</li>
             </ul>
             <Button asChild className="mt-4">
               <Link to="/settings">Go to Settings</Link>

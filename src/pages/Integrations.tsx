@@ -35,14 +35,14 @@ interface ShopifyLocationMapping {
   organization_id: string;
   shopify_location_id: string;
   shopify_location_name: string;
-  fortress_location_id: string;
+  fortress_location_id: string; // This now references inventory_folders.id
   user_id: string;
   created_at: string;
 }
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
-  const { locations: fortressLocations, fetchLocations: fetchFortressLocations } = useOnboarding();
+  const { inventoryFolders, fetchInventoryFolders } = useOnboarding(); // Changed from locations to inventoryFolders
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
@@ -59,7 +59,7 @@ const Integrations: React.FC = () => {
   const [isDeletingMapping, setIsDeletingMapping] = useState(false);
 
   const [selectedShopifyLocationId, setSelectedShopifyLocationId] = useState<string | null>(null);
-  const [selectedFortressLocationId, setSelectedFortressLocationId] = useState<string | null>(null);
+  const [selectedFortressFolderId, setSelectedFortressFolderId] = useState<string | null>(null); // Changed to FolderId
   const [mappingToEdit, setMappingToEdit] = useState<ShopifyLocationMapping | null>(null);
   const [mappingToDelete, setMappingToDelete] = useState<ShopifyLocationMapping | null>(null);
   const [isConfirmDeleteMappingOpen, setIsConfirmDeleteMappingOpen] = useState(false);
@@ -107,13 +107,13 @@ const Integrations: React.FC = () => {
     }
   }, [location.search, location.pathname, navigate]);
 
-  // Fetch Fortress locations and Shopify mappings on component mount/profile change
+  // Fetch Fortress folders and Shopify mappings on component mount/profile change
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
-      fetchFortressLocations();
+      fetchInventoryFolders(); // Changed to fetchInventoryFolders
       fetchShopifyLocationMappings();
     }
-  }, [isLoadingProfile, profile?.organizationId, fetchFortressLocations]);
+  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]); // Changed to fetchInventoryFolders
 
   // --- QuickBooks Handlers ---
   const handleConnectQuickBooks = () => {
@@ -169,7 +169,7 @@ const Integrations: React.FC = () => {
 
   const handleSyncSalesOrders = async () => {
     if (!profile?.quickbooksAccessToken || !profile?.quickbooksRealmId) {
-      showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected and try connecting again.");
+      showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected in Settings.");
       return;
     }
     setIsSyncingQuickBooks(true);
@@ -377,8 +377,8 @@ const Integrations: React.FC = () => {
   };
 
   const handleSaveLocationMapping = async () => {
-    if (!profile?.organizationId || !profile?.id || !selectedShopifyLocationId || !selectedFortressLocationId) {
-      showError("Please select both a Shopify location and a Fortress location.");
+    if (!profile?.organizationId || !profile?.id || !selectedShopifyLocationId || !selectedFortressFolderId) {
+      showError("Please select both a Shopify location and a Fortress folder."); // Changed text
       return;
     }
 
@@ -397,7 +397,7 @@ const Integrations: React.FC = () => {
         // Update existing mapping
         const { error } = await supabase
           .from('shopify_location_mappings')
-          .update({ fortress_location_id: selectedFortressLocationId })
+          .update({ fortress_location_id: selectedFortressFolderId }) // Changed to selectedFortressFolderId
           .eq('id', existingMapping.id)
           .eq('organization_id', profile.organizationId);
         if (error) throw error;
@@ -410,7 +410,7 @@ const Integrations: React.FC = () => {
             organization_id: profile.organizationId,
             shopify_location_id: selectedShopifyLocationId,
             shopify_location_name: shopifyLoc.name,
-            fortress_location_id: selectedFortressLocationId,
+            fortress_location_id: selectedFortressFolderId, // Changed to selectedFortressFolderId
             user_id: profile.id,
           });
         if (error) throw error;
@@ -419,7 +419,7 @@ const Integrations: React.FC = () => {
       
       await fetchShopifyLocationMappings();
       setSelectedShopifyLocationId(null);
-      setSelectedFortressLocationId(null);
+      setSelectedFortressFolderId(null); // Changed to FolderId
       setMappingToEdit(null);
     } catch (error: any) {
       console.error("Error saving location mapping:", error);
@@ -432,7 +432,7 @@ const Integrations: React.FC = () => {
   const handleEditMappingClick = (mapping: ShopifyLocationMapping) => {
     setMappingToEdit(mapping);
     setSelectedShopifyLocationId(mapping.shopify_location_id);
-    setSelectedFortressLocationId(mapping.fortress_location_id);
+    setSelectedFortressFolderId(mapping.fortress_location_id); // Changed to FolderId
   };
 
   const handleDeleteMappingClick = (mapping: ShopifyLocationMapping) => {
@@ -462,9 +462,10 @@ const Integrations: React.FC = () => {
     }
   };
 
-  const getFortressLocationDisplayName = (id: string) => {
-    const loc = fortressLocations.find(l => l.id === id);
-    return loc ? (loc.displayName || loc.fullLocationString) : "Unknown Location";
+  // Helper to get folder display name
+  const getFortressFolderDisplayName = (id: string) => { // Changed function name
+    const folder = inventoryFolders.find(f => f.id === id);
+    return folder ? (folder.name) : "Unknown Folder"; // Display folder name
   };
 
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
@@ -575,7 +576,7 @@ const Integrations: React.FC = () => {
                   <MapPin className="h-5 w-5 text-primary" /> Shopify Location Mappings
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Map your Shopify fulfillment locations to your Fortress inventory locations to ensure accurate stock deduction.
+                  Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
                 </p>
                 <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations}>
                   {isFetchingShopifyLocations ? (
@@ -600,7 +601,7 @@ const Integrations: React.FC = () => {
                           onValueChange={(value) => {
                             setSelectedShopifyLocationId(value);
                             const existing = shopifyMappings.find(m => m.shopify_location_id === value);
-                            setSelectedFortressLocationId(existing?.fortress_location_id || null);
+                            setSelectedFortressFolderId(existing?.fortress_location_id || null); // Changed to FolderId
                             setMappingToEdit(existing || null);
                           }}
                           disabled={isSavingMapping}
@@ -618,19 +619,19 @@ const Integrations: React.FC = () => {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="fortress-location-select">Fortress Location</Label>
+                        <Label htmlFor="fortress-folder-select">Fortress Folder</Label> {/* Changed label */}
                         <Select
-                          value={selectedFortressLocationId || ""}
-                          onValueChange={setSelectedFortressLocationId}
-                          disabled={isSavingMapping || fortressLocations.length === 0}
+                          value={selectedFortressFolderId || ""}
+                          onValueChange={setSelectedFortressFolderId} // Changed to FolderId
+                          disabled={isSavingMapping || inventoryFolders.length === 0} // Changed to inventoryFolders
                         >
-                          <SelectTrigger id="fortress-location-select">
-                            <SelectValue placeholder="Select Fortress Location" />
+                          <SelectTrigger id="fortress-folder-select">
+                            <SelectValue placeholder="Select Fortress Folder" /> {/* Changed placeholder */}
                           </SelectTrigger>
                           <SelectContent>
-                            {fortressLocations.map(loc => (
-                              <SelectItem key={loc.id} value={loc.id}>
-                                {loc.displayName || loc.fullLocationString}
+                            {inventoryFolders.map(folder => ( // Changed to inventoryFolders
+                              <SelectItem key={folder.id} value={folder.id}>
+                                {folder.name} {/* Display folder name */}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -638,7 +639,7 @@ const Integrations: React.FC = () => {
                       </div>
                       <Button
                         onClick={handleSaveLocationMapping}
-                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressLocationId}
+                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId} // Changed to FolderId
                       >
                         {isSavingMapping ? (
                           <>
@@ -670,7 +671,7 @@ const Integrations: React.FC = () => {
                             <span>
                               <span className="font-medium">{mapping.shopify_location_name}</span>
                               <span className="text-muted-foreground"> &rarr; </span>
-                              <span className="font-medium">{getFortressLocationDisplayName(mapping.fortress_location_id)}</span>
+                              <span className="font-medium">{getFortressFolderDisplayName(mapping.fortress_location_id)}</span> {/* Changed function name */}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">

@@ -8,10 +8,10 @@ serve(async (req) => {
   }
 
   try {
-    const { item_id, location_string, location_type, physical_count, reason } = await req.json();
+    const { item_id, folder_id, location_type, physical_count, reason } = await req.json(); // Changed location_string to folder_id
 
-    if (!item_id || !location_string || !location_type || physical_count === undefined || physical_count === null) {
-      return new Response(JSON.stringify({ error: 'Missing required parameters: item_id, location_string, location_type, physical_count.' }), {
+    if (!item_id || !folder_id || !location_type || physical_count === undefined || physical_count === null) { // Changed location_string to folder_id
+      return new Response(JSON.stringify({ error: 'Missing required parameters: item_id, folder_id, location_type, physical_count.' }), { // Changed location_string to folder_id
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -87,7 +87,7 @@ serve(async (req) => {
         .from('discrepancies')
         .insert({
           item_id: item_id,
-          location_string: location_string,
+          folder_id: folder_id, // Changed location_string to folder_id
           location_type: location_type,
           original_quantity: original_quantity,
           counted_quantity: physical_count,
@@ -122,7 +122,16 @@ serve(async (req) => {
         });
       }
 
-      const notificationMessage = `Stock Discrepancy: ${itemData.name} (${itemData.sku}) at ${location_string} (${location_type}). Counted: ${physical_count}, System: ${original_quantity}. Difference: ${difference}. Reported by ${userName}.`;
+      // Fetch folder name for notification
+      const { data: folderData, error: folderNameError } = await supabaseAdmin
+        .from('inventory_folders')
+        .select('name')
+        .eq('id', folder_id)
+        .single();
+
+      const folderName = folderData?.name || folder_id; // Use folder name or ID if not found
+
+      const notificationMessage = `Stock Discrepancy: ${itemData.name} (${itemData.sku}) at ${folderName} (${location_type}). Counted: ${physical_count}, System: ${original_quantity}. Difference: ${difference}. Reported by ${userName}.`; // Changed location_string to folderName
 
       await supabaseAdmin
         .from('activity_logs')
@@ -136,7 +145,7 @@ serve(async (req) => {
             item_id: item_id,
             item_name: itemData.name,
             sku: itemData.sku,
-            location_string: location_string,
+            folder_id: folder_id, // Changed location_string to folder_id
             location_type: location_type,
             original_quantity: original_quantity,
             counted_quantity: physical_count,
