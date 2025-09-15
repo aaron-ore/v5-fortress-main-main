@@ -5,10 +5,10 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { List, LayoutGrid, Folder, Loader2, AlertTriangle } from "lucide-react";
+import { List, LayoutGrid, Folder, Loader2, AlertTriangle, PlusCircle, Edit, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { createInventoryColumns } from "@/pages/Inventory"; // Reusing columns from Inventory page
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
 import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDialog";
@@ -16,43 +16,67 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { useSidebar } from "@/context/SidebarContext";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showError } from "@/utils/toast";
+import FolderCard from "@/components/inventory/FolderCard"; // Import FolderCard
+import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Import FolderLabelGenerator
+import AddInventoryDialog from "@/components/AddInventoryDialog"; // Import AddInventoryDialog
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 
 const FolderContentPage: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const { inventoryItems, deleteInventoryItem, isLoadingInventory, refreshInventory } = useInventory();
-  const { inventoryFolders, isLoadingProfile } = useOnboarding(); // isLoadingProfile is used to check if folders are loaded
+  const { inventoryFolders, isLoadingProfile, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
   const { isCollapsed } = useSidebar();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
-  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
+  const [isConfirmDeleteItemDialogOpen, setIsConfirmDeleteItemDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const [isConfirmDeleteFolderDialogOpen, setIsConfirmDeleteFolderDialogOpen] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null);
 
   const [isQuickViewDialogOpen, setIsQuickViewDialogOpen] = useState(false);
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
+
+  const [isAddSubfolderDialogOpen, setIsAddSubfolderDialogOpen] = useState(false);
+  const [isEditSubfolderDialogOpen, setIsEditSubfolderDialogOpen] = useState(false);
+  const [subfolderToEdit, setSubfolderToEdit] = useState<InventoryFolder | null>(null);
+
+  const [isAddInventoryItemToFolderDialogOpen, setIsAddInventoryItemToFolderDialogOpen] = useState(false);
 
   const currentFolder = useMemo(() => {
     if (isLoadingProfile) return null;
     return inventoryFolders.find(folder => folder.id === folderId);
   }, [folderId, inventoryFolders, isLoadingProfile]);
 
-  const itemsInFolder = useMemo(() => {
+  const subfolders = useMemo(() => {
+    return inventoryFolders.filter(folder => folder.parentId === folderId);
+  }, [inventoryFolders, folderId]);
+
+  const itemsInCurrentFolder = useMemo(() => {
     return inventoryItems.filter(item => item.folderId === folderId);
   }, [inventoryItems, folderId]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) {
-      return itemsInFolder;
+      return itemsInCurrentFolder;
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return itemsInFolder.filter(item =>
+    return itemsInCurrentFolder.filter(item =>
       item.name.toLowerCase().includes(lowerCaseSearchTerm) ||
       item.sku.toLowerCase().includes(lowerCaseSearchTerm) ||
       item.description.toLowerCase().includes(lowerCaseSearchTerm)
     );
-  }, [itemsInFolder, searchTerm]);
+  }, [itemsInCurrentFolder, searchTerm]);
+
+  const getFolderItemCounts = useCallback((fId: string) => {
+    const items = inventoryItems.filter(item => item.folderId === fId);
+    const subfoldersIn = inventoryFolders.filter(folder => folder.parentId === fId);
+    return { itemCount: items.length, subfolderCount: subfoldersIn.length };
+  }, [inventoryItems, inventoryFolders]);
 
   const handleQuickView = useCallback((item: InventoryItem) => {
     setSelectedItemForQuickView(item);
@@ -61,24 +85,74 @@ const FolderContentPage: React.FC = () => {
 
   const handleDeleteItemClick = useCallback((itemId: string, itemName: string) => {
     setItemToDelete({ id: itemId, name: itemName });
-    setIsConfirmDeleteDialogOpen(true);
+    setIsConfirmDeleteItemDialogOpen(true);
   }, []);
 
   const confirmDeleteItem = async () => {
     if (itemToDelete) {
       await deleteInventoryItem(itemToDelete.id);
-      refreshInventory(); // Refresh to update the list after deletion
+      refreshInventory();
     }
-    setIsConfirmDeleteDialogOpen(false);
+    setIsConfirmDeleteItemDialogOpen(false);
     setItemToDelete(null);
   };
 
   const handleCreateOrder = useCallback((item: InventoryItem) => {
-    // Placeholder for creating an order from this item
     showError(`Create order for ${item.name} (feature not implemented yet)`);
   }, []);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders), [handleQuickView, inventoryFolders]);
+  const navigateToFolder = useCallback((id: string) => {
+    navigate(`/folders/${id}`);
+  }, [navigate]);
+
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]);
+
+  // Subfolder management handlers
+  const handleAddSubfolderClick = () => {
+    setIsAddSubfolderDialogOpen(true);
+  };
+
+  const handleEditSubfolderClick = (folder: InventoryFolder) => {
+    setSubfolderToEdit(folder);
+    setIsEditSubfolderDialogOpen(true);
+  };
+
+  const handleDeleteSubfolderClick = (folder: InventoryFolder) => {
+    setFolderToDelete(folder);
+    setIsConfirmDeleteFolderDialogOpen(true);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (folderToDelete) {
+      const { itemCount, subfolderCount } = getFolderItemCounts(folderToDelete.id);
+      if (itemCount > 0 || subfolderCount > 0) {
+        showError(`Cannot delete folder "${folderToDelete.name}". It contains ${itemCount} items and ${subfolderCount} subfolders. Please empty it first.`);
+        setIsConfirmDeleteFolderDialogOpen(false);
+        setFolderToDelete(null);
+        return;
+      }
+      await removeInventoryFolder(folderToDelete.id);
+    }
+    setIsConfirmDeleteFolderDialogOpen(false);
+    setFolderToDelete(null);
+  };
+
+  const handleSaveSubfolder = async (newFolderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => {
+    if (!currentFolder) return;
+
+    if (isNew) {
+      await addInventoryFolder({ ...newFolderData, parentId: currentFolder.id });
+      setIsAddSubfolderDialogOpen(false);
+    } else if (subfolderToEdit) {
+      await updateInventoryFolder({ ...subfolderToEdit, ...newFolderData });
+      setIsEditSubfolderDialogOpen(false);
+      setSubfolderToEdit(null);
+    }
+  };
+
+  const handleAddInventoryItemToFolderClick = () => {
+    setIsAddInventoryItemToFolderDialogOpen(true);
+  };
 
   if (isLoadingInventory || isLoadingProfile) {
     return (
@@ -111,7 +185,7 @@ const FolderContentPage: React.FC = () => {
       </div>
 
       <p className="text-muted-foreground">
-        Viewing inventory items within the "{currentFolder.name}" folder.
+        Viewing contents of the "{currentFolder.name}" folder.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -122,6 +196,12 @@ const FolderContentPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="flex items-center ml-auto space-x-2">
+          <Button onClick={handleAddSubfolderClick} size="sm">
+            <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
+          </Button>
+          <Button onClick={handleAddInventoryItemToFolderClick} size="sm">
+            <PlusCircle className="h-4 w-4 mr-2" /> Add Item
+          </Button>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -155,35 +235,63 @@ const FolderContentPage: React.FC = () => {
 
       <Card className="flex-grow rounded-md border flex flex-col">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Items in Folder ({filteredItems.length})</CardTitle>
+          <CardTitle className="text-xl font-semibold">Contents ({subfolders.length + filteredItems.length})</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto">
-          {filteredItems.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No inventory items found in this folder.</p>
+          {subfolders.length === 0 && filteredItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">This folder is empty.</p>
           ) : (
-            <>
-              {viewMode === "table" && (
-                <DataTable columns={columnsForDataTable} data={filteredItems} />
+            <div className="space-y-6">
+              {/* Subfolders Display */}
+              {subfolders.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-4">Subfolders ({subfolders.length})</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {subfolders.map(folder => {
+                      const { itemCount, subfolderCount } = getFolderItemCounts(folder.id);
+                      return (
+                        <FolderCard
+                          key={folder.id}
+                          folder={folder}
+                          onEdit={handleEditSubfolderClick}
+                          onDelete={handleDeleteSubfolderClick}
+                          itemCount={itemCount}
+                          subfolderCount={subfolderCount}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-              {viewMode === "card" && (
-                <InventoryCardGrid
-                  items={filteredItems}
-                  onAdjustStock={handleQuickView}
-                  onCreateOrder={handleCreateOrder}
-                  onViewDetails={handleQuickView}
-                  onDeleteItem={handleDeleteItemClick}
-                  isSidebarCollapsed={isCollapsed}
-                />
+
+              {/* Inventory Items Display */}
+              {filteredItems.length > 0 && (
+                <div className="mt-8">
+                  <h2 className="text-lg font-semibold mb-4">Inventory Items ({filteredItems.length})</h2>
+                  {viewMode === "table" && (
+                    <DataTable columns={columnsForDataTable} data={filteredItems} />
+                  )}
+                  {viewMode === "card" && (
+                    <InventoryCardGrid
+                      items={filteredItems}
+                      onAdjustStock={handleQuickView}
+                      onCreateOrder={handleCreateOrder}
+                      onViewDetails={handleQuickView}
+                      onDeleteItem={handleDeleteItemClick}
+                      isSidebarCollapsed={isCollapsed}
+                    />
+                  )}
+                </div>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {itemToDelete && (
         <ConfirmDialog
-          isOpen={isConfirmDeleteDialogOpen}
-          onClose={() => setIsConfirmDeleteDialogOpen(false)}
+          isOpen={isConfirmDeleteItemDialogOpen}
+          onClose={() => setIsConfirmDeleteItemDialogOpen(false)}
           onConfirm={confirmDeleteItem}
           title="Confirm Item Deletion"
           description={`Are you sure you want to delete "${itemToDelete.name}" (SKU: ${itemToDelete.id})? This action cannot be undone.`}
@@ -191,10 +299,69 @@ const FolderContentPage: React.FC = () => {
           cancelText="Cancel"
         />
       )}
+      {folderToDelete && (
+        <ConfirmDialog
+          isOpen={isConfirmDeleteFolderDialogOpen}
+          onClose={() => setIsConfirmDeleteFolderDialogOpen(false)}
+          onConfirm={confirmDeleteFolder}
+          title="Confirm Folder Deletion"
+          description={
+            <div>
+              <p>Are you sure you want to delete the folder "<span className="font-semibold">{folderToDelete.name}</span>"?</p>
+              <p className="text-destructive font-semibold mt-2">
+                This action cannot be undone. All {getFolderItemCounts(folderToDelete.id).itemCount} items and {getFolderItemCounts(folderToDelete.id).subfolderCount} subfolders within this folder will be unassigned or deleted.
+              </p>
+            </div>
+          }
+          confirmText="Delete Folder"
+          cancelText="Cancel"
+        />
+      )}
       <InventoryItemQuickViewDialog
         isOpen={isQuickViewDialogOpen}
         onClose={() => setIsQuickViewDialogOpen(false)}
         item={selectedItemForQuickView}
+      />
+
+      {/* Add Subfolder Dialog */}
+      <Dialog open={isAddSubfolderDialogOpen} onOpenChange={setIsAddSubfolderDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Subfolder to "{currentFolder?.name}"</DialogTitle>
+            <DialogDescription>Define a new subfolder within the current folder.</DialogDescription>
+          </DialogHeader>
+          <FolderLabelGenerator
+            initialFolder={null}
+            onSave={handleSaveSubfolder}
+            onClose={() => setIsAddSubfolderDialogOpen(false)}
+            parentId={currentFolder?.id}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Subfolder Dialog */}
+      {subfolderToEdit && (
+        <Dialog open={isEditSubfolderDialogOpen} onOpenChange={setIsEditSubfolderDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Subfolder "{subfolderToEdit.name}"</DialogTitle>
+              <DialogDescription>Update details for this subfolder.</DialogDescription>
+            </DialogHeader>
+            <FolderLabelGenerator
+              initialFolder={subfolderToEdit}
+              onSave={handleSaveSubfolder}
+              onClose={() => { setIsEditSubfolderDialogOpen(false); setSubfolderToEdit(null); }}
+              parentId={currentFolder?.id}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Add Inventory Item to Folder Dialog */}
+      <AddInventoryDialog
+        isOpen={isAddInventoryItemToFolderDialogOpen}
+        onClose={() => setIsAddInventoryItemToFolderDialogOpen(false)}
+        initialFolderId={currentFolder?.id}
       />
     </div>
   );

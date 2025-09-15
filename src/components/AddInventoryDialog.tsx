@@ -29,11 +29,13 @@ import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Impor
 interface AddInventoryDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  initialFolderId?: string; // NEW: Optional prop to pre-select folder
 }
 
 const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   isOpen,
   onClose,
+  initialFolderId, // NEW: Destructure initialFolderId
 }) => {
   const { addInventoryItem } = useInventory();
   const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders
@@ -81,8 +83,9 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setPickingReorderLevel("");
       setUnitCost("");
       setRetailPrice("");
-      setSelectedMainFolderId(inventoryFolders.length > 0 ? inventoryFolders[0].id : "");
-      setSelectedPickingBinFolderId(inventoryFolders.length > 0 ? inventoryFolders[0].id : "");
+      // NEW: Set initial folder based on prop or first available
+      setSelectedMainFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : ""));
+      setSelectedPickingBinFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : ""));
       setSelectedVendorId("none");
       setBarcodeValue("");
       setQrCodeSvgPreview(null);
@@ -92,7 +95,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
     }
-  }, [isOpen, inventoryFolders]);
+  }, [isOpen, inventoryFolders, initialFolderId]); // Added initialFolderId to dependencies
 
   useEffect(() => {
     const updateQrCode = async () => {

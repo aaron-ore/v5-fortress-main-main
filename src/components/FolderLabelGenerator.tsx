@@ -6,12 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Printer, Download, Save } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
-import LocationLabelPdfContent from "@/components/LocationLabelPdfContent";
-import html2canvas from 'html2canvas';
-// Removed buildLocationString, getUniqueLocationParts, LocationParts as they are not directly used for folders
+import LocationLabelPdfContent from "@/components/LocationLabelPdfContent"; // This component will be renamed to FolderLabelPdfContent
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [
@@ -23,39 +21,39 @@ const labelColors = [
   { name: "Orange", hex: "#FF9800" },
 ];
 
-interface LocationLabelGeneratorProps {
-  initialLocation?: InventoryFolder | null; // Updated from Location to InventoryFolder
-  onSave: (folder: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void; // Updated to InventoryFolder
+interface FolderLabelGeneratorProps {
+  initialFolder?: InventoryFolder | null;
+  onSave: (folder: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void;
   onClose: () => void;
   onGenerateAndPrint?: (data: PrintContentData[]) => void;
+  parentId?: string; // New prop for subfolders
 }
 
-const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
-  initialLocation,
+const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
+  initialFolder,
   onSave,
   onClose,
   onGenerateAndPrint,
+  parentId,
 }) => {
   const { initiatePrint } = usePrint();
-  const { inventoryFolders: existingFoldersInContext } = useOnboarding(); // Updated to inventoryFolders
+  const { inventoryFolders: existingFoldersInContext } = useOnboarding();
 
-  const [folderName, setFolderName] = useState(initialLocation?.name || ""); // Changed from displayName to folderName
-  const [selectedColor, setSelectedColor] = useState(initialLocation?.color || labelColors[0].hex);
+  const [folderName, setFolderName] = useState(initialFolder?.name || "");
+  const [selectedColor, setSelectedColor] = useState(initialFolder?.color || labelColors[0].hex);
   const [quantity, setQuantity] = useState("1");
   const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
 
   const labelPreviewRef = useRef<HTMLDivElement>(null);
 
-  // Removed uniqueAreas, uniqueRows, etc.
-
   useEffect(() => {
-    setFolderName(initialLocation?.name || ""); // Changed from displayName to folderName
-    setSelectedColor(initialLocation?.color || labelColors[0].hex);
+    setFolderName(initialFolder?.name || "");
+    setSelectedColor(initialFolder?.color || labelColors[0].hex);
     setQuantity("1");
-  }, [initialLocation]);
+  }, [initialFolder]);
 
-  const folderIdentifier = useMemo(() => { // Changed from fullLocationString to folderIdentifier
-    return folderName; // For folders, the name is the identifier
+  const folderIdentifier = useMemo(() => {
+    return folderName;
   }, [folderName]);
 
   useEffect(() => {
@@ -75,28 +73,29 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     generatePreviewQr();
   }, [folderIdentifier]);
 
-  const handleSaveFolderDetails = async () => { // Renamed from handleSaveLocationDetails
-    if (!folderName || !selectedColor) { // Validate folderName
+  const handleSaveFolderDetails = async () => {
+    if (!folderName || !selectedColor) {
       showError("Please fill in the folder name and select a color.");
       return;
     }
 
-    const isNew = !initialLocation;
+    const isNew = !initialFolder;
 
-    const duplicateExists = existingFoldersInContext.some(folder => // Check against existingFoldersInContext
+    const duplicateExists = existingFoldersInContext.some(folder =>
       folder.name.toLowerCase() === folderName.trim().toLowerCase() &&
-      folder.id !== initialLocation?.id
+      folder.id !== initialFolder?.id &&
+      (folder.parentId === parentId || (!folder.parentId && !parentId)) // Check uniqueness within the same parent or top-level
     );
 
     if (duplicateExists) {
-      showError(`A folder with the name "${folderName}" already exists. Please choose a unique name.`);
+      showError(`A folder with the name "${folderName}" already exists in this level. Please choose a unique name.`);
       return;
     }
 
-    const folderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'> = { // Create InventoryFolder object
+    const folderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'> = {
       name: folderName.trim(),
       color: selectedColor,
-      // parentId, description, imageUrl, tags can be added via a more detailed dialog
+      parentId: parentId || undefined, // Assign parentId if present
     };
 
     onSave(folderData, isNew);
@@ -104,7 +103,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
   };
 
   const handleGenerateAndPrint = async () => {
-    if (!folderName || !selectedColor || !quantity) { // Validate folderName
+    if (!folderName || !selectedColor || !quantity) {
       showError("Please fill in the folder name and select a color.");
       return;
     }
@@ -119,13 +118,13 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
       const qrSvg = await generateQrCodeSvg(folderIdentifier, 150);
 
       const labelsToPrint: PrintContentData[] = Array.from({ length: numQuantity }).map(() => ({
-        type: "location-label", // Reusing location-label type for now
+        type: "location-label",
         props: {
-          folderName: folderName, // Pass folderName
+          folderName: folderName,
           color: selectedColor,
           qrCodeSvg: qrSvg,
           printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-          folderIdentifier: folderIdentifier, // Pass folderIdentifier
+          folderIdentifier: folderIdentifier,
         },
       }));
 
@@ -169,16 +168,15 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     }
   };
 
-  const isSaveDisabled = !folderName || !selectedColor; // Validate folderName
+  const isSaveDisabled = !folderName || !selectedColor;
 
   return (
     <div className="space-y-4 flex-grow flex flex-col p-4">
       <div className="space-y-2">
-        <Label htmlFor="folderName">Folder Name <span className="text-red-500">*</span></Label> {/* Updated label */}
-        <Input id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Folder Name" /> {/* Updated to folderName */}
+        <Label htmlFor="folderName">Folder Name <span className="text-red-500">*</span></Label>
+        <Input id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Folder Name" />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Removed Area, Row, Bay, Level, Pos inputs */}
         <div className="space-y-2">
           <Label htmlFor="color">Label Color</Label>
           <Select value={selectedColor} onValueChange={setSelectedColor}>
@@ -216,13 +214,13 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
         <h3 className="text-sm font-semibold text-muted-foreground mb-2">Label Preview</h3>
         {qrCodeSvg ? (
           <div className="w-[101.6mm] h-[50.8mm] flex items-center justify-center overflow-hidden p-1 bg-white">
-            <LocationLabelPdfContent // Reusing LocationLabelPdfContent
+            <LocationLabelPdfContent
               ref={labelPreviewRef}
-              folderName={folderName} // Pass folderName
+              folderName={folderName}
               color={selectedColor}
               qrCodeSvg={qrCodeSvg}
               printDate={format(new Date(), "MMM dd, yyyy HH:mm")}
-              folderIdentifier={folderIdentifier} // Pass folderIdentifier
+              folderIdentifier={folderIdentifier}
             />
           </div>
         ) : (
@@ -231,7 +229,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
       </div>
       <div className="flex gap-2 w-full mt-auto">
         <Button onClick={handleSaveFolderDetails} className="flex-grow" disabled={isSaveDisabled}>
-          <Save className="h-4 w-4 mr-2" /> {initialLocation ? "Save Changes" : "Save Folder"} {/* Updated button text */}
+          <Save className="h-4 w-4 mr-2" /> {initialFolder ? "Save Changes" : "Save Folder"}
         </Button>
         <Button onClick={handleGenerateAndPrint} className="flex-grow" variant="secondary" disabled={isSaveDisabled}>
           <Printer className="h-4 w-4 mr-2" /> Generate & Print Labels
@@ -244,4 +242,4 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
   );
 };
 
-export default LocationLabelGenerator;
+export default FolderLabelGenerator;

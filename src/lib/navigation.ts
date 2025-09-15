@@ -45,7 +45,7 @@ export const mainNavItems: NavItem[] = [
   { title: "Orders", href: "/orders", icon: Receipt },
   { title: "Customers", href: "/customers", icon: User },
   { title: "Vendors", href: "/vendors", icon: Truck },
-  { title: "Locations", href: "/locations", icon: MapPin },
+  { title: "Folders", href: "/folders", icon: MapPin }, // Updated href to /folders
   { title: "Integrations", href: "/integrations", icon: Plug },
   { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
   {

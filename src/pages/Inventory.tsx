@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { PlusCircle, List, LayoutGrid, Folder, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react"; // Changed MapPin to Folder
+import { PlusCircle, List, LayoutGrid, Folder, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,14 +22,14 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { showSuccess } from "@/utils/toast";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { showSuccess, showError } from "@/utils/toast";
+import { useNavigate } from "react-router-dom";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import ManageFoldersDialog from "@/components/ManageLocationsDialog"; // Renamed import
+import ManageFoldersDialog from "@/components/ManageLocationsDialog";
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import BulkUpdateDialog from "@/components/BulkUpdateDialog";
@@ -39,8 +39,12 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDialog";
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import { useSidebar } from "@/context/SidebarContext";
+import FolderCard from "@/components/inventory/FolderCard"; // Import the new FolderCard
+import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Renamed import
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: any[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [ // Updated structuredLocations to inventoryFolders, added navigateToFolder
+
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [
   {
     accessorKey: "name",
     header: "Item Name",
@@ -72,14 +76,14 @@ export const createInventoryColumns = (handleQuickView: (item: InventoryItem) =>
     header: "Reorder Level",
   },
   {
-    accessorKey: "folderId", // Changed from location to folderId
-    header: "Folder", // Changed header to Folder
+    accessorKey: "folderId",
+    header: "Folder",
     cell: ({ row }) => {
       const folderId = row.original.folderId;
-      const foundFolder = inventoryFolders.find(folder => folder.id === folderId); // Find folder by ID
+      const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
       return (
         <Button variant="link" className="p-0 h-auto text-left font-medium hover:underline" onClick={() => navigateToFolder(folderId)}>
-          {foundFolder?.name || "Unassigned"} {/* Display folder name */}
+          {foundFolder?.name || "Unassigned"}
         </Button>
       );
     },
@@ -119,14 +123,13 @@ const Inventory: React.FC = () => {
   const { inventoryItems, deleteInventoryItem, refreshInventory, isLoadingInventory } = useInventory();
   const { categories } = useCategories();
   const { vendors } = useVendors();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
   const { isCollapsed } = useSidebar();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isManageCategoriesDialogOpen, setIsManageCategoriesDialogOpen] = useState(false);
-  const [isManageFoldersDialogOpen, setIsManageFoldersDialogOpen] = useState(false); // Renamed state
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false);
   const [isImportCsvDialogOpen, setIsImportCsvDialogOpen] = useState(false);
@@ -139,9 +142,13 @@ const Inventory: React.FC = () => {
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
 
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
-  const [folderFilter, setFolderFilter] = useState("all"); // Changed from locationFilter to folderFilter
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // State for Add/Edit Folder Dialog
+  const [isFolderLabelGeneratorOpen, setIsFolderLabelGeneratorOpen] = useState(false);
+  const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // For folder deletion confirmation
 
   useEffect(() => {
     refreshInventory();
@@ -151,6 +158,16 @@ const Inventory: React.FC = () => {
     return new Map(vendors.map(vendor => [vendor.id, vendor.name]));
   }, [vendors]);
 
+  const topLevelFolders = useMemo(() => {
+    return inventoryFolders.filter(folder => !folder.parentId);
+  }, [inventoryFolders]);
+
+  const getFolderItemCounts = useCallback((folderId: string) => {
+    const items = inventoryItems.filter(item => item.folderId === folderId);
+    const subfolders = inventoryFolders.filter(folder => folder.parentId === folderId);
+    return { itemCount: items.length, subfolderCount: subfolders.length };
+  }, [inventoryItems, inventoryFolders]);
+
   const filteredItems = useMemo(() => {
     return inventoryItems
       .filter(item => {
@@ -159,20 +176,19 @@ const Inventory: React.FC = () => {
           item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (inventoryFolders.find(f => f.id === item.folderId)?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || // Search by folder name
+          (inventoryFolders.find(f => f.id === item.folderId)?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (item.vendorId ? (vendorNameMap.get(item.vendorId) || "").toLowerCase().includes(searchTerm.toLowerCase()) : false);
 
-        const matchesFolder = folderFilter === "all" || item.folderId === folderFilter; // Updated to folderId
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         const matchesStatus = statusFilter === "all" || item.status === statusFilter;
 
-        return matchesSearch && matchesFolder && matchesCategory && matchesStatus;
+        return matchesSearch && matchesCategory && matchesStatus;
       })
       .map(item => ({
         ...item,
         vendorName: item.vendorId ? vendorNameMap.get(item.vendorId) || '-' : '-',
       }));
-  }, [inventoryItems, searchTerm, vendorNameMap, folderFilter, categoryFilter, statusFilter, inventoryFolders]); // Added inventoryFolders to dependencies
+  }, [inventoryItems, searchTerm, vendorNameMap, categoryFilter, statusFilter, inventoryFolders]);
 
   const handleDeleteItemClick = useCallback((itemId: string, itemName: string) => {
     setItemToDelete({ id: itemId, name: itemName });
@@ -204,7 +220,47 @@ const Inventory: React.FC = () => {
     navigate(`/folders/${folderId}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]);
+
+  // Folder management handlers
+  const handleAddFolderClick = () => {
+    setFolderToEdit(null); // Clear any existing folder data
+    setIsFolderLabelGeneratorOpen(true);
+  };
+
+  const handleEditFolderClick = (folder: InventoryFolder) => {
+    setFolderToEdit(folder);
+    setIsFolderLabelGeneratorOpen(true);
+  };
+
+  const handleDeleteFolderClick = (folder: InventoryFolder) => {
+    setFolderToDelete(folder);
+    setIsConfirmDeleteDialogOpen(true); // Reuse item deletion dialog state for simplicity
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (folderToDelete) {
+      const { itemCount, subfolderCount } = getFolderItemCounts(folderToDelete.id);
+      if (itemCount > 0 || subfolderCount > 0) {
+        showError(`Cannot delete folder "${folderToDelete.name}". It contains ${itemCount} items and ${subfolderCount} subfolders. Please empty it first.`);
+        setIsConfirmDeleteDialogOpen(false);
+        setFolderToDelete(null);
+        return;
+      }
+      await removeInventoryFolder(folderToDelete.id);
+    }
+    setIsConfirmDeleteDialogOpen(false);
+    setFolderToDelete(null);
+  };
+
+  const handleSaveFolder = async (newFolderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => {
+    if (isNew) {
+      await addInventoryFolder(newFolderData);
+    } else if (folderToEdit) {
+      await updateInventoryFolder({ ...folderToEdit, ...newFolderData });
+    }
+    setIsFolderLabelGeneratorOpen(false);
+  };
 
   return (
     <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root">
@@ -217,7 +273,6 @@ const Inventory: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        {/* Removed folderFilter dropdown as navigation will handle filtering by folder */}
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Categories" />
@@ -275,11 +330,10 @@ const Inventory: React.FC = () => {
 
       <Card className="rounded-md border flex flex-col flex-grow">
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-xl font-semibold">Current Stock</CardTitle>
+          <CardTitle className="text-xl font-semibold">Inventory Overview</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
-            {/* Moved Manage Folders button here */}
-            <Button variant="outline" onClick={() => setIsManageFoldersDialogOpen(true)} size="sm">
-              <Folder className="h-4 w-4 mr-2" /> Manage Folders
+            <Button onClick={handleAddFolderClick} size="sm">
+              <PlusCircle className="h-4 w-4 mr-2" /> Add New Folder
             </Button>
             <Button onClick={() => setIsAddInventoryDialogOpen(true)} size="sm">
               <PlusCircle className="h-4 w-4 mr-2" /> Add New Item
@@ -317,24 +371,53 @@ const Inventory: React.FC = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="ml-2 text-muted-foreground">Loading inventory...</span>
             </div>
-          ) : filteredItems.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No inventory items found.</p>
           ) : (
-            <>
-              {viewMode === "table" && (
-                <DataTable columns={columnsForDataTable} data={filteredItems} />
+            <div className="space-y-6">
+              {/* Top-level Folders Display */}
+              {topLevelFolders.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {topLevelFolders.map(folder => {
+                    const { itemCount, subfolderCount } = getFolderItemCounts(folder.id);
+                    return (
+                      <FolderCard
+                        key={folder.id}
+                        folder={folder}
+                        onEdit={handleEditFolderClick}
+                        onDelete={handleDeleteFolderClick}
+                        itemCount={itemCount}
+                        subfolderCount={subfolderCount}
+                      />
+                    );
+                  })}
+                </div>
               )}
-              {viewMode === "card" && (
-                <InventoryCardGrid
-                  items={filteredItems}
-                  onAdjustStock={handleQuickView}
-                  onCreateOrder={handleCreateOrder}
-                  onViewDetails={handleQuickView}
-                  onDeleteItem={handleDeleteItemClick}
-                  isSidebarCollapsed={isCollapsed}
-                />
+
+              {/* All Items (if no specific folder is selected, or for global search) */}
+              {filteredItems.length === 0 && topLevelFolders.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No inventory items or folders found.</p>
+              ) : (
+                <>
+                  {searchTerm && filteredItems.length > 0 && (
+                    <div className="mt-8">
+                      <h2 className="text-xl font-semibold mb-4">Search Results ({filteredItems.length})</h2>
+                      {viewMode === "table" && (
+                        <DataTable columns={columnsForDataTable} data={filteredItems} />
+                      )}
+                      {viewMode === "card" && (
+                        <InventoryCardGrid
+                          items={filteredItems}
+                          onAdjustStock={handleQuickView}
+                          onCreateOrder={handleCreateOrder}
+                          onViewDetails={handleQuickView}
+                          onDeleteItem={handleDeleteItemClick}
+                          isSidebarCollapsed={isCollapsed}
+                        />
+                      )}
+                    </div>
+                  )}
+                </>
               )}
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -342,10 +425,6 @@ const Inventory: React.FC = () => {
       <AddInventoryDialog
         isOpen={isAddInventoryDialogOpen}
         onClose={() => setIsAddInventoryDialogOpen(false)}
-      />
-      <ManageFoldersDialog // Renamed component
-        isOpen={isManageFoldersDialogOpen} // Renamed state
-        onClose={() => setIsManageFoldersDialogOpen(false)} // Renamed state
       />
       <CategoryManagementDialog
         isOpen={isManageCategoriesDialogOpen}
@@ -378,11 +457,46 @@ const Inventory: React.FC = () => {
           cancelText="Cancel"
         />
       )}
+      {folderToDelete && (
+        <ConfirmDialog
+          isOpen={isConfirmDeleteDialogOpen} // Reusing state
+          onClose={() => setIsConfirmDeleteDialogOpen(false)}
+          onConfirm={confirmDeleteFolder}
+          title="Confirm Folder Deletion"
+          description={
+            <div>
+              <p>Are you sure you want to delete the folder "<span className="font-semibold">{folderToDelete.name}</span>"?</p>
+              <p className="text-destructive font-semibold mt-2">
+                This action cannot be undone. All {getFolderItemCounts(folderToDelete.id).itemCount} items and {getFolderItemCounts(folderToDelete.id).subfolderCount} subfolders within this folder will be unassigned or deleted.
+              </p>
+            </div>
+          }
+          confirmText="Delete Folder"
+          cancelText="Cancel"
+        />
+      )}
       <InventoryItemQuickViewDialog
         isOpen={isQuickViewDialogOpen}
         onClose={() => setIsQuickViewDialogOpen(false)}
         item={selectedItemForQuickView}
       />
+
+      {/* Folder Label Generator Dialog (for adding/editing folders) */}
+      <Dialog open={isFolderLabelGeneratorOpen} onOpenChange={setIsFolderLabelGeneratorOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{folderToEdit ? "Edit Folder & Generate Labels" : "Add New Folder & Generate Labels"}</DialogTitle>
+            <DialogDescription>
+              {folderToEdit ? "Update details for this folder and generate new labels." : "Define a new folder and generate scannable QR code labels."}
+            </DialogDescription>
+          </DialogHeader>
+          <FolderLabelGenerator
+            initialFolder={folderToEdit}
+            onSave={handleSaveFolder}
+            onClose={() => setIsFolderLabelGeneratorOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
