@@ -51,13 +51,13 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import SortableItemRow from "./SortableItemRow"; // NEW: Import SortableItemRow
+import SortableItemRow from "@/components/orders/SortableItemRow";
 
-interface AddOrderFormProps {
+interface CreateOrderDialogContentProps {
   onClose: () => void;
 }
 
-const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
+const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
@@ -452,4 +452,4 @@ const AddOrderForm: React.FC<AddOrderFormProps> = ({ onClose }) => {
   );
 };
 
-export default AddOrderForm;
+export default CreateOrderDialogContent;

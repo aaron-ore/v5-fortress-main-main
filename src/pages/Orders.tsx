@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react"; // Removed Edit, Archive, Eye, Link
+import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { useOrders } from "@/context/OrdersContext"; // Removed OrderItem
+import { useOrders } from "@/context/OrdersContext";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import {
@@ -33,8 +33,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
-import { createOrderColumns } from "@/components/orders/orders-table-columns"; // NEW: Import createOrderColumns
-import AddOrderForm from "@/components/orders/AddOrderForm"; // NEW: Import AddOrderForm
+import { createOrderColumns } from "@/components/orders/orders-table-columns";
+import CreateOrderDialogContent from "@/components/orders/CreateOrderDialogContent"; // NEW: Import CreateOrderDialogContent
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, archiveOrder } = useOrders();
@@ -178,7 +178,7 @@ const Orders: React.FC = () => {
                 Fill in the details to create a new sales or purchase order.
               </DialogDescription>
             </DialogHeader>
-            <AddOrderForm onClose={() => setIsAddOrderDialogOpen(false)} />
+            <CreateOrderDialogContent onClose={() => setIsAddOrderDialogOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>

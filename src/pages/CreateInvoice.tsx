@@ -448,4 +448,4 @@ const CreateInvoice: React.FC = () => {
   );
 };
 
-export default AddOrderForm;
+export default CreateInvoice;
