@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, MessageSquare, Barcode } from "lucide-react"; // Removed Package, MapPin
+import { AlertTriangle, MessageSquare, Barcode, Folder } from "lucide-react"; // Changed MapPin to Folder
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface IssueReportToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -26,11 +26,11 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const { inventoryItems } = useInventory();
   const { addNotification } = useNotifications();
   const { profile } = useProfile();
-  const { locations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
 
   const [issueType, setIssueType] = useState("");
   const [itemId, setItemId] = useState("");
-  const [location, setLocation] = useState("");
+  const [folderId, setFolderId] = useState(""); // Changed from location to folderId
   const [description, setDescription] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -55,8 +55,8 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
     if (foundItem) {
       setItemId(foundItem.id);
-      setLocation(foundItem.location);
-      showSuccess(`Scanned item: ${foundItem.name}. Item and location pre-filled.`);
+      setFolderId(foundItem.folderId); // Updated to folderId
+      showSuccess(`Scanned item: ${foundItem.name}. Item and folder pre-filled.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
     }
@@ -77,7 +77,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       issueType,
       itemId: selectedItem?.id || "N/A",
       itemName: selectedItem?.name || "N/A",
-      location: location || "N/A",
+      folderId: folderId || "N/A", // Updated to folderId
       description,
       contactInfo,
       timestamp: new Date().toISOString(),
@@ -110,7 +110,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     // Reset form
     setIssueType("");
     setItemId("");
-    setLocation("");
+    setFolderId(""); // Reset folderId
     setDescription("");
     setContactInfo("");
   };
@@ -172,16 +172,16 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location" className="font-semibold">Location (Optional)</Label>
-                <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger id="location">
-                    <SelectValue placeholder="Select location" />
+                <Label htmlFor="folderId" className="font-semibold">Folder (Optional)</Label> {/* Updated label */}
+                <Select value={folderId} onValueChange={setFolderId}> {/* Updated to folderId */}
+                  <SelectTrigger id="folderId">
+                    <SelectValue placeholder="Select folder" /> {/* Updated placeholder */}
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="N/A">N/A (General Location)</SelectItem>
-                    {locations.map(loc => (
-                      <SelectItem key={loc.id} value={loc.fullLocationString}>
-                        {loc.displayName || loc.fullLocationString}
+                    <SelectItem value="N/A">N/A (General Folder)</SelectItem> {/* Updated text */}
+                    {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name} {/* Display folder name */}
                       </SelectItem>
                     ))}
                   </SelectContent>

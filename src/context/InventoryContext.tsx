@@ -35,8 +35,9 @@ export interface InventoryItem {
   incomingStock: number;
   unitCost: number;
   retailPrice: number;
-  location: string;
-  pickingBinLocation: string;
+  folderId: string; // Changed from location to folderId
+  tags?: string[]; // Added tags
+  notes?: string; // Added notes
   status: string;
   lastUpdated: string;
   imageUrl?: string;
@@ -102,8 +103,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       incomingStock: isNaN(incomingStock) ? 0 : incomingStock,
       unitCost: isNaN(unitCost) ? 0 : unitCost,
       retailPrice: isNaN(retailPrice) ? 0 : retailPrice,
-      location: item.location || "",
-      pickingBinLocation: item.picking_bin_location || item.location || "",
+      folderId: item.folder_id || "", // Updated to folderId
+      tags: item.tags || undefined, // Added tags
+      notes: item.notes || undefined, // Added notes
       status: item.status || "In Stock",
       lastUpdated: lastUpdatedString,
       imageUrl: item.image_url || undefined,
@@ -252,8 +254,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: 0,
         unit_cost: item.unitCost,
         retail_price: item.retailPrice,
-        location: item.location,
-        picking_bin_location: item.pickingBinLocation,
+        folder_id: item.folderId, // Updated to folder_id
+        tags: item.tags, // Added tags
+        notes: item.notes, // Added notes
         status: status,
         last_updated: lastUpdated,
         image_url: item.imageUrl,
@@ -308,8 +311,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: updatedItem.incomingStock,
         unit_cost: updatedItem.unitCost,
         retail_price: updatedItem.retailPrice,
-        location: updatedItem.location,
-        picking_bin_location: updatedItem.pickingBinLocation,
+        folder_id: updatedItem.folderId, // Updated to folder_id
+        tags: updatedItem.tags, // Added tags
+        notes: updatedItem.notes, // Added notes
         status: newStatus,
         last_updated: lastUpdated,
         image_url: updatedItem.imageUrl,

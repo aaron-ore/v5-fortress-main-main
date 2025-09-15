@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Barcode, CheckCircle, ShoppingCart, MapPin } from "lucide-react";
+import { Barcode, CheckCircle, ShoppingCart, Folder } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
 
 interface FulfilledItemDisplay extends POItem {
   fulfilledQuantity: number;
@@ -27,6 +28,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
+  const { inventoryFolders } = useOnboarding(); // Get inventory folders
 
   const [soNumberInput, setSoNumberInput] = useState("");
   const [selectedSO, setSelectedSO] = useState<OrderItem | null>(null);
@@ -152,6 +154,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
             oldQuantity: oldQuantity,
             newQuantity: newQuantity,
             reason: `Fulfilled for SO ${selectedSO.id} (Mobile)`,
+            folderId: inventoryItem.folderId, // Pass folderId
           });
         } else {
           showError(`Inventory item for ${item.itemName} not found.`);
@@ -178,6 +181,12 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   };
 
   const isCompleteButtonDisabled = !selectedSO || fulfilledItems.every(item => item.fulfilledQuantity === 0);
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -224,7 +233,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
                         <span className="text-sm text-muted-foreground">SKU: {item.inventoryItemDetails?.sku}</span>
                       </div>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <MapPin className="h-4 w-4" /> Location: {item.inventoryItemDetails?.location || "N/A"}
+                        <Folder className="h-4 w-4" /> Folder: {getFolderName(item.inventoryItemDetails?.folderId || "")} {/* Display folder name */}
                       </p>
                       <div className="flex justify-between items-center">
                         <p className="text-muted-foreground text-sm">Required: {item.quantity}</p>

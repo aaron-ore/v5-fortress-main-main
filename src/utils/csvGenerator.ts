@@ -37,12 +37,14 @@ export const generateInventoryCsvTemplate = (): string => {
     "incomingStock",
     "unitCost",
     "retailPrice",
-    "location",
+    "folderName", // Changed from location to folderName
     "imageUrl",
     "vendorId",
     "barcodeUrl",
     "autoReorderEnabled",
     "autoReorderQuantity",
+    "tags", // Added tags
+    "notes", // Added notes
   ];
 
   const exampleRow = [
@@ -58,12 +60,14 @@ export const generateInventoryCsvTemplate = (): string => {
     "10", // incomingStock
     "15.00", // unitCost
     "25.00", // retailPrice
-    "Main Warehouse-A-01-01-1-A", // example structured location
+    "Main Warehouse", // example folder name
     "http://example.com/imageA.jpg", // imageUrl
     "vendor-uuid-123", // vendorId
     "SKU-001", // barcodeUrl
     "TRUE", // autoReorderEnabled
     "100", // autoReorderQuantity
+    "fragile, high-value", // example tags
+    "Special handling required.", // example notes
   ];
 
   const csvContent = [

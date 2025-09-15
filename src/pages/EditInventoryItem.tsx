@@ -31,8 +31,8 @@ import { useVendors } from "@/context/VendorContext";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useOnboarding } from "@/context/OnboardingContext";
-import { parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+// Removed parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
@@ -50,8 +50,9 @@ const formSchema = z.object({
   incomingStock: z.number().min(0, "Must be non-negative"),
   unitCost: z.number().min(0, "Must be non-negative"),
   retailPrice: z.number().min(0, "Must be non-negative"),
-  location: z.string().min(1, "Location is required"),
-  pickingBinLocation: z.string().min(1, "Picking bin location is required"),
+  folderId: z.string().min(1, "Folder is required"), // Changed from location to folderId
+  tags: z.string().optional(), // Added tags
+  notes: z.string().optional(), // Added notes
   imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
@@ -64,7 +65,7 @@ const EditInventoryItem: React.FC = () => {
   const { inventoryItems, updateInventoryItem } = useInventory();
   const { categories, addCategory } = useCategories();
   const { vendors } = useVendors();
-  const { locations: savedLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [itemNotFound, setItemNotFound] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -76,16 +77,11 @@ const EditInventoryItem: React.FC = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isImageCleared, setIsImageCleared] = useState(false);
 
-  const [mainLocationParts, setMainLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
-  const [pickingBinLocationParts, setPickingBinLocationParts] = useState<LocationParts>({ area: '', row: '', bay: '', level: '', pos: '' });
+  // Removed mainLocationParts and pickingBinLocationParts states
 
   const item = useMemo(() => inventoryItems.find((i) => i.id === id), [inventoryItems, id]);
 
-  const uniqueAreas = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'area');
-  const uniqueRows = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'row');
-  const uniqueBays = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'bay');
-  const uniqueLevels = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'level');
-  const uniquePositions = getUniqueLocationParts(savedLocations.map(loc => loc.fullLocationString), 'pos');
+  // Removed uniqueAreas, uniqueRows, etc.
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -104,8 +100,9 @@ const EditInventoryItem: React.FC = () => {
           incomingStock: item.incomingStock,
           unitCost: item.unitCost,
           retailPrice: item.retailPrice,
-          location: item.location,
-          pickingBinLocation: item.pickingBinLocation,
+          folderId: item.folderId, // Updated to folderId
+          tags: item.tags?.join(', ') || "", // Updated to tags
+          notes: item.notes || "", // Updated to notes
           imageUrl: item.imageUrl || "",
           vendorId: item.vendorId || "null-vendor",
           autoReorderEnabled: item.autoReorderEnabled,
@@ -125,8 +122,9 @@ const EditInventoryItem: React.FC = () => {
         incomingStock: 0,
         unitCost: 0,
         retailPrice: 0,
-        location: "",
-        pickingBinLocation: "",
+        folderId: "", // Updated to folderId
+        tags: "", // Added tags
+        notes: "", // Added notes
         imageUrl: "",
         vendorId: "null-vendor",
         autoReorderEnabled: false,
@@ -143,9 +141,10 @@ const EditInventoryItem: React.FC = () => {
       form.reset({
         ...item,
         vendorId: item.vendorId || "null-vendor",
+        tags: item.tags?.join(', ') || "", // Set tags for form
+        notes: item.notes || "", // Set notes for form
       });
-      setMainLocationParts(parseLocationString(item.location));
-      setPickingBinLocationParts(parseLocationString(item.pickingBinLocation));
+      // Removed setMainLocationParts and setPickingBinLocationParts
 
       setImageFile(null);
       setImageUrlPreview(item.imageUrl || null);
@@ -260,11 +259,10 @@ const EditInventoryItem: React.FC = () => {
     try {
       const finalBarcodeValue = values.sku || undefined;
 
-      const finalMainLocationString = buildLocationString(mainLocationParts);
-      const finalPickingBinLocationString = buildLocationString(pickingBinLocationParts);
+      // Removed location string building logic
 
-      if (!finalMainLocationString || !finalPickingBinLocationString) {
-        showError("Please select all parts for both Primary Location and Picking Bin Location.");
+      if (!values.folderId) { // Validate folderId
+        showError("Please select a folder for the item.");
         setIsSaving(false);
         return;
       }
@@ -273,8 +271,9 @@ const EditInventoryItem: React.FC = () => {
       await updateInventoryItem({
         ...item,
         ...values,
-        location: finalMainLocationString,
-        pickingBinLocation: finalPickingBinLocationString,
+        folderId: values.folderId, // Updated to folderId
+        tags: values.tags?.split(',').map(tag => tag.trim()).filter(Boolean), // Process tags
+        notes: values.notes, // Process notes
         imageUrl: finalImageUrl,
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
@@ -578,86 +577,76 @@ const EditInventoryItem: React.FC = () => {
                   )}
                 />
               </div>
-              {/* Main Storage Location Dropdowns */}
-              <div className="space-y-2 col-span-2">
-                <FormLabel>Primary Location</FormLabel>
-                <div className="grid grid-cols-3 gap-2">
-                  <Select value={mainLocationParts.area} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, area: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueAreas.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={mainLocationParts.row} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, row: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Row" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueRows.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={mainLocationParts.bay} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, bay: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Bay" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueBays.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={mainLocationParts.level} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, level: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Level" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueLevels.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={mainLocationParts.pos} onValueChange={(val) => setMainLocationParts(prev => ({ ...prev, pos: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
-                    <SelectContent>
-                      {uniquePositions.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {savedLocations.length === 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    You need to set up inventory locations first.
-                    <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
-                      <Link to="/locations">Manage Locations</Link>
-                    </Button>
-                  </p>
+              {/* Folder Selection */}
+              <FormField
+                control={form.control}
+                name="folderId"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Folder <span className="text-red-500">*</span></FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a folder" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {inventoryFolders.length > 0 ? (
+                          inventoryFolders.map((folder) => (
+                            <SelectItem key={folder.id} value={folder.id}>
+                              {folder.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            No folders set up.
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {inventoryFolders.length === 0 && (
+                      <FormDescription>
+                        You need to set up inventory folders first.
+                        <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
+                          <Link to="/folders">Manage Folders</Link>
+                        </Button>
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
-              {/* Picking Bin Location Dropdowns */}
-              <div className="space-y-2 col-span-2">
-                <FormLabel>Picking Bin Location</FormLabel>
-                <div className="grid grid-cols-3 gap-2">
-                  <Select value={pickingBinLocationParts.area} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, area: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueAreas.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={pickingBinLocationParts.row} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, row: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Row" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueRows.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={pickingBinLocationParts.bay} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, bay: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Bay" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueBays.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={pickingBinLocationParts.level} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, level: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Level" /></SelectTrigger>
-                    <SelectContent>
-                      {uniqueLevels.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={pickingBinLocationParts.pos} onValueChange={(val) => setPickingBinLocationParts(prev => ({ ...prev, pos: val }))} disabled={savedLocations.length === 0}>
-                    <SelectTrigger><SelectValue placeholder="Pos" /></SelectTrigger>
-                    <SelectContent>
-                      {uniquePositions.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              />
+              {/* Tags Field */}
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., fragile, electronics, high-value" />
+                    </FormControl>
+                    <FormDescription>
+                      Add keywords to help categorize and search for items.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Notes Field */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 

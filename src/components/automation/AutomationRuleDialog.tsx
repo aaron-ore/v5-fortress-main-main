@@ -18,7 +18,7 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed unused imports: useOrders, useVendors, useCustomers
 
 interface AutomationRuleDialogProps {
@@ -31,7 +31,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const { addRule, updateRule } = useAutomation();
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
-  const { locations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -233,7 +233,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     <SelectItem value="quantity">Total Quantity</SelectItem>
                     <SelectItem value="status">Status</SelectItem>
                     <SelectItem value="category">Category</SelectItem>
-                    <SelectItem value="location">Location</SelectItem>
+                    <SelectItem value="folderId">Folder</SelectItem> {/* Updated to folderId */}
                   </SelectContent>
                 </Select>
               </div>
@@ -249,7 +249,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                         <SelectItem value="gt">Greater than (&gt;)</SelectItem>
                       </>
                     )}
-                    {["status", "category", "location"].includes(conditionField) && (
+                    {["status", "category", "folderId"].includes(conditionField) && ( // Updated to folderId
                       <SelectItem value="eq">Equals (=)</SelectItem>
                     )}
                   </SelectContent>
@@ -285,11 +285,11 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                       {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                ) : conditionField === "location" ? (
+                ) : conditionField === "folderId" ? ( // Updated to folderId
                   <Select value={conditionValue} onValueChange={setConditionValue}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select location" /></SelectTrigger>
+                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
                     <SelectContent>
-                      {locations.map(loc => <SelectItem key={loc.id} value={loc.fullLocationString}>{loc.displayName || loc.fullLocationString}</SelectItem>)}
+                      {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
                     </SelectContent>
                   </Select>
                 ) : null}
@@ -344,6 +344,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     <SelectItem value="category">Category</SelectItem>
                     <SelectItem value="unitCost">Unit Cost</SelectItem>
                     <SelectItem value="retailPrice">Retail Price</SelectItem>
+                    <SelectItem value="folderId">Folder</SelectItem> {/* Added folderId */}
                   </SelectContent>
                 </Select>
               </div>
@@ -359,7 +360,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                         <SelectItem value="gt">Greater than (&gt;)</SelectItem>
                       </>
                     )}
-                    {conditionField === "category" && (
+                    {["category", "folderId"].includes(conditionField) && ( // Updated to folderId
                       <SelectItem value="eq">Equals (=)</SelectItem>
                     )}
                   </SelectContent>
@@ -384,6 +385,13 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
                       {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : conditionField === "folderId" ? ( // Updated to folderId
+                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
+                    <SelectContent>
+                      {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
                     </SelectContent>
                   </Select>
                 ) : null}

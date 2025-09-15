@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Barcode, CheckCircle, Package, MapPin, Printer } from "lucide-react";
+import { Barcode, CheckCircle, Package, Folder, Printer } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
@@ -19,7 +19,7 @@ import { format } from "date-fns";
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation: string; // fullLocationString
+  suggestedPutawayFolderId: string; // Changed from suggestedPutawayLocation to suggestedPutawayFolderId
   lotNumber?: string;
   expirationDate?: string;
   serialNumber?: string; // Added for future use
@@ -35,7 +35,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { initiatePrint } = usePrint();
 
   const [poNumberInput, setPoNumberInput] = useState("");
@@ -43,7 +43,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   const [receivedItems, setReceivedItems] = useState<ReceivedItemDisplay[]>([]);
   const [isScanning, setIsScanning] = useState(false);
 
-  const availableLocations = useMemo(() => structuredLocations.filter(loc => loc.fullLocationString !== "RETURNS-AREA-01-1-A"), [structuredLocations]);
+  const availableFolders = useMemo(() => inventoryFolders.filter(folder => folder.name !== "Returns Area"), [inventoryFolders]); // Filter out Returns Area
 
   useEffect(() => {
     setSelectedPO(null);
@@ -62,20 +62,26 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     }
   }, [scannedDataFromGlobal, selectedPO, onScannedDataProcessed]);
 
-  const getSuggestedPutawayLocation = (itemCategory: string): string => {
-    if (availableLocations.length === 0) return "Unassigned";
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
 
-    // Find location objects by display name or full string
-    const mainWarehouse = availableLocations.find(loc => loc.displayName === "Main Warehouse" || loc.fullLocationString === "MAIN-WAREHOUSE-01-01-1-A");
-    const coldStorage = availableLocations.find(loc => loc.displayName === "Cold Storage" || loc.fullLocationString === "COLD-STORAGE-01-01-1-A");
-    const storeFront = availableLocations.find(loc => loc.displayName === "Store Front" || loc.fullLocationString === "STORE-FRONT-01-01-1-A");
+  const getSuggestedPutawayFolderId = (itemCategory: string): string => {
+    if (availableFolders.length === 0) return "Unassigned";
 
-    if (itemCategory === "Electronics" && mainWarehouse) return mainWarehouse.fullLocationString;
-    if (itemCategory === "Office Supplies" && storeFront) return storeFront.fullLocationString;
-    if (itemCategory === "Perishables" && coldStorage) return coldStorage.fullLocationString;
+    // Find folder objects by name
+    const mainWarehouse = availableFolders.find(folder => folder.name === "Main Warehouse");
+    const coldStorage = availableFolders.find(folder => folder.name === "Cold Storage");
+    const storeFront = availableFolders.find(folder => folder.name === "Store Front");
 
-    // Fallback to a random available location's fullLocationString
-    return availableLocations[Math.floor(Math.random() * availableLocations.length)].fullLocationString;
+    if (itemCategory === "Electronics" && mainWarehouse) return mainWarehouse.id;
+    if (itemCategory === "Office Supplies" && storeFront) return storeFront.id;
+    if (itemCategory === "Perishables" && coldStorage) return coldStorage.id;
+
+    // Fallback to a random available folder's ID
+    return availableFolders[Math.floor(Math.random() * availableFolders.length)].id;
   };
 
   const handlePoNumberSubmit = async (poNum?: string) => {
@@ -99,7 +105,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
           ...poItem,
           receivedQuantity: 0,
           inventoryItemDetails: inventoryItem,
-          suggestedPutawayLocation: inventoryItem ? getSuggestedPutawayLocation(inventoryItem.category) : "Unassigned",
+          suggestedPutawayFolderId: inventoryItem ? getSuggestedPutawayFolderId(inventoryItem.category) : "Unassigned", // Updated to folderId
           lotNumber: undefined,
           expirationDate: undefined,
           serialNumber: undefined,
@@ -171,8 +177,8 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handlePrintPutawayLabel = async (item: ReceivedItemDisplay) => {
-    if (!item.inventoryItemDetails || !item.suggestedPutawayLocation) {
-      showError("Cannot print label: Missing item details or putaway location.");
+    if (!item.inventoryItemDetails || !item.suggestedPutawayFolderId) {
+      showError("Cannot print label: Missing item details or putaway folder.");
       return;
     }
 
@@ -180,7 +186,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
       const qrCodeValue = JSON.stringify({
         sku: item.inventoryItemDetails.sku,
         qty: item.receivedQuantity,
-        loc: item.suggestedPutawayLocation,
+        folder: getFolderName(item.suggestedPutawayFolderId), // Use folder name
         lot: item.lotNumber,
         exp: item.expirationDate,
         sn: item.serialNumber,
@@ -191,13 +197,13 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         itemName: item.itemName,
         itemSku: item.inventoryItemDetails.sku,
         receivedQuantity: item.receivedQuantity,
-        suggestedLocation: item.suggestedPutawayLocation,
+        suggestedFolder: getFolderName(item.suggestedPutawayFolderId), // Use folder name
         lotNumber: item.lotNumber,
         expirationDate: item.expirationDate,
         serialNumber: item.serialNumber,
         qrCodeSvg: qrCodeSvg,
         printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-        structuredLocations: structuredLocations,
+        inventoryFolders: inventoryFolders, // Pass inventoryFolders
       };
 
       initiatePrint({ type: "putaway-label", props: labelProps });
@@ -236,6 +242,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
             oldQuantity: oldQuantity,
             newQuantity: newQuantity,
             reason: `Received from PO ${selectedPO.id} (Mobile)`,
+            folderId: inventoryItem.folderId, // Pass folderId
           });
         } else {
           showError(`Inventory item for ${item.itemName} not found.`);
@@ -310,7 +317,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                         <span className="text-sm text-muted-foreground">SKU: {item.inventoryItemDetails?.sku}</span>
                       </div>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <MapPin className="h-4 w-4" /> Suggested Putaway: {item.suggestedPutawayLocation || "N/A"}
+                        <Folder className="h-4 w-4" /> Suggested Putaway: {getFolderName(item.suggestedPutawayFolderId) || "N/A"} {/* Updated to folder name */}
                       </p>
                       <div className="flex justify-between items-center">
                         <p className="text-muted-foreground text-sm">Expected: {item.quantity}</p>
@@ -350,7 +357,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                         size="sm"
                         className="mt-3 w-full"
                         onClick={() => handlePrintPutawayLabel(item)}
-                        disabled={item.receivedQuantity === 0 || !item.suggestedPutawayLocation}
+                        disabled={item.receivedQuantity === 0 || !item.suggestedPutawayFolderId}
                       >
                         <Printer className="h-4 w-4 mr-2" /> Print Putaway Label
                       </Button>

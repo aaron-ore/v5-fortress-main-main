@@ -2,11 +2,12 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
 
 interface PickListItem {
   itemName: string;
   itemSku: string;
-  pickingBinLocation: string;
+  pickingBinFolderId: string; // Changed from pickingBinLocation to pickingBinFolderId
   quantityToPick: number;
 }
 
@@ -26,11 +27,18 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
   pickerName,
 }) => {
   const { profile } = useProfile();
+  const { inventoryFolders } = useOnboarding(); // Get inventory folders
   const pickDateObj = parseAndValidateDate(pickDate);
 
   if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
   }
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
@@ -95,7 +103,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
             <tr className="bg-gray-100 border border-gray-300">
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">SKU</th>
-              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Location</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Folder</th> {/* Updated to Folder */}
               <th className="py-2 px-4 text-right font-semibold">Quantity</th>
             </tr>
           </thead>
@@ -104,7 +112,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
               <tr key={_index} className="border-b border-gray-200">
                 <td className="py-2 px-4 border-r border-gray-200">{item.itemName}</td>
                 <td className="py-2 px-4 border-r border-gray-200">{item.itemSku}</td>
-                <td className="py-2 px-4 border-r border-gray-200">{item.pickingBinLocation}</td>
+                <td className="py-2 px-4 border-r border-gray-200">{getFolderName(item.pickingBinFolderId)}</td> {/* Updated to folder name */}
                 <td className="py-2 px-4 text-right">{item.quantityToPick}</td>
               </tr>
             ))}

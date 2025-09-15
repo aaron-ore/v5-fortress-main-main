@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Printer, Download, Save } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
 import LocationLabelPdfContent from "@/components/LocationLabelPdfContent";
 import html2canvas from 'html2canvas';
-import { buildLocationString, getUniqueLocationParts } from "@/utils/locationParser";
+// Removed buildLocationString, getUniqueLocationParts, LocationParts as they are not directly used for folders
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [
@@ -24,8 +24,8 @@ const labelColors = [
 ];
 
 interface LocationLabelGeneratorProps {
-  initialLocation?: Location | null;
-  onSave: (location: Omit<Location, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void;
+  initialLocation?: InventoryFolder | null; // Updated from Location to InventoryFolder
+  onSave: (folder: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => void; // Updated to InventoryFolder
   onClose: () => void;
   onGenerateAndPrint?: (data: PrintContentData[]) => void;
 }
@@ -37,46 +37,32 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
   onGenerateAndPrint,
 }) => {
   const { initiatePrint } = usePrint();
-  const { locations: existingLocationsInContext } = useOnboarding();
+  const { inventoryFolders: existingFoldersInContext } = useOnboarding(); // Updated to inventoryFolders
 
-  const [displayName, setDisplayName] = useState(initialLocation?.displayName || "");
-  const [area, setArea] = useState(initialLocation?.area || "A");
-  const [row, setRow] = useState(initialLocation?.row || "01");
-  const [bay, setBay] = useState(initialLocation?.bay || "01");
-  const [level, setLevel] = useState(initialLocation?.level || "1");
-  const [pos, setPos] = useState(initialLocation?.pos || "A");
+  const [folderName, setFolderName] = useState(initialLocation?.name || ""); // Changed from displayName to folderName
   const [selectedColor, setSelectedColor] = useState(initialLocation?.color || labelColors[0].hex);
   const [quantity, setQuantity] = useState("1");
   const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
 
   const labelPreviewRef = useRef<HTMLDivElement>(null);
 
-  const uniqueAreas = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'area');
-  const uniqueRows = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'row');
-  const uniqueBays = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'bay');
-  const uniqueLevels = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'level');
-  const uniquePositions = getUniqueLocationParts(existingLocationsInContext.map(loc => loc.fullLocationString), 'pos');
+  // Removed uniqueAreas, uniqueRows, etc.
 
   useEffect(() => {
-    setDisplayName(initialLocation?.displayName || "");
-    setArea(initialLocation?.area || "A");
-    setRow(initialLocation?.row || "01");
-    setBay(initialLocation?.bay || "01");
-    setLevel(initialLocation?.level || "1");
-    setPos(initialLocation?.pos || "A");
+    setFolderName(initialLocation?.name || ""); // Changed from displayName to folderName
     setSelectedColor(initialLocation?.color || labelColors[0].hex);
     setQuantity("1");
   }, [initialLocation]);
 
-  const fullLocationString = useMemo(() => {
-    return buildLocationString({ area, row, bay, level, pos });
-  }, [area, row, bay, level, pos]);
+  const folderIdentifier = useMemo(() => { // Changed from fullLocationString to folderIdentifier
+    return folderName; // For folders, the name is the identifier
+  }, [folderName]);
 
   useEffect(() => {
     const generatePreviewQr = async () => {
-      if (fullLocationString) {
+      if (folderIdentifier) {
         try {
-          const svg = await generateQrCodeSvg(fullLocationString, 150);
+          const svg = await generateQrCodeSvg(folderIdentifier, 150);
           setQrCodeSvg(svg);
         } catch (error) {
           console.error("Error generating QR for preview:", error);
@@ -87,44 +73,39 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
       }
     };
     generatePreviewQr();
-  }, [fullLocationString]);
+  }, [folderIdentifier]);
 
-  const handleSaveLocationDetails = async () => {
-    if (!area || !row || !bay || !level || !pos || !selectedColor) {
-      showError("Please fill in all location details and select a color.");
+  const handleSaveFolderDetails = async () => { // Renamed from handleSaveLocationDetails
+    if (!folderName || !selectedColor) { // Validate folderName
+      showError("Please fill in the folder name and select a color.");
       return;
     }
 
     const isNew = !initialLocation;
 
-    const duplicateExists = existingLocationsInContext.some(loc =>
-      loc.fullLocationString.toLowerCase() === fullLocationString.toLowerCase() &&
-      loc.id !== initialLocation?.id
+    const duplicateExists = existingFoldersInContext.some(folder => // Check against existingFoldersInContext
+      folder.name.toLowerCase() === folderName.trim().toLowerCase() &&
+      folder.id !== initialLocation?.id
     );
 
     if (duplicateExists) {
-      showError(`A location with the identifier "${fullLocationString}" already exists. Please choose a unique identifier.`);
+      showError(`A folder with the name "${folderName}" already exists. Please choose a unique name.`);
       return;
     }
 
-    const locationData: Omit<Location, 'id' | 'createdAt' | 'userId' | 'organizationId'> = {
-      fullLocationString,
-      displayName: displayName.trim() || undefined,
-      area,
-      row,
-      bay,
-      level,
-      pos,
+    const folderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'> = { // Create InventoryFolder object
+      name: folderName.trim(),
       color: selectedColor,
+      // parentId, description, imageUrl, tags can be added via a more detailed dialog
     };
 
-    onSave(locationData, isNew);
+    onSave(folderData, isNew);
     onClose();
   };
 
   const handleGenerateAndPrint = async () => {
-    if (!area || !row || !bay || !level || !pos || !selectedColor || !quantity) {
-      showError("Please fill in all location details and select a color.");
+    if (!folderName || !selectedColor || !quantity) { // Validate folderName
+      showError("Please fill in the folder name and select a color.");
       return;
     }
 
@@ -135,20 +116,16 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     }
 
     try {
-      const qrSvg = await generateQrCodeSvg(fullLocationString, 150);
+      const qrSvg = await generateQrCodeSvg(folderIdentifier, 150);
 
       const labelsToPrint: PrintContentData[] = Array.from({ length: numQuantity }).map(() => ({
-        type: "location-label",
+        type: "location-label", // Reusing location-label type for now
         props: {
-          area,
-          row,
-          bay,
-          level,
-          pos,
+          folderName: folderName, // Pass folderName
           color: selectedColor,
           qrCodeSvg: qrSvg,
           printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-          locationString: fullLocationString,
+          folderIdentifier: folderIdentifier, // Pass folderIdentifier
         },
       }));
 
@@ -158,7 +135,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
         for (const label of labelsToPrint) {
           initiatePrint(label);
         }
-        showSuccess(`Generated and sent ${numQuantity} location labels to printer!`);
+        showSuccess(`Generated and sent ${numQuantity} folder labels to printer!`);
       }
     } catch (error: any) {
       showError(`Failed to generate labels: ${error.message}`);
@@ -181,7 +158,7 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `location-label-${fullLocationString}.png`;
+      link.download = `folder-label-${folderIdentifier}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -192,75 +169,16 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
     }
   };
 
-  const isSaveDisabled = !fullLocationString || !selectedColor || !area || !row || !bay || !level || !pos;
+  const isSaveDisabled = !folderName || !selectedColor; // Validate folderName
 
   return (
     <div className="space-y-4 flex-grow flex flex-col p-4">
       <div className="space-y-2">
-        <Label htmlFor="displayName">Display Name (Optional)</Label>
-        <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Location Display Name" />
+        <Label htmlFor="folderName">Folder Name <span className="text-red-500">*</span></Label> {/* Updated label */}
+        <Input id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Folder Name" /> {/* Updated to folderName */}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="area">Area (e.g., A, B, C)</Label>
-          <Select value={area} onValueChange={(val) => setArea(val)}>
-            <SelectTrigger id="area" aria-label="Location Area"><SelectValue placeholder="Area" /></SelectTrigger>
-            <SelectContent>
-              {uniqueAreas.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-              <SelectItem value="A">A</SelectItem>
-              <SelectItem value="B">B</SelectItem>
-              <SelectItem value="C">C</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="row">Row (e.g., 01, 02)</Label>
-          <Select value={row} onValueChange={(val) => setRow(val)}>
-            <SelectTrigger id="row" aria-label="Location Row"><SelectValue placeholder="Row" /></SelectTrigger>
-            <SelectContent>
-              {uniqueRows.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-              <SelectItem value="01">01</SelectItem>
-              <SelectItem value="02">02</SelectItem>
-              <SelectItem value="03">03</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="bay">Bay (e.g., 01, 02)</Label>
-          <Select value={bay} onValueChange={(val) => setBay(val)}>
-            <SelectTrigger id="bay" aria-label="Location Bay"><SelectValue placeholder="Bay" /></SelectTrigger>
-            <SelectContent>
-              {uniqueBays.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-              <SelectItem value="01">01</SelectItem>
-              <SelectItem value="02">02</SelectItem>
-              <SelectItem value="03">03</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="level">Level (e.g., 1, 2, 3)</Label>
-          <Select value={level} onValueChange={(val) => setLevel(val)}>
-            <SelectTrigger id="level" aria-label="Location Level"><SelectValue placeholder="Level" /></SelectTrigger>
-            <SelectContent>
-              {uniqueLevels.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-              <SelectItem value="1">1</SelectItem>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="pos">Position (e.g., A, B, C)</Label>
-          <Select value={pos} onValueChange={(val) => setPos(val)}>
-            <SelectTrigger id="pos" aria-label="Location Position"><SelectValue placeholder="Pos" /></SelectTrigger>
-            <SelectContent>
-              {uniquePositions.map(val => <SelectItem key={val} value={val}>{val}</SelectItem>)}
-              <SelectItem value="A">A</SelectItem>
-              <SelectItem value="B">B</SelectItem>
-              <SelectItem value="C">C</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Removed Area, Row, Bay, Level, Pos inputs */}
         <div className="space-y-2">
           <Label htmlFor="color">Label Color</Label>
           <Select value={selectedColor} onValueChange={setSelectedColor}>
@@ -298,17 +216,13 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
         <h3 className="text-sm font-semibold text-muted-foreground mb-2">Label Preview</h3>
         {qrCodeSvg ? (
           <div className="w-[101.6mm] h-[50.8mm] flex items-center justify-center overflow-hidden p-1 bg-white">
-            <LocationLabelPdfContent
+            <LocationLabelPdfContent // Reusing LocationLabelPdfContent
               ref={labelPreviewRef}
-              area={area}
-              row={row}
-              bay={bay}
-              level={level}
-              pos={pos}
+              folderName={folderName} // Pass folderName
               color={selectedColor}
               qrCodeSvg={qrCodeSvg}
               printDate={format(new Date(), "MMM dd, yyyy HH:mm")}
-              locationString={fullLocationString}
+              folderIdentifier={folderIdentifier} // Pass folderIdentifier
             />
           </div>
         ) : (
@@ -316,8 +230,8 @@ const LocationLabelGenerator: React.FC<LocationLabelGeneratorProps> = ({
         )}
       </div>
       <div className="flex gap-2 w-full mt-auto">
-        <Button onClick={handleSaveLocationDetails} className="flex-grow" disabled={isSaveDisabled}>
-          <Save className="h-4 w-4 mr-2" /> {initialLocation ? "Save Changes" : "Save Location"}
+        <Button onClick={handleSaveFolderDetails} className="flex-grow" disabled={isSaveDisabled}>
+          <Save className="h-4 w-4 mr-2" /> {initialLocation ? "Save Changes" : "Save Folder"} {/* Updated button text */}
         </Button>
         <Button onClick={handleGenerateAndPrint} className="flex-grow" variant="secondary" disabled={isSaveDisabled}>
           <Printer className="h-4 w-4 mr-2" /> Generate & Print Labels

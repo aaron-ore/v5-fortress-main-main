@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Package } from "lucide-react";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { showSuccess } from "@/utils/toast";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface InventorySelectionDialogProps {
   isOpen: boolean;
@@ -39,7 +39,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
   itemType,
 }) => {
   const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
 
@@ -89,9 +89,10 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
     }
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+  // Function to get folder display name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   return (
@@ -135,7 +136,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
                   <TableHead>Item Name</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Location</TableHead>
+                  <TableHead>Folder</TableHead> {/* Updated to Folder */}
                   <TableHead className="text-right">On Hand</TableHead>
                   <TableHead className="text-right">
                     {itemType === "purchase" ? "Unit Cost" : "Retail Price"}
@@ -163,7 +164,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>
                       <TableCell>{item.category}</TableCell>
-                      <TableCell>{getLocationDisplayName(item.location)}</TableCell>
+                      <TableCell>{getFolderDisplayName(item.folderId)}</TableCell> {/* Updated to folderId */}
                       <TableCell className="text-right">{item.quantity}</TableCell>
                       <TableCell className="text-right">
                         ${itemType === "purchase" ? item.unitCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : item.retailPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

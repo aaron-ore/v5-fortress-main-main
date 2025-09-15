@@ -1,3 +1,7 @@
+// This utility will now be used for structuring folder names if desired,
+// but the primary "location" of an item will be its folderId.
+// Keeping it for potential future use in structuring folder names or sub-locations.
+
 export interface LocationParts {
   area: string;
   row: string;

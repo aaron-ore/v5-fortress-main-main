@@ -16,6 +16,7 @@ export interface StockMovement {
   timestamp: string;
   organizationId: string | null;
   userId: string;
+  folderId?: string; // Added folderId
 }
 
 interface StockMovementContextType {
@@ -53,6 +54,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
       timestamp: timestampString,
       organizationId: movement.organization_id,
       userId: movement.user_id || "",
+      folderId: movement.folder_id || undefined, // Added folderId
     };
   };
 
@@ -112,6 +114,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
         reason: movement.reason,
         user_id: session.user.id,
         organization_id: profile.organizationId,
+        folder_id: movement.folderId, // Added folder_id
       })
       .select();
 

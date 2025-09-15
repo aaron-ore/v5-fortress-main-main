@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Undo2, Scan, Package, MapPin, CheckCircle } from "lucide-react";
+import { Undo2, Scan, Package, Folder, CheckCircle } from "lucide-react"; // Changed MapPin to Folder
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
 
 interface ReturnsProcessingToolProps {
@@ -19,33 +21,29 @@ interface ReturnsProcessingToolProps {
 
 const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { locations, addLocation } = useOnboarding();
+  const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { addStockMovement } = useStockMovement();
 
   const [scannedItem, setScannedItem] = useState<InventoryItem | null>(null);
   const [returnQuantity, setReturnQuantity] = useState("");
   const [returnReason, setReturnReason] = useState("");
-  const [returnDestination, setReturnDestination] = useState("");
+  const [returnDestinationFolderId, setReturnDestinationFolderId] = useState(""); // Changed from returnDestination to returnDestinationFolderId
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 
   const returnReasons = ["Damaged", "Customer Return (Resalable)", "Customer Return (Defective)", "Wrong Item Shipped", "Other"];
 
   useEffect(() => {
-    // Ensure 'Returns Area' exists as a location
-    const returnsAreaString = "RETURNS-AREA-01-1-A"; // Standardized string for Returns Area
-    const returnsAreaDisplayName = "Returns Area";
-
-    const existingReturnsArea = locations.find(loc => loc.fullLocationString === returnsAreaString);
+    // Ensure 'Returns Area' exists as a folder
+    const returnsAreaName = "Returns Area";
+    const existingReturnsArea = inventoryFolders.find(folder => folder.name === returnsAreaName);
     if (!existingReturnsArea) {
-      addLocation({
-        fullLocationString: returnsAreaString,
-        displayName: returnsAreaDisplayName,
-        area: "RETURNS", row: "AREA", bay: "01", level: "1", pos: "A",
+      addInventoryFolder({
+        name: returnsAreaName,
         color: "#F44336", // Red for returns
       });
     }
-  }, [locations, addLocation]);
+  }, [inventoryFolders, addInventoryFolder]);
 
   useEffect(() => {
     if (scannedDataFromGlobal && !isScanning) {
@@ -66,14 +64,14 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     if (foundItem) {
       setScannedItem(foundItem);
       setReturnQuantity("1"); // Default to 1 for scanned item
-      // Suggest original picking bin or returns area based on initial reason
-      setReturnDestination(foundItem.pickingBinLocation);
+      // Suggest original folder or returns area based on initial reason
+      setReturnDestinationFolderId(foundItem.folderId); // Updated to folderId
       showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
       setScannedItem(null);
       setReturnQuantity("");
-      setReturnDestination("");
+      setReturnDestinationFolderId("");
     }
   };
 
@@ -83,7 +81,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   };
 
   const handleProcessReturn = async () => {
-    if (!scannedItem || !returnQuantity || !returnReason || !returnDestination) {
+    if (!scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId) {
       showError("Please scan an item and fill in all return details.");
       return;
     }
@@ -98,14 +96,15 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     let newPickingBinQuantity = scannedItem.pickingBinQuantity;
     let newOverstockQuantity = scannedItem.overstockQuantity;
 
-    const returnsAreaString = "RETURNS-AREA-01-1-A";
+    const returnsAreaFolder = inventoryFolders.find(folder => folder.name === "Returns Area");
+    const returnsAreaFolderId = returnsAreaFolder?.id;
 
-    if (returnDestination === scannedItem.pickingBinLocation) {
+    if (returnDestinationFolderId === scannedItem.folderId) { // If returning to original folder
       newPickingBinQuantity += quantity;
-    } else if (returnDestination === returnsAreaString) {
+    } else if (returnsAreaFolderId && returnDestinationFolderId === returnsAreaFolderId) { // If returning to Returns Area
       newOverstockQuantity += quantity; // For simplicity, returns area items go to overstock
     } else {
-      // If a different location is selected, for simplicity, add to overstock
+      // If a different folder is selected, for simplicity, add to overstock
       newOverstockQuantity += quantity;
     }
 
@@ -113,7 +112,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       ...scannedItem,
       pickingBinQuantity: newPickingBinQuantity,
       overstockQuantity: newOverstockQuantity,
-      location: returnDestination, // Update primary location if it's a full return to a new spot
+      folderId: returnDestinationFolderId, // Update primary folderId
       lastUpdated: new Date().toISOString().split('T')[0],
     };
 
@@ -126,21 +125,29 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       amount: quantity,
       oldQuantity: oldQuantity,
       newQuantity: newPickingBinQuantity + newOverstockQuantity,
-      reason: `Return: ${returnReason} to ${returnDestination}`,
+      reason: `Return: ${returnReason} to ${getFolderName(returnDestinationFolderId)}`, // Use folder name
+      folderId: returnDestinationFolderId, // Log the destination folder
     });
 
     await refreshInventory();
-    showSuccess(`Processed return for ${quantity} units of ${scannedItem.name}. Stock updated and directed to ${returnDestination}.`);
+    showSuccess(`Processed return for ${quantity} units of ${scannedItem.name}. Stock updated and directed to ${getFolderName(returnDestinationFolderId)}.`); // Use folder name
 
     // Reset form
     setScannedItem(null);
     setReturnQuantity("");
     setReturnReason("");
-    setReturnDestination("");
+    setReturnDestinationFolderId("");
     setNotes("");
   };
 
-  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestination || parseInt(returnQuantity) <= 0;
+  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId || parseInt(returnQuantity) <= 0;
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string | undefined) => {
+    if (!folderId) return "N/A";
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -194,12 +201,13 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
               <Label htmlFor="returnReason">Reason for Return</Label>
               <Select value={returnReason} onValueChange={(value) => {
                 setReturnReason(value);
-                const returnsAreaString = "RETURNS-AREA-01-1-A";
-                // Suggest 'Returns Area' if damaged/defective, otherwise original picking bin
+                const returnsAreaFolder = inventoryFolders.find(folder => folder.name === "Returns Area");
+                const returnsAreaFolderId = returnsAreaFolder?.id;
+                // Suggest 'Returns Area' if damaged/defective, otherwise original folder
                 if (value.includes("Damaged") || value.includes("Defective")) {
-                  setReturnDestination(returnsAreaString);
+                  setReturnDestinationFolderId(returnsAreaFolderId || "");
                 } else {
-                  setReturnDestination(scannedItem.pickingBinLocation);
+                  setReturnDestinationFolderId(scannedItem.folderId);
                 }
               }}>
                 <SelectTrigger id="returnReason">
@@ -215,21 +223,21 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="returnDestination">Direct to Location</Label>
-              <Select value={returnDestination} onValueChange={setReturnDestination}>
-                <SelectTrigger id="returnDestination">
-                  <SelectValue placeholder="Select destination" />
+              <Label htmlFor="returnDestinationFolderId">Direct to Folder</Label> {/* Updated label */}
+              <Select value={returnDestinationFolderId} onValueChange={setReturnDestinationFolderId}> {/* Updated to returnDestinationFolderId */}
+                <SelectTrigger id="returnDestinationFolderId">
+                  <SelectValue placeholder="Select destination folder" /> {/* Updated placeholder */}
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.fullLocationString}>
-                      {loc.displayName || loc.fullLocationString}
+                  {inventoryFolders.map((folder) => ( // Iterate over inventoryFolders
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name} {/* Display folder name */}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> Suggested: {returnReason.includes("Damaged") || returnReason.includes("Defective") ? "Returns Area" : scannedItem.pickingBinLocation}
+                <Folder className="h-3 w-3" /> Suggested: {returnReason.includes("Damaged") || returnReason.includes("Defective") ? "Returns Area" : getFolderName(scannedItem.folderId)} {/* Updated to folder name */}
               </p>
             </div>
             <div className="space-y-2 flex-grow">

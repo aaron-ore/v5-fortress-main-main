@@ -13,31 +13,30 @@ export interface CompanyProfile {
   companyLogoUrl?: string;
 }
 
-export interface Location {
+// Renamed from Location to InventoryFolder
+export interface InventoryFolder {
   id: string;
   organizationId: string;
-  fullLocationString: string;
-  displayName?: string;
-  area: string;
-  row: string;
-  bay: string;
-  level: string;
-  pos: string;
-  color: string;
+  name: string; // Folder name (e.g., "Main Warehouse", "Electronics")
+  description?: string; // Folder description/notes
+  parentId?: string; // For subfolders
+  imageUrl?: string; // For folder icon/image
+  color: string; // For visual coding
   createdAt: string;
   userId: string;
+  tags?: string[]; // For folder tags
 }
 
 interface OnboardingContextType {
   isOnboardingComplete: boolean;
   companyProfile: ProfileCompanyProfile | null;
-  locations: Location[];
+  inventoryFolders: InventoryFolder[]; // Renamed from locations to inventoryFolders
   markOnboardingComplete: () => void;
   setCompanyProfile: (profile: CompanyProfile, uniqueCode?: string) => Promise<void>;
-  addLocation: (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">) => Promise<Location | null>;
-  updateLocation: (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => Promise<void>;
-  removeLocation: (locationId: string) => Promise<void>;
-  fetchLocations: () => Promise<void>;
+  addInventoryFolder: (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">) => Promise<InventoryFolder | null>; // Renamed from addLocation
+  updateInventoryFolder: (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => Promise<void>; // Renamed from updateLocation
+  removeInventoryFolder: (folderId: string) => Promise<void>; // Renamed from removeLocation
+  fetchInventoryFolders: () => Promise<void>; // Renamed from fetchLocations
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -53,7 +52,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const companyProfile = profile?.companyProfile || null;
 
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [inventoryFolders, setInventoryFolders] = useState<InventoryFolder[]>([]); // Renamed from locations
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -67,51 +66,51 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [profile, isLoadingProfile]);
 
-  const mapSupabaseLocationToLocation = (data: any): Location => ({
+  // Renamed from mapSupabaseLocationToLocation
+  const mapSupabaseFolderToInventoryFolder = (data: any): InventoryFolder => ({
     id: data.id,
     organizationId: data.organization_id,
-    fullLocationString: data.full_location_string,
-    displayName: data.display_name || undefined,
-    area: data.area,
-    row: data.row,
-    bay: data.bay,
-    level: data.level,
-    pos: data.pos,
+    name: data.name,
+    description: data.description || undefined,
+    parentId: data.parent_id || undefined,
+    imageUrl: data.image_url || undefined,
     color: data.color,
     createdAt: data.created_at,
     userId: data.user_id,
+    tags: data.tags || undefined,
   });
 
-  const fetchLocations = useCallback(async () => {
+  // Renamed from fetchLocations
+  const fetchInventoryFolders = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      setLocations([]);
+      setInventoryFolders([]);
       return;
     }
 
     const { data, error } = await supabase
-      .from("locations")
+      .from("inventory_folders") // Updated table name
       .select("*")
       .eq("organization_id", profile.organizationId)
-      .order("full_location_string", { ascending: true });
+      .order("name", { ascending: true });
 
     if (error) {
-      console.error("Error fetching locations:", error);
-      showError("Failed to load locations.");
-      await logActivity("Location Fetch Failed", `Failed to load locations for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
-      setLocations([]);
+      console.error("Error fetching inventory folders:", error);
+      showError("Failed to load inventory folders.");
+      await logActivity("Inventory Folder Fetch Failed", `Failed to load inventory folders for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
+      setInventoryFolders([]);
     } else {
-      setLocations(data.map(mapSupabaseLocationToLocation));
+      setInventoryFolders(data.map(mapSupabaseFolderToInventoryFolder));
     }
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
-      fetchLocations();
+      fetchInventoryFolders();
     } else if (!isLoadingProfile && !profile?.organizationId) {
-      setLocations([]);
+      setInventoryFolders([]);
     }
-  }, [isLoadingProfile, profile?.organizationId, fetchLocations]);
+  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
 
 
   const markOnboardingComplete = async () => {
@@ -262,138 +261,137 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
-  const addLocation = async (location: Omit<Location, "id" | "createdAt" | "userId" | "organizationId">): Promise<Location | null> => {
+  // Renamed from addLocation
+  const addInventoryFolder = async (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">): Promise<InventoryFolder | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to add locations.";
-      await logActivity("Add Location Failed", errorMessage, profile, { location_name: location.displayName || location.fullLocationString }, true);
+      const errorMessage = "You must be logged in and have an organization ID to add inventory folders.";
+      await logActivity("Add Inventory Folder Failed", errorMessage, profile, { folder_name: folder.name }, true);
       showError(errorMessage);
       return null;
     }
 
-    const { data: existingDbLocation, error: fetchError } = await supabase
-      .from("locations")
+    const { data: existingDbFolder, error: fetchError } = await supabase
+      .from("inventory_folders") // Updated table name
       .select("*")
       .eq("organization_id", profile.organizationId)
-      .eq("full_location_string", location.fullLocationString)
+      .eq("name", folder.name) // Check by name for uniqueness
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error("Error checking for existing location:", fetchError);
-      await logActivity("Add Location Failed", `Failed to check for existing location: ${location.fullLocationString}.`, profile, { error_message: fetchError.message, location_details: location }, true);
-      showError(`Failed to check for existing location: ${fetchError.message}`);
+      console.error("Error checking for existing folder:", fetchError);
+      await logActivity("Add Inventory Folder Failed", `Failed to check for existing folder: ${folder.name}.`, profile, { error_message: fetchError.message, folder_details: folder }, true);
+      showError(`Failed to check for existing folder: ${fetchError.message}`);
       return null;
     }
 
-    if (existingDbLocation) {
-      console.log(`Location "${location.fullLocationString}" already exists in DB. Skipping insert.`);
-      const mappedExistingLocation = mapSupabaseLocationToLocation(existingDbLocation);
-      setLocations(prev => {
-        if (!prev.some(loc => loc.id === mappedExistingLocation.id)) {
-          return [...prev, mappedExistingLocation];
+    if (existingDbFolder) {
+      console.log(`Folder "${folder.name}" already exists in DB. Skipping insert.`);
+      const mappedExistingFolder = mapSupabaseFolderToInventoryFolder(existingDbFolder);
+      setInventoryFolders(prev => {
+        if (!prev.some(f => f.id === mappedExistingFolder.id)) {
+          return [...prev, mappedExistingFolder];
         }
         return prev;
       });
-      await logActivity("Add Location Skipped", `Location "${location.fullLocationString}" already exists.`, profile, { location_id: mappedExistingLocation.id, location_name: mappedExistingLocation.displayName || mappedExistingLocation.fullLocationString });
-      return mappedExistingLocation;
+      await logActivity("Add Inventory Folder Skipped", `Folder "${folder.name}" already exists.`, profile, { folder_id: mappedExistingFolder.id, folder_name: mappedExistingFolder.name });
+      return mappedExistingFolder;
     }
 
     const { data, error } = await supabase
-      .from("locations")
+      .from("inventory_folders") // Updated table name
       .insert({
         organization_id: profile.organizationId,
-        full_location_string: location.fullLocationString,
-        display_name: location.displayName,
-        area: location.area,
-        row: location.row,
-        bay: location.bay,
-        level: location.level,
-        pos: location.pos,
-        color: location.color,
+        name: folder.name,
+        description: folder.description,
+        parent_id: folder.parentId,
+        image_url: folder.imageUrl,
+        color: folder.color,
         user_id: session.user.id,
+        tags: folder.tags,
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Error adding location:", error);
-      await logActivity("Add Location Failed", `Failed to add location: ${location.displayName || location.fullLocationString}.`, profile, { error_message: error.message, location_details: location }, true);
-      showError(`Failed to add location: ${error.message}`);
+      console.error("Error adding inventory folder:", error);
+      await logActivity("Add Inventory Folder Failed", `Failed to add folder: ${folder.name}.`, profile, { error_message: error.message, folder_details: folder }, true);
+      showError(`Failed to add folder: ${error.message}`);
       return null;
     } else if (data) {
-      const newLocation = mapSupabaseLocationToLocation(data);
-      setLocations((prev) => [...prev, newLocation]);
-      showSuccess(`Location "${location.displayName || location.fullLocationString}" added.`);
-      await logActivity("Add Location Success", `Added new location: ${newLocation.displayName || newLocation.fullLocationString}.`, profile, { location_id: newLocation.id, location_name: newLocation.displayName || newLocation.fullLocationString });
-      return newLocation;
+      const newFolder = mapSupabaseFolderToInventoryFolder(data);
+      setInventoryFolders((prev) => [...prev, newFolder]);
+      showSuccess(`Folder "${folder.name}" added.`);
+      await logActivity("Add Inventory Folder Success", `Added new folder: ${newFolder.name}.`, profile, { folder_id: newFolder.id, folder_name: newFolder.name });
+      return newFolder;
     }
     return null;
   };
 
-  const updateLocation = async (location: Omit<Location, "createdAt" | "userId" | "organizationId">) => {
+  // Renamed from updateLocation
+  const updateInventoryFolder = async (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to update locations.";
-      await logActivity("Update Location Failed", errorMessage, profile, { location_id: location.id, location_name: location.displayName || location.fullLocationString }, true);
+      const errorMessage = "You must be logged in and have an organization ID to update inventory folders.";
+      await logActivity("Update Inventory Folder Failed", errorMessage, profile, { folder_id: folder.id, folder_name: folder.name }, true);
       showError(errorMessage);
       return;
     }
 
     const { data, error } = await supabase
-      .from("locations")
+      .from("inventory_folders") // Updated table name
       .update({
-        full_location_string: location.fullLocationString,
-        display_name: location.displayName,
-        area: location.area,
-        row: location.row,
-        bay: location.bay,
-        level: location.level,
-        pos: location.pos,
-        color: location.color,
+        name: folder.name,
+        description: folder.description,
+        parent_id: folder.parentId,
+        image_url: folder.imageUrl,
+        color: folder.color,
+        tags: folder.tags,
       })
-      .eq("id", location.id)
+      .eq("id", folder.id)
       .eq("organization_id", profile.organizationId)
       .select()
       .single();
 
     if (error) {
-      console.error("Error updating location:", error);
-      await logActivity("Update Location Failed", `Failed to update location: ${location.displayName || location.fullLocationString} (ID: ${location.id}).`, profile, { error_message: error.message, location_id: location.id, updated_fields: location }, true);
-      showError(`Failed to update location: ${error.message}`);
+      console.error("Error updating inventory folder:", error);
+      await logActivity("Update Inventory Folder Failed", `Failed to update folder: ${folder.name} (ID: ${folder.id}).`, profile, { error_message: error.message, folder_id: folder.id, updated_fields: folder }, true);
+      showError(`Failed to update folder: ${error.message}`);
     } else if (data) {
-      setLocations((prev) =>
-        prev.map((loc) => (loc.id === data.id ? mapSupabaseLocationToLocation(data) : loc))
+      setInventoryFolders((prev) =>
+        prev.map((f) => (f.id === data.id ? mapSupabaseFolderToInventoryFolder(data) : f))
       );
-      showSuccess(`Location "${location.displayName || location.fullLocationString}" updated.`);
-      await logActivity("Update Location Success", `Updated location: ${location.displayName || location.fullLocationString} (ID: ${location.id}).`, profile, { location_id: location.id, updated_fields: location });
+      showSuccess(`Folder "${folder.name}" updated.`);
+      await logActivity("Update Inventory Folder Success", `Updated folder: ${folder.name} (ID: ${folder.id}).`, profile, { folder_id: folder.id, updated_fields: folder });
     }
   };
 
-  const removeLocation = async (locationId: string) => {
+  // Renamed from removeLocation
+  const removeInventoryFolder = async (folderId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an an organization ID to remove locations.";
-      await logActivity("Remove Location Failed", errorMessage, profile, { location_id: locationId }, true);
+      const errorMessage = "You must be logged in and have an an organization ID to remove inventory folders.";
+      await logActivity("Remove Inventory Folder Failed", errorMessage, profile, { folder_id: folderId }, true);
       showError(errorMessage);
       return;
     }
 
-    const locationToRemove = locations.find(loc => loc.id === locationId);
+    const folderToRemove = inventoryFolders.find(f => f.id === folderId);
 
     const { error } = await supabase
-      .from("locations")
+      .from("inventory_folders") // Updated table name
       .delete()
-      .eq("id", locationId)
+      .eq("id", folderId)
       .eq("organization_id", profile.organizationId);
 
     if (error) {
-      console.error("Error removing location:", error);
-      await logActivity("Remove Location Failed", `Failed to remove location: ${locationToRemove?.displayName || locationToRemove?.fullLocationString} (ID: ${locationId}).`, profile, { error_message: error.message, location_id: locationId }, true);
-      showError(`Failed to remove location: ${error.message}`);
+      console.error("Error removing inventory folder:", error);
+      await logActivity("Remove Inventory Folder Failed", `Failed to remove folder: ${folderToRemove?.name} (ID: ${folderId}).`, profile, { error_message: error.message, folder_id: folderId }, true);
+      showError(`Failed to remove folder: ${error.message}`);
     } else {
-      setLocations((prev) => prev.filter((loc) => loc.id !== locationId));
-      showSuccess(`Location "${locationToRemove?.displayName || locationToRemove?.fullLocationString}" removed.`);
-      await logActivity("Remove Location Success", `Removed location: ${locationToRemove?.displayName || locationToRemove?.fullLocationString} (ID: ${locationId}).`, profile, { location_id: locationId });
+      setInventoryFolders((prev) => prev.filter((f) => f.id !== folderId));
+      showSuccess(`Folder "${folderToRemove?.name}" removed.`);
+      await logActivity("Remove Inventory Folder Success", `Removed folder: ${folderToRemove?.name} (ID: ${folderId}).`, profile, { folder_id: folderId });
     }
   };
 
@@ -402,13 +400,13 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       value={{
         isOnboardingComplete,
         companyProfile,
-        locations,
+        inventoryFolders, // Renamed
         markOnboardingComplete,
         setCompanyProfile,
-        addLocation,
-        updateLocation,
-        removeLocation,
-        fetchLocations,
+        addInventoryFolder, // Renamed
+        updateInventoryFolder, // Renamed
+        removeInventoryFolder, // Renamed
+        fetchInventoryFolders, // Renamed
       }}
     >
       {children}

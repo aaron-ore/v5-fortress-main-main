@@ -13,44 +13,44 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MapPin, Search } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
 import { Input } from "@/components/ui/input";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
-interface LocationInventoryViewDialogProps {
+interface FolderInventoryViewDialogProps { // Renamed interface
   isOpen: boolean;
   onClose: () => void;
-  locationName: string;
+  folderId: string; // Changed from locationName to folderId
 }
 
-const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = ({
+const FolderInventoryViewDialog: React.FC<FolderInventoryViewDialogProps> = ({ // Renamed component
   isOpen,
   onClose,
-  locationName,
+  folderId, // Changed from locationName
 }) => {
   const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [searchTerm, setSearchTerm] = useState("");
 
-  const locationDisplayName = useMemo(() => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === locationName);
-    return foundLoc?.displayName || locationName;
-  }, [structuredLocations, locationName]);
+  const folderDisplayName = useMemo(() => { // Renamed from locationDisplayName
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
+  }, [inventoryFolders, folderId]);
 
-  const itemsInLocation = useMemo(() => {
+  const itemsInFolder = useMemo(() => { // Renamed from itemsInLocation
     return inventoryItems.filter(item =>
-      item.location === locationName || item.pickingBinLocation === locationName
+      item.folderId === folderId
     );
-  }, [inventoryItems, locationName]);
+  }, [inventoryItems, folderId]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) {
-      return itemsInLocation;
+      return itemsInFolder;
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return itemsInLocation.filter(item =>
+    return itemsInFolder.filter(item =>
       item.name.toLowerCase().includes(lowerCaseSearchTerm) ||
       item.sku.toLowerCase().includes(lowerCaseSearchTerm)
     );
-  }, [itemsInLocation, searchTerm]);
+  }, [itemsInFolder, searchTerm]);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,10 +63,10 @@ const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = 
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" /> Inventory in "{locationDisplayName}"
+            <MapPin className="h-6 w-6 text-primary" /> Inventory in "{folderDisplayName}" {/* Updated to folderDisplayName */}
           </DialogTitle>
           <DialogDescription>
-            Viewing all inventory items currently stored in {locationDisplayName}.
+            Viewing all inventory items currently stored in {folderDisplayName}. {/* Updated to folderDisplayName */}
           </DialogDescription>
         </DialogHeader>
         <div className="flex-grow flex flex-col gap-4 py-4 px-6 overflow-hidden">
@@ -82,7 +82,7 @@ const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = 
 
           {filteredItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              No inventory items found in "{locationDisplayName}" matching your search.
+              No inventory items found in "{folderDisplayName}" matching your search. {/* Updated to folderDisplayName */}
             </p>
           ) : (
             <ScrollArea className="flex-grow border border-border rounded-md">
@@ -123,4 +123,4 @@ const LocationInventoryViewDialog: React.FC<LocationInventoryViewDialogProps> = 
   );
 };
 
-export default LocationInventoryViewDialog;
+export default FolderInventoryViewDialog; // Renamed export

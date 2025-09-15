@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
 import { CompanyProfileStepProps } from "./CompanyProfileStep"; // Import the interface
-import LocationSetupStep from "./LocationSetupStep";
-import { LocationSetupStepProps } from "./LocationSetupStep"; // Import the interface
+import FolderSetupStep from "./FolderSetupStep"; // Renamed import
+import { FolderSetupStepProps } from "./FolderSetupStep"; // Renamed import
 // import ProductImportStep from "./ProductImportStep"; // Removed
 import { useOnboarding } from "@/context/OnboardingContext";
 
@@ -21,8 +21,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => { 
       component: CompanyProfileStep as React.FC<CompanyProfileStepProps>, // Cast to ensure type compatibility
     },
     {
-      title: "Warehouse & Locations",
-      component: LocationSetupStep as React.FC<LocationSetupStepProps>, // Cast to ensure type compatibility
+      title: "Inventory Folders", // Updated title
+      component: FolderSetupStep as React.FC<FolderSetupStepProps>, // Updated to FolderSetupStep
     },
     // Removed ProductImportStep
   ];

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Truck, Package, ArrowRight, Barcode } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now contains Location[]
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
 import { showError, showSuccess } from "@/utils/toast";
 
@@ -20,13 +20,13 @@ interface StockTransferToolProps {
 
 const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { locations } = useOnboarding(); // Now contains Location[]
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const { addStockMovement } = useStockMovement();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItemId, setSelectedItemId] = useState("");
-  const [fromLocation, setFromLocation] = useState(""); // This will be fullLocationString
-  const [toLocation, setToLocation] = useState(""); // This will be fullLocationString
+  const [fromFolderId, setFromFolderId] = useState(""); // Changed from fromLocation to fromFolderId
+  const [toFolderId, setToFolderId] = useState(""); // Changed from toLocation to toFolderId
   const [transferQuantity, setTransferQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -45,18 +45,24 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     );
   }, [inventoryItems, searchTerm]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   // Reset form when item changes or component mounts
   useEffect(() => {
     if (selectedItem) {
-      setFromLocation(selectedItem.location); // Use item's current location
+      setFromFolderId(selectedItem.folderId); // Use item's current folderId
       setTransferQuantity("");
       setNotes("");
-      setToLocation(""); // Reset toLocation when item changes
+      setToFolderId(""); // Reset toFolderId when item changes
     } else {
-      setFromLocation("");
+      setFromFolderId("");
       setTransferQuantity("");
       setNotes("");
-      setToLocation("");
+      setToFolderId("");
     }
   }, [selectedItem]);
 
@@ -95,12 +101,12 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
   };
 
   const handleSubmitTransfer = async () => {
-    if (!selectedItem || !fromLocation || !toLocation || !transferQuantity) {
+    if (!selectedItem || !fromFolderId || !toFolderId || !transferQuantity) {
       showError("Please fill in all required fields.");
       return;
     }
-    if (fromLocation === toLocation) {
-      showError("Source and destination locations cannot be the same.");
+    if (fromFolderId === toFolderId) {
+      showError("Source and destination folders cannot be the same.");
       return;
     }
 
@@ -110,7 +116,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
       return;
     }
     if (selectedItem.quantity < quantity) {
-      showError(`Not enough stock at ${fromLocation}. Available: ${selectedItem.quantity}`);
+      showError(`Not enough stock at ${getFolderName(fromFolderId)}. Available: ${selectedItem.quantity}`);
       return;
     }
 
@@ -119,7 +125,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     const updatedItem = {
       ...selectedItem,
       quantity: newQuantity, // Update quantity at the source (conceptually, the item is moving)
-      location: toLocation, // Update the item's primary location to the destination
+      folderId: toFolderId, // Update the item's primary folder to the destination
       lastUpdated: new Date().toISOString().split('T')[0],
     };
 
@@ -130,20 +136,21 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
       await addStockMovement({
         itemId: selectedItem.id,
         itemName: selectedItem.name,
-        type: "subtract", // Log as subtract from old location
+        type: "subtract", // Log as subtract from old folder
         amount: quantity,
         oldQuantity: oldQuantity,
         newQuantity: newQuantity,
-        reason: `Transferred from ${fromLocation} to ${toLocation}`,
+        reason: `Transferred from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}`,
+        folderId: fromFolderId, // Log the folder from which it was transferred
       });
 
-      showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${fromLocation} to ${toLocation}.`);
+      showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}.`);
       refreshInventory(); // Ensure inventory context is refreshed
       // Reset form
       setSearchTerm("");
       setSelectedItemId("");
-      setFromLocation("");
-      setToLocation("");
+      setFromFolderId("");
+      setToFolderId("");
       setTransferQuantity("");
       setNotes("");
     } catch (error: any) {
@@ -209,19 +216,19 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fromLocation" className="font-semibold">From Location</Label>
-              <Input id="fromLocation" value={fromLocation} disabled />
+              <Label htmlFor="fromFolderId" className="font-semibold">From Folder</Label> {/* Updated label */}
+              <Input id="fromFolderId" value={getFolderName(fromFolderId)} disabled /> {/* Display folder name */}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="toLocation">To Location</Label>
-              <Select value={toLocation} onValueChange={setToLocation}>
-                <SelectTrigger id="toLocation">
-                  <SelectValue placeholder="Select destination location" />
+              <Label htmlFor="toFolderId">To Folder</Label> {/* Updated label */}
+              <Select value={toFolderId} onValueChange={setToFolderId}> {/* Updated to toFolderId */}
+                <SelectTrigger id="toFolderId">
+                  <SelectValue placeholder="Select destination folder" /> {/* Updated placeholder */}
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.filter(loc => loc.fullLocationString !== fromLocation).map(loc => (
-                    <SelectItem key={loc.id} value={loc.fullLocationString}>
-                      {loc.displayName || loc.fullLocationString}
+                  {inventoryFolders.filter(folder => folder.id !== fromFolderId).map(folder => ( // Filter by folderId
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name} {/* Display folder name */}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -250,7 +257,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
                 rows={2}
               />
             </div>
-            <Button onClick={handleSubmitTransfer} className="w-full" disabled={!selectedItem || !toLocation || !transferQuantity || fromLocation === toLocation}>
+            <Button onClick={handleSubmitTransfer} className="w-full" disabled={!selectedItem || !toFolderId || !transferQuantity || fromFolderId === toFolderId}>
               <ArrowRight className="h-4 w-4 mr-2" /> Confirm Transfer
             </Button>
           </CardContent>

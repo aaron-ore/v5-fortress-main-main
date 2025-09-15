@@ -2,24 +2,16 @@ import React from "react";
 import { Diamond } from "lucide-react";
 
 interface LocationLabelPdfContentProps {
-  area: string;
-  row: string;
-  bay: string;
-  level: string;
-  pos: string;
+  folderName: string; // Changed from area, row, bay, level, pos
   color: string;
   qrCodeSvg: string;
   printDate: string;
-  locationString: string;
+  folderIdentifier: string; // Changed from locationString
   className?: string;
 }
 
 const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPdfContentProps>(({
-  area,
-  row,
-  bay,
-  level,
-  pos,
+  folderName, // Changed from area, row, bay, level, pos
   color,
   qrCodeSvg,
   className,
@@ -36,33 +28,11 @@ const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPd
         <Diamond className="h-6 w-6 text-gray-700" />
       </div>
 
-      {/* Location Details - positioned on the right side of the label */}
+      {/* Folder Name - positioned on the right side of the label */}
       <div className="absolute top-[2mm] right-[2mm] w-[50mm] h-[45mm] flex flex-col justify-center items-center z-10">
-        {/* Row for Area and Row */}
-        <div className="flex w-full justify-around mb-1">
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[0.6rem] font-bold uppercase text-gray-700">AREA</span>
-            <span className="text-3xl font-extrabold text-black">{area}</span>
-          </div>
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[0.6rem] font-bold uppercase text-gray-700">ROW</span>
-            <span className="text-3xl font-extrabold text-black">{row}</span>
-          </div>
-        </div>
-        {/* Row for Bay, Level, Pos */}
-        <div className="flex w-full justify-around">
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[0.6rem] font-bold uppercase text-gray-700">BAY</span>
-            <span className="text-3xl font-extrabold text-black">{bay}</span>
-          </div>
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[0.6rem] font-bold uppercase text-gray-700">LEVEL</span>
-            <span className="text-3xl font-extrabold text-white px-2 rounded-sm" style={{ backgroundColor: color }}>{level}</span>
-          </div>
-          <div className="flex flex-col items-center leading-none">
-            <span className="text-[0.6rem] font-bold uppercase text-gray-700">POS</span>
-            <span className="text-3xl font-extrabold text-black">{pos}</span>
-          </div>
+        <div className="flex flex-col items-center leading-none">
+          <span className="text-[0.6rem] font-bold uppercase text-gray-700">FOLDER</span>
+          <span className="text-3xl font-extrabold text-black text-center px-2 rounded-sm" style={{ backgroundColor: color }}>{folderName}</span> {/* Display folderName */}
         </div>
       </div>
     </div>

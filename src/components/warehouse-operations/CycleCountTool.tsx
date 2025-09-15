@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Barcode } from "lucide-react"; // Removed CheckCircle, Package
+import { Folder, Barcode } from "lucide-react"; // Changed MapPin to Folder
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed useStockMovement as updates will go through Edge Function
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -20,8 +20,7 @@ interface CountedItem {
   systemOverstockQuantity: number; // Track system quantity for overstock
   countedPickingBinQuantity: number; // User input for picking bin
   countedOverstockQuantity: number; // User input for overstock
-  location: string; // Main location (fullLocationString)
-  pickingBinLocation: string; // Specific picking bin location (fullLocationString)
+  folderId: string; // Changed from location to folderId
   isScanned: boolean;
   barcodeUrl?: string;
 }
@@ -34,18 +33,18 @@ interface CycleCountToolProps {
 
 const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, refreshInventory } = useInventory();
-  const { locations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   // Removed useStockMovement as updates will go through Edge Function
 
-  const [selectedLocation, setSelectedLocation] = useState("all"); // This will be fullLocationString or "all"
+  const [selectedFolder, setSelectedFolder] = useState("all"); // Changed from selectedLocation to selectedFolder
   const [itemsToCount, setItemsToCount] = useState<CountedItem[]>([]);
   const [isCounting, setIsCounting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
 
   const filteredInventory = useMemo(() => {
-    if (selectedLocation === "all") return inventoryItems;
-    return inventoryItems.filter(item => item.location === selectedLocation || item.pickingBinLocation === selectedLocation);
-  }, [inventoryItems, selectedLocation]);
+    if (selectedFolder === "all") return inventoryItems;
+    return inventoryItems.filter(item => item.folderId === selectedFolder); // Filter by folderId
+  }, [inventoryItems, selectedFolder]);
 
   useEffect(() => {
     if (!isCounting) {
@@ -62,7 +61,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
 
   const startCycleCount = () => {
     if (filteredInventory.length === 0) {
-      showError("No items found for the selected location to start a cycle count.");
+      showError("No items found for the selected folder to start a cycle count.");
       return;
     }
     const initialItems: CountedItem[] = filteredInventory.map(item => ({
@@ -73,14 +72,13 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
       systemOverstockQuantity: item.overstockQuantity,
       countedPickingBinQuantity: 0,
       countedOverstockQuantity: 0,
-      location: item.location,
-      pickingBinLocation: item.pickingBinLocation,
+      folderId: item.folderId, // Updated to folderId
       isScanned: false,
       barcodeUrl: item.barcodeUrl,
     }));
     setItemsToCount(initialItems);
     setIsCounting(true);
-    showSuccess(`Cycle count started for ${selectedLocation === "all" ? "all locations" : locations.find(loc => loc.fullLocationString === selectedLocation)?.displayName || selectedLocation}.`);
+    showSuccess(`Cycle count started for ${selectedFolder === "all" ? "all folders" : inventoryFolders.find(folder => folder.id === selectedFolder)?.name || selectedFolder}.`); // Updated to folder name
   };
 
   const handleCountedQuantityChange = (itemId: string, locationType: 'pickingBin' | 'overstock', quantity: string) => {
@@ -148,7 +146,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           const { data, error } = await supabase.functions.invoke('handle-stock-discrepancy', {
             body: JSON.stringify({
               item_id: item.id,
-              location_string: item.pickingBinLocation,
+              folder_id: item.folderId, // Updated to folder_id
               location_type: 'picking_bin',
               physical_count: item.countedPickingBinQuantity,
               reason: 'Cycle Count Adjustment',
@@ -173,7 +171,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           const { data, error } = await supabase.functions.invoke('handle-stock-discrepancy', {
             body: JSON.stringify({
               item_id: item.id,
-              location_string: item.location, // Assuming main location for overstock
+              folder_id: item.folderId, // Updated to folder_id
               location_type: 'overstock',
               physical_count: item.countedOverstockQuantity,
               reason: 'Cycle Count Adjustment',
@@ -201,7 +199,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     refreshInventory(); // Refresh inventory to reflect changes
     setIsCounting(false);
     setItemsToCount([]);
-    setSelectedLocation("all");
+    setSelectedFolder("all"); // Reset to all folders
   };
 
   return (
@@ -212,21 +210,21 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" /> Select Location
+              <Folder className="h-5 w-5 text-primary" /> Select Folder {/* Updated icon and title */}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="locationSelect" className="font-semibold">Location to Count</Label>
-              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                <SelectTrigger id="locationSelect">
-                  <SelectValue placeholder="Select a location" />
+              <Label htmlFor="folderSelect" className="font-semibold">Folder to Count</Label> {/* Updated label */}
+              <Select value={selectedFolder} onValueChange={setSelectedFolder}> {/* Updated to selectedFolder */}
+                <SelectTrigger id="folderSelect">
+                  <SelectValue placeholder="Select a folder" /> {/* Updated placeholder */}
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map(loc => (
-                    <SelectItem key={loc.id} value={loc.fullLocationString}>
-                      {loc.displayName || loc.fullLocationString}
+                  <SelectItem value="all">All Folders</SelectItem> {/* Updated text */}
+                  {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name} {/* Display folder name */}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -257,12 +255,12 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                       <h3 className="font-semibold text-lg">{item.name}</h3>
                       <span className="text-sm text-muted-foreground">SKU: {item.sku}</span>
                     </div>
-                    <p className="text-muted-foreground text-sm mb-2">Main Location: {locations.find(loc => loc.fullLocationString === item.location)?.displayName || item.location}</p>
+                    <p className="text-muted-foreground text-sm mb-2">Folder: {getFolderName(item.folderId)}</p> {/* Updated to folder name */}
                     
                     {/* Picking Bin Quantity */}
                     <div className="flex items-center justify-between mb-2">
                       <Label htmlFor={`counted-picking-qty-${item.id}`} className="font-semibold">
-                        Picking Bin ({locations.find(loc => loc.fullLocationString === item.pickingBinLocation)?.displayName || item.pickingBinLocation}):
+                        Picking Bin ({getFolderName(item.folderId)}): {/* Updated to folder name */}
                       </Label>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">System: {item.systemPickingBinQuantity}</span>

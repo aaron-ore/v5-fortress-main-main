@@ -11,11 +11,13 @@ import { useReplenishment, ReplenishmentTask } from "@/context/ReplenishmentCont
 import { useProfile } from "@/context/ProfileContext";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
 
 const ReplenishmentManagementTool: React.FC = () => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { replenishmentTasks, addReplenishmentTask, updateReplenishmentTask } = useReplenishment();
   const { allProfiles } = useProfile();
+  const { inventoryFolders } = useOnboarding(); // Get inventory folders
 
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<ReplenishmentTask['status'] | "all">("Pending");
   const [selectedTask, setSelectedTask] = useState<ReplenishmentTask | null>(null);
@@ -26,7 +28,7 @@ const ReplenishmentManagementTool: React.FC = () => {
     return inventoryItems.filter(item =>
       item.pickingBinQuantity <= item.pickingReorderLevel &&
       item.overstockQuantity > 0 // Only if there's overstock to pull from
-    ).sort((a, b) => a.pickingBinLocation.localeCompare(b.pickingBinLocation));
+    ).sort((a, b) => a.folderId.localeCompare(b.folderId)); // Sort by folderId
   }, [inventoryItems]);
 
   // Filtered replenishment tasks
@@ -43,6 +45,12 @@ const ReplenishmentManagementTool: React.FC = () => {
       setAssignedTo("unassigned");
     }
   }, [selectedTask]);
+
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
 
   const handleCreateTask = async (item: InventoryItem) => {
     if (item.overstockQuantity <= 0) {
@@ -63,8 +71,8 @@ const ReplenishmentManagementTool: React.FC = () => {
     await addReplenishmentTask({
       itemId: item.id,
       itemName: item.name,
-      fromLocation: item.location, // Assuming overstock is in main location (fullLocationString)
-      toLocation: item.pickingBinLocation, // Picking bin location (fullLocationString)
+      fromFolderId: item.folderId, // Use item's main folder as source
+      toFolderId: item.folderId, // For simplicity, assume picking bin is in the same main folder
       quantity: quantityToMove,
     });
   };
@@ -216,7 +224,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        <ArrowRight className="h-3 w-3 inline-block mr-1" /> {task.fromLocation} to {task.toLocation}
+                        <ArrowRight className="h-3 w-3 inline-block mr-1" /> {getFolderName(task.fromFolderId)} to {getFolderName(task.toFolderId)} {/* Updated to folder names */}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Created: {formatDistanceToNowStrict(new Date(task.createdAt), { addSuffix: true })}
@@ -233,7 +241,7 @@ const ReplenishmentManagementTool: React.FC = () => {
             <div className="mt-4 pt-4 border-t border-border space-y-3">
               <h3 className="text-lg font-semibold">Task Details: {selectedTask.id}</h3>
               <p className="text-sm text-muted-foreground">Item: {selectedTask.itemName} ({selectedTask.quantity} units)</p>
-              <p className="text-sm text-muted-foreground">Move from: {selectedTask.fromLocation} to {selectedTask.toLocation}</p>
+              <p className="text-sm text-muted-foreground">Move from: {getFolderName(selectedTask.fromFolderId)} to {getFolderName(selectedTask.toFolderId)}</p> {/* Updated to folder names */}
               <p className="text-sm text-muted-foreground">Status: <Badge variant={
                 selectedTask.status === "Pending" ? "warning" :
                 selectedTask.status === "Assigned" ? "secondary" :

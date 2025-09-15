@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface InventoryCardProps {
   item: InventoryItem;
@@ -23,7 +23,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   onDeleteItem,
   isSidebarCollapsed,
 }) => {
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
 
   let statusVariant: "success" | "warning" | "destructive" | "info" | "muted" = "info";
   switch (item.status) {
@@ -38,9 +38,10 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
       break;
   }
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+  // Function to get folder display name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   return (
@@ -70,7 +71,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
             <Tag className="h-3 w-3" /> SKU: {item.sku}
           </p>
           <p className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> Location: {getLocationDisplayName(item.location)}
+            <MapPin className="h-3 w-3" /> Folder: {getFolderDisplayName(item.folderId)} {/* Updated to folderId */}
           </p>
         </div>
         <div className="flex items-baseline justify-between mt-3 flex-shrink-0">

@@ -77,6 +77,7 @@ export const processAutoReorder = async (
       shippingMethod: "Standard",
       items: poItems,
       terms: "Net 30", // Default terms
+      // No direct folderId here, as orders are not directly tied to folders in this way
     };
 
     try {

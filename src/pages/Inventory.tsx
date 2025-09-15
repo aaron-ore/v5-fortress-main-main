@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { PlusCircle, List, LayoutGrid, MapPin, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react";
+import { PlusCircle, List, LayoutGrid, Folder, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react"; // Changed MapPin to Folder
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,13 +22,13 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showSuccess } from "@/utils/toast";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import ManageLocationsDialog from "@/components/ManageLocationsDialog";
+import ManageFoldersDialog from "@/components/ManageFoldersDialog"; // Renamed import
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import BulkUpdateDialog from "@/components/BulkUpdateDialog";
@@ -39,7 +39,7 @@ import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDia
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import { useSidebar } from "@/context/SidebarContext";
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, structuredLocations: any[]): ColumnDef<InventoryItem>[] => [
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: any[]): ColumnDef<InventoryItem>[] => [ // Updated structuredLocations to inventoryFolders
   {
     accessorKey: "name",
     header: "Item Name",
@@ -71,12 +71,12 @@ export const createInventoryColumns = (handleQuickView: (item: InventoryItem) =>
     header: "Reorder Level",
   },
   {
-    accessorKey: "location",
-    header: "Location",
+    accessorKey: "folderId", // Changed from location to folderId
+    header: "Folder", // Changed header to Folder
     cell: ({ row }) => {
-      const fullLocationString = row.original.location;
-      const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-      return foundLoc?.displayName || fullLocationString;
+      const folderId = row.original.folderId;
+      const foundFolder = inventoryFolders.find(folder => folder.id === folderId); // Find folder by ID
+      return foundFolder?.name || "Unassigned"; // Display folder name
     },
   },
   {
@@ -114,13 +114,13 @@ const Inventory: React.FC = () => {
   const { inventoryItems, deleteInventoryItem, refreshInventory, isLoadingInventory } = useInventory();
   const { categories } = useCategories();
   const { vendors } = useVendors();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const { isCollapsed } = useSidebar();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isManageCategoriesDialogOpen, setIsManageCategoriesDialogOpen] = useState(false);
-  const [isManageLocationsDialogOpen, setIsManageLocationsDialogOpen] = useState(false);
+  const [isManageFoldersDialogOpen, setIsManageFoldersDialogOpen] = useState(false); // Renamed state
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false);
   const [isImportCsvDialogOpen, setIsImportCsvDialogOpen] = useState(false);
@@ -133,7 +133,7 @@ const Inventory: React.FC = () => {
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
 
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
-  const [locationFilter, setLocationFilter] = useState("all");
+  const [folderFilter, setFolderFilter] = useState("all"); // Changed from locationFilter to folderFilter
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -153,20 +153,20 @@ const Inventory: React.FC = () => {
           item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (inventoryFolders.find(f => f.id === item.folderId)?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || // Search by folder name
           (item.vendorId ? (vendorNameMap.get(item.vendorId) || "").toLowerCase().includes(searchTerm.toLowerCase()) : false);
 
-        const matchesLocation = locationFilter === "all" || item.location === locationFilter || item.pickingBinLocation === locationFilter;
+        const matchesFolder = folderFilter === "all" || item.folderId === folderFilter; // Updated to folderId
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         const matchesStatus = statusFilter === "all" || item.status === statusFilter;
 
-        return matchesSearch && matchesLocation && matchesCategory && matchesStatus;
+        return matchesSearch && matchesFolder && matchesCategory && matchesStatus;
       })
       .map(item => ({
         ...item,
         vendorName: item.vendorId ? vendorNameMap.get(item.vendorId) || '-' : '-',
       }));
-  }, [inventoryItems, searchTerm, vendorNameMap, locationFilter, categoryFilter, statusFilter]);
+  }, [inventoryItems, searchTerm, vendorNameMap, folderFilter, categoryFilter, statusFilter, inventoryFolders]); // Added inventoryFolders to dependencies
 
   const handleDeleteItemClick = useCallback((itemId: string, itemName: string) => {
     setItemToDelete({ id: itemId, name: itemName });
@@ -194,7 +194,7 @@ const Inventory: React.FC = () => {
     showSuccess(`Create order for ${item.name} (placeholder)`);
   }, []);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, structuredLocations), [handleQuickView, structuredLocations]);
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders), [handleQuickView, inventoryFolders]); // Updated structuredLocations to inventoryFolders
 
   return (
     <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root">
@@ -207,14 +207,14 @@ const Inventory: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Select value={locationFilter} onValueChange={setLocationFilter}>
+        <Select value={folderFilter} onValueChange={setFolderFilter}> {/* Changed from locationFilter to folderFilter */}
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Locations" />
+            <SelectValue placeholder="All Folders" /> {/* Updated placeholder */}
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Locations</SelectItem>
-            {structuredLocations.map(loc => (
-              <SelectItem key={loc.id} value={loc.fullLocationString}>{loc.displayName || loc.fullLocationString}</SelectItem>
+            <SelectItem value="all">All Folders</SelectItem> {/* Updated text */}
+            {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
+              <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem> // Display folder name
             ))}
           </SelectContent>
         </Select>
@@ -283,8 +283,8 @@ const Inventory: React.FC = () => {
             <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
               Manage Categories
             </Button>
-            <Button variant="outline" onClick={() => setIsManageLocationsDialogOpen(true)} size="sm">
-              <MapPin className="h-4 w-4 mr-2" /> Manage Locations
+            <Button variant="outline" onClick={() => setIsManageFoldersDialogOpen(true)} size="sm"> {/* Renamed state */}
+              <Folder className="h-4 w-4 mr-2" /> Manage Folders {/* Updated icon and text */}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -342,9 +342,9 @@ const Inventory: React.FC = () => {
         isOpen={isAddInventoryDialogOpen}
         onClose={() => setIsAddInventoryDialogOpen(false)}
       />
-      <ManageLocationsDialog
-        isOpen={isManageLocationsDialogOpen}
-        onClose={() => setIsManageLocationsDialogOpen(false)}
+      <ManageFoldersDialog // Renamed component
+        isOpen={isManageFoldersDialogOpen} // Renamed state
+        onClose={() => setIsManageFoldersDialogOpen(false)} // Renamed state
       />
       <CategoryManagementDialog
         isOpen={isManageCategoriesDialogOpen}

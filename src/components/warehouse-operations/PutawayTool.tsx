@@ -4,13 +4,13 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Package, MapPin, ListOrdered, Scan } from "lucide-react";
+import { CheckCircle, Package, Folder, ListOrdered, Scan } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
-  suggestedPutawayLocation: string; // fullLocationString
+  suggestedPutawayFolderId: string; // Changed from suggestedPutawayLocation to suggestedPutawayFolderId
   isPutAway: boolean;
 }
 
@@ -35,14 +35,14 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const { orders, updateOrder } = useOrders();
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from structuredLocations
 
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
-  const [scannedLocation, setScannedLocation] = useState<string | null>(null); // Stores the fullLocationString of the scanned location
+  const [scannedFolderId, setScannedFolderId] = useState<string | null>(null); // Changed from scannedLocation to scannedFolderId
   const [isScanning, setIsScanning] = useState(false);
-  const [currentScanMode, setCurrentScanMode] = useState<"po" | "location" | "item">("po");
+  const [currentScanMode, setCurrentScanMode] = useState<"po" | "folder" | "item">("po"); // Changed from location to folder
 
   const receivedPOs = useMemo(() => {
     return orders.filter(order => order.type === "Purchase" && order.putawayStatus === "Pending");
@@ -52,7 +52,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     // Reset state when component mounts or PO input changes
     setSelectedPO(null);
     setItemsToPutAway([]);
-    setScannedLocation(null);
+    setScannedFolderId(null);
     setCurrentScanMode("po");
   }, [poNumberInput]);
 
@@ -71,23 +71,23 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       const foundPO = receivedPOs.find(po => po.id.toLowerCase() === lowerCaseScannedData);
       if (foundPO) {
         handlePoSelect(foundPO.id);
-        showSuccess(`PO ${foundPO.id} loaded. Now scan a location.`);
-        setCurrentScanMode("location");
+        showSuccess(`PO ${foundPO.id} loaded. Now scan a folder.`); // Updated text
+        setCurrentScanMode("folder"); // Next step is to scan folder
       } else {
         showError(`Purchase Order "${scannedData}" not found or not ready for putaway.`);
       }
-    } else if (currentScanMode === "location") {
-      const foundLocation = structuredLocations.find(loc => loc.fullLocationString.toLowerCase() === lowerCaseScannedData);
-      if (foundLocation) {
-        setScannedLocation(foundLocation.fullLocationString);
-        showSuccess(`Location ${foundLocation.displayName || foundLocation.fullLocationString} scanned. Now scan an item.`);
+    } else if (currentScanMode === "folder") { // Changed from location to folder
+      const foundFolder = inventoryFolders.find(folder => folder.name.toLowerCase() === lowerCaseScannedData); // Find folder by name
+      if (foundFolder) {
+        setScannedFolderId(foundFolder.id); // Set folderId
+        showSuccess(`Folder ${foundFolder.name} scanned. Now scan an item.`); // Updated text
         setCurrentScanMode("item");
       } else {
-        showError(`Location "${scannedData}" not recognized.`);
+        showError(`Folder "${scannedData}" not recognized.`); // Updated text
       }
     } else if (currentScanMode === "item") {
-      if (!selectedPO || !scannedLocation) {
-        showError("Please load a PO and scan a location first.");
+      if (!selectedPO || !scannedFolderId) {
+        showError("Please load a PO and scan a folder first."); // Updated text
         return;
       }
 
@@ -99,12 +99,12 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       );
 
       if (itemToPutAway) {
-        // Check if the scanned location matches the suggested location for this item
-        if (itemToPutAway.suggestedPutawayLocation === scannedLocation) {
+        // Check if the scanned folder matches the suggested folder for this item
+        if (itemToPutAway.suggestedPutawayFolderId === scannedFolderId) {
           confirmPutaway(itemToPutAway);
         } else {
           // Allow override, but warn
-          showError(`Scanned item ${itemToPutAway.itemName} is suggested for ${getLocationDisplayName(itemToPutAway.suggestedPutawayLocation)}, but scanned location is ${getLocationDisplayName(scannedLocation)}. Confirm to override.`);
+          showError(`Scanned item ${itemToPutAway.itemName} is suggested for ${getFolderDisplayName(itemToPutAway.suggestedPutawayFolderId)}, but scanned folder is ${getFolderDisplayName(scannedFolderId)}. Confirm to override.`); // Updated text
           // For now, we'll just confirm, but a real system might ask for explicit confirmation
           confirmPutaway(itemToPutAway);
         }
@@ -114,7 +114,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
   };
 
-  const handleScanClick = (mode: "po" | "location" | "item") => {
+  const handleScanClick = (mode: "po" | "folder" | "item") => { // Changed from location to folder
     setIsScanning(true);
     setCurrentScanMode(mode);
     onScanRequest(handleScannedData);
@@ -132,13 +132,13 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
         return {
           ...poItem,
           inventoryItemDetails: inventoryItem,
-          suggestedPutawayLocation: inventoryItem?.location || "Unassigned", // Use item's current location as suggested
+          suggestedPutawayFolderId: inventoryItem?.folderId || "Unassigned", // Use item's current folderId as suggested
           isPutAway: false,
         };
       });
       setItemsToPutAway(itemsWithDetails);
       showSuccess(`Purchase Order ${foundPO.id} loaded. Ready for putaway.`);
-      setCurrentScanMode("location"); // Next step is to scan location
+      setCurrentScanMode("folder"); // Next step is to scan folder
     } else {
       showError(`Purchase Order "${orderId}" not found or not ready for putaway.`);
       setSelectedPO(null);
@@ -148,18 +148,18 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   const confirmPutaway = async (itemToPutAway: PutawayItemDisplay) => {
-    if (!selectedPO || !scannedLocation || !itemToPutAway.inventoryItemDetails) {
+    if (!selectedPO || !scannedFolderId || !itemToPutAway.inventoryItemDetails) {
       showError("Missing data for putaway confirmation.");
       return;
     }
 
     const inventoryItem = itemToPutAway.inventoryItemDetails;
-    const newLocation = scannedLocation;
+    const newFolderId = scannedFolderId;
 
-    // Update inventory item's location
+    // Update inventory item's folderId
     const updatedInventoryItem = {
       ...inventoryItem,
-      location: newLocation,
+      folderId: newFolderId,
       lastUpdated: new Date().toISOString().split('T')[0],
     };
     await updateInventoryItem(updatedInventoryItem);
@@ -168,17 +168,18 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     await addStockMovement({
       itemId: inventoryItem.id,
       itemName: inventoryItem.name,
-      type: "add", // Conceptually, it's being added to a new specific location
+      type: "add", // Conceptually, it's being added to a new specific folder
       amount: itemToPutAway.quantity,
       oldQuantity: inventoryItem.quantity, // Total quantity before this putaway
-      newQuantity: inventoryItem.quantity, // Total quantity remains same, only location changes
-      reason: `Putaway from PO ${selectedPO.id} to ${newLocation}`,
+      newQuantity: inventoryItem.quantity, // Total quantity remains same, only folder changes
+      reason: `Putaway from PO ${selectedPO.id} to ${getFolderDisplayName(newFolderId)}`, // Use folder name
+      folderId: newFolderId, // Log the destination folder
     });
 
     setItemsToPutAway(prev => prev.map(item =>
       item.id === itemToPutAway.id ? { ...item, isPutAway: true } : item
     ));
-    showSuccess(`Put away ${itemToPutAway.itemName} to ${getLocationDisplayName(newLocation)}.`);
+    showSuccess(`Put away ${itemToPutAway.itemName} to ${getFolderDisplayName(newFolderId)}.`); // Use folder name
 
     // Check if all items from the PO are put away
     const allItemsPutAway = itemsToPutAway.every(item => item.isPutAway || item.id === itemToPutAway.id);
@@ -187,16 +188,17 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       showSuccess(`All items from PO ${selectedPO.id} have been put away!`);
       setSelectedPO(null);
       setItemsToPutAway([]);
-      setScannedLocation(null);
+      setScannedFolderId(null);
       setPoNumberInput("");
       setCurrentScanMode("po");
     }
     refreshInventory();
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+  // Helper to get folder display name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   const isCompleteButtonDisabled = !selectedPO || itemsToPutAway.some(item => !item.isPutAway);
@@ -236,24 +238,24 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
           <div className="flex gap-2">
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-              onClick={() => handleScanClick("location")}
+              onClick={() => handleScanClick("folder")} // Changed to folder
               disabled={isScanning}
             >
-              <MapPin className="h-6 w-6" />
-              {isScanning && currentScanMode === "location" ? "Scanning Location..." : "Scan Location"}
+              <Folder className="h-6 w-6" /> {/* Updated icon */}
+              {isScanning && currentScanMode === "folder" ? "Scanning Folder..." : "Scan Folder"} {/* Updated text */}
             </Button>
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
               onClick={() => handleScanClick("item")}
-              disabled={isScanning || !scannedLocation}
+              disabled={isScanning || !scannedFolderId}
             >
               <Package className="h-6 w-6" />
               {isScanning && currentScanMode === "item" ? "Scanning Item..." : "Scan Item"}
             </Button>
           </div>
-          {scannedLocation && (
+          {scannedFolderId && (
             <p className="text-sm text-muted-foreground text-center">
-              Current Putaway Location: <span className="font-semibold text-primary">{getLocationDisplayName(scannedLocation)}</span>
+              Current Putaway Folder: <span className="font-semibold text-primary">{getFolderDisplayName(scannedFolderId)}</span> {/* Updated to folder name */}
             </p>
           )}
         </div>
@@ -276,7 +278,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                         <Package className="h-4 w-4" /> Quantity: {item.quantity}
                       </p>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <MapPin className="h-4 w-4" /> Suggested: <span className="font-semibold text-primary">{getLocationDisplayName(item.suggestedPutawayLocation)}</span>
+                        <Folder className="h-4 w-4" /> Suggested: <span className="font-semibold text-primary">{getFolderDisplayName(item.suggestedPutawayFolderId)}</span> {/* Updated to folder name */}
                       </p>
                       {item.isPutAway ? (
                         <div className="flex items-center text-green-500 font-semibold mt-2">
@@ -288,9 +290,9 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                           size="sm"
                           className="mt-2"
                           onClick={() => confirmPutaway(item)}
-                          disabled={!scannedLocation}
+                          disabled={!scannedFolderId}
                         >
-                          Confirm Putaway to {scannedLocation ? getLocationDisplayName(scannedLocation) : "Scanned Location"}
+                          Confirm Putaway to {scannedFolderId ? getFolderDisplayName(scannedFolderId) : "Scanned Folder"} {/* Updated to folder name */}
                         </Button>
                       )}
                     </CardContent>
@@ -313,7 +315,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
           onClick={() => {
             setSelectedPO(null);
             setItemsToPutAway([]);
-            setScannedLocation(null);
+            setScannedFolderId(null);
             setPoNumberInput("");
             setCurrentScanMode("po");
             showSuccess("Putaway session cleared.");

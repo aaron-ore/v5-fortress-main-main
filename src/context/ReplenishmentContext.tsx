@@ -8,8 +8,8 @@ export interface ReplenishmentTask {
   id: string;
   itemId: string;
   itemName: string;
-  fromLocation: string;
-  toLocation: string;
+  fromFolderId: string; // Changed from fromLocation to fromFolderId
+  toFolderId: string; // Changed from toLocation to toFolderId
   quantity: number;
   status: "Pending" | "Assigned" | "Completed" | "Cancelled";
   assignedTo?: string;
@@ -44,8 +44,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       id: task.id || "",
       itemId: task.item_id || "",
       itemName: task.item_name || "",
-      fromLocation: task.from_location || "",
-      toLocation: task.to_location || "",
+      fromFolderId: task.from_folder_id || "", // Updated to fromFolderId
+      toFolderId: task.to_folder_id || "", // Updated to toFolderId
       quantity: isNaN(quantity) ? 0 : quantity,
       status: task.status || "Pending",
       assignedTo: task.assigned_to || undefined,
@@ -96,8 +96,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       .insert({
         item_id: task.itemId,
         item_name: task.itemName,
-        from_location: task.fromLocation,
-        to_location: task.toLocation,
+        from_folder_id: task.fromFolderId, // Updated to from_folder_id
+        to_folder_id: task.toFolderId, // Updated to to_folder_id
         quantity: task.quantity,
         status: "Pending",
         user_id: session.user.id,
@@ -127,8 +127,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       .update({
         item_id: updatedTask.itemId,
         item_name: updatedTask.itemName,
-        from_location: updatedTask.fromLocation,
-        to_location: updatedTask.toLocation,
+        from_folder_id: updatedTask.fromFolderId, // Updated to from_folder_id
+        to_folder_id: updatedTask.toFolderId, // Updated to to_folder_id
         quantity: updatedTask.quantity,
         status: updatedTask.status,
         assigned_to: updatedTask.assignedTo,

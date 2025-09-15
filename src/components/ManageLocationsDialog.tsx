@@ -11,90 +11,95 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useOnboarding, Location } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { showSuccess, showError } from "@/utils/toast";
-import { PlusCircle, Trash2, MapPin } from "lucide-react";
-import { parseLocationString, buildLocationString } from "@/utils/locationParser"; // NEW: Import location parsers
+import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
+// Removed parseLocationString, buildLocationString as they are not directly used for generic folders
 
-interface ManageLocationsDialogProps {
+interface ManageFoldersDialogProps { // Renamed interface
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ManageLocationsDialog: React.FC<ManageLocationsDialogProps> = ({
+const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed component
   isOpen,
   onClose,
 }) => {
-  const { locations, addLocation, removeLocation } = useOnboarding();
-  const [newLocationName, setNewLocationName] = useState("");
+  const { inventoryFolders, addInventoryFolder, removeInventoryFolder, updateInventoryFolder } = useOnboarding(); // Updated context functions
+  const [newFolderName, setNewFolderName] = useState("");
+  const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null); // State for editing
+  const [editingFolderName, setEditingFolderName] = useState("");
 
   // State for delete confirmation dialog
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
-  const [locationToDelete, setLocationToDelete] = useState<Location | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null);
 
-  const handleAddLocation = async () => { // NEW: Made async
-    if (newLocationName.trim() === "") {
-      showError("Location name cannot be empty.");
+  const handleAddFolder = async () => { // Renamed from handleAddLocation
+    if (newFolderName.trim() === "") {
+      showError("Folder name cannot be empty.");
       return;
     }
-    // Check if display name or full location string already exists
-    const existingLocation = locations.find(loc => 
-      loc.displayName?.toLowerCase() === newLocationName.trim().toLowerCase() ||
-      loc.fullLocationString.toLowerCase() === newLocationName.trim().toLowerCase()
+    // Check if folder name already exists at the root level (for simplicity, no parent_id check here)
+    const existingFolder = inventoryFolders.find(folder =>
+      folder.name.toLowerCase() === newFolderName.trim().toLowerCase()
     );
-    if (existingLocation) {
-      showError("This location already exists.");
+    if (existingFolder) {
+      showError("This folder already exists.");
       return;
     }
 
-    // For simplicity in this dialog, we'll try to parse it or use it as a display name
-    const parsed = parseLocationString(newLocationName.trim());
-    let fullLocationString = newLocationName.trim();
-    let displayName = newLocationName.trim();
-
-    // If it looks like a structured string, use it as such
-    if (parsed.area && parsed.row && parsed.bay && parsed.level && parsed.pos) {
-      fullLocationString = buildLocationString(parsed);
-      displayName = newLocationName.trim(); // Keep display name as entered
-    } else {
-      // If not a structured string, assume it's just a display name, generate a simple structured string
-      // This is a simplified approach for onboarding. In a full system, you'd guide the user to create structured locations.
-      const baseName = newLocationName.trim().replace(/[^a-zA-Z0-9]/g, '');
-      fullLocationString = `${baseName.substring(0,2).toUpperCase()}-01-01-1-A`;
-      displayName = newLocationName.trim();
-    }
-
-    // Default color for new locations
+    // Default color for new folders
     const defaultColor = "#4CAF50"; // Green
 
-    const newLocation: Omit<Location, "id" | "createdAt" | "userId" | "organizationId"> = {
-      fullLocationString,
-      displayName,
-      area: parsed.area || "N/A", // Fallback if not parsed
-      row: parsed.row || "N/A",
-      bay: parsed.bay || "N/A",
-      level: parsed.level || "N/A",
-      pos: parsed.pos || "N/A",
+    const newFolder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId"> = {
+      name: newFolderName.trim(),
       color: defaultColor,
+      // parentId, description, imageUrl, tags can be added via a more detailed dialog
     };
 
-    await addLocation(newLocation); // NEW: Call addLocation with structured object
-    showSuccess(`Location "${newLocationName.trim()}" added.`);
-    setNewLocationName("");
+    await addInventoryFolder(newFolder); // Updated context function
+    showSuccess(`Folder "${newFolderName.trim()}" added.`);
+    setNewFolderName("");
   };
 
-  const handleRemoveLocationClick = (location: Location) => { // NEW: Pass full Location object
-    setLocationToDelete(location);
+  const handleEditFolderClick = (folder: InventoryFolder) => {
+    setFolderToEdit(folder);
+    setEditingFolderName(folder.name);
+  };
+
+  const handleSaveEditedFolder = async () => {
+    if (!folderToEdit || !editingFolderName.trim()) {
+      showError("Folder name cannot be empty.");
+      return;
+    }
+
+    // Check for duplicate name, excluding the folder being edited
+    const duplicateExists = inventoryFolders.some(f =>
+      f.name.toLowerCase() === editingFolderName.trim().toLowerCase() && f.id !== folderToEdit.id
+    );
+    if (duplicateExists) {
+      showError("A folder with this name already exists.");
+      return;
+    }
+
+    await updateInventoryFolder({ ...folderToEdit, name: editingFolderName.trim() });
+    showSuccess(`Folder "${editingFolderName.trim()}" updated.`);
+    setFolderToEdit(null);
+    setEditingFolderName("");
+  };
+
+  const handleRemoveFolderClick = (folder: InventoryFolder) => { // Renamed from handleRemoveLocationClick
+    setFolderToDelete(folder);
     setIsConfirmDeleteDialogOpen(true);
   };
 
-  const confirmRemoveLocation = async () => { // NEW: Async function
-    if (locationToDelete) {
-      await removeLocation(locationToDelete.id); // NEW: Pass ID to removeLocation
-      showSuccess(`Location "${locationToDelete.displayName || locationToDelete.fullLocationString}" removed.`);
+  const confirmRemoveFolder = async () => { // Renamed from confirmRemoveLocation
+    if (folderToDelete) {
+      await removeInventoryFolder(folderToDelete.id); // Updated context function
+      showSuccess(`Folder "${folderToDelete.name}" removed.`);
     }
     setIsConfirmDeleteDialogOpen(false);
-    setLocationToDelete(null);
+    setFolderToDelete(null);
   };
 
   return (
@@ -102,50 +107,77 @@ const ManageLocationsDialog: React.FC<ManageLocationsDialogProps> = ({
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" /> Manage Inventory Locations
+            <Folder className="h-6 w-6 text-primary" /> Manage Inventory Folders {/* Updated icon and title */}
           </DialogTitle>
           <DialogDescription>
-            Add, view, or remove your inventory storage locations.
+            Add, view, edit, or remove your inventory organization folders.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="newLocation">New Location Name</Label>
+            <Label htmlFor="newFolder">New Folder Name</Label> {/* Updated label */}
             <div className="flex gap-2">
               <Input
-                id="newLocation"
-                value={newLocationName}
-                onChange={(e) => setNewLocationName(e.target.value)}
-                placeholder="e.g., Main Warehouse, Shelf A"
+                id="newFolder"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="e.g., Main Warehouse, Electronics"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
-                    handleAddLocation();
+                    handleAddFolder();
                   }
                 }}
               />
-              <Button onClick={handleAddLocation}>
+              <Button onClick={handleAddFolder}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Add
               </Button>
             </div>
           </div>
 
-          {locations.length > 0 && (
+          {inventoryFolders.length > 0 && (
             <div className="space-y-2">
-              <Label>Existing Locations</Label>
-              <ul className="border border-border rounded-md p-3 bg-muted/20 max-h-40 overflow-y-auto">
-                {locations.map((loc) => ( // Iterate over Location objects
-                  <li key={loc.id} className="flex items-center justify-between py-1 text-foreground">
-                    <span>{loc.displayName || loc.fullLocationString}</span> {/* Display name or full string */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveLocationClick(loc)} // Pass full Location object
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <Label>Existing Folders</Label> {/* Updated label */}
+              <ScrollArea className="border border-border rounded-md p-3 bg-muted/20 max-h-40 overflow-y-auto">
+                <ul className="space-y-1">
+                  {inventoryFolders.map((folder) => ( // Iterate over InventoryFolder objects
+                    <li key={folder.id} className="flex items-center justify-between py-1 text-foreground">
+                      {folderToEdit?.id === folder.id ? (
+                        <Input
+                          value={editingFolderName}
+                          onChange={(e) => setEditingFolderName(e.target.value)}
+                          onBlur={handleSaveEditedFolder}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveEditedFolder();
+                            }
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <span>{folder.name}</span>
+                      )}
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditFolderClick(folder)}
+                          aria-label={`Edit folder ${folder.name}`}
+                        >
+                          <Edit className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFolderClick(folder)} // Pass full InventoryFolder object
+                          aria-label={`Remove folder ${folder.name}`}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
             </div>
           )}
         </div>
@@ -155,13 +187,13 @@ const ManageLocationsDialog: React.FC<ManageLocationsDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
-      {locationToDelete && (
+      {folderToDelete && (
         <ConfirmDialog
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
-          onConfirm={confirmRemoveLocation}
-          title="Confirm Location Deletion"
-          description={`Are you sure you want to delete the location "${locationToDelete.displayName || locationToDelete.fullLocationString}"? This cannot be undone.`}
+          onConfirm={confirmRemoveFolder}
+          title="Confirm Folder Deletion"
+          description={`Are you sure you want to delete the folder "${folderToDelete.name}"? This cannot be undone and will unassign all items within it.`}
           confirmText="Delete"
           cancelText="Cancel"
         />
@@ -170,4 +202,4 @@ const ManageLocationsDialog: React.FC<ManageLocationsDialogProps> = ({
   );
 };
 
-export default ManageLocationsDialog;
+export default ManageFoldersDialog; // Renamed export

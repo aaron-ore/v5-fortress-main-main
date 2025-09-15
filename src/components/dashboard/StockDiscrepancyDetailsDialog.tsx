@@ -17,7 +17,7 @@ import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface StockDiscrepancyDetailsDialogProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ interface DiscrepancyLog {
   organizationId: string;
   itemId: string;
   itemName: string;
-  locationString: string;
+  folderId: string; // Changed from locationString to folderId
   locationType: string;
   originalQuantity: number;
   countedQuantity: number;
@@ -43,7 +43,7 @@ interface DiscrepancyLog {
 
 const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps> = ({ isOpen, onClose, dateRange }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { locations: structuredLocations } = useOnboarding();
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [discrepancies, setDiscrepancies] = useState<DiscrepancyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -84,7 +84,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
         organizationId: log.organization_id,
         itemId: log.item_id,
         itemName: log.item_name,
-        locationString: log.location_string,
+        folderId: log.folder_id, // Updated to folderId
         locationType: log.location_type,
         originalQuantity: log.original_quantity,
         countedQuantity: log.counted_quantity,
@@ -109,9 +109,10 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
     return user?.fullName || user?.email || "Unknown User";
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+  // Function to get folder display name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   const getDisplayDateRange = () => {
@@ -188,10 +189,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
                           <Package className="h-4 w-4 text-primary" /> {discrepancy.itemName} (ID: {discrepancy.itemId})
                         </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-4 w-4" /> Location: {getLocationDisplayName(discrepancy.locationString)} ({discrepancy.locationType.replace('_', ' ')})
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Original: {discrepancy.originalQuantity}, Counted: {discrepancy.countedQuantity}, Difference: {discrepancy.difference}
+                          <MapPin className="h-4 w-4" /> Folder: {getFolderDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')}) {/* Updated to folderId */}
                         </p>
                         {discrepancy.reason && (
                           <p className="text-sm text-muted-foreground mt-1">
@@ -227,7 +225,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
           onClose={() => setIsConfirmDialogOpen(false)}
           onConfirm={confirmResolveDiscrepancy}
           title="Confirm Resolution"
-          description={`Are you sure you want to mark the discrepancy for "${discrepancyToResolve.itemName}" at "${getLocationDisplayName(discrepancyToResolve.locationString)}" as resolved?`}
+          description={`Are you sure you want to mark the discrepancy for "${discrepancyToResolve.itemName}" at "${getFolderDisplayName(discrepancyToResolve.folderId)}" as resolved?`} {/* Updated to folderId */}
           confirmText="Resolve"
           cancelText="Cancel"
         />

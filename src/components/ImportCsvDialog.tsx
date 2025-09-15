@@ -14,12 +14,12 @@ import { Download } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { showError, showSuccess } from "@/utils/toast";
 import { generateInventoryCsvTemplate } from "@/utils/csvGenerator";
 import DuplicateItemsWarningDialog from "@/components/DuplicateItemsWarningDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { parseLocationString } from "@/utils/locationParser";
+// Removed parseLocationString as it's not directly used for folders
 import { supabase } from "@/lib/supabaseClient";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import { useProfile } from "@/context/ProfileContext";
@@ -41,16 +41,16 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
 }) => {
   const { inventoryItems, refreshInventory } = useInventory();
   const {  } = useCategories(); // Removed categories and addCategory
-  const { locations, addLocation } = useOnboarding();
+  const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { profile } = useProfile();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [jsonDataToProcess, setJsonDataToProcess] = useState<any[] | null>(null);
 
-  // States for New Locations Confirmation
-  const [newLocationsToConfirm, setNewLocationsToConfirm] = useState<string[]>([]);
-  const [isConfirmNewLocationsDialogOpen, setIsConfirmNewLocationsDialogOpen] = useState(false);
+  // States for New Folders Confirmation
+  const [newFoldersToConfirm, setNewFoldersToConfirm] = useState<string[]>([]); // Renamed from newLocationsToConfirm
+  const [isConfirmNewFoldersDialogOpen, setIsConfirmNewFoldersDialogOpen] = useState(false); // Renamed
 
   // States for Duplicate SKUs Warning
   const [duplicateSkusInCsv, setDuplicateSkusInCsv] = useState<CsvDuplicateItem[]>([]);
@@ -62,12 +62,17 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     return new Set(inventoryItems.map(item => item.sku.toLowerCase()));
   }, [inventoryItems]);
 
+  // Memoize existing folder names for efficient lookup
+  const existingFolderNames = useMemo(() => {
+    return new Set(inventoryFolders.map(folder => folder.name.toLowerCase()));
+  }, [inventoryFolders]);
+
   useEffect(() => {
     if (isOpen) {
       setSelectedFile(null);
       setJsonDataToProcess(null);
-      setNewLocationsToConfirm([]);
-      setIsConfirmNewLocationsDialogOpen(false);
+      setNewFoldersToConfirm([]);
+      setIsConfirmNewFoldersDialogOpen(false);
       setDuplicateSkusInCsv([]);
       setIsDuplicateItemsWarningDialogOpen(false);
       setDuplicateAction("skip");
@@ -88,18 +93,15 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     }
   };
 
-  const checkForNewLocationsAndProceed = async (data: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => {
-    const uniqueLocationsInCsv = Array.from(new Set(data.map(row => String(row.location || '').trim())));
-    const uniquePickingBinLocationsInCsv = Array.from(new Set(data.map(row => String(row.pickingBinLocation || '').trim())));
-    const allUniqueLocationsInCsv = Array.from(new Set([...uniqueLocationsInCsv, ...uniquePickingBinLocationsInCsv]));
+  const checkForNewFoldersAndProceed = async (data: any[], actionForDuplicates: "skip" | "add_to_stock" | "update") => { // Renamed
+    const uniqueFolderNamesInCsv = Array.from(new Set(data.map(row => String(row.folderName || '').trim()))); // Changed from location to folderName
 
-    const existingLocationsLower = new Set(locations.map(loc => loc.fullLocationString.toLowerCase()));
-    const newLocations = allUniqueLocationsInCsv.filter(loc => loc && !existingLocationsLower.has(loc.toLowerCase()));
+    const newFolders = uniqueFolderNamesInCsv.filter(folderName => folderName && !existingFolderNames.has(folderName.toLowerCase())); // Check against existingFolderNames
 
-    if (newLocations.length > 0) {
-      setNewLocationsToConfirm(newLocations);
+    if (newFolders.length > 0) {
+      setNewFoldersToConfirm(newFolders);
       setDuplicateAction(actionForDuplicates);
-      setIsConfirmNewLocationsDialogOpen(true);
+      setIsConfirmNewFoldersDialogOpen(true);
       setIsUploading(false);
     } else {
       await invokeEdgeFunction(actionForDuplicates); // Removed dataToProcess
@@ -227,7 +229,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
           setDuplicateSkusInCsv(duplicates);
           setIsDuplicateItemsWarningDialogOpen(true);
         } else {
-          await checkForNewLocationsAndProceed(jsonData, "skip");
+          await checkForNewFoldersAndProceed(jsonData, "skip"); // Renamed
         }
 
       } catch (parseError: any) {
@@ -267,7 +269,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   const handleSkipAllDuplicates = async () => {
     setIsDuplicateItemsWarningDialogOpen(false);
     if (jsonDataToProcess) {
-      await checkForNewLocationsAndProceed(jsonDataToProcess, "skip");
+      await checkForNewFoldersAndProceed(jsonDataToProcess, "skip"); // Renamed
     } else {
       setIsUploading(false);
       setSelectedFile(null);
@@ -278,7 +280,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   const handleAddToExistingStock = async () => {
     setIsDuplicateItemsWarningDialogOpen(false);
     if (jsonDataToProcess) {
-      await checkForNewLocationsAndProceed(jsonDataToProcess, "add_to_stock");
+      await checkForNewFoldersAndProceed(jsonDataToProcess, "add_to_stock"); // Renamed
     } else {
       setIsUploading(false);
       setSelectedFile(null);
@@ -289,7 +291,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   const handleUpdateExisting = async () => {
     setIsDuplicateItemsWarningDialogOpen(false);
     if (jsonDataToProcess) {
-      await checkForNewLocationsAndProceed(jsonDataToProcess, "update");
+      await checkForNewFoldersAndProceed(jsonDataToProcess, "update"); // Renamed
     } else {
       setIsUploading(false);
       setSelectedFile(null);
@@ -307,38 +309,31 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
     onClose();
   };
 
-  const handleConfirmAddLocations = async () => {
-    setIsConfirmNewLocationsDialogOpen(false);
+  const handleConfirmAddFolders = async () => { // Renamed
+    setIsConfirmNewFoldersDialogOpen(false);
     setIsUploading(true);
 
-    for (const locString of newLocationsToConfirm) {
-      const parsed = parseLocationString(locString);
-      const newLocation: Omit<Location, "id" | "createdAt" | "userId" | "organizationId"> = {
-        fullLocationString: locString,
-        displayName: locString,
-        area: parsed.area || "N/A",
-        row: parsed.row || "N/A",
-        bay: parsed.bay || "N/A",
-        level: parsed.level || "N/A",
-        pos: parsed.pos || "N/A",
-        color: "#CCCCCC",
+    for (const folderName of newFoldersToConfirm) { // Iterate over folder names
+      const newFolder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId"> = { // Create InventoryFolder object
+        name: folderName,
+        color: "#CCCCCC", // Default color
       };
-      await addLocation(newLocation);
+      await addInventoryFolder(newFolder); // Use addInventoryFolder
     }
-    showSuccess(`Added new locations: ${newLocationsToConfirm.join(", ")}`);
+    showSuccess(`Added new folders: ${newFoldersToConfirm.join(", ")}`);
 
     if (jsonDataToProcess) {
       await invokeEdgeFunction(duplicateAction); // Removed jsonDataToProcess
     }
-    setNewLocationsToConfirm([]);
+    setNewFoldersToConfirm([]);
     setSelectedFile(null);
   };
 
-  const handleCancelAddLocations = () => {
-    setIsConfirmNewLocationsDialogOpen(false);
+  const handleCancelAddFolders = () => { // Renamed
+    setIsConfirmNewFoldersDialogOpen(false);
     setIsUploading(false);
     setJsonDataToProcess(null);
-    setNewLocationsToConfirm([]);
+    setNewFoldersToConfirm([]);
     setSelectedFile(null);
     showError("CSV upload cancelled.");
     onClose();
@@ -397,22 +392,22 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       />
 
       <ConfirmDialog
-        isOpen={isConfirmNewLocationsDialogOpen}
-        onClose={handleCancelAddLocations}
-        onConfirm={handleConfirmAddLocations}
-        title="New Locations Detected"
+        isOpen={isConfirmNewFoldersDialogOpen}
+        onClose={handleCancelAddFolders}
+        onConfirm={handleConfirmAddFolders}
+        title="New Folders Detected"
         description={
           <div>
-            <p>The following new inventory locations were found in your CSV:</p>
+            <p>The following new inventory folders were found in your CSV:</p>
             <ul className="list-disc list-inside mt-2 ml-4 text-left">
-              {newLocationsToConfirm.map((loc, _index) => (
-                <li key={_index} className="font-semibold">{loc}</li>
+              {newFoldersToConfirm.map((folderName, _index) => (
+                <li key={_index} className="font-semibold">{folderName}</li>
               ))}
             </ul>
-            <p>Would you like to add these to your available locations? Items with these locations will only be imported if confirmed.</p>
+            <p>Would you like to add these to your available folders? Items with these folders will only be imported if confirmed.</p>
           </div>
         }
-        confirmText="Add Locations & Continue"
+        confirmText="Add Folders & Continue"
         cancelText="Cancel Import"
       />
     </Dialog>

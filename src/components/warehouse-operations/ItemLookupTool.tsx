@@ -4,11 +4,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Barcode, Package, Tag, MapPin, Info, Image } from "lucide-react";
+import { Search, Barcode, Package, Tag, Folder, Info, Image } from "lucide-react"; // Changed MapPin to Folder
 import { useInventory } from "@/context/InventoryContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Import QR code generator
-import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
+import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface ItemLookupToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -18,7 +18,7 @@ interface ItemLookupToolProps {
 
 const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems } = useInventory();
-  const { locations: structuredLocations } = useOnboarding(); // NEW: Get structured locations
+  const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null); // State for QR code SVG
@@ -98,9 +98,10 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
     showSuccess(`Selected item: ${item.name}`);
   };
 
-  const getLocationDisplayName = (fullLocationString: string) => {
-    const foundLoc = structuredLocations.find(loc => loc.fullLocationString === fullLocationString);
-    return foundLoc?.displayName || fullLocationString;
+  // Function to get folder display name
+  const getFolderDisplayName = (folderId: string) => {
+    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   return (
@@ -173,8 +174,8 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
                 <span className="font-semibold">SKU:</span> {selectedItem.sku}
               </p>
               <p className="flex items-center gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">Location:</span> {getLocationDisplayName(selectedItem.location)}
+                <Folder className="h-4 w-4 text-muted-foreground" /> {/* Updated icon */}
+                <span className="font-semibold">Folder:</span> {getFolderDisplayName(selectedItem.folderId)} {/* Updated to folderId */}
               </p>
               <p className="flex items-center gap-2 text-sm">
                 <Info className="h-4 w-4 text-muted-foreground" />
