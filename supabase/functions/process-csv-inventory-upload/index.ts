@@ -1,8 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-// Removed: import { corsHeaders } from '../_shared/cors.ts';
-
 // Inlined corsHeaders definition to resolve module import error
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -77,7 +75,7 @@ serve(async (req) => {
     const itemsToUpdate: any[] = [];
     const errors: string[] = [];
 
-    -- Fetch existing categories, folders, and inventory items for validation and updates
+    // Fetch existing categories, folders, and inventory items for validation and updates
     const { data: existingCategories, error: catError } = await supabaseAdmin
       .from('categories')
       .select('id, name')
