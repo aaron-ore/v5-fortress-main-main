@@ -172,6 +172,50 @@
 
     --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
   }
+
+  /* NEW: Deep Forest Light Theme Palette */
+  html.deep-forest-light {
+    --background: 240 10% 98%; /* Very light grey/blue */
+    --foreground: 240 9% 11%; /* Original deep-forest background */
+
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 240 9% 11%;
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 9% 11%;
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+
+    --primary: 168 43% 40%; /* Darker teal for contrast */
+    --primary-foreground: 0 0% 100%; /* White text on dark primary */
+
+    --secondary: 240 6% 80%; /* Light muted purple-grey */
+    --secondary-foreground: 240 9% 11%;
+
+    --muted: 240 5% 90%; /* Very light grey for muted elements */
+    --muted-foreground: 240 5% 40%; /* Darker grey for muted text */
+
+    --accent: 270 29% 60%; /* Lighter dark purple */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
+
+    --destructive: 0 80% 40%; /* Standard red for light theme */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 80%; /* Light grey border */
+    --input: 240 10% 95%; /* Slightly darker than background for input */
+    --ring: 168 43% 40%; /* Primary color */
+
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-active-background: var(--secondary);
+    --sidebar-active-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-toggle-background: var(--secondary);
+
+    --scrollbar-background: 240 5% 85%;
+
+    --shadow-color: hsl(0 0% 0% / 0.08);
+  }
 }
 
 @layer base {

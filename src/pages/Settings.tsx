@@ -171,7 +171,7 @@ const Settings: React.FC = () => {
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
   const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
 
-  const availableThemes = ['dark', 'emerald', 'deep-forest'];
+  const availableThemes = ['dark', 'emerald', 'deep-forest', 'deep-forest-light'];
 
   return (
     <div className="flex flex-col space-y-6 p-6">
@@ -213,6 +213,8 @@ const Settings: React.FC = () => {
               id="companyAddress"
               value={companyAddress}
               onChange={(e) => setCompanyAddress(e.target.value)}
+              placeholder="123 Business Rd, Suite 100, City, State, Zip"
+              rows={3}
             />
           </div>
           <div className="space-y-2">
