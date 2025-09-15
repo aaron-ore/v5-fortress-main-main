@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"; // Corrected import for useEffect and useRef
+import { useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -65,6 +65,7 @@ import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext";
 import Automation from "./pages/Automation";
 import ItemHistoryPage from "./pages/ItemHistoryPage";
+import FolderContentPage from "./pages/FolderContentPage"; // NEW: Import FolderContentPage
 import { Loader2 } from "lucide-react";
 
 
@@ -106,6 +107,7 @@ const AuthenticatedApp = () => {
                             <Route path="setup-instructions" element={<SetupInstructions />} />
                             <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
                             <Route path="folders" element={<Folders />} />
+                            <Route path="folders/:folderId" element={<FolderContentPage />} /> {/* NEW: Route for folder content */}
                             <Route path="integrations" element={<Integrations />} />
                             <Route path="automation" element={<Automation />} />
                             <Route path="*" element={<NotFound />} />

@@ -26,6 +26,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showSuccess } from "@/utils/toast";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
 import ManageFoldersDialog from "@/components/ManageLocationsDialog"; // Renamed import
@@ -39,7 +40,7 @@ import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDia
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import { useSidebar } from "@/context/SidebarContext";
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: any[]): ColumnDef<InventoryItem>[] => [ // Updated structuredLocations to inventoryFolders
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: any[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [ // Updated structuredLocations to inventoryFolders, added navigateToFolder
   {
     accessorKey: "name",
     header: "Item Name",
@@ -76,7 +77,11 @@ export const createInventoryColumns = (handleQuickView: (item: InventoryItem) =>
     cell: ({ row }) => {
       const folderId = row.original.folderId;
       const foundFolder = inventoryFolders.find(folder => folder.id === folderId); // Find folder by ID
-      return foundFolder?.name || "Unassigned"; // Display folder name
+      return (
+        <Button variant="link" className="p-0 h-auto text-left font-medium hover:underline" onClick={() => navigateToFolder(folderId)}>
+          {foundFolder?.name || "Unassigned"} {/* Display folder name */}
+        </Button>
+      );
     },
   },
   {
@@ -116,6 +121,7 @@ const Inventory: React.FC = () => {
   const { vendors } = useVendors();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const { isCollapsed } = useSidebar();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
@@ -194,7 +200,11 @@ const Inventory: React.FC = () => {
     showSuccess(`Create order for ${item.name} (placeholder)`);
   }, []);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders), [handleQuickView, inventoryFolders]); // Updated structuredLocations to inventoryFolders
+  const navigateToFolder = useCallback((folderId: string) => {
+    navigate(`/folders/${folderId}`);
+  }, [navigate]);
+
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
 
   return (
     <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root">
@@ -207,17 +217,7 @@ const Inventory: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Select value={folderFilter} onValueChange={setFolderFilter}> {/* Changed from locationFilter to folderFilter */}
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Folders" /> {/* Updated placeholder */}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Folders</SelectItem> {/* Updated text */}
-            {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
-              <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem> // Display folder name
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Removed folderFilter dropdown as navigation will handle filtering by folder */}
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="All Categories" />
@@ -277,14 +277,15 @@ const Inventory: React.FC = () => {
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Current Stock</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
+            {/* Moved Manage Folders button here */}
+            <Button variant="outline" onClick={() => setIsManageFoldersDialogOpen(true)} size="sm">
+              <Folder className="h-4 w-4 mr-2" /> Manage Folders
+            </Button>
             <Button onClick={() => setIsAddInventoryDialogOpen(true)} size="sm">
               <PlusCircle className="h-4 w-4 mr-2" /> Add New Item
             </Button>
             <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
               Manage Categories
-            </Button>
-            <Button variant="outline" onClick={() => setIsManageFoldersDialogOpen(true)} size="sm"> {/* Renamed state */}
-              <Folder className="h-4 w-4 mr-2" /> Manage Folders {/* Updated icon and text */}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

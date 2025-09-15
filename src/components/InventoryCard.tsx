@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 interface InventoryCardProps {
   item: InventoryItem;
@@ -24,6 +25,7 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   isSidebarCollapsed,
 }) => {
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const navigate = useNavigate(); // Initialize useNavigate
 
   let statusVariant: "success" | "warning" | "destructive" | "info" | "muted" = "info";
   switch (item.status) {
@@ -42,6 +44,10 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   const getFolderDisplayName = (folderId: string) => {
     const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
     return foundFolder?.name || "Unknown Folder";
+  };
+
+  const handleFolderClick = (folderId: string) => {
+    navigate(`/folders/${folderId}`);
   };
 
   return (
@@ -71,7 +77,9 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
             <Tag className="h-3 w-3" /> SKU: {item.sku}
           </p>
           <p className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" /> Folder: {getFolderDisplayName(item.folderId)} {/* Updated to folderId */}
+            <Button variant="link" className="p-0 h-auto text-left text-muted-foreground hover:text-primary" onClick={() => handleFolderClick(item.folderId)}>
+              <MapPin className="h-3 w-3 mr-1" /> Folder: {getFolderDisplayName(item.folderId)} {/* Updated to folderId */}
+            </Button>
           </p>
         </div>
         <div className="flex items-baseline justify-between mt-3 flex-shrink-0">
