@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DefaultDashboardContent from "./DefaultDashboardContent";
 import ClassicDashboard from "./ClassicDashboard";
 // Removed DateRange and setDateRange as they are not used in this component

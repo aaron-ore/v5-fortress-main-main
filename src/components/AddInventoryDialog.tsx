@@ -276,6 +276,15 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     }
   };
 
+  // Define these variables here so they are in scope for isFormInvalid
+  const parsedPickingBinQuantity = parseInt(pickingBinQuantity || '0');
+  const parsedOverstockQuantity = parseInt(overstockQuantity || '0');
+  const parsedReorderLevel = parseInt(reorderLevel || '0');
+  const parsedPickingReorderLevel = parseInt(pickingReorderLevel || '0');
+  const parsedUnitCost = parseFloat(unitCost || '0');
+  const parsedRetailPrice = parseFloat(retailPrice || '0');
+  const parsedAutoReorderQuantity = parseInt(autoReorderQuantity || '0');
+
   const areMainLocationPartsMissing = viewMode === "detailed" && (!mainLocationParts.area || !mainLocationParts.row || !mainLocationParts.bay || !mainLocationParts.level || !mainLocationParts.pos);
   const arePickingBinLocationPartsMissing = viewMode === "detailed" && (!pickingBinLocationParts.area || !pickingBinLocationParts.row || !pickingBinLocationParts.bay || !pickingBinLocationParts.level || !pickingBinLocationParts.pos);
 
@@ -283,19 +292,17 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !itemName.trim() ||
     !sku.trim() ||
     !category.trim() ||
-    !unitCost ||
-    !retailPrice ||
-    (viewMode === "simple" && (!simpleQuantity || isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) ||
-    (viewMode === "detailed" && (isNaN(finalPickingBinQuantity) || finalPickingBinQuantity < 0 || isNaN(finalOverstockQuantity) || finalOverstockQuantity < 0)) ||
-    !reorderLevel || isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0 ||
-    (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
-    isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
-    isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
+    isNaN(parsedUnitCost) || parsedUnitCost < 0 ||
+    isNaN(parsedRetailPrice) || parsedRetailPrice < 0 ||
+    (viewMode === "simple" && (isNaN(parseInt(simpleQuantity || '0')) || parseInt(simpleQuantity || '0') < 0)) ||
+    (viewMode === "detailed" && (isNaN(parsedPickingBinQuantity) || parsedPickingBinQuantity < 0 || isNaN(parsedOverstockQuantity) || parsedOverstockQuantity < 0)) ||
+    isNaN(parsedReorderLevel) || parsedReorderLevel < 0 ||
+    (viewMode === "detailed" && (isNaN(parsedPickingReorderLevel) || parsedPickingReorderLevel < 0)) ||
     (viewMode === "detailed" && locations.length === 0) ||
     (viewMode === "detailed" && areMainLocationPartsMissing) ||
     (viewMode === "detailed" && arePickingBinLocationPartsMissing) ||
     categories.length === 0 ||
-    (autoReorderEnabled && (parseInt(autoReorderQuantity || '0') <= 0 || isNaN(parseInt(autoReorderQuantity || '0')))) ||
+    (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity))) ||
     isUploadingImage;
 
   return (

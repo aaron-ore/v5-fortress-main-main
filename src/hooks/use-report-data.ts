@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react"; // Removed useMemo as it was unused
+import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns"; // Removed subMonths, subDays, startOfMonth
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext"; // Added POItem
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext"; // Added StockMovement
+import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";

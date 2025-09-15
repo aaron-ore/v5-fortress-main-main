@@ -197,6 +197,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
     try {
       await addOrder(newSalesOrder);
       navigate("/orders");
+      onClose(); // Close the dialog after successful submission
     } catch (error) {
       // Error handling is already in addOrder context function
     }

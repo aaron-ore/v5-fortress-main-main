@@ -1,4 +1,4 @@
-import React, { useState,  useMemo } from "react"; // Removed useEffect
+import React, { useState,  useEffect, useMemo } from "react"; // Removed useEffect
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,11 +71,11 @@ const ClassicDashboard: React.FC = () => {
   const { metrics, lists } = dashboardData;
 
   // Combine recent sales and purchase orders for a generic "Recent Orders" list
-  const recentOrders = [...lists.recentSalesOrders, ...lists.recentPurchaseOrders].sort((a, b) => {
+  const recentOrders = useMemo(() => [...lists.recentSalesOrders, ...lists.recentPurchaseOrders].sort((a, b) => {
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
     return dateB.getTime() - dateA.getTime();
-  });
+  }), [lists.recentSalesOrders, lists.recentPurchaseOrders]);
 
   return (
     <div className="space-y-6">
