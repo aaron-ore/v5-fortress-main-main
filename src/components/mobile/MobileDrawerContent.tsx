@@ -15,7 +15,6 @@ import { useProfile } from "@/context/ProfileContext";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-// Removed unused import: useOnboarding
 
 interface MobileDrawerContentProps {
   onLinkClick: () => void;

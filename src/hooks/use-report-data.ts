@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
+import { useStockMovement } from "@/context/StockMovementContext";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { useOnboarding, Location } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
@@ -73,7 +73,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
     let currentProcessedData: any = null;
     let currentPdfProps: any = { ...basePdfProps };
-    let printType: PrintContentData['type'] = reportId as PrintContentData['type'];
+    // let printType: PrintContentData['type'] = reportId as PrintContentData['type']; // Removed unused variable
 
     try {
       switch (reportId) {

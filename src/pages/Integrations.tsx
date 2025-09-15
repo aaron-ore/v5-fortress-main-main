@@ -469,7 +469,6 @@ const Integrations: React.FC = () => {
 
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isShopifyConnected = profile?.shopifyAccessToken && profile?.shopifyStoreName;
-  // Removed isAdmin as it's not used
 
   if (isLoadingProfile) {
     return (

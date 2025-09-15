@@ -7,24 +7,24 @@ import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext";
 
 interface DashboardSummaryPdfContentProps {
+  reportDate: string;
   totalStockValue: number;
   totalUnitsOnHand: number;
   lowStockItems: InventoryItem[];
   outOfStockItems: InventoryItem[];
   recentSalesOrders: OrderItem[];
   recentPurchaseOrders: OrderItem[];
-  reportDate: string;
   dateRange?: DateRange;
 }
 
 const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
+  reportDate,
   totalStockValue,
   totalUnitsOnHand,
   lowStockItems,
   outOfStockItems,
   recentSalesOrders,
   recentPurchaseOrders,
-  reportDate,
   dateRange,
 }) => {
   const { profile } = useProfile();

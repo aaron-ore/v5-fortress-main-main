@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useStockMovement } from "@/context/StockMovementContext";
 import { useVendors } from "@/context/VendorContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { showError } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -716,7 +716,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingProfile,
     inventoryItems, orders, stockMovements, vendors, profile, structuredLocations, dateRange,
     pendingDiscrepanciesCount, previousPeriodDiscrepanciesCount, dailyIssuesCount, previousPeriodIssuesCount,
-    filterDataByDateRange, refresh
+    filterDataByDateRange, refreshTrigger
   ]);
 
   useEffect(() => {

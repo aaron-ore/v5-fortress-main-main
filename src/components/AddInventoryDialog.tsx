@@ -24,7 +24,6 @@ import { useProfile } from "@/context/ProfileContext";
 import { Link } from "react-router-dom";
 import { buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import CustomFileInput from "@/components/CustomFileInput";
 
 interface AddInventoryDialogProps {
@@ -283,13 +282,15 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !itemName.trim() ||
     !sku.trim() ||
     !category.trim() ||
+    !unitCost ||
+    !retailPrice ||
     (viewMode === "simple" && (!simpleQuantity || isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) ||
     (viewMode === "detailed" && (!pickingBinQuantity || isNaN(parseInt(pickingBinQuantity)) || parseInt(pickingBinQuantity) < 0)) ||
     (viewMode === "detailed" && (!overstockQuantity || isNaN(parseInt(overstockQuantity)) || parseInt(overstockQuantity) < 0)) ||
     !reorderLevel || isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0 ||
     (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
-    !unitCost || isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
-    !retailPrice || isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
+    isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
+    isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
     (viewMode === "detailed" && locations.length === 0) ||
     (viewMode === "detailed" && areMainLocationPartsMissing) ||
     (viewMode === "detailed" && arePickingBinLocationPartsMissing) ||
