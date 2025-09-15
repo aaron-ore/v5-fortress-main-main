@@ -19,7 +19,7 @@ interface InventoryMovementReportProps {
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
   movements: movementsToDisplay,
   allProfiles,
-  structuredLocations,
+  // Removed structuredLocations as it's not used in this component
 }) => {
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);

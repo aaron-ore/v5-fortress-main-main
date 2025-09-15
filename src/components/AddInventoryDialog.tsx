@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { buildLocationString, getUniqueLocationParts, LocationParts } from "@/utils/locationParser";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
+import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import uploadFileToSupabase
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -285,8 +286,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !unitCost ||
     !retailPrice ||
     (viewMode === "simple" && (!simpleQuantity || isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) ||
-    (viewMode === "detailed" && (!pickingBinQuantity || isNaN(parseInt(pickingBinQuantity)) || parseInt(pickingBinQuantity) < 0)) ||
-    (viewMode === "detailed" && (!overstockQuantity || isNaN(parseInt(overstockQuantity)) || parseInt(overstockQuantity) < 0)) ||
+    (viewMode === "detailed" && (isNaN(finalPickingBinQuantity) || finalPickingBinQuantity < 0 || isNaN(finalOverstockQuantity) || finalOverstockQuantity < 0)) ||
     !reorderLevel || isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0 ||
     (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
     isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||

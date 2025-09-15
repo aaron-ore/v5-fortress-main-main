@@ -8,11 +8,10 @@ import EditWalletBalanceDialog from "./EditWalletBalanceDialog"; // Import the n
 
 interface WalletCardProps {
   totalStockValue: number;
-  totalIncome: number;
-  totalLosses: number;
+  // Removed totalIncome and totalLosses as they are not used in this component
 }
 
-const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue, totalIncome, totalLosses }) => {
+const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => { // Removed totalIncome and totalLosses from destructuring
   const navigate = useNavigate();
 
   // Initial simulated cash balance if nothing is in local storage

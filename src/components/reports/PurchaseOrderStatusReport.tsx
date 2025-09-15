@@ -15,7 +15,7 @@ interface PurchaseOrderStatusReportProps {
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
   orders: ordersToDisplay,
-  statusFilter: currentStatusFilter,
+  // Removed statusFilter: currentStatusFilter as it's not used in this component
 }) => {
   const totalOrders = ordersToDisplay.length;
   const totalAmount = ordersToDisplay.reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);

@@ -1,9 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { format } from "date-fns";
 import { Package, Receipt, AlertTriangle, DollarSign } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { parseAndValidateDate } from "@/utils/dateUtils";
 
 // Props now directly reflect the processed data from useReportData
 interface DashboardSummaryReportProps {

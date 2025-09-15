@@ -68,7 +68,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
   const { vendors, isLoadingVendors, refreshVendors } = useVendors();
-  const { profile, isLoadingProfile, fetchAllProfiles, allProfiles } = useProfile();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile(); // Removed allProfiles from destructuring
   const { locations: structuredLocations, fetchLocations } = useOnboarding();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -550,15 +550,6 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         };
       });
 
-      inventoryItems.forEach(item => {
-        if (locationMetrics[item.location]) {
-          locationMetrics[item.location].currentStock += item.quantity;
-        }
-        if (item.pickingBinLocation && item.pickingBinLocation !== item.location && locationMetrics[item.pickingBinLocation]) {
-          locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity;
-        }
-      });
-
       stockMovements.forEach(movement => {
         const item = inventoryItems.find(inv => inv.id === movement.itemId);
         if (item) {
@@ -571,6 +562,15 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
               locationMetrics[movementLocation].netChange -= movement.amount;
             }
           }
+        }
+      });
+
+      inventoryItems.forEach(item => {
+        if (locationMetrics[item.location]) {
+          locationMetrics[item.location].currentStock += item.quantity;
+        }
+        if (item.pickingBinLocation && item.pickingBinLocation !== item.location && locationMetrics[item.pickingBinLocation]) {
+          locationMetrics[item.pickingBinLocation].currentStock += item.pickingBinQuantity;
         }
       });
 

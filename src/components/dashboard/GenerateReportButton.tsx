@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import { usePrint } from "@/context/PrintContext";
 import { showError } from "@/utils/toast";
-import { format, isValid } from "date-fns";
+import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { useProfile } from "@/context/ProfileContext"; // Corrected path
 import { InventoryItem } from "@/context/InventoryContext";

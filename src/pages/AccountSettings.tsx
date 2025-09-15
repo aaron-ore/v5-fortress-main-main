@@ -11,7 +11,7 @@ import { showSuccess } from "@/utils/toast";
 import { useProfile } from "@/context/ProfileContext";
 
 const AccountSettings: React.FC = () => {
-  const { setTheme } = useTheme();
+  const {  } = useTheme(); // Removed setTheme from destructuring
   const { profile } = useProfile();
 
   const [currentPassword, setCurrentPassword] = useState("");

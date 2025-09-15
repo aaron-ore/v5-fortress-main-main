@@ -155,6 +155,7 @@ const AppContent = () => {
       navigate('/integrations', { replace: true });
     }
 
+    // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
@@ -162,7 +163,7 @@ const AppContent = () => {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
       shopifyCallbackProcessedRef.current = true;
-      navigate('/integrations', { replace: true });
+      navigate(location.pathname, { replace: true });
     }
   }, [location.search, location.pathname, navigate]);
 
@@ -243,7 +244,7 @@ const AppContent = () => {
         {mainAppRoutes}
       </div>
 
-      {isPrinting && (
+      {isPrinting && printContentData && ( // Add check for printContentData
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
           {renderPdfComponent()}
         </PrintWrapper>

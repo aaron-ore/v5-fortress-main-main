@@ -15,7 +15,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -449,4 +448,4 @@ const CreateInvoice: React.FC = () => {
   );
 };
 
-export default CreateInvoice;
+export default AddOrderForm;

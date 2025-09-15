@@ -15,12 +15,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Trash2, Printer, PackageOpen } from "lucide-react";
+import { PlusCircle, Printer, PackageOpen } from "lucide-react"; // Removed Trash2
 import { showError } from "@/utils/toast";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { formatPhoneNumber } from "@/utils/formatters";
@@ -171,7 +170,7 @@ const CreatePurchaseOrder: React.FC = () => {
   };
 
   const handlePrintPdf = () => {
-    if (!poNumber || !supplierName || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
+    if (!poNumber || !supplierName || items.some(item => !item.itemName || item.quantity <= 0 || item.unitPrice <= 0)) {
       showError("Please fill in all required PO details before generating the PDF.");
       return;
     }

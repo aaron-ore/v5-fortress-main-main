@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { PlusCircle, Edit, Archive, Eye, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
+import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react"; // Removed Edit, Archive, Eye, Link
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/ui/data-table";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders } from "@/context/OrdersContext"; // Removed OrderItem
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import {

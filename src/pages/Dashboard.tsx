@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DefaultDashboardContent from "./DefaultDashboardContent";
 import ClassicDashboard from "./ClassicDashboard";
-import { DateRange } from "react-day-picker"; // Import DateRange
+// Removed DateRange and setDateRange as they are not used in this component
 
 const Dashboard: React.FC = () => {
   const [dashboardView, setDashboardView] = useState<"default" | "classic">("default");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // State for date range
+  // Removed dateRange and setDateRange as they are not used in this component
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

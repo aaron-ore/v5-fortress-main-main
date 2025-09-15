@@ -15,13 +15,12 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Trash2, Archive, Printer } from "lucide-react";
+import { PlusCircle, Archive, Printer } from "lucide-react"; // Removed Trash2
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import ConfirmDialog from "@/components/ConfirmDialog";

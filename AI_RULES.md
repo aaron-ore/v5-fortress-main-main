@@ -23,9 +23,7 @@ Available packages and libraries:
 To ensure code quality and prevent common errors, adhere to the following practices:
 
 1.  **Leverage Linting and Static Analysis Tools:** Utilize tools like ESLint to catch unused imports, unused variables, and potential code quality issues early in the development cycle. Integrate these tools into the workflow to enforce consistent code style and identify problems before they lead to build failures.
-
 2.  **Strict TypeScript Configuration:** Maintain a strict TypeScript configuration (`"strict": true` in `tsconfig.json`) to enforce robust type checking. This helps catch type mismatches and related errors at compile time, significantly reducing runtime bugs.
-
 3.  **Thorough Code Reviews:** Encourage comprehensive code reviews to identify issues that automated tools might miss. Code reviews provide an opportunity for peer feedback, knowledge sharing, and ensuring adherence to best practices.
-
 4.  **Understand Library APIs and Types:** When using third-party libraries, always consult their official documentation and TypeScript definitions. Understand the expected types for props, event handlers, and return values to ensure correct integration and prevent type-related errors. In rare cases where a library's type definition is overly strict, use type assertions judiciously and with clear justification.
+5.  **Eliminate Unused Code:** Regularly review and remove unused imports, variables, functions, and components. This reduces bundle size, improves readability, and prevents potential confusion or dead code.

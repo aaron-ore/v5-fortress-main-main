@@ -23,23 +23,23 @@ import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
 import { FilterX, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2 and AlertTriangle
 import { useDashboardData } from "@/hooks/use-dashboard-data"; // NEW: Import the new hook
-import LiveMetricsCard from "@/components/dashboard/LiveMetricsCard"; // Import LiveMetricsCard
-import OpenPurchaseOrdersCard from "@/components/dashboard/OpenPurchaseOrdersCard";
-import PendingInvoicesCard from "@/components/dashboard/PendingInvoicesCard";
-import LowStockAlertsCard from "@/components/dashboard/LowStockAlertsCard";
-import RecentShipmentsCard from "@/components/dashboard/RecentShipmentsCard";
-import StockOnHandCard from "@/components/dashboard/StockOnHandCard";
-import SupplierPerformanceCard from "@/components/dashboard/SupplierPerformanceCard";
-import InventoryTurnoverRateCard from "@/components/dashboard/InventoryTurnoverRateCard";
-import SalesInventoryTrendCard from "@/components/dashboard/SalesInventoryTrendCard";
-import DemandForecastCard from "@/components/dashboard/DemandForecastCard";
-import ProfitabilityMetricsCard from "@/components/dashboard/ProfitabilityMetricsCard";
-import RecentOrdersCard from "@/components/dashboard/RecentOrdersCard";
-import OverviewBarChart from "@/components/dashboard/OverviewBarChart";
-import WeeklyRevenueBarChart from "@/components/dashboard/WeeklyRevenueBarChart";
-import SalesOverviewChart from "@/components/dashboard/SalesOverviewChart";
-import OutOfStockItemsCard from "@/components/dashboard/OutOfStockItemsCard";
-import SlowMovingDeadstockCard from "@/components/dashboard/SlowMovingDeadstockCard";
+// Removed LiveMetricsCard
+// Removed OpenPurchaseOrdersCard
+// Removed PendingInvoicesCard
+// Removed LowStockAlertsCard
+// Removed RecentShipmentsCard
+// Removed StockOnHandCard
+// Removed SupplierPerformanceCard
+// Removed InventoryTurnoverRateCard
+// Removed SalesInventoryTrendCard
+// Removed DemandForecastCard
+// Removed ProfitabilityMetricsCard
+// Removed RecentOrdersCard
+// Removed OverviewBarChart
+// Removed WeeklyRevenueBarChart
+// Removed SalesOverviewChart
+// Removed OutOfStockItemsCard
+// Removed SlowMovingDeadstockCard
 
 
 const DefaultDashboardContent: React.FC = () => {
@@ -123,8 +123,7 @@ const DefaultDashboardContent: React.FC = () => {
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
           <WalletCard
             totalStockValue={metrics.totalStockValue}
-            totalIncome={metrics.totalIncome}
-            totalLosses={metrics.totalLosses}
+            // Removed totalIncome and totalLosses as they are not used in WalletCard
           />
           <LossesCard
             totalLosses={metrics.totalLosses}
@@ -176,18 +175,23 @@ const DefaultDashboardContent: React.FC = () => {
 
         {/* NEW Row 4: Operational Overview Cards */}
         <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <OpenPurchaseOrdersCard
-            openPurchaseOrders={lists.openPurchaseOrders}
-          />
-          <PendingInvoicesCard
-            pendingInvoices={lists.pendingInvoices}
-          />
-          <LowStockAlertsCard
-            lowStockItems={lists.lowStockItems}
-          />
-          <RecentShipmentsCard
-            recentShipments={lists.recentShipments}
-          />
+          {/* Removed LiveMetricsCard */}
+          {/* Removed OpenPurchaseOrdersCard */}
+          {/* Removed PendingInvoicesCard */}
+          {/* Removed LowStockAlertsCard */}
+          {/* Removed RecentShipmentsCard */}
+          {/* Removed StockOnHandCard */}
+          {/* Removed SupplierPerformanceCard */}
+          {/* Removed InventoryTurnoverRateCard */}
+          {/* Removed SalesInventoryTrendCard */}
+          {/* Removed DemandForecastCard */}
+          {/* Removed ProfitabilityMetricsCard */}
+          {/* Removed RecentOrdersCard */}
+          {/* Removed OverviewBarChart */}
+          {/* Removed WeeklyRevenueBarChart */}
+          {/* Removed SalesOverviewChart */}
+          {/* Removed OutOfStockItemsCard */}
+          {/* Removed SlowMovingDeadstockCard */}
         </div>
       </div>
 
