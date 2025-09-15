@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,13 +18,14 @@ import FolderCard from "@/components/inventory/FolderCard"; // Import FolderCard
 import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Import FolderLabelGenerator
 import AddInventoryDialog from "@/components/AddInventoryDialog"; // Import AddInventoryDialog
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-
+import { useProfile } from "@/context/ProfileContext"; // FIXED: Import useProfile
 
 const FolderContentPage: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
   const { inventoryItems, deleteInventoryItem, isLoadingInventory, refreshInventory } = useInventory();
-  const { inventoryFolders, isLoadingProfile, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
+  const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
+  const { isLoadingProfile } = useProfile(); // FIXED: Get isLoadingProfile from useProfile
   const { isCollapsed } = useSidebar();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,7 +90,7 @@ const FolderContentPage: React.FC = () => {
   const confirmDeleteItem = async () => {
     if (itemToDelete) {
       await deleteInventoryItem(itemToDelete.id);
-      refreshInventory();
+      refreshInventory(); // Refresh to update the list after deletion
     }
     setIsConfirmDeleteItemDialogOpen(false);
     setItemToDelete(null);

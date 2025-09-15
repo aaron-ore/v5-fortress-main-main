@@ -8,8 +8,8 @@ import { showSuccess } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import LocationLabelGenerator from "@/components/LocationLabelGenerator"; // This component will remain for physical labels
-import FolderInventoryViewDialog from "@/components/LocationInventoryViewDialog"; // Renamed import
+import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // FIXED: Corrected import path
+import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // FIXED: Corrected import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Folders = () => { // Renamed component and removed React.FC
@@ -19,7 +19,7 @@ const Folders = () => { // Renamed component and removed React.FC
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // Updated type
 
-  const [isLocationLabelGeneratorOpen, setIsLocationLabelGeneratorOpen] = useState(false);
+  const [isFolderLabelGeneratorOpen, setIsFolderLabelGeneratorOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null); // Updated type
 
   const [isFolderInventoryViewDialogOpen, setIsFolderInventoryViewDialogOpen] = useState(false); // Renamed state
@@ -27,12 +27,12 @@ const Folders = () => { // Renamed component and removed React.FC
 
   const handleAddFolderClick = () => { // Renamed
     setFolderToEdit(null);
-    setIsLocationLabelGeneratorOpen(true); // Reusing the label generator for folder details
+    setIsFolderLabelGeneratorOpen(true); // Reusing the label generator for folder details
   };
 
   const handleEditFolderClick = (folder: InventoryFolder) => { // Renamed
     setFolderToEdit(folder);
-    setIsLocationLabelGeneratorOpen(true); // Reusing the label generator for folder details
+    setIsFolderLabelGeneratorOpen(true); // Reusing the label generator for folder details
   };
 
   const handleDeleteFolderClick = (folder: InventoryFolder) => { // Renamed
@@ -63,7 +63,7 @@ const Folders = () => { // Renamed component and removed React.FC
     } else if (folderToEdit) {
       await updateInventoryFolder({ ...folderToEdit, ...newFolderData }); // Updated context function
     }
-    setIsLocationLabelGeneratorOpen(false);
+    setIsFolderLabelGeneratorOpen(false);
   };
 
   const handleGenerateAndPrintFromGenerator = (labelsToPrint: PrintContentData[]) => {
@@ -161,7 +161,7 @@ const Folders = () => { // Renamed component and removed React.FC
       )}
 
       {/* Location Label Generator Dialog (repurposed for folder labels) */}
-      <Dialog open={isLocationLabelGeneratorOpen} onOpenChange={setIsLocationLabelGeneratorOpen}>
+      <Dialog open={isFolderLabelGeneratorOpen} onOpenChange={setIsFolderLabelGeneratorOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{folderToEdit ? "Edit Folder & Generate Labels" : "Add New Folder & Generate Labels"}</DialogTitle> {/* Updated title */}
@@ -169,11 +169,10 @@ const Folders = () => { // Renamed component and removed React.FC
               {folderToEdit ? "Update details for this folder and generate new labels." : "Define a new folder and generate scannable QR code labels."} {/* Updated description */}
             </DialogDescription>
           </DialogHeader>
-          <LocationLabelGenerator
-            initialLocation={folderToEdit}
+          <FolderLabelGenerator
+            initialFolder={folderToEdit}
             onSave={handleSaveFolder}
-            onGenerateAndPrint={handleGenerateAndPrintFromGenerator}
-            onClose={() => setIsLocationLabelGeneratorOpen(false)}
+            onClose={() => setIsFolderLabelGeneratorOpen(false)}
           />
         </DialogContent>
       </Dialog>

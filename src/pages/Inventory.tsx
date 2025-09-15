@@ -29,7 +29,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import ManageFoldersDialog from "@/components/ManageLocationsDialog";
+import ManageFoldersDialog from "@/components/ManageFoldersDialog"; // FIXED: Corrected import path
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import BulkUpdateDialog from "@/components/BulkUpdateDialog";
@@ -130,6 +130,7 @@ const Inventory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isManageCategoriesDialogOpen, setIsManageCategoriesDialogOpen] = useState(false);
+  const [isManageFoldersDialogOpen, setIsManageFoldersDialogOpen] = useState(false); // Renamed state
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [isBulkUpdateDialogOpen, setIsBulkUpdateDialogOpen] = useState(false);
   const [isImportCsvDialogOpen, setIsImportCsvDialogOpen] = useState(false);
@@ -176,7 +177,7 @@ const Inventory: React.FC = () => {
           item.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (inventoryFolders.find(f => f.id === item.folderId)?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (inventoryFolders.find(f => f.id === item.folderId)?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) || // Search by folder name
           (item.vendorId ? (vendorNameMap.get(item.vendorId) || "").toLowerCase().includes(searchTerm.toLowerCase()) : false);
 
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
@@ -220,7 +221,7 @@ const Inventory: React.FC = () => {
     navigate(`/folders/${folderId}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]);
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
 
   // Folder management handlers
   const handleAddFolderClick = () => {
@@ -393,29 +394,27 @@ const Inventory: React.FC = () => {
               )}
 
               {/* All Items (if no specific folder is selected, or for global search) */}
-              {filteredItems.length === 0 && topLevelFolders.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No inventory items or folders found.</p>
-              ) : (
-                <>
-                  {searchTerm && filteredItems.length > 0 && (
-                    <div className="mt-8">
-                      <h2 className="text-xl font-semibold mb-4">Search Results ({filteredItems.length})</h2>
-                      {viewMode === "table" && (
-                        <DataTable columns={columnsForDataTable} data={filteredItems} />
-                      )}
-                      {viewMode === "card" && (
-                        <InventoryCardGrid
-                          items={filteredItems}
-                          onAdjustStock={handleQuickView}
-                          onCreateOrder={handleCreateOrder}
-                          onViewDetails={handleQuickView}
-                          onDeleteItem={handleDeleteItemClick}
-                          isSidebarCollapsed={isCollapsed}
-                        />
-                      )}
-                    </div>
+              {searchTerm && filteredItems.length > 0 ? (
+                <div className="mt-8">
+                  <h2 className="text-xl font-semibold mb-4">Search Results ({filteredItems.length})</h2>
+                  {viewMode === "table" && (
+                    <DataTable columns={columnsForDataTable} data={filteredItems} />
                   )}
-                </>
+                  {viewMode === "card" && (
+                    <InventoryCardGrid
+                      items={filteredItems}
+                      onAdjustStock={handleQuickView}
+                      onCreateOrder={handleCreateOrder}
+                      onViewDetails={handleQuickView}
+                      onDeleteItem={handleDeleteItemClick}
+                      isSidebarCollapsed={isCollapsed}
+                    />
+                  )}
+                </div>
+              ) : (
+                !searchTerm && topLevelFolders.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">No inventory items or folders found. Add your first folder or item!</p>
+                )
               )}
             </div>
           )}
@@ -425,6 +424,10 @@ const Inventory: React.FC = () => {
       <AddInventoryDialog
         isOpen={isAddInventoryDialogOpen}
         onClose={() => setIsAddInventoryDialogOpen(false)}
+      />
+      <ManageFoldersDialog
+        isOpen={isManageFoldersDialogOpen}
+        onClose={() => setIsManageFoldersDialogOpen(false)}
       />
       <CategoryManagementDialog
         isOpen={isManageCategoriesDialogOpen}

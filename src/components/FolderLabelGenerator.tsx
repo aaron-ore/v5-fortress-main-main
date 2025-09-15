@@ -10,6 +10,7 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
 import LocationLabelPdfContent from "@/components/LocationLabelPdfContent"; // This component will be renamed to FolderLabelPdfContent
+import html2canvas from 'html2canvas'; // NEW: Import html2canvas
 
 // Predefined colors for labels, matching some of the designs
 const labelColors = [
