@@ -12,7 +12,7 @@ import LocationLabelGenerator from "@/components/LocationLabelGenerator"; // Thi
 import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // Renamed import
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-const Folders: React.FC = () => { // Renamed component
+const Folders = () => { // Renamed component and removed React.FC
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding(); // Updated context functions
   const { initiatePrint } = usePrint();
 
@@ -78,7 +78,7 @@ const Folders: React.FC = () => { // Renamed component
       <h1 className="text-3xl font-bold">Folder Management</h1> {/* Updated title */}
       <p className="text-muted-foreground">Manage your inventory organization folders and generate QR code labels for them.</p> {/* Updated description */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-grow">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 flex-grow">
         {/* Manage Folders Card */}
         <Card className="bg-card border-border shadow-sm flex flex-col">
           <CardHeader className="pb-2">
@@ -190,4 +190,4 @@ const Folders: React.FC = () => { // Renamed component
   );
 };
 
-export default Folders; // Renamed export
+export default Folders;
