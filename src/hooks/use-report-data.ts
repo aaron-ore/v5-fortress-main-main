@@ -1,17 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns"; // Removed subMonths, subDays, startOfMonth
+import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
-import { useOnboarding, Location } from "@/context/OnboardingContext";
-import { parseAndValidateDate } from "@/utils/dateUtils";
-import { showError } from "@/utils/toast";
+import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile
+import { useOnboarding } from "@/context/OnboardingContext"; // Removed Location
+// Removed showError
+// Removed PrintContentData
 import { supabase } from "@/lib/supabaseClient";
-import { PrintContentData } from "@/context/PrintContext";
 
 interface ReportDataResult {
   data: any;
@@ -316,7 +315,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           }
 
           const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
+          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(date.from)) ? endOfDay(dateRange.from) : null);
 
           if (filterFrom && filterTo) {
             query = query.gte('timestamp', filterFrom.toISOString())
