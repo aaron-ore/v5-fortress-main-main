@@ -84,8 +84,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setUnitCost("");
       setRetailPrice("");
       // NEW: Set initial folder based on prop or first available
-      setSelectedMainFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : ""));
-      setSelectedPickingBinFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : ""));
+      setSelectedMainFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : "no-folders"));
+      setSelectedPickingBinFolderId(initialFolderId || (inventoryFolders.length > 0 ? inventoryFolders[0].id : "no-folders"));
       setSelectedVendorId("none");
       setBarcodeValue("");
       setQrCodeSvgPreview(null);
@@ -184,8 +184,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
       isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
       isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
-      !finalMainFolderId ||
-      !finalPickingBinFolderId ||
+      !finalMainFolderId || finalMainFolderId === "no-folders" ||
+      !finalPickingBinFolderId || finalPickingBinFolderId === "no-folders" ||
       (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
     ) {
       showError("Please fill in all required fields with valid numbers.");
@@ -291,8 +291,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     isNaN(parsedReorderLevel) || parsedReorderLevel < 0 ||
     (viewMode === "detailed" && (isNaN(parsedPickingReorderLevel) || parsedPickingReorderLevel < 0)) ||
     inventoryFolders.length === 0 ||
-    !selectedMainFolderId ||
-    !selectedPickingBinFolderId ||
+    !selectedMainFolderId || selectedMainFolderId === "no-folders" ||
+    !selectedPickingBinFolderId || selectedPickingBinFolderId === "no-folders" ||
     categories.length === 0 ||
     (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity))) ||
     isUploadingImage;
@@ -444,7 +444,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                     {inventoryFolders.length > 0 ? (
                       inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)
                     ) : (
-                      <SelectItem value="" disabled>No folders set up.</SelectItem>
+                      <SelectItem value="no-folders" disabled>No folders set up.</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -467,7 +467,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                     {inventoryFolders.length > 0 ? (
                       inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)
                     ) : (
-                      <SelectItem value="" disabled>No folders set up.</SelectItem>
+                      <SelectItem value="no-folders" disabled>No folders set up.</SelectItem>
                     )}
                   </SelectContent>
                 </Select>

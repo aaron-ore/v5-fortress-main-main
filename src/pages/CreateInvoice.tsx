@@ -275,12 +275,12 @@ const CreateInvoice: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customerNameSelect">Customer Name</Label>
-                <Select value={selectedCustomerId || ""} onValueChange={setSelectedCustomerId}>
+                <Select value={selectedCustomerId || "none-selected"} onValueChange={setSelectedCustomerId}>
                   <SelectTrigger id="customerNameSelect">
                     <SelectValue placeholder="Select an existing customer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Select Customer</SelectItem>
+                    <SelectItem value="none-selected">Select Customer</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer.id} value={customer.id}>
                         {customer.name}

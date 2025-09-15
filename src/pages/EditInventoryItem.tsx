@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -122,7 +122,7 @@ const EditInventoryItem: React.FC = () => {
         incomingStock: 0,
         unitCost: 0,
         retailPrice: 0,
-        folderId: "", // Updated to folderId
+        folderId: "no-folders", // Updated to folderId
         tags: "", // Added tags
         notes: "", // Added notes
         imageUrl: "",
@@ -261,7 +261,7 @@ const EditInventoryItem: React.FC = () => {
 
       // Removed location string building logic
 
-      if (!values.folderId) { // Validate folderId
+      if (!values.folderId || values.folderId === "no-folders") { // Validate folderId
         showError("Please select a folder for the item.");
         setIsSaving(false);
         return;
@@ -598,7 +598,7 @@ const EditInventoryItem: React.FC = () => {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="no-folders" disabled>
                             No folders set up.
                           </SelectItem>
                         )}
