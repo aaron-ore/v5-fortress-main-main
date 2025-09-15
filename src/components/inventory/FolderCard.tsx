@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Folder, MoreVertical, Edit, Trash2, Package, PlusCircle } from "lucide-react";
+import { Folder, MoreVertical, Edit, Trash2, Package } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

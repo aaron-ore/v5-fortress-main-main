@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useState, useMemo, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { List, LayoutGrid, Folder, Loader2, AlertTriangle, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { List, LayoutGrid, Folder, Loader2, AlertTriangle, PlusCircle } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";

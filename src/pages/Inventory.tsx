@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { PlusCircle, List, LayoutGrid, Folder, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2, Edit, Trash2 } from "lucide-react";
+import { PlusCircle, List, LayoutGrid, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -329,7 +329,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <Card className="rounded-md border flex flex-col flex-grow">
+      <Card className="flex-grow rounded-md border flex flex-col">
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Inventory Overview</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
