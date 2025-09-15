@@ -8,9 +8,9 @@ import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { parseAndValidateDate } from "@/utils/dateUtils"; // Corrected: Added import for parseAndValidateDate
+import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-import { PrintContentData } from "@/context/PrintContext";
+// Removed: import { PrintContentData } from "@/context/PrintContext";
 
 interface ReportDataResult {
   data: any;
@@ -315,7 +315,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           }
 
           const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
-          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null); // Corrected: Changed 'date.from' to 'dateRange.from'
+          const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
           if (filterFrom && filterTo) {
             query = query.gte('timestamp', filterFrom.toISOString())
