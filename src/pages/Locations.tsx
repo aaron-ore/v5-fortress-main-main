@@ -66,12 +66,7 @@ const Folders = () => { // Renamed component and removed React.FC
     setIsFolderLabelGeneratorOpen(false);
   };
 
-  const handleGenerateAndPrintFromGenerator = (labelsToPrint: PrintContentData[]) => {
-    for (const label of labelsToPrint) {
-      initiatePrint(label);
-    }
-    showSuccess(`Generated and sent ${labelsToPrint.length} folder labels to printer!`);
-  };
+  // Removed handleGenerateAndPrintFromGenerator as it's no longer used.
 
   return (
     <div className="flex flex-col flex-grow space-y-6 p-6">

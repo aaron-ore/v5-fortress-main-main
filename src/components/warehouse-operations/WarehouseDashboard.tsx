@@ -12,7 +12,7 @@ const WarehouseDashboard: React.FC = () => {
   const { notifications, markNotificationAsRead } = useNotifications();
   const { inventoryItems } = useInventory();
   const { orders } = useOrders();
-  const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const {  } = useOnboarding(); // Get inventory folders
 
   const unreadNotifications = notifications.filter(n => !n.isRead).slice(0, 5); // Show top 5 unread
   const lowStockItems = inventoryItems.filter(item => item.quantity <= item.reorderLevel).slice(0, 3); // Top 3 low stock

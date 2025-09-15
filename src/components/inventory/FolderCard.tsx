@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 interface FolderCardProps {
   folder: InventoryFolder;
