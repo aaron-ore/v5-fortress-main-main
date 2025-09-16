@@ -11,6 +11,7 @@ import {
   Menu,
 } from "lucide-react";
 import MobileDrawerContent from "@/components/MobileDrawerContent";
+import { useNavigate } from "react-router-dom"; // Added: Missing useNavigate import
 
 const MobileNav: React.FC = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
