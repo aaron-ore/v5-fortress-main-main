@@ -297,8 +297,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   };
 
   return (
-    <div className="flex flex-col flex-grow p-6 pt-0"> {/* Added flex-grow and p-6 pt-0 */}
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0"> {/* Added flex-shrink-0 */}
+    <div className="flex flex-col flex-grow"> {/* Removed p-6 pt-0 here */}
+      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6 pt-6"> {/* Added px-6 pt-6 */}
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
           <TabsTrigger value="Purchase">Purchase Order</TabsTrigger>
@@ -311,8 +311,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </TabsContent>
       </Tabs>
 
-      <ScrollArea className="flex-grow pr-4"> {/* Changed height to flex-grow */}
-        <div className="space-y-6">
+      <ScrollArea className="flex-grow px-6"> {/* Changed height to flex-grow and added px-6 */}
+        <div className="space-y-6 py-4"> {/* Added py-4 for vertical spacing within scrollable area */}
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="text-xl font-semibold">{orderType} Order Details</CardTitle>
@@ -503,7 +503,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </div>
       </ScrollArea>
 
-      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
+      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0 p-6 pt-0"> {/* Added p-6 pt-0 */}
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
