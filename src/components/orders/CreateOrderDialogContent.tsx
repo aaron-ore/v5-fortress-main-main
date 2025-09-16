@@ -28,7 +28,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useCustomers } from "@/context/CustomerContext";
-import { useVendors } from "@/context/Vendor/Context";
+import { useVendors } from "@/context/VendorContext"; // Corrected import path
 import {
   Select,
   SelectContent,
