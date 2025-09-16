@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input }2 from "@/components/ui/input";
 import {
   Dialog, // Keep Dialog import for other dialogs
   DialogContent,
@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderColumns } from "@/components/orders/orders-table-columns";
-// Removed CreateOrderDialogContent import
+import { useNavigate } from "react-router-dom"; // Added useNavigate import
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, archiveOrder } = useOrders();
