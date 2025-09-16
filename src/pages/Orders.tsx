@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input }2 from "@/components/ui/input";
+import { Input } from "@/components/ui/input"; // Corrected: Removed extra '2'
 import {
   Dialog, // Keep Dialog import for other dialogs
   DialogContent,
