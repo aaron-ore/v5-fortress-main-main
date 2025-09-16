@@ -64,7 +64,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers();
-  const { vendors } = useVendors(); // Keep vendors for consistency, though not directly used for Sales
+  const {  } = useVendors(); // Keep vendors for consistency, though not directly used for Sales
   const { profile } = useProfile();
 
   const orderType: "Sales" = "Sales"; // Fixed to Sales

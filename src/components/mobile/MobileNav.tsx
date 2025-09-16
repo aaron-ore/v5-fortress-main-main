@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils"; // Import cn
 import { Button } from "@/components/ui/button";
 import {
   Sheet,

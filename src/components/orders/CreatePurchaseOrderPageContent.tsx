@@ -27,7 +27,7 @@ import InventorySelectionDialog from "@/components/InventorySelectionDialog";
 import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useCustomers } from "@/context/CustomerContext"; // Keep customers for consistency, though not directly used for Purchase
+import { useCustomers } from "@/context/CustomerContext";
 import { useVendors } from "@/context/VendorContext";
 import {
   Select,
@@ -63,7 +63,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   const navigate = useNavigate();
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
-  const { customers } = useCustomers(); // Keep customers for consistency, though not directly used for Purchase
+  const {  } = useCustomers(); // Keep customers for consistency, though not directly used for Purchase
   const { vendors } = useVendors();
   const { profile } = useProfile();
 

@@ -3,14 +3,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Corrected: Removed extra '2'
+import { Input } from "@/components/ui/input";
 import {
-  Dialog, // Keep Dialog import for other dialogs
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  // Removed DialogTrigger as it's no longer used for Create Order
+  // Removed unused Dialog imports
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { useOrders } from "@/context/OrdersContext";
@@ -34,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderColumns } from "@/components/orders/orders-table-columns";
-import { useNavigate } from "react-router-dom"; // Added useNavigate import
+import { useNavigate } from "react-router-dom";
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, archiveOrder } = useOrders();
@@ -47,7 +42,7 @@ const Orders: React.FC = () => {
   const [isOrderReceiveShipmentDialogOpe, setIsOrderReceiveShipmentDialogOpe] = useState(false);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
 
-  const navigate = useNavigate(); // Added useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrders();
