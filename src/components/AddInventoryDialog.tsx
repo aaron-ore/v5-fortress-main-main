@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import uploadFileToSupabase
+import { Loader2 } from "lucide-react"; // Import Loader2 for the spinner
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -68,6 +69,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
   const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
+  const [isAddingItem, setIsAddingItem] = useState(false); // NEW: Loading state for adding item
 
   useEffect(() => {
     if (isOpen) {
@@ -94,6 +96,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setIsUploadingImage(false);
       setAutoReorderEnabled(false);
       setAutoReorderQuantity("");
+      setIsAddingItem(false); // Reset loading state
     }
   }, [isOpen, inventoryFolders, initialFolderId]); // Added initialFolderId to dependencies
 
@@ -144,6 +147,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    setIsAddingItem(true); // Set loading state to true
+
     let finalPickingBinQuantity: number;
     let finalOverstockQuantity: number;
     let finalReorderLevel: number;
@@ -189,16 +194,19 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
     ) {
       showError("Please fill in all required fields with valid numbers.");
+      setIsAddingItem(false); // Reset loading state
       return;
     }
 
     if (inventoryFolders.length === 0) {
       showError("You need to set up inventory folders first. Please go to Manage Folders.");
+      setIsAddingItem(false); // Reset loading state
       return;
     }
 
     if (!profile?.organizationId) {
       showError("Organization ID not found. Please ensure your company profile is set up.");
+      setIsAddingItem(false); // Reset loading state
       return;
     }
 
@@ -211,6 +219,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
 
     if (existingItem) {
       showError(`An item with SKU '${sku.trim()}' already exists in your organization. Please use a unique SKU.`);
+      setIsAddingItem(false); // Reset loading state
       return;
     }
     if (fetchError && fetchError.code === 'PGRST116') { // PGRST116 means "no rows found", which is expected for a non-duplicate
@@ -218,6 +227,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     } else if (fetchError) {
       console.error("Error checking for duplicate SKU:", fetchError);
       showError("Failed to check for duplicate SKU. Please try again.");
+      setIsAddingItem(false); // Reset loading state
       return;
     }
 
@@ -231,6 +241,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       } catch (error: any) {
         console.error("Error uploading product image:", error);
         showError(`Failed to upload product image: ${error.message}`);
+        setIsAddingItem(false); // Reset loading state
         setIsUploadingImage(false);
         return;
       } finally {
@@ -268,6 +279,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     } catch (error: any) {
       console.error("Failed to add inventory item:", error);
       showError("Failed to add item: " + (error.message || "Unknown error. Please check console for details."));
+    } finally {
+      setIsAddingItem(false); // Reset loading state
     }
   };
 
@@ -295,7 +308,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !selectedPickingBinFolderId || selectedPickingBinFolderId === "no-folders" ||
     categories.length === 0 ||
     (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity))) ||
-    isUploadingImage;
+    isUploadingImage ||
+    isAddingItem; // NEW: Disable if item is already being added
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -602,11 +616,17 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isAddingItem}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isFormInvalid}>
-            Add Item
+            {isAddingItem ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Adding...
+              </>
+            ) : (
+              "Add Item"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
