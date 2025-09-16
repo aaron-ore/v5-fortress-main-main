@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="text-[var(--nav-foreground)]"
+        className="text-sidebar-foreground"
       >
         <path
           d="M12 2L2 12L12 22L22 12L12 2Z"
@@ -84,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
           fillOpacity="0.2"
         />
       </svg>
-      {!isCollapsedState && <span className="text-xl font-semibold text-[var(--nav-foreground)]">Fortress</span>}
+      {!isCollapsedState && <span className="text-xl font-semibold text-sidebar-foreground">Fortress</span>}
     </div>
   );
 
@@ -191,7 +191,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 h-screen flex flex-col bg-[var(--nav-background)] text-[var(--nav-foreground)] transition-all duration-200 z-30 border-r border-sidebar-border",
+        "fixed top-0 left-0 h-screen flex flex-col bg-sidebar-background text-sidebar-foreground transition-all duration-200 z-30 border-r border-sidebar-border",
         isCollapsed ? "w-[80px]" : "w-[280px]",
         "shadow-theme-glow"
       )}
@@ -203,7 +203,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
-            className="h-9 w-9 rounded-full bg-sidebar-toggle-background text-[var(--nav-foreground)] hover:bg-white/20"
+            className="h-9 w-9 rounded-full bg-sidebar-toggle-background text-sidebar-foreground hover:bg-white/20"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -218,7 +218,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 variant="ghost"
                 size="icon"
                 onClick={onToggleCollapse}
-                className="absolute top-4 -right-5 h-10 w-10 rounded-full bg-sidebar-toggle-background text-[var(--nav-foreground)] hover:bg-white/20 shadow-md border border-sidebar-border"
+                className="absolute top-4 -right-5 h-10 w-10 rounded-full bg-sidebar-toggle-background text-sidebar-foreground hover:bg-white/20 shadow-md border border-sidebar-border"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>
@@ -237,7 +237,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             <AvatarFallback>{profile.fullName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div className="ml-3 overflow-hidden">
-            <p className="text-sm font-medium text-[var(--nav-foreground)] truncate">{profile.fullName}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{profile.fullName}</p>
             <p className="text-xs text-muted-foreground truncate">{profile.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
           </div>
         </div>

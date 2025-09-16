@@ -206,11 +206,8 @@
     --ring: 80 10% 70%; /* Ring color: Primary color */
 
     /* NEW: Specific variables for navigation elements */
-    --nav-background: 175 60% 30%; /* Viridian Green */
-    --nav-foreground: 0 0% 100%; /* White */
-
-    --sidebar-background: var(--nav-background); /* Sidebar background: Viridian Green */
-    --sidebar-foreground: var(--nav-foreground); /* Sidebar text/icons: White */
+    --sidebar-background: 175 60% 30%; /* Viridian Green */
+    --sidebar-foreground: 0 0% 100%; /* White */
     --sidebar-active-background: 175 60% 40%; /* Lighter Viridian Green for active/hover */
     --sidebar-active-foreground: 0 0% 100%; /* White for active/hover text */
     --sidebar-border: var(--border); /* Sidebar border: Matches main border */
