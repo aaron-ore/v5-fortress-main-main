@@ -13,9 +13,9 @@ const CreatePurchaseOrder: React.FC = () => {
   // The dialog itself handles the form logic and submission.
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Create New Purchase Order</h1>
-      <p className="text-muted-foreground">
+    <div className="space-y-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
+      <h1 className="text-3xl font-bold flex-shrink-0">Create New Purchase Order</h1> {/* Added flex-shrink-0 */}
+      <p className="text-muted-foreground flex-shrink-0"> {/* Added flex-shrink-0 */}
         Fill in the details to create a new purchase order.
       </p>
       <CreateOrderDialogContent onClose={() => navigate("/orders")} />

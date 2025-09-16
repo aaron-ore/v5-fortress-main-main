@@ -297,8 +297,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   };
 
   return (
-    <div className="space-y-4">
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full">
+    <div className="flex flex-col flex-grow p-6 pt-0"> {/* Added flex-grow and p-6 pt-0 */}
+      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0"> {/* Added flex-shrink-0 */}
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
           <TabsTrigger value="Purchase">Purchase Order</TabsTrigger>
@@ -311,7 +311,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </TabsContent>
       </Tabs>
 
-      <ScrollArea className="h-[calc(95vh-180px)] pr-4"> {/* Adjusted height for scroll area */}
+      <ScrollArea className="flex-grow pr-4"> {/* Changed height to flex-grow */}
         <div className="space-y-6">
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
@@ -503,7 +503,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </div>
       </ScrollArea>
 
-      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>

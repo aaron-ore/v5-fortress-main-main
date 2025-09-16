@@ -44,7 +44,7 @@ const Orders: React.FC = () => {
   const [activeTab, setActiveTab] = useState("all");
 
   const [isOrderFulfillmentDialogOpen, setIsOrderFulfillmentDialogOpen] = useState(false);
-  const [isOrderReceiveShipmentDialogOpen, setIsOrderReceiveShipmentDialogOpen] = useState(false);
+  const [isOrderReceiveShipmentDialogOpe, setIsOrderReceiveShipmentDialogOpe] = useState(false);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
 
   useEffect(() => {
@@ -139,7 +139,7 @@ const Orders: React.FC = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setIsOrderReceiveShipmentDialogOpen(true)}>
+              <DropdownMenuItem onClick={() => setIsOrderReceiveShipmentDialogOpe(true)}>
                 <PackagePlus className="h-4 w-4 mr-2" /> Receive Shipment
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsOrderFulfillmentDialogOpen(true)}>
@@ -171,8 +171,8 @@ const Orders: React.FC = () => {
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Order
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[900px] max-h-[95vh]"> {/* Adjusted size */}
-            <DialogHeader>
+          <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[95vh] p-0"> {/* Added flex flex-col and p-0 */}
+            <DialogHeader className="p-6 pb-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
               <DialogTitle>Create New Order</DialogTitle>
               <DialogDescription>
                 Fill in the details to create a new sales or purchase order.
@@ -217,8 +217,8 @@ const Orders: React.FC = () => {
         onClose={() => setIsOrderFulfillmentDialogOpen(false)}
       />
       <OrderReceiveShipmentDialog
-        isOpen={isOrderReceiveShipmentDialogOpen}
-        onClose={() => setIsOrderReceiveShipmentDialogOpen(false)}
+        isOpen={isOrderReceiveShipmentDialogOpe}
+        onClose={() => setIsOrderReceiveShipmentDialogOpe(false)}
       />
     </div>
   );
