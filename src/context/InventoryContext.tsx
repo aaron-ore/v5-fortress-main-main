@@ -277,6 +277,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       await logActivity("Add Inventory Item Failed", `Failed to add inventory item: ${item.name} (SKU: ${item.sku}).`, profile, { error_message: error.message, item_details: item }, true);
       throw new Error(error.message || 'Failed to add item: Unknown error.');
     } else if (data && data.length > 0) {
+      // Optimistically update state
+      const newItem: InventoryItem = mapSupabaseItemToInventoryItem(data[0]);
+      setInventoryItems((prevItems) => [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name)));
+
       showSuccess(`Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
       await logActivity("Add Inventory Item Success", `Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`, profile, { item_id: data[0].id, item_name: data[0].name, sku: data[0].sku });
     } else {
