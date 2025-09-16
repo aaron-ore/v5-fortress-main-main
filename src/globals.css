@@ -161,8 +161,8 @@
     --ring: 168 43% 27%; /* Primary color */
 
     /* Sidebar specific colors for Deep Forest theme */
-    --sidebar-background: var(--background);
-    --sidebar-foreground: var(--foreground);
+    --sidebar-background: var(--card); /* Set sidebar background to card color */
+    --sidebar-foreground: var(--foreground); /* Keep sidebar text/icons white */
     --sidebar-active-background: var(--secondary);
     --sidebar-active-foreground: 0 0% 100%; /* Explicitly white for dark themes */
     --sidebar-border: var(--border);

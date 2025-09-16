@@ -115,7 +115,7 @@ const Orders: React.FC = () => {
     }
   };
 
-  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRealmId;
+  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isAdmin = profile?.role === 'admin';
 
   return (
@@ -171,7 +171,7 @@ const Orders: React.FC = () => {
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Order
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[900px] max-h-[95vh]"> {/* Adjusted size */}
             <DialogHeader>
               <DialogTitle>Create New Order</DialogTitle>
               <DialogDescription>
