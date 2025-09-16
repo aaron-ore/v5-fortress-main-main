@@ -207,10 +207,10 @@
 
     /* NEW: Specific variables for navigation elements */
     --nav-background: 175 60% 30%; /* Viridian Green */
-    --nav-foreground: 40 100% 95%; /* Cream */
+    --nav-foreground: 0 0% 100%; /* White */
 
     --sidebar-background: var(--nav-background); /* Sidebar background: Viridian Green */
-    --sidebar-foreground: var(--nav-foreground); /* Sidebar text/icons: Cream */
+    --sidebar-foreground: var(--nav-foreground); /* Sidebar text/icons: White */
     --sidebar-active-background: var(--secondary); /* Active sidebar item background: Muted orange/brown */
     --sidebar-active-foreground: var(--foreground); /* Active sidebar item text: Dark (for contrast on light secondary) */
     --sidebar-border: var(--border); /* Sidebar border: Matches main border */
