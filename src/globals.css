@@ -175,44 +175,44 @@
 
   /* NEW: Deep Forest Light Theme Palette */
   html.deep-forest-light {
-    --background: 240 10% 98%; /* Very light grey/blue */
-    --foreground: 240 9% 11%; /* Original deep-forest background */
+    --background: 240 10% 98%; /* Main content background: Very light grey/blue */
+    --foreground: 240 9% 11%; /* Main content text: Original deep-forest background (dark) */
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 240 9% 11%;
+    --card: 168 43% 27%; /* Header background: Dark teal from deep-forest primary */
+    --card-foreground: 40 100% 95%; /* Header text/icons: Cream */
     box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 9% 11%;
+    --popover: 0 0% 100%; /* Popover background: White */
+    --popover-foreground: 240 9% 11%; /* Popover text: Dark */
     box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
-    --primary: 168 43% 40%; /* Darker teal for contrast */
-    --primary-foreground: 0 0% 100%; /* White text on dark primary */
+    --primary: 168 43% 40%; /* Primary button color: Darker teal for contrast on light background */
+    --primary-foreground: 0 0% 100%; /* Primary button text: White */
 
-    --secondary: 240 6% 80%; /* Light muted purple-grey */
-    --secondary-foreground: 240 9% 11%;
+    --secondary: 240 6% 80%; /* Secondary button color: Light muted purple-grey */
+    --secondary-foreground: 240 9% 11%; /* Secondary button text: Dark */
 
-    --muted: 240 5% 90%; /* Very light grey for muted elements */
-    --muted-foreground: 240 5% 40%; /* Darker grey for muted text */
+    --muted: 240 5% 90%; /* Muted background: Very light grey */
+    --muted-foreground: 40 10% 80%; /* Muted text: Lighter cream-grey for visibility on dark backgrounds */
 
-    --accent: 270 29% 60%; /* Lighter dark purple */
-    --accent-foreground: 0 0% 100%; /* White text on accent */
+    --accent: 270 29% 60%; /* Accent color: Lighter dark purple */
+    --accent-foreground: 0 0% 100%; /* Accent text: White */
 
-    --destructive: 0 80% 40%; /* Standard red for light theme */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 80% 40%; /* Destructive color: Standard red */
+    --destructive-foreground: 0 0% 100%; /* Destructive text: White */
 
-    --border: 240 5% 80%; /* Light grey border */
-    --input: 240 10% 95%; /* Slightly darker than background for input */
-    --ring: 168 43% 40%; /* Primary color */
+    --border: 168 43% 35%; /* Border color: Lighter shade of dark teal */
+    --input: 168 43% 20%; /* Input background: Slightly lighter dark teal */
+    --ring: 168 43% 40%; /* Ring color: Primary color */
 
-    --sidebar-background: var(--background);
-    --sidebar-foreground: var(--foreground);
-    --sidebar-active-background: var(--secondary);
-    --sidebar-active-foreground: var(--foreground);
-    --sidebar-border: var(--border);
-    --sidebar-toggle-background: var(--secondary);
+    --sidebar-background: 168 43% 27%; /* Sidebar background: Dark teal */
+    --sidebar-foreground: 40 100% 95%; /* Sidebar text/icons: Cream */
+    --sidebar-active-background: var(--secondary); /* Active sidebar item background: Light muted purple-grey */
+    --sidebar-active-foreground: var(--foreground); /* Active sidebar item text: Dark (for contrast on light secondary) */
+    --sidebar-border: var(--border); /* Sidebar border: Matches main border */
+    --sidebar-toggle-background: var(--secondary); /* Sidebar toggle background: Light muted purple-grey */
 
-    --scrollbar-background: 240 5% 85%;
+    --scrollbar-background: 168 43% 30%; /* Scrollbar background: Lighter dark teal */
 
     --shadow-color: hsl(0 0% 0% / 0.08);
   }
