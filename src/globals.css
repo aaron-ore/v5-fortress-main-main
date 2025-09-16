@@ -211,10 +211,10 @@
 
     --sidebar-background: var(--nav-background); /* Sidebar background: Viridian Green */
     --sidebar-foreground: var(--nav-foreground); /* Sidebar text/icons: White */
-    --sidebar-active-background: var(--secondary); /* Active sidebar item background: Muted orange/brown */
-    --sidebar-active-foreground: var(--foreground); /* Active sidebar item text: Dark (for contrast on light secondary) */
+    --sidebar-active-background: 175 60% 40%; /* Lighter Viridian Green for active/hover */
+    --sidebar-active-foreground: 0 0% 100%; /* White for active/hover text */
     --sidebar-border: var(--border); /* Sidebar border: Matches main border */
-    --sidebar-toggle-background: var(--secondary); /* Sidebar toggle background: Muted orange/brown */
+    --sidebar-toggle-background: var(--secondary);
 
     --scrollbar-background: 75 8% 75%; /* Scrollbar background: Light */
 
