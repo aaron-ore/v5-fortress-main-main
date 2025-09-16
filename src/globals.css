@@ -172,51 +172,6 @@
 
     --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
   }
-
-  /* NEW: Deep Forest Light Theme Palette */
-  html.deep-forest-light {
-    --background: 40 10% 96%; /* Main content background: Light, natural tone */
-    --foreground: 220 10% 8%; /* Main content text: Dark */
-
-    --card: 0 0% 100%; /* Keep cards white */
-    --card-foreground: 220 10% 8%; /* Keep card text dark */
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
-
-    --popover: 0 0% 100%; /* Popover background: White */
-    --popover-foreground: 220 10% 8%; /* Popover text: Dark */
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
-
-    --primary: 80 10% 70%; /* Primary button color: Muted green */
-    --primary-foreground: 0 0% 100%; /* Primary button text: White */
-
-    --secondary: 40 19% 70%; /* Secondary button color: Muted orange/brown */
-    --secondary-foreground: 220 10% 8%; /* Secondary button text: Dark */
-
-    --muted: 75 8% 88%; /* Muted background: Light grey/green */
-    --muted-foreground: 220 5% 50%; /* Muted text: Medium grey */
-
-    --accent: 40 19% 70%; /* Accent color: Same as secondary for consistency */
-    --accent-foreground: 220 10% 8%; /* Accent text: Dark */
-
-    --destructive: 0 80% 40%; /* Destructive color: Standard red */
-    --destructive-foreground: 0 0% 100%; /* Destructive text: White */
-
-    --border: 40 10% 60%; /* Border color: Muted brown */
-    --input: 75 8% 90%; /* Input background: Light grey */
-    --ring: 80 10% 70%; /* Ring color: Primary color */
-
-    /* NEW: Specific variables for navigation elements */
-    --sidebar-background: 175 60% 30%; /* Viridian Green */
-    --sidebar-foreground: 0 0% 100%; /* White */
-    --sidebar-active-background: 175 60% 40%; /* Lighter Viridian Green for active/hover */
-    --sidebar-active-foreground: 0 0% 100%; /* White for active/hover text */
-    --sidebar-border: var(--border); /* Sidebar border: Matches main border */
-    --sidebar-toggle-background: var(--secondary);
-
-    --scrollbar-background: 75 8% 75%; /* Scrollbar background: Light */
-
-    --shadow-color: hsl(0 0% 0% / 0.08);
-  }
 }
 
 @layer base {
