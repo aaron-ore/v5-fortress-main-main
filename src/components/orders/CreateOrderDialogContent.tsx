@@ -293,8 +293,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   };
 
   return (
-    <div className="flex flex-col flex-grow h-full">
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6 pt-6">
+    <div className="flex flex-col flex-grow overflow-hidden"> {/* Removed h-full, added overflow-hidden */}
+      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6 pt-0"> {/* Removed pt-6 */}
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
           <TabsTrigger value="Purchase">Purchase Order</TabsTrigger>
@@ -308,8 +308,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       </Tabs>
 
       {/* Main scrollable area for the form content */}
-      <ScrollArea className="flex-grow px-6" style={{ maxHeight: 'calc(95vh - 200px)' }}> {/* Explicit max-height */}
-        <div className="space-y-6 py-4">
+      <ScrollArea className="flex-grow px-6"> {/* flex-grow to take remaining space, px-6 for horizontal padding */}
+        <div className="space-y-6 py-4"> {/* py-4 for vertical spacing within scrollable area */}
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="text-xl font-semibold">{orderType} Order Details</CardTitle>
