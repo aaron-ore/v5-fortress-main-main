@@ -49,11 +49,11 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [description, setDescription] = useState("");
   const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
-  const [simpleQuantity, setSimpleQuantity] = useState("");
-  const [pickingBinQuantity, setPickingBinQuantity] = useState("");
-  const [overstockQuantity, setOverstockQuantity] = useState("");
-  const [reorderLevel, setReorderLevel] = useState("");
-  const [pickingReorderLevel, setPickingReorderLevel] = useState("");
+  const [simpleQuantity, setSimpleQuantity] = useState("0"); // Changed from ""
+  const [pickingBinQuantity, setPickingBinQuantity] = useState("0"); // Changed from ""
+  const [overstockQuantity, setOverstockQuantity] = useState("0"); // Changed from ""
+  const [reorderLevel, setReorderLevel] = useState("0"); // Changed from ""
+  const [pickingReorderLevel, setPickingReorderLevel] = useState("0"); // Changed from ""
   const [unitCost, setUnitCost] = useState("");
   const [retailPrice, setRetailPrice] = useState("");
   
@@ -76,11 +76,11 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       setDescription("");
       setSku("");
       setCategory("");
-      setSimpleQuantity("");
-      setPickingBinQuantity("");
-      setOverstockQuantity("");
-      setReorderLevel("");
-      setPickingReorderLevel("");
+      setSimpleQuantity("0"); // Changed from ""
+      setPickingBinQuantity("0"); // Changed from ""
+      setOverstockQuantity("0"); // Changed from ""
+      setReorderLevel("0"); // Changed from ""
+      setPickingReorderLevel("0"); // Changed from ""
       setUnitCost("");
       setRetailPrice("");
       // NEW: Set initial folder based on prop or first available
@@ -178,10 +178,10 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       !category.trim() ||
       !unitCost ||
       !retailPrice ||
-      (viewMode === "simple" && (!simpleQuantity || isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) ||
+      (viewMode === "simple" && (isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) || // Removed || '0' as state is now '0'
       (viewMode === "detailed" && (isNaN(finalPickingBinQuantity) || finalPickingBinQuantity < 0 || isNaN(finalOverstockQuantity) || finalOverstockQuantity < 0)) ||
-      !reorderLevel || isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0 ||
-      (viewMode === "detailed" && (!pickingReorderLevel || isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) ||
+      (isNaN(parseInt(reorderLevel)) || parseInt(reorderLevel) < 0) || // Removed || '0' as state is now '0'
+      (viewMode === "detailed" && (isNaN(parseInt(pickingReorderLevel)) || parseInt(pickingReorderLevel) < 0)) || // Removed || '0' as state is now '0'
       isNaN(parseFloat(unitCost)) || parseFloat(unitCost) < 0 ||
       isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
       !finalMainFolderId || finalMainFolderId === "no-folders" ||
@@ -272,10 +272,10 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   };
 
   // Define these variables here so they are in scope for isFormInvalid
-  const parsedPickingBinQuantity = parseInt(pickingBinQuantity || '0');
-  const parsedOverstockQuantity = parseInt(overstockQuantity || '0');
-  const parsedReorderLevel = parseInt(reorderLevel || '0');
-  const parsedPickingReorderLevel = parseInt(pickingReorderLevel || '0');
+  const parsedPickingBinQuantity = parseInt(pickingBinQuantity); // Removed || '0'
+  const parsedOverstockQuantity = parseInt(overstockQuantity); // Removed || '0'
+  const parsedReorderLevel = parseInt(reorderLevel); // Removed || '0'
+  const parsedPickingReorderLevel = parseInt(pickingReorderLevel); // Removed || '0'
   const parsedUnitCost = parseFloat(unitCost || '0');
   const parsedRetailPrice = parseFloat(retailPrice || '0');
   const parsedAutoReorderQuantity = parseInt(autoReorderQuantity || '0');
@@ -286,7 +286,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     !category.trim() ||
     isNaN(parsedUnitCost) || parsedUnitCost < 0 ||
     isNaN(parsedRetailPrice) || parsedRetailPrice < 0 ||
-    (viewMode === "simple" && (isNaN(parseInt(simpleQuantity || '0')) || parseInt(simpleQuantity || '0') < 0)) ||
+    (viewMode === "simple" && (isNaN(parseInt(simpleQuantity)) || parseInt(simpleQuantity) < 0)) || // Removed || '0'
     (viewMode === "detailed" && (isNaN(parsedPickingBinQuantity) || parsedPickingBinQuantity < 0 || isNaN(parsedOverstockQuantity) || parsedOverstockQuantity < 0)) ||
     isNaN(parsedReorderLevel) || parsedReorderLevel < 0 ||
     (viewMode === "detailed" && (isNaN(parsedPickingReorderLevel) || parsedPickingReorderLevel < 0)) ||
