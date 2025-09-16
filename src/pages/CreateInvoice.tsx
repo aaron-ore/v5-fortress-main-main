@@ -8,14 +8,10 @@ import CreateOrderDialogContent from "@/components/orders/CreateOrderDialogConte
 const CreateInvoice: React.FC = () => {
   const navigate = useNavigate();
 
-  // This page now simply renders the CreateOrderDialogContent
-  // and sets the initial order type to Sales.
-  // The dialog itself handles the form logic and submission.
-
   return (
-    <div className="space-y-6 flex flex-col flex-grow"> {/* Added flex flex-col flex-grow */}
-      <h1 className="text-3xl font-bold flex-shrink-0">Create New Invoice</h1> {/* Added flex-shrink-0 */}
-      <p className="text-muted-foreground flex-shrink-0"> {/* Added flex-shrink-0 */}
+    <div className="space-y-6 flex flex-col flex-grow h-full"> {/* Added h-full */}
+      <h1 className="text-3xl font-bold flex-shrink-0">Create New Invoice</h1>
+      <p className="text-muted-foreground flex-shrink-0">
         Fill in the details to create a new sales order.
       </p>
       <CreateOrderDialogContent onClose={() => navigate("/orders")} />

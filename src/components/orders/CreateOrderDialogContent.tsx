@@ -28,7 +28,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useCustomers } from "@/context/CustomerContext";
-import { useVendors } from "@/context/VendorContext";
+import { useVendors } from "@/context/Vendor/Context";
 import {
   Select,
   SelectContent,
@@ -293,8 +293,9 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   };
 
   return (
-    <div className="flex flex-col flex-grow overflow-hidden"> {/* Removed h-full, added overflow-hidden */}
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6 pt-0"> {/* Removed pt-6 */}
+    <div className="flex flex-col flex-grow overflow-hidden">
+      {/* Tabs for Order Type - Fixed Height */}
+      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
           <TabsTrigger value="Purchase">Purchase Order</TabsTrigger>
@@ -303,13 +304,13 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
           <h2 className="text-2xl font-bold mb-4">Create New Invoice</h2>
         </TabsContent>
         <TabsContent value="Purchase" className="mt-4">
-          <h2 className="text-2xl font-bold mb-4">Create New Purchase Order</h2>
+          <h2 className="2xl font-bold mb-4">Create New Purchase Order</h2>
         </TabsContent>
       </Tabs>
 
-      {/* Main scrollable area for the form content */}
-      <ScrollArea className="flex-grow px-6"> {/* flex-grow to take remaining space, px-6 for horizontal padding */}
-        <div className="space-y-6 py-4"> {/* py-4 for vertical spacing within scrollable area */}
+      {/* Main Scrollable Area for Form Content - Flexible Height */}
+      <ScrollArea className="flex-grow px-6">
+        <div className="space-y-6 py-4">
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
               <CardTitle className="text-xl font-semibold">{orderType} Order Details</CardTitle>
@@ -500,6 +501,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </div>
       </ScrollArea>
 
+      {/* Footer Buttons - Fixed Height */}
       <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0 p-6 pt-0">
         <Button variant="outline" onClick={onClose}>
           Cancel

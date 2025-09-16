@@ -171,8 +171,8 @@ const Orders: React.FC = () => {
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Order
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[95vh] p-0"> {/* Added flex flex-col and p-0 */}
-            <DialogHeader className="p-6 pb-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
+          <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[95vh] p-0">
+            <DialogHeader className="p-6 pb-4 flex-shrink-0">
               <DialogTitle>Create New Order</DialogTitle>
               <DialogDescription>
                 Fill in the details to create a new sales or purchase order.
