@@ -28,7 +28,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useCustomers } from "@/context/CustomerContext";
-import { useVendors } from "@/context/VendorContext"; // NEW: Import useVendors
+import { useVendors } from "@/context/VendorContext";
 import {
   Select,
   SelectContent,
@@ -37,8 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // NEW: Import Tabs components
-import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
   DndContext,
@@ -65,22 +65,22 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers();
-  const { vendors } = useVendors(); // NEW: Use vendors
+  const { vendors } = useVendors();
   const { profile } = useProfile();
 
-  const [orderType, setOrderType] = useState<"Sales" | "Purchase">("Sales"); // NEW: State for order type
-  const [orderNumber, setOrderNumber] = useState(""); // Renamed from invoiceNumber
-  const [customerSupplierId, setCustomerSupplierId] = useState<string | null>(null); // NEW: For selecting existing customer/vendor
-  const [customerSupplierName, setCustomerSupplierName] = useState(""); // Renamed from customerName
-  const [customerSupplierEmail, setCustomerSupplierEmail] = useState(""); // Renamed from customerEmail
-  const [customerSupplierAddress, setCustomerSupplierAddress] = useState(""); // Renamed from customerAddress
-  const [customerSupplierContact, setCustomerSupplierContact] = useState(""); // Renamed from customerContact
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().split("T")[0]); // Renamed from invoiceDate
+  const [orderType, setOrderType] = useState<"Sales" | "Purchase">("Sales");
+  const [orderNumber, setOrderNumber] = useState("");
+  const [customerSupplierId, setCustomerSupplierId] = useState<string | null>(null);
+  const [customerSupplierName, setCustomerSupplierName] = useState("");
+  const [customerSupplierEmail, setCustomerSupplierEmail] = useState("");
+  const [customerSupplierAddress, setCustomerSupplierAddress] = useState("");
+  const [customerSupplierContact, setCustomerSupplierContact] = useState("");
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().split("T")[0]);
   const [terms, setTerms] = useState("Due on Receipt");
   const [dueDate, setDueDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<POItem[]>([]);
-  const [orderQrCodeSvg, setOrderQrCodeSvg] = useState<string | null>(null); // Renamed from invoiceQrCodeSvg
+  const [orderQrCodeSvg, setOrderQrCodeSvg] = useState<string | null>(null);
   const [calculatedTotalAmount, setCalculatedTotalAmount] = useState(0);
 
   const taxRate = 0.05;
@@ -92,7 +92,6 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
     useSensor(KeyboardSensor)
   );
 
-  // Effect to update customer/vendor details when selected from dropdown
   useEffect(() => {
     if (customerSupplierId) {
       if (orderType === "Sales") {
@@ -103,7 +102,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
           setCustomerSupplierAddress(customer.address || "");
           setCustomerSupplierContact(customer.phone ? formatPhoneNumber(customer.phone) : "");
         }
-      } else { // Purchase Order
+      } else {
         const vendor = vendors.find(v => v.id === customerSupplierId);
         if (vendor) {
           setCustomerSupplierName(vendor.name);
@@ -113,7 +112,6 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         }
       }
     } else {
-      // Clear fields if "Select Customer/Vendor" or "Add New" is chosen
       setCustomerSupplierName("");
       setCustomerSupplierEmail("");
       setCustomerSupplierAddress("");
@@ -121,13 +119,11 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
     }
   }, [customerSupplierId, orderType, customers, vendors]);
 
-  // Effect to calculate total amount in real-time
   useEffect(() => {
     const subtotal = items.reduce((sum, item) => sum + (isNaN(item.quantity) ? 0 : item.quantity) * (isNaN(item.unitPrice) ? 0 : item.unitPrice), 0);
     setCalculatedTotalAmount(subtotal * (1 + taxRate));
   }, [items, taxRate]);
 
-  // Generate QR code for Order number
   useEffect(() => {
     const generateQr = async () => {
       if (orderNumber) {
@@ -203,8 +199,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       dueDate: dueDate,
       itemCount: items.length,
       notes: notes.trim(),
-      orderType: orderType === "Sales" ? "Retail" as "Retail" : "Wholesale" as "Wholesale", // Defaulting for now
-      shippingMethod: "Standard" as "Standard", // Defaulting for now
+      orderType: orderType === "Sales" ? "Retail" as "Retail" : "Wholesale" as "Wholesale",
+      shippingMethod: "Standard" as "Standard",
       items: items,
       terms: terms.trim(),
     };
@@ -297,7 +293,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
   };
 
   return (
-    <div className="flex flex-col flex-grow h-full"> {/* Added h-full here */}
+    <div className="flex flex-col flex-grow h-full">
       <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6 pt-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
@@ -311,7 +307,8 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         </TabsContent>
       </Tabs>
 
-      <ScrollArea className="flex-grow px-6">
+      {/* Main scrollable area for the form content */}
+      <ScrollArea className="flex-grow px-6" style={{ maxHeight: 'calc(95vh - 200px)' }}> {/* Explicit max-height */}
         <div className="space-y-6 py-4">
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
@@ -451,7 +448,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
               >
-                <ScrollArea className="h-40 max-h-40 overflow-y-auto"> {/* Added ScrollArea */}
+                <ScrollArea className="h-40 max-h-40 overflow-y-auto">
                   <Table className="min-w-[600px]">
                     <TableHeader>
                       <TableRow>
@@ -489,7 +486,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
               <CardTitle className="text-xl font-semibold">Notes</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col relative min-h-[120px]">
-              <ScrollArea className="h-24 max-h-24 overflow-y-auto"> {/* Added ScrollArea */}
+              <ScrollArea className="h-24 max-h-24 overflow-y-auto">
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
