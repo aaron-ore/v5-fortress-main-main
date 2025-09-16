@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils"; // Import cn utility
 
-const CurrentDateTime: React.FC = () => {
+interface CurrentDateTimeProps {
+  className?: string; // Add className prop
+}
+
+const CurrentDateTime: React.FC<CurrentDateTimeProps> = ({ className }) => { // Accept className
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   useEffect(() => {
@@ -27,7 +32,7 @@ const CurrentDateTime: React.FC = () => {
   });
 
   return (
-    <div className="text-sm text-muted-foreground text-right">
+    <div className={cn("text-sm text-muted-foreground text-right", className)}> {/* Apply className */}
       <div>{formattedDate}</div>
       <div>{formattedTime}</div>
     </div>

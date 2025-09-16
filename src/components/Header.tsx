@@ -69,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
 
   if (isMobile) {
     return (
-      <header className={cn("bg-card border-b border-border px-4 py-3 flex items-center justify-between h-[60px] flex-shrink-0", className)}>
+      <header className={cn("bg-[var(--nav-background)] border-b border-border px-4 py-3 flex items-center justify-between h-[60px] flex-shrink-0", className)}>
         <div className="flex items-center space-x-4">
           <MobileNav />
           <div className="flex items-center space-x-2">
@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-primary"
+                className="text-[var(--nav-foreground)]"
               >
                 <path
                   d="M12 2L2 12L12 22L22 12L12 2Z"
@@ -97,22 +97,22 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
                 />
               </svg>
             )}
-            <span className="text-xl font-semibold text-foreground">{profile?.companyProfile?.companyName || "Fortress"}</span>
+            <span className="text-xl font-semibold text-[var(--nav-foreground)]">{profile?.companyProfile?.companyName || "Fortress"}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
-          <CurrentDateTime />
-          <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)}>
-            <Search className="h-5 w-5 text-muted-foreground" />
+          <CurrentDateTime className="text-[var(--nav-foreground)]" />
+          <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)} className="text-[var(--nav-foreground)] hover:bg-white/20">
+            <Search className="h-5 w-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative text-[var(--nav-foreground)] hover:bg-white/20"
             onClick={() => setIsNotificationSheetOpen(true)}
           >
-            <Bell className="h-5 w-5 text-muted-foreground" />
+            <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
             )}
@@ -124,32 +124,32 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
 
   // Desktop Header
   return (
-    <header className={cn("bg-card rounded-lg shadow-sm p-4 flex items-center justify-between h-[80px] flex-shrink-0", className)}>
+    <header className={cn("bg-[var(--nav-background)] rounded-lg shadow-sm p-4 flex items-center justify-between h-[80px] flex-shrink-0", className)}>
       <div className="flex items-center space-x-4 flex-grow">
         {profile?.companyProfile?.companyLogoUrl ? (
           <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="h-8 w-auto object-contain" />
         ) : (
-          <h2 className="text-2xl font-bold text-foreground truncate max-w-xs">
+          <h2 className="text-2xl font-bold text-[var(--nav-foreground)] truncate max-w-xs">
             {profile?.companyProfile?.companyName || "Fortress"}
           </h2>
         )}
       </div>
 
       <div className="flex items-center space-x-4">
-        <CurrentDateTime />
-        <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)}>
-          <Search className="h-5 w-5 text-muted-foreground" />
+        <CurrentDateTime className="text-[var(--nav-foreground)]" />
+        <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)} className="text-[var(--nav-foreground)] hover:bg-white/20">
+          <Search className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => setIsFeedbackDialogOpen(true)}>
-          <Flag className="h-5 w-5 text-muted-foreground" />
+        <Button variant="ghost" size="icon" onClick={() => setIsFeedbackDialogOpen(true)} className="text-[var(--nav-foreground)] hover:bg-white/20">
+          <Flag className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
+          className="relative text-[var(--nav-foreground)] hover:bg-white/20"
           onClick={() => setIsNotificationSheetOpen(true)}
         >
-          <Bell className="h-5 w-5 text-muted-foreground" />
+          <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
           )}
@@ -159,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-10 w-auto justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted/20 hover:text-foreground"
+              className="h-10 w-auto justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors text-[var(--nav-foreground)] hover:bg-white/20"
             >
               <User className="h-5 w-5 mr-3" />
               <span className="truncate">{profile?.fullName || "My Profile"}</span>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// Removed unused import: cn
+import { cn } from "@/lib/utils"; // Import cn
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -39,7 +39,7 @@ const MobileNav: React.FC = () => {
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
-              className="text-primary"
+              className="text-[var(--nav-foreground)]"
             >
               <path
                 d="M12 2L2 12L12 22L22 12L12 2Z"
@@ -53,7 +53,7 @@ const MobileNav: React.FC = () => {
                 fillOpacity="0.2"
             />
           </svg>
-            <span className="text-xl font-semibold text-foreground">Fortress</span>
+            <span className="text-xl font-semibold text-[var(--nav-foreground)]">Fortress</span>
           </SheetTitle>
         </SheetHeader>
 
