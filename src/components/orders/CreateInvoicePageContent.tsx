@@ -28,7 +28,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useCustomers } from "@/context/CustomerContext";
-import { useVendors } from "@/context/VendorContext"; // Corrected import path
+import { useVendors } from "@/context/VendorContext";
 import {
   Select,
   SelectContent,
@@ -37,7 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
@@ -56,19 +55,19 @@ import {
 } from "@dnd-kit/sortable";
 import SortableItemRow from "@/components/orders/SortableItemRow";
 
-interface CreateOrderDialogContentProps {
+interface CreateInvoicePageContentProps {
   onClose: () => void;
 }
 
-const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onClose }) => {
+const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const { addOrder } = useOrders();
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers();
-  const { vendors } = useVendors();
+  const { vendors } = useVendors(); // Keep vendors for consistency, though not directly used for Sales
   const { profile } = useProfile();
 
-  const [orderType, setOrderType] = useState<"Sales" | "Purchase">("Sales");
+  const orderType: "Sales" = "Sales"; // Fixed to Sales
   const [orderNumber, setOrderNumber] = useState("");
   const [customerSupplierId, setCustomerSupplierId] = useState<string | null>(null);
   const [customerSupplierName, setCustomerSupplierName] = useState("");
@@ -94,22 +93,12 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
 
   useEffect(() => {
     if (customerSupplierId) {
-      if (orderType === "Sales") {
-        const customer = customers.find(c => c.id === customerSupplierId);
-        if (customer) {
-          setCustomerSupplierName(customer.name);
-          setCustomerSupplierEmail(customer.email || "");
-          setCustomerSupplierAddress(customer.address || "");
-          setCustomerSupplierContact(customer.phone ? formatPhoneNumber(customer.phone) : "");
-        }
-      } else {
-        const vendor = vendors.find(v => v.id === customerSupplierId);
-        if (vendor) {
-          setCustomerSupplierName(vendor.name);
-          setCustomerSupplierEmail(vendor.email || "");
-          setCustomerSupplierAddress(vendor.address || "");
-          setCustomerSupplierContact(vendor.phone ? formatPhoneNumber(vendor.phone) : "");
-        }
+      const customer = customers.find(c => c.id === customerSupplierId);
+      if (customer) {
+        setCustomerSupplierName(customer.name);
+        setCustomerSupplierEmail(customer.email || "");
+        setCustomerSupplierAddress(customer.address || "");
+        setCustomerSupplierContact(customer.phone ? formatPhoneNumber(customer.phone) : "");
       }
     } else {
       setCustomerSupplierName("");
@@ -117,7 +106,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       setCustomerSupplierAddress("");
       setCustomerSupplierContact("");
     }
-  }, [customerSupplierId, orderType, customers, vendors]);
+  }, [customerSupplierId, customers]);
 
   useEffect(() => {
     const subtotal = items.reduce((sum, item) => sum + (isNaN(item.quantity) ? 0 : item.quantity) * (isNaN(item.unitPrice) ? 0 : item.unitPrice), 0);
@@ -174,7 +163,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 + Math.random() : 1 + Math.random(),
       itemName: invItem.name,
       quantity: 1,
-      unitPrice: orderType === "Sales" ? invItem.retailPrice : invItem.unitCost,
+      unitPrice: invItem.retailPrice, // Always retail price for sales
       inventoryItemId: invItem.id,
     }));
     setItems((prevItems) => {
@@ -186,7 +175,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
 
   const handleSubmit = async () => {
     if (!customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
-      showError(`Please fill in all required ${orderType} Order details and ensure all items have valid names, quantities, and prices.`);
+      showError(`Please fill in all required Invoice details and ensure all items have valid names, quantities, and prices.`);
       return;
     }
 
@@ -199,7 +188,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       dueDate: dueDate,
       itemCount: items.length,
       notes: notes.trim(),
-      orderType: orderType === "Sales" ? "Retail" as "Retail" : "Wholesale" as "Wholesale",
+      orderType: "Retail" as "Retail", // Fixed to Retail for Sales
       shippingMethod: "Standard" as "Standard",
       items: items,
       terms: terms.trim(),
@@ -216,7 +205,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
 
   const handlePrintPdf = () => {
     if (!orderNumber || !customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
-      showError(`Please fill in all required ${orderType} Order details before generating the PDF.`);
+      showError(`Please fill in all required Invoice details before generating the PDF.`);
       return;
     }
     if (!profile?.companyProfile) {
@@ -240,44 +229,23 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
       orderQrCodeSvg: orderQrCodeSvg,
     };
 
-    if (orderType === "Sales") {
-      initiatePrint({
-        type: "invoice",
-        props: {
-          invoiceNumber: commonPdfProps.orderNumber,
-          invoiceDate: commonPdfProps.orderDate,
-          customerName: commonPdfProps.customerSupplierName,
-          customerEmail: commonPdfProps.customerSupplierEmail,
-          customerAddress: commonPdfProps.customerSupplierAddress,
-          terms: commonPdfProps.terms,
-          dueDate: commonPdfProps.dueDate,
-          items: commonPdfProps.items,
-          notes: commonPdfProps.notes,
-          taxRate: commonPdfProps.taxRate,
-          companyLogoUrl: commonPdfProps.companyLogoUrl,
-          invoiceQrCodeSvg: commonPdfProps.orderQrCodeSvg,
-        },
-      });
-    } else { // Purchase Order
-      initiatePrint({
-        type: "purchase-order",
-        props: {
-          poNumber: commonPdfProps.orderNumber,
-          poDate: commonPdfProps.orderDate,
-          supplierName: commonPdfProps.customerSupplierName,
-          supplierEmail: commonPdfProps.customerSupplierEmail,
-          supplierAddress: commonPdfProps.customerSupplierAddress,
-          supplierContact: commonPdfProps.customerSupplierContact,
-          terms: commonPdfProps.terms,
-          dueDate: commonPdfProps.dueDate,
-          items: commonPdfProps.items,
-          notes: commonPdfProps.notes,
-          taxRate: commonPdfProps.taxRate,
-          companyLogoUrl: commonPdfProps.companyLogoUrl,
-          poQrCodeSvg: commonPdfProps.orderQrCodeSvg,
-        },
-      });
-    }
+    initiatePrint({
+      type: "invoice",
+      props: {
+        invoiceNumber: commonPdfProps.orderNumber,
+        invoiceDate: commonPdfProps.orderDate,
+        customerName: commonPdfProps.customerSupplierName,
+        customerEmail: commonPdfProps.customerSupplierEmail,
+        customerAddress: commonPdfProps.customerSupplierAddress,
+        terms: commonPdfProps.terms,
+        dueDate: commonPdfProps.dueDate,
+        items: commonPdfProps.items,
+        notes: commonPdfProps.notes,
+        taxRate: commonPdfProps.taxRate,
+        companyLogoUrl: commonPdfProps.companyLogoUrl,
+        invoiceQrCodeSvg: commonPdfProps.orderQrCodeSvg,
+      },
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -294,30 +262,16 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
 
   return (
     <div className="flex flex-col flex-grow overflow-hidden">
-      {/* Tabs for Order Type - Fixed Height */}
-      <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "Sales" | "Purchase")} className="w-full flex-shrink-0 px-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="Sales">Sales Order (Invoice)</TabsTrigger>
-          <TabsTrigger value="Purchase">Purchase Order</TabsTrigger>
-        </TabsList>
-        <TabsContent value="Sales" className="mt-4">
-          <h2 className="text-2xl font-bold mb-4">Create New Invoice</h2>
-        </TabsContent>
-        <TabsContent value="Purchase" className="mt-4">
-          <h2 className="2xl font-bold mb-4">Create New Purchase Order</h2>
-        </TabsContent>
-      </Tabs>
-
       {/* Main Scrollable Area for Form Content - Flexible Height */}
       <ScrollArea className="flex-grow px-6">
         <div className="space-y-6 py-4">
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xl font-semibold">{orderType} Order Details</CardTitle>
+              <CardTitle className="text-xl font-semibold">Invoice Details</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="orderNumber">{orderType} Number</Label>
+                <Label htmlFor="orderNumber">Invoice Number</Label>
                 <Input
                   id="orderNumber"
                   value={orderNumber}
@@ -327,26 +281,18 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customerSupplierNameSelect">{orderType === "Sales" ? "Customer Name" : "Supplier Name"}</Label>
+                <Label htmlFor="customerSupplierNameSelect">Customer Name</Label>
                 <Select value={customerSupplierId || "none-selected"} onValueChange={setCustomerSupplierId}>
                   <SelectTrigger id="customerSupplierNameSelect">
-                    <SelectValue placeholder={`Select an existing ${orderType === "Sales" ? "customer" : "supplier"}`} />
+                    <SelectValue placeholder="Select an existing customer" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none-selected">Select {orderType === "Sales" ? "Customer" : "Supplier"}</SelectItem>
-                    {orderType === "Sales" ? (
-                      customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      vendors.map((vendor) => (
-                        <SelectItem key={vendor.id} value={vendor.id}>
-                          {vendor.name}
-                        </SelectItem>
-                      ))
-                    )}
+                    <SelectItem value="none-selected">Select Customer</SelectItem>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {!customerSupplierId && (
@@ -354,23 +300,23 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
                     id="customerSupplierName"
                     value={customerSupplierName}
                     onChange={(e) => setCustomerSupplierName(e.target.value)}
-                    placeholder={`Or enter new ${orderType === "Sales" ? "customer" : "supplier"} name`}
+                    placeholder="Or enter new customer name"
                     className="mt-2"
                   />
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customerSupplierEmail">{orderType === "Sales" ? "Customer Email" : "Supplier Email"}</Label>
+                <Label htmlFor="customerSupplierEmail">Customer Email</Label>
                 <Input
                   id="customerSupplierEmail"
                   type="email"
                   value={customerSupplierEmail}
                   onChange={(e) => setCustomerSupplierEmail(e.target.value)}
-                  placeholder={`${orderType === "Sales" ? "customer" : "supplier"}@example.com`}
+                  placeholder="customer@example.com"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customerSupplierContact">{orderType === "Sales" ? "Customer Phone" : "Supplier Phone"}</Label>
+                <Label htmlFor="customerSupplierContact">Customer Phone</Label>
                 <Input
                   id="customerSupplierContact"
                   type="text"
@@ -381,17 +327,17 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="customerSupplierAddress">{orderType === "Sales" ? "Customer Address" : "Supplier Address"}</Label>
+                <Label htmlFor="customerSupplierAddress">Customer Address</Label>
                 <Textarea
                   id="customerSupplierAddress"
                   value={customerSupplierAddress}
                   onChange={(e) => setCustomerSupplierAddress(e.target.value)}
-                  placeholder={`${orderType === "Sales" ? "456 Customer St" : "123 Supplier St"}, City, State, Zip`}
+                  placeholder="456 Customer St, City, State, Zip"
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="orderDate">{orderType} Date</Label>
+                <Label htmlFor="orderDate">Invoice Date</Label>
                 <Input
                   id="orderDate"
                   type="date"
@@ -506,7 +452,7 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>Create {orderType} Order</Button>
+        <Button onClick={handleSubmit}>Create Invoice</Button>
         <Button variant="secondary" onClick={handlePrintPdf} disabled={!orderNumber}>
           <Printer className="h-4 w-4 mr-2" /> Print/PDF
         </Button>
@@ -516,10 +462,10 @@ const CreateOrderDialogContent: React.FC<CreateOrderDialogContentProps> = ({ onC
         isOpen={isInventorySelectionDialogOpen}
         onClose={() => setIsInventorySelectionDialogOpen(false)}
         onAddItems={handleAddSelectedInventoryItems}
-        itemType={orderType === "Sales" ? "sales" : "purchase"}
+        itemType="sales"
       />
     </div>
   );
 };
 
-export default CreateOrderDialogContent;
+export default CreateInvoicePageContent;

@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug } from "lucide-react";
+import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
+  Dialog, // Keep Dialog import for other dialogs
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  // Removed DialogTrigger as it's no longer used for Create Order
 } from "@/components/ui/dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { useOrders } from "@/context/OrdersContext";
@@ -34,18 +34,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderColumns } from "@/components/orders/orders-table-columns";
-import CreateOrderDialogContent from "@/components/orders/CreateOrderDialogContent"; // NEW: Import CreateOrderDialogContent
+// Removed CreateOrderDialogContent import
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, archiveOrder } = useOrders();
   const { profile, fetchProfile } = useProfile();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddOrderDialogOpen, setIsAddOrderDialogOpen] = useState(false);
+  // Removed isAddOrderDialogOpen state
   const [activeTab, setActiveTab] = useState("all");
 
   const [isOrderFulfillmentDialogOpen, setIsOrderFulfillmentDialogOpen] = useState(false);
   const [isOrderReceiveShipmentDialogOpe, setIsOrderReceiveShipmentDialogOpe] = useState(false);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
+
+  const navigate = useNavigate(); // Added useNavigate
 
   useEffect(() => {
     fetchOrders();
@@ -165,22 +167,23 @@ const Orders: React.FC = () => {
           </Button>
         )}
 
-        <Dialog open={isAddOrderDialogOpen} onOpenChange={setIsAddOrderDialogOpen}>
-          <DialogTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Create New Order
+              <PlusCircle className="mr-2 h-4 w-4" /> Create New Order <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[900px] flex flex-col max-h-[95vh] p-0">
-            <DialogHeader className="p-6 pb-4 flex-shrink-0">
-              <DialogTitle>Create New Order</DialogTitle>
-              <DialogDescription>
-                Fill in the details to create a new sales or purchase order.
-              </DialogDescription>
-            </DialogHeader>
-            <CreateOrderDialogContent onClose={() => setIsAddOrderDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>New Order Type</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/create-invoice")}>
+              <Receipt className="h-4 w-4 mr-2" /> Sales Order (Invoice)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/create-po")}>
+              <PackagePlus className="h-4 w-4 mr-2" /> Purchase Order
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow">
