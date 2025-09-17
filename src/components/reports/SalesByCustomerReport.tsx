@@ -37,11 +37,11 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Sales Revenue</h3>
-              <p className="text-3xl font-bold text-green-500">${totalOverallSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold text-green-500">${(totalOverallSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Items Sold</h3>
-              <p className="text-3xl font-bold">{totalOverallItems.toLocaleString()}</p>
+              <p className="text-3xl font-bold">{(totalOverallItems ?? 0).toLocaleString()}</p>
             </div>
           </div>
 
@@ -61,8 +61,8 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
                   {customerSales.map((data: CustomerSalesData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.customerName}</TableCell>
-                      <TableCell className="text-right">${data.totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-right">{data.totalItems.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right">{(data.totalItems ?? 0).toLocaleString()}</TableCell>
                       <TableCell>{data.lastOrderDate}</TableCell>
                     </TableRow>
                   ))}

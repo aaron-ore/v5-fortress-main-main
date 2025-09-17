@@ -39,11 +39,11 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Inventory Value</h3>
-              <p className="text-3xl font-bold text-green-500">${totalOverallValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold text-green-500">${(totalOverallValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Units On Hand</h3>
-              <p className="text-3xl font-bold">{totalOverallQuantity.toLocaleString()}</p>
+              <p className="text-3xl font-bold">{(totalOverallQuantity ?? 0).toLocaleString()}</p>
             </div>
           </div>
 
@@ -62,8 +62,8 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
                   {groupedData.map((data: GroupedDataItem, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.name}</TableCell>
-                      <TableCell className="text-right">{data.totalQuantity.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">${data.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right">{(data.totalQuantity ?? 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">${(data.totalValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

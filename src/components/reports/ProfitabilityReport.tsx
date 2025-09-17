@@ -22,7 +22,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
   totalSalesRevenue,
   totalCostOfGoodsSold,
 }) => {
-  const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
+  const grossProfit = (totalSalesRevenue ?? 0) - (totalCostOfGoodsSold ?? 0);
 
   return (
     <div className="space-y-6">
@@ -39,15 +39,15 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Sales Revenue</h3>
-              <p className="text-3xl font-bold text-green-500">${totalSalesRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold text-green-500">${(totalSalesRevenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Cost of Goods Sold</h3>
-              <p className="text-3xl font-bold">${totalCostOfGoodsSold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold">${(totalCostOfGoodsSold ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Gross Profit</h3>
-              <p className="text-3xl font-bold">${grossProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold">${(grossProfit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
 
@@ -65,7 +65,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
                   {metricsData.map((metric: ProfitabilityMetricsData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{metric.name}</TableCell>
-                      <TableCell className="text-right">{metric.value.toFixed(1)}%</TableCell>
+                      <TableCell className="text-right">{(metric.value ?? 0).toFixed(1)}%</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
