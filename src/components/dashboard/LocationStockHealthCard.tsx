@@ -79,7 +79,7 @@ const LocationStockHealthCard: React.FC<LocationStockHealthCardProps> = ({ locat
             </div>
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               {displayData.map((data, index) => (
-                <div key={index} className="flex items-center gap-2">
+                <div key={index} className="flex items-center gap-2 min-w-0 overflow-hidden"> {/* Added min-w-0 and overflow-hidden */}
                   <span className="h-3 w-3 rounded-full" style={{ backgroundColor: LOCATION_COLORS[index % LOCATION_COLORS.length] }}></span>
                   <span className="text-muted-foreground truncate">{data.label}</span>
                 </div>
