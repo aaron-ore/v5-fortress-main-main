@@ -172,6 +172,51 @@
 
     --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
   }
+
+  /* NEW: Tropical Indigo Theme Palette */
+  html.tropical-indigo {
+    --background: 250 9% 37%; /* Davy's gray */
+    --foreground: 110 100% 97%; /* Honeydew */
+
+    --card: 255 16% 31%; /* English Violet */
+    --card-foreground: 110 100% 97%;
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+
+    --popover: 255 16% 31%;
+    --popover-foreground: 110 100% 97%;
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+
+    --primary: 138 75% 64%; /* Light green */
+    --primary-foreground: 250 9% 37%; /* Davy's gray */
+
+    --secondary: 255 16% 31%; /* English Violet */
+    --secondary-foreground: 110 100% 97%;
+
+    --muted: 250 9% 37%; /* Davy's gray */
+    --muted-foreground: 244 69% 74%; /* Tropical indigo */
+
+    --accent: 244 69% 74%; /* Tropical indigo */
+    --accent-foreground: 250 9% 37%; /* Davy's gray */
+
+    --destructive: 0 80% 60%; /* Standard red */
+    --destructive-foreground: 110 100% 97%;
+
+    --border: 255 16% 31%; /* English Violet */
+    --input: 250 9% 37%; /* Davy's gray */
+    --ring: 138 75% 64%; /* Light green */
+
+    /* Sidebar specific colors for Tropical Indigo theme */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-active-background: var(--secondary);
+    --sidebar-active-foreground: var(--secondary-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-toggle-background: var(--secondary);
+
+    --scrollbar-background: 250 9% 45%; /* Slightly lighter Davy's gray */
+
+    --shadow-color: hsl(0 0% 0% / 0.08);
+  }
 }
 
 @layer base {

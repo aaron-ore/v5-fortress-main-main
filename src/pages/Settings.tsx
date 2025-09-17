@@ -45,7 +45,7 @@ const Settings: React.FC = () => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       if (file.type.startsWith("image/")) {
-        setCompanyLogoFile(file);
+        setImageFile(file);
         const reader = new FileReader();
         reader.onloadend = () => {
           setCompanyLogoUrlPreview(reader.result as string);
@@ -87,6 +87,7 @@ const Settings: React.FC = () => {
           }
         }
         finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/');
+        console.log("[Settings] Uploaded image URL:", finalCompanyLogoUrl);
         showSuccess("Company logo uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading company logo:", error);
@@ -171,7 +172,7 @@ const Settings: React.FC = () => {
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
   const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
 
-  const availableThemes = ['dark', 'emerald', 'deep-forest', 'deep-forest-light'];
+  const availableThemes = ['dark', 'emerald', 'deep-forest', 'tropical-indigo'];
 
   return (
     <div className="flex flex-col space-y-6 p-6">
