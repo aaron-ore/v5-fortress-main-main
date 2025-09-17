@@ -64,7 +64,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                 </TableHeader>
                 <TableBody>
                   {(movementsToDisplay ?? []).map((movement: StockMovement) => {
-                    const movementTimestamp = parseAndValidateDate(movement.timestamp); // Defined here
+                    const movementTimestamp = parseAndValidateDate(movement.timestamp);
                     return (
                       <TableRow key={movement.id}>
                         <TableCell className="font-medium">{movement.itemName}</TableCell>

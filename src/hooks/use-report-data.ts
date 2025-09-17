@@ -1,33 +1,78 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Updated to InventoryFolder
+import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// Removed: import { PrintContentData } from "@/context/PrintContext";
+import { showError } from "@/utils/toast";
 
-interface ReportDataResult {
-  data: any;
+interface DashboardContentData {
+  metrics: {
+    totalStockValue: number;
+    totalUnitsOnHand: number;
+    lowStockItemsCount: number;
+    outOfStockItemsCount: number;
+    ordersDueTodayCount: number;
+    incomingShipmentsCount: number;
+    recentAdjustmentsCount: number;
+    totalIncome: number;
+    totalLosses: number;
+    fulfillmentPercentage: number;
+    pendingPercentage: number;
+    inventoryTurnoverRate: string;
+    supplierPerformanceScore: "good" | "average" | "bad";
+  };
+  charts: {
+    last3MonthSalesData: any[];
+    monthlyOverviewData: any[];
+    liveActivityData: any[];
+    totalStockValueTrendData: any[];
+    salesInventoryTrendData: any[];
+    demandForecastData: any[];
+    weeklyRevenueData: any[];
+    profitabilityMetricsData: any[];
+    topStockBulletGraphData: any[];
+    locationStockHealthData: any[];
+  };
+  lists: {
+    lowStockItems: InventoryItem[];
+    outOfStockItems: InventoryItem[];
+    recentSalesOrders: OrderItem[];
+    recentPurchaseOrders: OrderItem[];
+    openPurchaseOrders: OrderItem[];
+    pendingInvoices: OrderItem[];
+    recentShipments: OrderItem[];
+    topSellingProducts: { name: string; unitsSold: number }[];
+    pendingDiscrepanciesCount: number;
+    previousPeriodDiscrepanciesCount: number;
+    dailyIssuesCount: number;
+    previousPeriodIssuesCount: number;
+  };
+}
+
+interface UseDashboardHookResult {
+  data: DashboardContentData | null;
   pdfProps: any;
   isLoading: boolean;
   error: string | null;
   refresh: () => void;
 }
 
-export const useReportData = (reportId: string, dateRange: DateRange | undefined): ReportDataResult => {
-  const { inventoryItems } = useInventory();
-  const { orders } = useOrders();
-  const { categories } = useCategories();
-  const { customers } = useCustomers();
-  const { stockMovements, fetchStockMovements } = useStockMovement();
-  const { profile, allProfiles, fetchAllProfiles } = useProfile();
-  const { inventoryFolders: structuredLocations } = useOnboarding(); // Updated to inventoryFolders
+export const useReportData = (reportId: string, dateRange: DateRange | undefined): UseDashboardHookResult => {
+  const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
+  const { orders, isLoadingOrders, fetchOrders } = useOrders();
+  const { categories, isLoadingCategories, refreshCategories } = useCategories(); // Added isLoadingCategories, refreshCategories
+  const { customers, isLoadingCustomers, refreshCustomers } = useCustomers(); // Added isLoadingCustomers, refreshCustomers
+  const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
+  const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding(); // Added isLoadingFolders, fetchInventoryFolders
 
   const [processedData, setProcessedData] = useState<any>(null);
   const [pdfProps, setPdfProps] = useState<any>(null);
@@ -36,8 +81,18 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const refresh = useCallback(() => {
+    setError(null); // Clear previous errors on refresh
     setRefreshTrigger(prev => prev + 1);
-  }, []);
+    // Trigger individual context refreshes
+    refreshInventory();
+    fetchOrders();
+    refreshCategories(); // Refresh categories
+    refreshCustomers(); // Refresh customers
+    fetchStockMovements();
+    refreshVendors();
+    fetchAllProfiles();
+    fetchInventoryFolders();
+  }, [refreshInventory, fetchOrders, refreshCategories, refreshCustomers, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
 
   const filterDataByDateRange = useCallback((items: any[], dateKey: string) => {
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
@@ -58,8 +113,25 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       return;
     }
 
+    // Check if any critical data dependencies are still loading
+    if (
+      isLoadingProfile ||
+      isLoadingInventory ||
+      isLoadingOrders ||
+      isLoadingStockMovements ||
+      isLoadingVendors ||
+      isLoadingCategories || // Check categories loading
+      isLoadingCustomers || // Check customers loading
+      isLoadingFolders // Check folders loading
+    ) {
+      // If any dependency is still loading, defer report generation.
+      // The useEffect below will re-trigger once all are loaded.
+      setIsLoading(true); // Keep loading state true
+      return;
+    }
+
     setIsLoading(true);
-    setError(null);
+    setError(null); // Clear error at the start of a new generation attempt
 
     const basePdfProps = {
       companyName: profile.companyProfile.companyName,
@@ -72,7 +144,6 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
     let currentProcessedData: any = null;
     let currentPdfProps: any = { ...basePdfProps };
-    // let printType: PrintContentData['type'] = reportId as PrintContentData['type']; // Removed unused variable
 
     try {
       switch (reportId) {
@@ -118,7 +189,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "inventory-valuation": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const groupBy = 'category';
+          const groupBy = 'category'; // Default or from a filter option
 
           let groupedData: { name: string; totalValue: number; totalQuantity: number }[] = [];
           let totalOverallValue = 0;
@@ -140,11 +211,11 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               totalValue: data.totalValue,
               totalQuantity: data.totalQuantity,
             })).sort((a, b) => b.totalValue - a.totalValue);
-          } else {
+          } else { // Group by folder
             const locationMap: { [key: string]: { totalValue: number; totalQuantity: number, displayName: string } } = {};
             filteredInventory.forEach((item: InventoryItem) => {
-              const folderIdKey = item.folderId; // Changed from locationKey to folderIdKey
-              const display = structuredLocations.find(folder => folder.id === folderIdKey)?.name || folderIdKey; // Find folder by ID and use its name
+              const folderIdKey = item.folderId;
+              const display = structuredLocations.find(folder => folder.id === folderIdKey)?.name || folderIdKey;
 
               if (!locationMap[folderIdKey]) {
                 locationMap[folderIdKey] = { totalValue: 0, totalQuantity: 0, displayName: display };
@@ -176,16 +247,14 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           
           currentProcessedData = {
             items: itemsToDisplay,
-            statusFilter: 'all',
+            statusFilter: 'all', // Default or from a filter option
             structuredLocations,
           };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
           break;
         }
         case "inventory-movement": {
-          await fetchStockMovements();
-          await fetchAllProfiles();
-          const movementTypeFilter = 'all';
+          const movementTypeFilter = 'all'; // Default or from a filter option
 
           const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: StockMovement) => {
             return movementTypeFilter === "all" || movement.type === movementTypeFilter;
@@ -256,7 +325,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             return order.type === "Purchase";
           });
 
-          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all';
+          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all'; // Default or from a filter option
           currentProcessedData = { orders: filteredOrders, statusFilter };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
           break;
@@ -274,17 +343,17 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               if (inventoryItem) {
                 totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
               } else {
-                totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7;
+                totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Fallback if item not found
               }
             });
           });
 
           const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
           const grossProfitMargin = totalSalesRevenue > 0 ? (grossProfit / totalSalesRevenue) * 100 : 0;
-          const simulatedOperatingExpenses = totalSalesRevenue * 0.20;
+          const simulatedOperatingExpenses = totalSalesRevenue * 0.20; // Example
           const netProfit = grossProfit - simulatedOperatingExpenses;
           const netProfitMargin = totalSalesRevenue > 0 ? (netProfit / totalSalesRevenue) * 100 : 0;
-          const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0;
+          const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0; // Example
 
           const metricsData = [
             { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
@@ -301,8 +370,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "stock-discrepancy": {
-          await fetchAllProfiles();
-          const statusFilter: 'all' | 'pending' | 'resolved' = 'all';
+          const statusFilter: 'all' | 'pending' | 'resolved' = 'all'; // Default or from a filter option
 
           let query = supabase
             .from('discrepancies')
@@ -338,8 +406,8 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             originalQuantity: log.original_quantity,
             countedQuantity: log.counted_quantity,
             difference: log.difference,
-            reason: log.reason,
             status: log.status,
+            reason: log.reason,
           }));
 
           currentProcessedData = {
@@ -363,13 +431,32 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       setPdfProps(currentPdfProps);
       setIsLoading(false);
     }
-  }, [reportId, dateRange, inventoryItems, orders, categories, customers, stockMovements, profile, allProfiles, structuredLocations, fetchStockMovements, fetchAllProfiles]);
+  }, [
+    reportId, dateRange, inventoryItems, orders, categories, customers, stockMovements,
+    profile, allProfiles, structuredLocations, isLoadingInventory, isLoadingOrders,
+    isLoadingStockMovements, isLoadingVendors, isLoadingProfile, isLoadingCategories,
+    isLoadingCustomers, isLoadingFolders
+  ]);
 
   useEffect(() => {
-    if (profile?.companyProfile) {
+    // Only trigger report generation if all contexts are loaded
+    if (
+      !isLoadingProfile &&
+      !isLoadingInventory &&
+      !isLoadingOrders &&
+      !isLoadingStockMovements &&
+      !isLoadingVendors &&
+      !isLoadingCategories &&
+      !isLoadingCustomers &&
+      !isLoadingFolders
+    ) {
       generateReportData();
     }
-  }, [profile?.companyProfile, generateReportData, refreshTrigger]);
+  }, [
+    generateReportData, refreshTrigger, isLoadingProfile, isLoadingInventory,
+    isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingCategories,
+    isLoadingCustomers, isLoadingFolders
+  ]);
 
   return { data: processedData, pdfProps, isLoading, error, refresh };
 };
