@@ -36,8 +36,9 @@ import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfConten
 import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent";
 import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent";
 import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent";
-import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Corrected import path
-import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent"; // Corrected import path
+import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent";
+import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent";
+import PickingWavePdfContent from "@/components/reports/pdf/PickingWavePdfContent"; // Ensure this import is present and correct
 
 export interface ReportItem {
   id: string;
@@ -122,6 +123,6 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "putaway-label": PutawayLabelPdfContent,
   "purchase-order": PurchaseOrderPdfContent,
   "invoice": InvoicePdfContent,
-  "location-label": FolderLabelPdfContent, // Corrected name and added to map
-  "picking-wave": PickingWavePdfContent, // Added to map
+  "location-label": FolderLabelPdfContent,
+  "picking-wave": PickingWavePdfContent,
 };
