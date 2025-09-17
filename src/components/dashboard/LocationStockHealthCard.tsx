@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ArrowUp, ArrowDown, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
 
 const LOCATION_COLORS = [
   "hsl(var(--primary))",
@@ -60,35 +61,35 @@ const LocationStockHealthCard: React.FC<LocationStockHealthCardProps> = ({ locat
     <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="pb-2">
         <CardTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <MapPin className="h-6 w-6 text-primary" /> Folder Stock {/* Changed title to Folder Stock */}
+          <MapPin className="h-6 w-6 text-primary" /> Folder Stock
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Top folders by stock movement</p> {/* Changed description to folders */}
+        <p className="text-sm text-muted-foreground">Top folders by stock movement</p>
       </CardHeader>
       <CardContent className="flex-grow p-4 pt-0 flex flex-col justify-between">
         {displayData.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 justify-items-center items-center flex-grow">
-              {displayData.map((data, index) => (
-                <MiniDonut
-                  key={index}
-                  percentage={data.percentage}
-                  isPositive={data.isPositive}
-                  color={LOCATION_COLORS[index % LOCATION_COLORS.length]}
-                />
-              ))}
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              {displayData.map((data, index) => (
-                <div key={index} className="flex items-center gap-2 min-w-0 overflow-hidden"> {/* Added min-w-0 and overflow-hidden */}
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: LOCATION_COLORS[index % LOCATION_COLORS.length] }}></span>
-                  <span className="text-muted-foreground truncate">{data.label}</span>
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 justify-items-center items-center flex-grow">
+            {displayData.map((data, index) => (
+              <TooltipProvider key={index}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div> {/* Wrap MiniDonut in a div to make it a valid trigger */}
+                      <MiniDonut
+                        percentage={data.percentage}
+                        isPositive={data.isPositive}
+                        color={LOCATION_COLORS[index % LOCATION_COLORS.length]}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{data.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-            No stock movement data available for folders. {/* Changed text to folders */}
+            No stock movement data available for folders.
           </div>
         )}
       </CardContent>
