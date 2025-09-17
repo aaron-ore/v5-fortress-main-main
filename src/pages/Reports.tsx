@@ -4,12 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, LayoutDashboard, Package, Receipt, Truck, Scale, FileText, DollarSign, Users, AlertTriangle, ChevronDown, FilterX, Printer, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  // Removed DropdownMenu imports as they are no longer needed
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/DateRangePicker";
@@ -21,8 +16,11 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
-import { hasPlanAccess } from "@/utils/planUtils"; // Import hasPlanAccess
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { hasPlanAccess } from "@/utils/planUtils";
+
+// Import the ReportSidebar component
+import ReportSidebar from "@/components/reports/ReportSidebar";
 
 // Import all report content components
 import DashboardSummaryReportContent from "@/components/reports/DashboardSummaryReport";
@@ -279,127 +277,117 @@ const Reports: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col flex-grow">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-      </div>
-      <p className="text-muted-foreground mb-6">
-        Generate detailed reports to gain actionable insights into your inventory, sales, and operations.
-      </p>
-
-      <Card className="mb-4 bg-card border-border shadow-sm">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-semibold">Report Configuration</CardTitle>
-          <div className="flex items-center gap-2">
-            <DateRangePicker dateRange={dateRange} onSelect={setDateRange} className="w-[240px]" />
-            {dateRange?.from && isValid(dateRange.from) && (
-              <Button variant="outline" onClick={handleClearDateFilter} size="icon">
-                <FilterX className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-      </Card>
-
-      <Card className="flex-grow rounded-lg border flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-xl font-semibold">
-            {currentReportTitle}
+    <div className="flex flex-col lg:flex-row flex-grow space-y-6 lg:space-y-0 lg:space-x-6">
+      {/* Sidebar for Report Navigation */}
+      <Card className="lg:w-1/4 bg-card border-border shadow-sm flex-shrink-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <BarChart className="h-6 w-6 text-primary" /> Reports
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <BarChart className="h-4 w-4" /> {currentReportTitle} <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              {reportCategories.map(category => (
-                <React.Fragment key={category.title}>
-                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-muted-foreground rounded-md mx-2 my-1 cursor-default">
-                    {category.icon && <category.icon className="h-4 w-4" />} {category.title}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="mx-2" />
-                  {category.reports.map(report => (
-                    <DropdownMenuItem
-                      key={report.id}
-                      onClick={() => handleReportSelect(report.id)}
-                      className={cn("mx-2", activeReportId === report.id && "bg-muted text-primary")}
-                    >
-                      {report.title}
-                    </DropdownMenuItem>
-                  ))}
-                  {reportCategories.indexOf(category) < reportCategories.length - 1 && <DropdownMenuSeparator className="mx-2" />}
-                </React.Fragment>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </CardHeader>
-        <CardContent className="flex-grow p-4 pt-0">
-          {isLoadingReportData ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">Generating report...</span>
-            </div>
-          ) : reportError ? (
-            <div className="flex flex-col items-center justify-center h-full text-destructive">
-              <AlertTriangle className="h-16 w-16 mb-4" />
-              <p className="text-lg">Error: {reportError}</p>
-              <Button onClick={refreshReportData} className="mt-4">Retry Report</Button>
-            </div>
-          ) : !reportData ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <FileText className="h-16 w-16 mb-4" />
-              <p className="text-lg">Select a report and filters, then click "Refresh Report".</p>
-              <Button onClick={refreshReportData} className="mt-4">Generate Report</Button>
-            </div>
-          ) : (
-            <div ref={reportContentRef} className="space-y-6">
-              {CurrentReportComponent && <CurrentReportComponent {...reportData} />}
-            </div>
-          )}
+        <CardContent className="p-0">
+          <ReportSidebar
+            reportCategories={reportCategories}
+            // The ReportSidebar component will handle its own active state based on URL hash
+          />
         </CardContent>
       </Card>
 
-      <div className="mt-4 flex flex-wrap gap-2 justify-end">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button onClick={handleSummarizeReport} disabled={isSummarizing || !reportData || !hasAiSummaryAccess}>
-              {isSummarizing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...
-                </>
-              ) : (
-                <>
-                  <Brain className="h-4 w-4 mr-2" /> AI Summary
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          {!hasAiSummaryAccess && (
-            <TooltipContent>
-              <p>AI Summary is a Premium feature. Upgrade your plan to unlock!</p>
-            </TooltipContent>
-          )}
-        </Tooltip>
-        <Button onClick={handlePrintReport} disabled={!reportData}>
-          <Printer className="h-4 w-4 mr-2" /> Print/PDF
-        </Button>
-      </div>
+      {/* Main Report Content Area */}
+      <div className="flex flex-col flex-grow space-y-6">
+        <h1 className="text-3xl font-bold">Reports & Analytics</h1>
+        <p className="text-muted-foreground">
+          Generate detailed reports to gain actionable insights into your inventory, sales, and operations.
+        </p>
 
-      {aiSummary && (
-        <Card className="mt-4 bg-card border-border rounded-lg shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl font-semibold flex items-center gap-2">
-              <Brain className="h-6 w-6 text-accent" /> AI Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted/20 p-4 rounded-md border border-border">
-              <p className="text-foreground whitespace-pre-wrap">{aiSummary}</p>
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-xl font-semibold">Report Configuration</CardTitle>
+            <div className="flex items-center gap-2">
+              <DateRangePicker dateRange={dateRange} onSelect={setDateRange} className="w-[240px]" />
+              {dateRange?.from && isValid(dateRange.from) && (
+                <Button variant="outline" onClick={handleClearDateFilter} size="icon">
+                  <FilterX className="h-4 w-4" />
+                </Button>
+              )}
             </div>
+          </CardHeader>
+        </Card>
+
+        <Card className="flex-grow rounded-lg border flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-xl font-semibold">
+              {currentReportTitle}
+            </CardTitle>
+            {/* Removed DropdownMenu for report selection */}
+          </CardHeader>
+          <CardContent className="flex-grow p-4 pt-0">
+            {isLoadingReportData ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Generating report...</span>
+              </div>
+            ) : reportError ? (
+              <div className="flex flex-col items-center justify-center h-full text-destructive">
+                <AlertTriangle className="h-16 w-16 mb-4" />
+                <p className="text-lg">Error: {reportError}</p>
+                <Button onClick={refreshReportData} className="mt-4">Retry Report</Button>
+              </div>
+            ) : !reportData ? (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <FileText className="h-16 w-16 mb-4" />
+                <p className="text-lg">Select a report from the sidebar and filters, then click "Generate Report".</p>
+                <Button onClick={refreshReportData} className="mt-4">Generate Report</Button>
+              </div>
+            ) : (
+              <div ref={reportContentRef} className="space-y-6">
+                {CurrentReportComponent && <CurrentReportComponent {...reportData} />}
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+
+        <div className="mt-4 flex flex-wrap gap-2 justify-end">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={handleSummarizeReport} disabled={isSummarizing || !reportData || !hasAiSummaryAccess}>
+                {isSummarizing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...
+                  </>
+                ) : (
+                  <>
+                    <Brain className="h-4 w-4 mr-2" /> AI Summary
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            {!hasAiSummaryAccess && (
+              <TooltipContent>
+                <p>AI Summary is a Premium feature. Upgrade your plan to unlock!</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+          <Button onClick={handlePrintReport} disabled={!reportData}>
+            <Printer className="h-4 w-4 mr-2" /> Print/PDF
+          </Button>
+        </div>
+
+        {aiSummary && (
+          <Card className="mt-4 bg-card border-border rounded-lg shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                <Brain className="h-6 w-6 text-accent" /> AI Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/20 p-4 rounded-md border border-border">
+                <p className="text-foreground whitespace-pre-wrap">{aiSummary}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
