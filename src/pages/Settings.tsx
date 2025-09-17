@@ -45,7 +45,7 @@ const Settings: React.FC = () => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0];
       if (file.type.startsWith("image/")) {
-        setImageFile(file);
+        setCompanyLogoFile(file); // FIXED: Changed setImageFile to setCompanyLogoFile
         const reader = new FileReader();
         reader.onloadend = () => {
           setCompanyLogoUrlPreview(reader.result as string);

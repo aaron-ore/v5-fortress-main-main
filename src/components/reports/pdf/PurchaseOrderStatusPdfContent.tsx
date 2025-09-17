@@ -99,20 +99,20 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
                 const orderDate = parseAndValidateDate(order.date);
                 const dueDate = parseAndValidateDate(order.dueDate);
                 return (
-                  <TableRow key={order.id}>
-                    <TableCell className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</TableCell>
-                    <TableCell className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</TableCell>
-                    <TableCell className="py-2 px-4 border-r border-gray-200">{orderDate ? format(orderDate, "MMM dd, yyyy") : "N/A"}</TableCell>
-                    <TableCell className="py-2 px-4 border-r border-gray-200">{dueDate ? format(dueDate, "MMM dd, yyyy") : "N/A"}</TableCell>
-                    <TableCell className="py-2 px-4 border-r border-gray-200">{order.status ?? "N/A"}</TableCell>
-                    <TableCell className="py-2 px-4 text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                  </TableRow>
+                  <tr key={order.id}>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{orderDate ? format(orderDate, "MMM dd, yyyy") : "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{dueDate ? format(dueDate, "MMM dd, yyyy") : "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.status ?? "N/A"}</td>
+                    <td className="py-2 px-4 text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
                 );
               })
             ) : (
-              <TableRow className="border-b border-gray-200">
-                <TableCell colSpan={6} className="py-2 px-4 text-center text-gray-600">No purchase orders found for this report.</TableCell>
-              </TableRow>
+              <tr className="border-b border-gray-200">
+                <td colSpan={6} className="py-2 px-4 text-center text-gray-600">No purchase orders found for this report.</td>
+              </tr>
             )}
           </tbody>
         </table>

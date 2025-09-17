@@ -12,6 +12,7 @@ export interface CompanyProfile {
   companyLogoUrl?: string;
   organizationCode?: string;
   organizationTheme?: string;
+  plan?: string; // NEW: Added plan property
 }
 
 export interface UserProfile {
@@ -63,6 +64,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyLogoUrl: companyData.company_logo_url || undefined,
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
+      plan: companyData.plan || undefined, // NEW: Map plan from companyData
     } : undefined;
 
     return {
@@ -106,7 +108,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           company_logo_url,
           shopify_access_token,
           shopify_refresh_token,
-          shopify_store_name
+          shopify_store_name,
+          plan
         )
       `)
       .eq('id', user.id)
@@ -239,6 +242,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       currency: updates.companyCurrency,
       address: updates.companyAddress,
       company_logo_url: updates.companyLogoUrl,
+      plan: updates.plan, // NEW: Include plan in payload
     };
 
     if (uniqueCode !== undefined) {

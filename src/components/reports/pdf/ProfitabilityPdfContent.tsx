@@ -104,15 +104,15 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           <tbody>
             {(metricsData?.length ?? 0) > 0 ? (
               metricsData?.map((metric, index) => (
-                <TableRow key={index}>
-                  <TableCell className="py-2 px-4 border-r border-gray-200">{metric.name ?? "N/A"}</TableCell>
-                  <TableCell className="py-2 px-4 text-right">{(metric.value ?? 0).toFixed(1)}%</TableCell>
-                </TableRow>
+                <tr key={index}>
+                  <td className="py-2 px-4 border-r border-gray-200">{metric.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right">{(metric.value ?? 0).toFixed(1)}%</td>
+                </tr>
               ))
             ) : (
-              <TableRow className="border-b border-gray-200">
-                <TableCell colSpan={2} className="py-2 px-4 text-center text-gray-600">No profitability metrics available for this report.</TableCell>
-              </TableRow>
+              <tr className="border-b border-gray-200">
+                <td colSpan={2} className="py-2 px-4 text-center text-gray-600">No profitability metrics available for this report.</td>
+              </tr>
             )}
           </tbody>
         </table>

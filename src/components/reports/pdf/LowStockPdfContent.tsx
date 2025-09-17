@@ -96,18 +96,18 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
           <tbody>
             {(items?.length ?? 0) > 0 ? (
               items?.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</TableCell>
-                  <TableCell className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</TableCell>
-                  <TableCell className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</TableCell>
-                  <TableCell className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</TableCell>
-                  <TableCell className="py-2 px-4">{getFolderDisplayName(item.folderId ?? "")}</TableCell> {/* Updated to folderId */}
-                </TableRow>
+                <tr key={item.id}>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</td>
+                  <td className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</td>
+                  <td className="py-2 px-4">{getFolderDisplayName(item.folderId ?? "")}</td> {/* Updated to folderId */}
+                </tr>
               ))
             ) : (
-              <TableRow className="border-b border-gray-200">
-                <TableCell colSpan={5} className="py-2 px-4 text-center text-gray-600">No items found for this report.</TableCell>
-              </TableRow>
+              <tr className="border-b border-gray-200">
+                <td colSpan={5} className="py-2 px-4 text-center text-gray-600">No items found for this report.</td>
+              </tr>
             )}
           </tbody>
         </table>

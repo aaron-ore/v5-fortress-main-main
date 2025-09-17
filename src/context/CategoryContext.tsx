@@ -11,6 +11,7 @@ export interface Category {
 
 interface CategoryContextType {
   categories: Category[];
+  isLoadingCategories: boolean; // NEW: Add isLoadingCategories
   addCategory: (name: string) => Promise<Category | null>;
   removeCategory: (id: string) => Promise<void>;
   refreshCategories: () => Promise<void>;
@@ -20,12 +21,15 @@ const CategoryContext = createContext<CategoryContextType | undefined>(undefined
 
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true); // NEW: Add isLoadingCategories state
   const { profile, isLoadingProfile } = useProfile();
 
   const fetchCategories = useCallback(async () => {
+    setIsLoadingCategories(true); // NEW: Set loading to true
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setCategories([]);
+      setIsLoadingCategories(false); // NEW: Set loading to false
       return;
     }
 
@@ -47,6 +51,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       }));
       setCategories(fetchedCategories);
     }
+    setIsLoadingCategories(false); // NEW: Set loading to false
   }, [profile?.organizationId]);
 
   useEffect(() => {
@@ -77,7 +82,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (error) {
       if (error.code === '23505') {
         console.warn(`Category "${trimmedName}" already exists in DB, likely added concurrently.`);
-        const { data: existingDbCategory, error: _fetchErrorInner } = await supabase // Renamed to _fetchErrorInner
+        const { data: existingDbCategory, error: _fetchErrorInner } = await supabase
           .from("categories")
           .select("id, name, organization_id")
           .eq("name", trimmedName)
@@ -136,7 +141,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <CategoryContext.Provider value={{ categories, addCategory, removeCategory, refreshCategories }}>
+    <CategoryContext.Provider value={{ categories, isLoadingCategories, addCategory, removeCategory, refreshCategories }}>
       {children}
     </CategoryContext.Provider>
   );

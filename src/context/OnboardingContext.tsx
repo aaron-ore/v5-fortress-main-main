@@ -31,6 +31,7 @@ interface OnboardingContextType {
   isOnboardingComplete: boolean;
   companyProfile: ProfileCompanyProfile | null;
   inventoryFolders: InventoryFolder[]; // Renamed from locations to inventoryFolders
+  isLoadingFolders: boolean; // NEW: Add isLoadingFolders
   markOnboardingComplete: () => void;
   setCompanyProfile: (profile: CompanyProfile, uniqueCode?: string) => Promise<void>;
   addInventoryFolder: (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">) => Promise<InventoryFolder | null>; // Renamed from addLocation
@@ -53,6 +54,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const companyProfile = profile?.companyProfile || null;
 
   const [inventoryFolders, setInventoryFolders] = useState<InventoryFolder[]>([]); // Renamed from locations
+  const [isLoadingFolders, setIsLoadingFolders] = useState(true); // NEW: Add isLoadingFolders state
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -82,9 +84,11 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // Renamed from fetchLocations
   const fetchInventoryFolders = useCallback(async () => {
+    setIsLoadingFolders(true); // NEW: Set loading to true
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setInventoryFolders([]);
+      setIsLoadingFolders(false); // NEW: Set loading to false
       return;
     }
 
@@ -102,6 +106,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else {
       setInventoryFolders(data.map(mapSupabaseFolderToInventoryFolder));
     }
+    setIsLoadingFolders(false); // NEW: Set loading to false
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
@@ -109,6 +114,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       fetchInventoryFolders();
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setInventoryFolders([]);
+      setIsLoadingFolders(false); // NEW: Set loading to false
     }
   }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
 
@@ -182,7 +188,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme')
+          .select('unique_code, company_logo_url, default_theme, plan') // NEW: Select plan
           .eq('id', profile.organizationId)
           .single();
 
@@ -229,6 +235,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           currency: profileData.currency,
           unique_code: uniqueCodeToPersist,
           default_theme: existingOrg?.default_theme || 'dark',
+          plan: existingOrg?.plan || 'free', // NEW: Include plan in update payload
           company_logo_url: profileData.companyLogoUrl,
         };
         console.log("[OnboardingContext] Update payload for organizations table:", updatePayload);
@@ -401,6 +408,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         isOnboardingComplete,
         companyProfile,
         inventoryFolders, // Renamed
+        isLoadingFolders, // NEW: Provide isLoadingFolders
         markOnboardingComplete,
         setCompanyProfile,
         addInventoryFolder, // Renamed

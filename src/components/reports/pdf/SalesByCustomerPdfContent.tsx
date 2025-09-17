@@ -98,17 +98,17 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
           <tbody>
             {(customerSales?.length ?? 0) > 0 ? (
               customerSales?.map((data, index) => (
-                <TableRow key={index}>
-                  <TableCell className="py-2 px-4 border-r border-gray-200">{data.customerName ?? "N/A"}</TableCell>
-                  <TableCell className="py-2 px-4 text-right border-r border-gray-200">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                  <TableCell className="py-2 px-4 text-right border-r border-gray-200">{(data.totalItems ?? 0).toLocaleString()}</TableCell>
-                  <TableCell className="py-2 px-4">{parseAndValidateDate(data.lastOrderDate) ? format(parseAndValidateDate(data.lastOrderDate)!, "MMM dd, yyyy") : "N/A"}</TableCell>
-                </TableRow>
+                <tr key={index}>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.customerName ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">{(data.totalItems ?? 0).toLocaleString()}</td>
+                  <td className="py-2 px-4">{parseAndValidateDate(data.lastOrderDate) ? format(parseAndValidateDate(data.lastOrderDate)!, "MMM dd, yyyy") : "N/A"}</td>
+                </tr>
               ))
             ) : (
-              <TableRow className="border-b border-gray-200">
-                <TableCell colSpan={4} className="py-2 px-4 text-center text-gray-600">No sales data available for this report.</TableCell>
-              </TableRow>
+              <tr className="border-b border-gray-200">
+                <td colSpan={4} className="py-2 px-4 text-center text-gray-600">No sales data available for this report.</td>
+              </tr>
             )}
           </tbody>
         </table>
