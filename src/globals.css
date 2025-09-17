@@ -173,49 +173,49 @@
     --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
   }
 
-  /* NEW: Tropical Indigo Theme Palette */
+  /* NEW: Tropical Indigo Theme Palette (Light Version) */
   html.tropical-indigo {
-    --background: 250 9% 37%; /* Davy's gray */
-    --foreground: 110 100% 97%; /* Honeydew */
+    --background: 240 10% 98%; /* Very light grey/off-white */
+    --foreground: 240 10% 10%; /* Very dark grey/almost black */
 
-    --card: 255 16% 31%; /* English Violet */
-    --card-foreground: 110 100% 97%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 240 10% 10%;
+    box-shadow: 0 4px 12px hsl(240 10% 10% / 0.08);
 
-    --popover: 255 16% 31%;
-    --popover-foreground: 110 100% 97%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 240 10% 10%;
+    box-shadow: 0 4px 12px hsl(240 10% 10% / 0.08);
 
-    --primary: 138 75% 64%; /* Light green */
-    --primary-foreground: 250 9% 37%; /* Davy's gray */
+    --primary: 244 69% 74%; /* Tropical Indigo */
+    --primary-foreground: 240 10% 10%; /* Dark text on primary accent */
 
-    --secondary: 255 16% 31%; /* English Violet */
-    --secondary-foreground: 110 100% 97%;
+    --secondary: 240 10% 94%; /* Light grey for secondary elements */
+    --secondary-foreground: 240 10% 10%;
 
-    --muted: 250 9% 37%; /* Davy's gray */
-    --muted-foreground: 244 69% 74%; /* Tropical indigo */
+    --muted: 240 10% 90%; /* Even lighter grey for muted backgrounds */
+    --muted-foreground: 240 10% 40%; /* Medium grey for muted text */
 
-    --accent: 244 69% 74%; /* Tropical indigo */
-    --accent-foreground: 250 9% 37%; /* Davy's gray */
+    --accent: 138 75% 64%; /* Light green */
+    --accent-foreground: 240 10% 10%; /* Dark text on accent */
 
     --destructive: 0 80% 60%; /* Standard red */
-    --destructive-foreground: 110 100% 97%;
+    --destructive-foreground: 0 0% 100%; /* White text on red */
 
-    --border: 255 16% 31%; /* English Violet */
-    --input: 250 9% 37%; /* Davy's gray */
-    --ring: 138 75% 64%; /* Light green */
+    --border: 240 10% 80%; /* Light grey border */
+    --input: 240 10% 96%; /* Slightly darker off-white for input fields */
+    --ring: var(--primary); /* Primary color for ring */
 
     /* Sidebar specific colors for Tropical Indigo theme */
     --sidebar-background: var(--background);
     --sidebar-foreground: var(--foreground);
     --sidebar-active-background: var(--secondary);
-    --sidebar-active-foreground: var(--secondary-foreground);
+    --sidebar-active-foreground: var(--foreground);
     --sidebar-border: var(--border);
     --sidebar-toggle-background: var(--secondary);
 
-    --scrollbar-background: 250 9% 45%; /* Slightly lighter Davy's gray */
+    --scrollbar-background: 240 10% 85%; /* Light grey for scrollbar */
 
-    --shadow-color: hsl(0 0% 0% / 0.08);
+    --shadow-color: hsl(240 10% 10% / 0.08); /* Subtle dark shadow */
   }
 }
 
