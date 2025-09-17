@@ -70,8 +70,8 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoadingVendors, refreshVendors } = useVendors(); // Destructure refreshVendors
-  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
+  const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile(); // NEW: Destructure allProfiles and isLoadingAllProfiles
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
   const [processedData, setProcessedData] = useState<any>(null);
@@ -89,7 +89,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     refreshCategories();
     refreshCustomers();
     fetchStockMovements();
-    refreshVendors(); // Now correctly called
+    refreshVendors();
     fetchAllProfiles();
     fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, refreshCategories, refreshCustomers, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
@@ -116,6 +116,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     // Check if any critical data dependencies are still loading
     if (
       isLoadingProfile ||
+      isLoadingAllProfiles || // NEW: Check isLoadingAllProfiles
       isLoadingInventory ||
       isLoadingOrders ||
       isLoadingStockMovements ||
@@ -435,13 +436,14 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     reportId, dateRange, inventoryItems, orders, categories, customers, stockMovements,
     profile, allProfiles, structuredLocations, isLoadingInventory, isLoadingOrders,
     isLoadingStockMovements, isLoadingVendors, isLoadingProfile, isLoadingCategories,
-    isLoadingCustomers, isLoadingFolders
+    isLoadingCustomers, isLoadingFolders, isLoadingAllProfiles // NEW: Added isLoadingAllProfiles
   ]);
 
   useEffect(() => {
     // Only trigger report generation if all contexts are loaded
     if (
       !isLoadingProfile &&
+      !isLoadingAllProfiles && // NEW: Check isLoadingAllProfiles
       !isLoadingInventory &&
       !isLoadingOrders &&
       !isLoadingStockMovements &&
@@ -455,7 +457,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   }, [
     generateReportData, refreshTrigger, isLoadingProfile, isLoadingInventory,
     isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingCategories,
-    isLoadingCustomers, isLoadingFolders
+    isLoadingCustomers, isLoadingFolders, isLoadingAllProfiles // NEW: Added isLoadingAllProfiles
   ]);
 
   return { data: processedData, pdfProps, isLoading, error, refresh };

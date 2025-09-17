@@ -37,6 +37,7 @@ interface ProfileContextType {
   profile: UserProfile | null;
   allProfiles: UserProfile[];
   isLoadingProfile: boolean;
+  isLoadingAllProfiles: boolean; // NEW: Added loading state for all profiles
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
   updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => Promise<void>;
@@ -52,6 +53,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true); // NEW: Initialize loading state for all profiles
 
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
     const companyProfile: CompanyProfile | undefined = companyData ? {
@@ -124,9 +126,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
       setAllProfiles([]);
+      setIsLoadingAllProfiles(false); // NEW: Set loading to false if no organization
       return;
     }
 
+    setIsLoadingAllProfiles(true); // NEW: Use isLoadingAllProfiles
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -142,6 +146,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
+    setIsLoadingAllProfiles(false); // NEW: Set loading to false in all exit paths
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
@@ -149,6 +154,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       fetchProfile();
     }
   }, [isLoadingAuth, fetchProfile]);
+
+  // NEW: Effect to fetch all profiles once the main profile is loaded and has an organizationId
+  useEffect(() => {
+    if (!isLoadingProfile && profile?.organizationId) {
+      fetchAllProfiles();
+    } else if (!isLoadingProfile && !profile?.organizationId) {
+      setAllProfiles([]);
+      setIsLoadingAllProfiles(false);
+    }
+  }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
 
   const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => {
     if (!profile) {
@@ -238,6 +253,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           console.warn("Failed to delete old company logo from storage:", deleteError);
           await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: profile.companyProfile.companyLogoUrl }, true);
         } else {
+          console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
           await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: profile.companyProfile.companyLogoUrl });
         }
       }
@@ -250,12 +266,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error updating company profile:', error);
-      await logActivity("Update Company Profile Failed", `Failed to update company profile for organization ${profile.organizationId}.`, profile, { error_message: error.message, updated_fields: updates, unique_code: uniqueCode }, true);
+      await logActivity("Update Company Profile Failed", `Failed to update company profile for organization ${profile.organizationId}.`, profile, { error_message: error.message, updated_fields: payload }, true);
       showError(`Failed to update company profile: ${error.message}`);
       throw error;
     } else {
       showSuccess('Company profile updated successfully!');
-      await logActivity("Update Company Profile Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { updated_fields: updates, unique_code: uniqueCode });
+      await logActivity("Update Company Profile Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { updated_fields: payload });
       await fetchProfile();
     }
   };
@@ -291,6 +307,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         profile,
         allProfiles,
         isLoadingProfile,
+        isLoadingAllProfiles, // NEW: Provide isLoadingAllProfiles
         fetchProfile,
         fetchAllProfiles,
         updateProfile,
