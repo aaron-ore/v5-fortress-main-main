@@ -90,14 +90,14 @@
 
     --card: 160 20% 20%; /* Slightly lighter emerald */
     --card-foreground: 0 0% 100%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08); /* NEW: Subtle glow effect */
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
     --popover: 160 20% 20%;
     --popover-foreground: 0 0% 100%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08); /* NEW: Subtle glow effect */
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
     --primary: 160 60% 70%; /* Bright Emerald Green */
-    --primary-foreground: 0 0% 100%; /* Changed from 220 10% 8% to White */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 160 15% 30%; /* Muted green */
     --secondary-foreground: 0 0% 100%;
@@ -106,26 +106,25 @@
     --muted-foreground: 160 10% 60%;
 
     --accent: 160 60% 80%; /* Lighter bright emerald */
-    --accent-foreground: 0 0% 100%; /* Changed from 220 10% 8% to White */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 60%; /* Red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 160 15% 40%; /* Adjusted for better contrast in emerald theme */
-    --input: 160 20% 20%; /* Similar to card background */
-    --ring: 160 60% 70%; /* Primary color */
+    --border: 160 15% 40%;
+    --input: 160 20% 20%;
+    --ring: 160 60% 70%;
 
-    /* Sidebar specific colors for Emerald theme */
     --sidebar-background: var(--background);
     --sidebar-foreground: var(--foreground);
     --sidebar-active-background: var(--secondary);
-    --sidebar-active-foreground: 0 0% 100%; /* Explicitly white for dark themes */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-border: var(--border);
     --sidebar-toggle-background: var(--secondary);
 
-    --scrollbar-background: 160 15% 40%; /* Lighter scrollbar for emerald theme */
+    --scrollbar-background: 160 15% 40%;
 
-    --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
+    --shadow-color: hsl(0 0% 0% / 0.08);
   }
 
   /* NEW: Deep Forest Theme Palette */
@@ -135,11 +134,11 @@
 
     --card: 180 25% 16%; /* Very dark green-blue */
     --card-foreground: 0 0% 100%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08); /* NEW: Subtle glow effect */
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
     --popover: 180 25% 16%;
     --popover-foreground: 0 0% 100%;
-    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08); /* NEW: Subtle glow effect */
+    box-shadow: 0 4px 12px hsl(0 0% 0% / 0.08);
 
     --primary: 168 43% 27%; /* Dark teal */
     --primary-foreground: 0 0% 100%;
@@ -147,7 +146,7 @@
     --secondary: 240 6% 37%; /* Muted purple-grey */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 25%; /* Darker grey for muted elements */
+    --muted: 240 5% 25%;
     --muted-foreground: 240 5% 50%;
 
     --accent: 270 29% 35%; /* Dark purple */
@@ -156,21 +155,20 @@
     --destructive: 0 80% 60%; /* Standard red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 5% 35%; /* Adjusted for better contrast in dark themes */
-    --input: 180 25% 16%; /* Same as card */
-    --ring: 168 43% 27%; /* Primary color */
+    --border: 240 5% 35%;
+    --input: 180 25% 16%;
+    --ring: 168 43% 27%;
 
-    /* Sidebar specific colors for Deep Forest theme */
-    --sidebar-background: var(--card); /* Set sidebar background to card color */
-    --sidebar-foreground: var(--foreground); /* Keep sidebar text/icons white */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--foreground);
     --sidebar-active-background: var(--secondary);
-    --sidebar-active-foreground: 0 0% 100%; /* Explicitly white for dark themes */
+    --sidebar-active-foreground: 0 0% 100%;
     --sidebar-border: var(--border);
     --sidebar-toggle-background: var(--secondary);
 
-    --scrollbar-background: 240 5% 40%; /* Lighter scrollbar for deep-forest theme */
+    --scrollbar-background: 240 5% 40%;
 
-    --shadow-color: hsl(0 0% 0% / 0.08); /* NEW: Shadow color for glow */
+    --shadow-color: hsl(0 0% 0% / 0.08);
   }
 
   /* NEW: Tropical Indigo Theme Palette (Light Version) */
@@ -220,7 +218,7 @@
 
   /* NEW: Light Grey Indigo Theme Palette (Duplicated from Tropical Indigo, with light grey background) */
   html.light-grey-indigo {
-    --background: 0 0% 87%; /* Light grey (#DEDEDE) */
+    --background: 110 100% 97%; /* Light green/off-white (#EDFFEC) */
     --foreground: 240 10% 10%; /* Very dark grey/almost black */
 
     --card: 0 0% 100%; /* White */
@@ -247,12 +245,12 @@
     --destructive-foreground: 0 0% 100%; /* White text on red */
 
     --border: 240 10% 80%; /* Light grey border */
-    --input: 240 10% 96%; /* Slightly darker off-white for input fields */
+    --input: 0 0% 100%; /* White for input fields */
     --ring: var(--primary); /* Primary color for ring */
 
     /* Sidebar specific colors for Light Grey Indigo theme */
-    --sidebar-background: var(--background);
-    --sidebar-foreground: var(--foreground);
+    --sidebar-background: 244 69% 74%; /* Indigo (#9792E3) */
+    --sidebar-foreground: 0 0% 100%; /* White text on indigo sidebar */
     --sidebar-active-background: var(--secondary);
     --sidebar-active-foreground: var(--foreground);
     --sidebar-border: var(--border);
