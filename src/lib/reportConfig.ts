@@ -10,6 +10,29 @@ import {
   Scale,
   FileText,
 } from "lucide-react";
+import React from "react"; // Import React for React.ElementType
+
+// Import all report content components
+import DashboardSummaryReportContent from "@/components/reports/DashboardSummaryReport";
+import InventoryValuationReportContent from "@/components/reports/InventoryValuationReport";
+import LowStockReportContent from "@/components/reports/LowStockReport";
+import InventoryMovementReportContent from "@/components/reports/InventoryMovementReport";
+import SalesByCustomerReportContent from "@/components/reports/SalesByCustomerReport";
+import SalesByProductReportContent from "@/components/reports/SalesByProductReport";
+import PurchaseOrderStatusReportContent from "@/components/reports/PurchaseOrderStatusReport";
+import ProfitabilityReportContent from "@/components/reports/ProfitabilityReport";
+import DiscrepancyReportContent from "@/components/reports/DiscrepancyReport";
+
+// PDF content components
+import DashboardSummaryPdfContent from "@/components/reports/pdf/DashboardSummaryPdfContent";
+import InventoryValuationPdfContent from "@/components/reports/pdf/InventoryValuationPdfContent";
+import LowStockPdfContent from "@/components/reports/pdf/LowStockPdfContent";
+import InventoryMovementPdfContent from "@/components/reports/pdf/InventoryMovementPdfContent";
+import SalesByCustomerPdfContent from "@/components/reports/pdf/SalesByCustomerPdfContent";
+import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdfContent";
+import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
+import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
+import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
 
 export interface ReportItem {
   id: string;
@@ -65,3 +88,29 @@ export const reportCategories: ReportCategory[] = [
     ],
   },
 ];
+
+// Map report IDs to their respective content components
+export const reportContentComponents: { [key: string]: React.ElementType } = {
+  "dashboard-summary": DashboardSummaryReportContent,
+  "inventory-valuation": InventoryValuationReportContent,
+  "low-stock-out-of-stock": LowStockReportContent,
+  "inventory-movement": InventoryMovementReportContent,
+  "sales-by-customer": SalesByCustomerReportContent,
+  "sales-by-product": SalesByProductReportContent,
+  "purchase-order-status": PurchaseOrderStatusReportContent,
+  "profitability": ProfitabilityReportContent,
+  "stock-discrepancy": DiscrepancyReportContent,
+};
+
+// Map report IDs to their respective PDF content components
+export const pdfContentComponents: { [key: string]: React.ElementType } = {
+  "dashboard-summary": DashboardSummaryPdfContent,
+  "inventory-valuation": InventoryValuationPdfContent,
+  "low-stock-out-of-stock": LowStockPdfContent,
+  "inventory-movement": InventoryMovementPdfContent,
+  "sales-by-customer": SalesByCustomerPdfContent,
+  "sales-by-product": SalesByProductPdfContent,
+  "purchase-order-status": PurchaseOrderStatusPdfContent,
+  "profitability": ProfitabilityPdfContent,
+  "stock-discrepancy": DiscrepancyPdfContent,
+};

@@ -18,62 +18,8 @@ import { hasPlanAccess } from "@/utils/planUtils";
 // Import the ReportSidebar component
 import ReportSidebar from "@/components/reports/ReportSidebar";
 
-// Import report categories from the new config file
-import { reportCategories, ReportCategory, ReportItem } from "@/lib/reportConfig";
-
-// Import all report content components
-import DashboardSummaryReportContent from "@/components/reports/DashboardSummaryReport";
-import InventoryValuationReportContent from "@/components/reports/InventoryValuationReport";
-import LowStockReportContent from "@/components/reports/LowStockReport";
-import InventoryMovementReportContent from "@/components/reports/InventoryMovementReport";
-import SalesByCustomerReportContent from "@/components/reports/SalesByCustomerReport";
-import SalesByProductReportContent from "@/components/reports/SalesByProductReport";
-import PurchaseOrderStatusReportContent from "@/components/reports/PurchaseOrderStatusReport";
-import ProfitabilityReportContent from "@/components/reports/ProfitabilityReport";
-import DiscrepancyReportContent from "@/components/reports/DiscrepancyReport";
-
-// PDF content components (still needed for PrintWrapper)
-import DashboardSummaryPdfContent from "@/components/reports/pdf/DashboardSummaryPdfContent";
-// @ts-ignore
-import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent";
-// @ts-ignore
-import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent";
-
-import InventoryValuationPdfContent from "@/components/reports/pdf/InventoryValuationPdfContent";
-import LowStockPdfContent from "@/components/reports/pdf/LowStockPdfContent";
-import InventoryMovementPdfContent from "@/components/reports/pdf/InventoryMovementPdfContent";
-import SalesByCustomerPdfContent from "@/components/reports/pdf/SalesByCustomerPdfContent";
-import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdfContent";
-import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
-import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
-import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
-
-
-// Map report IDs to their respective content components
-const reportContentComponents: { [key: string]: React.ElementType } = {
-  "dashboard-summary": DashboardSummaryReportContent,
-  "inventory-valuation": InventoryValuationReportContent,
-  "low-stock-out-of-stock": LowStockReportContent,
-  "inventory-movement": InventoryMovementReportContent,
-  "sales-by-customer": SalesByCustomerReportContent,
-  "sales-by-product": SalesByProductReportContent,
-  "purchase-order-status": PurchaseOrderStatusReportContent,
-  "profitability": ProfitabilityReportContent,
-  "stock-discrepancy": DiscrepancyReportContent,
-};
-
-// Map report IDs to their respective PDF content components
-const pdfContentComponents: { [key: string]: React.ElementType } = {
-  "dashboard-summary": DashboardSummaryPdfContent,
-  "inventory-valuation": InventoryValuationPdfContent,
-  "low-stock-out-of-stock": LowStockPdfContent,
-  "inventory-movement": InventoryMovementPdfContent,
-  "sales-by-customer": SalesByCustomerPdfContent,
-  "sales-by-product": SalesByProductPdfContent,
-  "purchase-order-status": PurchaseOrderStatusPdfContent,
-  "profitability": ProfitabilityPdfContent,
-  "stock-discrepancy": DiscrepancyPdfContent,
-};
+// Import report categories and component mappings from the new config file
+import { reportCategories, reportContentComponents, pdfContentComponents } from "@/lib/reportConfig";
 
 
 const Reports: React.FC = () => {
@@ -103,13 +49,6 @@ const Reports: React.FC = () => {
       navigate("/reports#dashboard-summary", { replace: true });
     }
   }, [location.hash, navigate]);
-
-  // Removed unused handleReportSelect function
-  // const handleReportSelect = (reportId: string) => {
-  //   setActiveReportId(reportId);
-  //   navigate(`/reports#${reportId}`);
-  //   setAiSummary("");
-  // };
 
   const handleClearDateFilter = () => {
     setDateRange(undefined);
