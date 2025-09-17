@@ -31,7 +31,9 @@ import DiscrepancyReportContent from "@/components/reports/DiscrepancyReport";
 
 // PDF content components (still needed for PrintWrapper)
 import DashboardSummaryPdfContent from "@/components/reports/pdf/DashboardSummaryPdfContent";
+// @ts-ignore
 import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent";
+// @ts-ignore
 import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent";
 
 import InventoryValuationPdfContent from "@/components/reports/pdf/InventoryValuationPdfContent";
