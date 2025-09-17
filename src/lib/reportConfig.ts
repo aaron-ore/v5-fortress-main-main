@@ -33,6 +33,8 @@ import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdf
 import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
 import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
 import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
+import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent"; // NEW: Added import
+import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent"; // NEW: Added import
 
 export interface ReportItem {
   id: string;
@@ -113,4 +115,6 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "purchase-order-status": PurchaseOrderStatusPdfContent,
   "profitability": ProfitabilityPdfContent,
   "stock-discrepancy": DiscrepancyPdfContent,
+  "advanced-demand-forecast": AdvancedDemandForecastPdfContent, // NEW: Added
+  "putaway-label": PutawayLabelPdfContent, // NEW: Added
 };

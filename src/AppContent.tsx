@@ -35,18 +35,8 @@ import InvoicePdfContent from "./components/InvoicePdfContent";
 import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
 import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
-import DashboardSummaryPdfContent from "./components/reports/pdf/DashboardSummaryPdfContent";
-import AdvancedDemandForecastPdfContent from "./components/reports/pdf/AdvancedDemandForecastPdfContent";
-import PutawayLabelPdfContent from "./components/reports/pdf/PutawayLabelPdfContent";
-
-import InventoryValuationPdfContent from "./components/reports/pdf/InventoryValuationPdfContent";
-import LowStockPdfContent from "./components/reports/pdf/LowStockPdfContent";
-import InventoryMovementPdfContent from "./components/reports/pdf/InventoryMovementPdfContent";
-import SalesByCustomerPdfContent from "./components/reports/pdf/SalesByCustomerPdfContent";
-import SalesByProductPdfContent from "./components/reports/pdf/SalesByProductPdfContent";
-import PurchaseOrderStatusPdfContent from "./components/reports/pdf/PurchaseOrderStatusPdfContent";
-import ProfitabilityPdfContent from "./components/reports/pdf/ProfitabilityPdfContent";
-import DiscrepancyPdfContent from "./components/reports/pdf/DiscrepancyPdfContent";
+// Import pdfContentComponents from the centralized config file
+import { pdfContentComponents } from "./lib/reportConfig";
 
 import { useOnboarding } from "./context/OnboardingContext";
 import { useProfile } from "./context/ProfileContext";
@@ -206,39 +196,12 @@ const AppContent = () => {
 
     console.log("[AppContent] Rendering PDF component for type:", printContentData.type);
 
-    switch (printContentData.type) {
-      case "purchase-order":
-        return <PurchaseOrderPdfContent {...printContentData.props} />;
-      case "invoice":
-        return <InvoicePdfContent {...printContentData.props} />;
-      case "dashboard-summary":
-        return <DashboardSummaryPdfContent {...printContentData.props} />;
-      case "advanced-demand-forecast":
-        return <AdvancedDemandForecastPdfContent {...printContentData.props} />;
-      case "putaway-label":
-        return <PutawayLabelPdfContent {...printContentData.props} />;
-      case "location-label":
-        return <LocationLabelPdfContent {...printContentData.props} />;
-      case "picking-wave":
-        return <PickingWavePdfContent {...printContentData.props} />;
-      case "inventory-valuation-report":
-        return <InventoryValuationPdfContent {...printContentData.props} />;
-      case "low-stock-report":
-        return <LowStockPdfContent {...printContentData.props} />;
-      case "inventory-movement-report":
-        return <InventoryMovementPdfContent {...printContentData.props} />;
-      case "sales-by-customer-report":
-        return <SalesByCustomerPdfContent {...printContentData.props} />;
-      case "sales-by-product-report":
-        return <SalesByProductPdfContent {...printContentData.props} />;
-      case "purchase-order-status-report":
-        return <PurchaseOrderStatusPdfContent {...printContentData.props} />;
-      case "profitability-report":
-        return <ProfitabilityPdfContent {...printContentData.props} />;
-      case "discrepancy-report":
-        return <DiscrepancyPdfContent {...printContentData.props} />;
-      default:
-        return <div>Unknown PDF Report Type</div>;
+    const PdfComponent = pdfContentComponents[printContentData.type];
+
+    if (PdfComponent) {
+      return <PdfComponent {...printContentData.props} />;
+    } else {
+      return <div>Unknown PDF Report Type: {printContentData.type}</div>;
     }
   };
 
