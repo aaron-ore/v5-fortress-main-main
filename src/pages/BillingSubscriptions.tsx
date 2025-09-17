@@ -7,6 +7,7 @@ import { showSuccess } from "@/utils/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { planOrder } from "@/utils/planUtils"; // Import planOrder for consistency
 
 interface PlanFeature {
   text: string;

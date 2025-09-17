@@ -17,10 +17,12 @@ import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Updated to InventoryFolder
+import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Import Tooltip components
+import { hasPlanAccess } from "@/utils/planUtils"; // Import hasPlanAccess
 
 // Import all report content components
 import DashboardSummaryReportContent from "@/components/reports/DashboardSummaryReport";
@@ -43,7 +45,6 @@ import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdf
 import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
 import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
 import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
-// Removed unused imports: AdvancedDemandForecastPdfContent, PutawayLabelPdfContent
 
 interface ReportCategory {
   title: string;
@@ -70,7 +71,7 @@ const reportCategories: ReportCategory[] = [
     title: "Inventory Reports",
     icon: Package,
     reports: [
-      { id: "inventory-valuation", title: "Inventory Valuation", description: "Value of all stock by category/folder.", icon: DollarSign }, // Updated text
+      { id: "inventory-valuation", title: "Inventory Valuation", description: "Value of all stock by category/folder.", icon: DollarSign },
       { id: "low-stock-out-of-stock", title: "Low/Out of Stock", description: "Items needing replenishment.", icon: AlertTriangle },
       { id: "inventory-movement", title: "Inventory Movement", description: "Detailed log of stock changes.", icon: Scale },
       { id: "stock-discrepancy", title: "Stock Discrepancy", description: "Reported differences in stock counts.", icon: AlertTriangle },
@@ -124,7 +125,6 @@ const pdfContentComponents: { [key: string]: React.ElementType } = {
   "purchase-order-status": PurchaseOrderStatusPdfContent,
   "profitability": ProfitabilityPdfContent,
   "stock-discrepancy": DiscrepancyPdfContent,
-  // Removed unused PDF content components
 };
 
 
@@ -133,7 +133,7 @@ const Reports: React.FC = () => {
   const navigate = useNavigate();
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
-  const { inventoryFolders: structuredLocations } = useOnboarding(); // Updated to inventoryFolders
+  const { inventoryFolders: structuredLocations } = useOnboarding();
 
   const [activeReportId, setActiveReportId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -207,7 +207,16 @@ const Reports: React.FC = () => {
     showSuccess("Report sent to printer!");
   }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
 
+  const hasAiSummaryAccess = useMemo(() => {
+    // AI Summary is available from 'premium' plan onwards
+    return hasPlanAccess(profile?.companyProfile?.plan, "premium");
+  }, [profile?.companyProfile?.plan]);
+
   const handleSummarizeReport = async () => {
+    if (!hasAiSummaryAccess) {
+      showError("AI Summary is a Premium feature. Please upgrade your plan to use this functionality.");
+      return;
+    }
     if (!reportData) {
       showError("No report data to summarize. Please generate the report first.");
       setIsSummarizing(false);
@@ -352,17 +361,26 @@ const Reports: React.FC = () => {
       </Card>
 
       <div className="mt-4 flex flex-wrap gap-2 justify-end">
-        <Button onClick={handleSummarizeReport} disabled={isSummarizing || !reportData}>
-          {isSummarizing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...
-            </>
-          ) : (
-            <>
-              <Brain className="h-4 w-4 mr-2" /> AI Summary
-            </>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button onClick={handleSummarizeReport} disabled={isSummarizing || !reportData || !hasAiSummaryAccess}>
+              {isSummarizing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...
+                </>
+              ) : (
+                <>
+                  <Brain className="h-4 w-4 mr-2" /> AI Summary
+                </>
+              )}
+            </Button>
+          </TooltipTrigger>
+          {!hasAiSummaryAccess && (
+            <TooltipContent>
+              <p>AI Summary is a Premium feature. Upgrade your plan to unlock!</p>
+            </TooltipContent>
           )}
-        </Button>
+        </Tooltip>
         <Button onClick={handlePrintReport} disabled={!reportData}>
           <Printer className="h-4 w-4 mr-2" /> Print/PDF
         </Button>
