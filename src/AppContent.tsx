@@ -30,10 +30,6 @@ import OnboardingPage from "./pages/OnboardingPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 
-import PurchaseOrderPdfContent from "./components/PurchaseOrderPdfContent";
-import InvoicePdfContent from "./components/InvoicePdfContent";
-import LocationLabelPdfContent from "./components/LocationLabelPdfContent";
-import PickingWavePdfContent from "./components/PickingWavePdfContent";
 
 // Import pdfContentComponents from the centralized config file
 import { pdfContentComponents } from "./lib/reportConfig";

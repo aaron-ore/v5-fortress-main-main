@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ReportCategory, ReportItem } from "@/lib/reportConfig"; // Import interfaces from new config file
+import { ReportCategory } from "@/lib/reportConfig"; // Import interfaces from new config file
 
 interface ReportSidebarProps {
   reportCategories: ReportCategory[]; // Now passed as a prop
