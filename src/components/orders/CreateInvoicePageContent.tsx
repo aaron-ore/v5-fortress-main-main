@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent"; // Updated import path
 
 import {
   DndContext,

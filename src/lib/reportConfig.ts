@@ -35,6 +35,7 @@ import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfCo
 import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
 import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent"; // NEW: Added import
 import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent"; // NEW: Added import
+import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent"; // NEW: Added import
 
 export interface ReportItem {
   id: string;
@@ -117,4 +118,6 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "stock-discrepancy": DiscrepancyPdfContent,
   "advanced-demand-forecast": AdvancedDemandForecastPdfContent, // NEW: Added
   "putaway-label": PutawayLabelPdfContent, // NEW: Added
+  "purchase-order": PurchaseOrderPdfContent, // NEW: Added
+  "invoice": InvoicePdfContent, // NEW: Added
 };
