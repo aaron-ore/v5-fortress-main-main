@@ -32,8 +32,8 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
     ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
     : "All Time";
 
-  const totalOverallSales = customerSales.reduce((sum, data) => sum + data.totalSales, 0);
-  const totalOverallUnits = customerSales.reduce((sum, data) => sum + data.totalItems, 0);
+  const totalOverallSales = (customerSales ?? []).reduce((sum, data) => sum + (data.totalSales ?? 0), 0);
+  const totalOverallUnits = (customerSales ?? []).reduce((sum, data) => sum + (data.totalItems ?? 0), 0);
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
@@ -59,8 +59,8 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -70,15 +70,15 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Sales Revenue:</span>
-              <span>${totalOverallSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalOverallSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Units Sold:</span>
-              <span>{totalOverallUnits.toLocaleString()}</span>
+              <span>{(totalOverallUnits ?? 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Number of Customers:</span>
-              <span>{customerSales.length}</span>
+              <span>{(customerSales?.length ?? 0)}</span>
             </div>
           </div>
         </div>
@@ -96,12 +96,12 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {customerSales.length > 0 ? (
-              customerSales.map((data, index) => (
+            {(customerSales?.length ?? 0) > 0 ? (
+              customerSales?.map((data, index) => (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{data.customerName}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">${data.totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">{data.totalItems.toLocaleString()}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.customerName ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">{(data.totalItems ?? 0).toLocaleString()}</td>
                   <td className="py-2 px-4">{parseAndValidateDate(data.lastOrderDate) ? format(parseAndValidateDate(data.lastOrderDate)!, "MMM dd, yyyy") : "N/A"}</td>
                 </tr>
               ))

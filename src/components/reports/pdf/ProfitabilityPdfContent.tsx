@@ -35,7 +35,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
     ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
     : "All Time";
 
-  const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
+  const grossProfit = (totalSalesRevenue ?? 0) - (totalCostOfGoodsSold ?? 0);
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
@@ -61,8 +61,8 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -72,20 +72,20 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Sales Revenue:</span>
-              <span>${totalSalesRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalSalesRevenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Cost of Goods Sold:</span>
-              <span>${totalCostOfGoodsSold.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalCostOfGoodsSold ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Gross Profit:</span>
-              <span>${grossProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(grossProfit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            {metricsData.map((metric, index) => (
+            {(metricsData ?? []).map((metric, index) => (
               <div key={index} className="flex justify-between">
-                <span className="font-semibold">{metric.name}:</span>
-                <span>{metric.value.toFixed(1)}%</span>
+                <span className="font-semibold">{metric.name ?? "N/A"}:</span>
+                <span>{(metric.value ?? 0).toFixed(1)}%</span>
               </div>
             ))}
           </div>
@@ -102,11 +102,11 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {metricsData.length > 0 ? (
-              metricsData.map((metric, index) => (
+            {(metricsData?.length ?? 0) > 0 ? (
+              metricsData?.map((metric, index) => (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{metric.name}</td>
-                  <td className="py-2 px-4 text-right">{metric.value.toFixed(1)}%</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{metric.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right">{(metric.value ?? 0).toFixed(1)}%</td>
                 </tr>
               ))
             ) : (

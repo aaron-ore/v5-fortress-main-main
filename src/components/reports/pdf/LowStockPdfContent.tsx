@@ -38,7 +38,7 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
       : "LOW & OUT OF STOCK ITEMS";
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    const foundLoc = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
     return foundLoc?.name || "Unassigned"; // Use folder name
   };
 
@@ -66,15 +66,15 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
       <div className="mb-8">
         <p className="font-bold mb-2">SUMMARY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">Total {reportTitle} Items: {items.length}</p>
+          <p className="font-semibold">Total {reportTitle} Items: {(items?.length ?? 0)}</p>
           <p className="text-xs text-gray-600 mt-1">
             This report lists inventory items that are currently at or below their reorder level, or completely out of stock.
           </p>
@@ -94,14 +94,14 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {items.length > 0 ? (
-              items.map((item) => (
+            {(items?.length ?? 0) > 0 ? (
+              items?.map((item) => (
                 <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
-                  <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity}</td>
-                  <td className="py-2 px-4 text-right">{item.reorderLevel}</td>
-                  <td className="py-2 px-4">{getFolderDisplayName(item.folderId)}</td> {/* Updated to folderId */}
+                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</td>
+                  <td className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</td>
+                  <td className="py-2 px-4">{getFolderDisplayName(item.folderId ?? "")}</td> {/* Updated to folderId */}
                 </tr>
               ))
             ) : (

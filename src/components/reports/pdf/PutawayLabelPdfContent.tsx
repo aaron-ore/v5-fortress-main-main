@@ -32,28 +32,28 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
   const printDateObj = parseAndValidateDate(printDate);
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
-    return foundLoc?.name || folderId; // Use folder name
+    const foundLoc = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
+    return foundLoc?.name || folderId ?? "N/A"; // Use folder name
   };
 
   return (
     <div className="bg-white text-gray-900 font-sans text-xs p-2 w-[50mm] h-[50mm] border border-black flex flex-col overflow-hidden">
       <div className="flex justify-center mb-1 flex-shrink-0 p-1 bg-white">
-        <div dangerouslySetInnerHTML={{ __html: qrCodeSvg }} className="w-[25mm] h-[25mm] object-contain" />
+        <div dangerouslySetInnerHTML={{ __html: qrCodeSvg ?? "" }} className="w-[25mm] h-[25mm] object-contain" />
       </div>
 
-      <p className="font-bold text-sm text-center mb-1 leading-tight flex-shrink-0 truncate">{itemName}</p>
+      <p className="font-bold text-sm text-center mb-1 leading-tight flex-shrink-0 truncate">{itemName ?? "N/A"}</p>
 
       <div className="grid grid-cols-2 gap-x-1 gap-y-0.5 text-[0.6rem] flex-grow overflow-hidden">
         <div>
-          <span className="font-bold">SKU:</span> {itemSku}
+          <span className="font-bold">SKU:</span> {itemSku ?? "N/A"}
         </div>
         <div>
-          <span className="font-bold">Qty:</span> {receivedQuantity}
+          <span className="font-bold">Qty:</span> {receivedQuantity ?? 0}
         </div>
         {lotNumber && (
           <div>
-            <span className="font-bold">Lot:</span> {lotNumber}
+            <span className="font-bold">Lot:</span> {lotNumber ?? "N/A"}
           </div>
         )}
         {expirationDateObj && isValid(expirationDateObj) && (
@@ -63,11 +63,11 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
         )}
         {serialNumber && (
           <div>
-            <span className="font-bold">SN:</span> {serialNumber}
+            <span className="font-bold">SN:</span> {serialNumber ?? "N/A"}
           </div>
         )}
         <div className="col-span-2">
-          <span className="font-bold">Loc:</span> <span className="text-blue-700 font-extrabold">{getFolderDisplayName(suggestedLocation)}</span>
+          <span className="font-bold">Loc:</span> <span className="text-blue-700 font-extrabold">{getFolderDisplayName(suggestedLocation ?? "")}</span>
         </div>
       </div>
 

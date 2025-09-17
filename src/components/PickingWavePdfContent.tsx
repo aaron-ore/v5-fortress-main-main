@@ -36,7 +36,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
 
   // Helper to get folder name from ID
   const getFolderName = (folderId: string) => {
-    const folder = inventoryFolders.find(f => f.id === folderId);
+    const folder = (inventoryFolders ?? []).find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
@@ -53,11 +53,11 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             PICKING WAVE
           </h1>
-          <p className="text-lg font-semibold text-gray-700">Wave ID: {waveId}</p>
+          <p className="text-lg font-semibold text-gray-700">Wave ID: {waveId ?? "N/A"}</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">PICK DATE: {pickDateObj && isValid(pickDateObj) ? format(pickDateObj, "MMM dd, yyyy") : "N/A"}</p>
-          {pickerName && <p className="text-sm font-semibold">PICKER: {pickerName}</p>}
+          {pickerName && <p className="text-sm font-semibold">PICKER: {pickerName ?? "N/A"}</p>}
         </div>
       </div>
 
@@ -67,8 +67,8 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -84,13 +84,19 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {ordersInWave.map((order, _index) => (
-              <tr key={order.id} className="border-b border-gray-200">
-                <td className="py-2 px-4 border-r border-gray-200">{order.id}</td>
-                <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier}</td>
-                <td className="py-2 px-4">{order.deliveryRoute || 'N/A'}</td>
+            {(ordersInWave?.length ?? 0) > 0 ? (
+              ordersInWave?.map((order, _index) => (
+                <tr key={order.id} className="border-b border-gray-200">
+                  <td className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</td>
+                  <td className="py-2 px-4">{order.deliveryRoute ?? 'N/A'}</td>
+                </tr>
+              ))
+            ) : (
+              <tr className="border-b border-gray-200">
+                <td colSpan={3} className="py-2 px-4 text-center text-gray-600">No orders in this wave.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -108,14 +114,20 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {pickListItems.map((item, _index) => (
-              <tr key={_index} className="border-b border-gray-200">
-                <td className="py-2 px-4 border-r border-gray-200">{item.itemName}</td>
-                <td className="py-2 px-4 border-r border-gray-200">{item.itemSku}</td>
-                <td className="py-2 px-4 border-r border-gray-200">{getFolderName(item.pickingBinFolderId)}</td> {/* Updated to folder name */}
-                <td className="py-2 px-4 text-right">{item.quantityToPick}</td>
+            {(pickListItems?.length ?? 0) > 0 ? (
+              pickListItems?.map((item, _index) => (
+                <tr key={_index} className="border-b border-gray-200">
+                  <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.itemSku ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{getFolderName(item.pickingBinFolderId ?? "")}</td> {/* Updated to folder name */}
+                  <td className="py-2 px-4 text-right">{item.quantityToPick ?? 0}</td>
+                </tr>
+              ))
+            ) : (
+              <tr className="border-b border-gray-200">
+                <td colSpan={4} className="py-2 px-4 text-center text-gray-600">No items in pick list.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

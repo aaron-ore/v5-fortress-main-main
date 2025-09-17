@@ -33,8 +33,8 @@ const SalesByProductPdfContent: React.FC<SalesByProductPdfContentProps> = ({
     ? `${format(dateRange.from, "MMM dd, yyyy")} - ${dateRange.to && isValid(dateRange.to) ? format(dateRange.to, "MMM dd, yyyy") : format(dateRange.from, "MMM dd, yyyy")}`
     : "All Time";
 
-  const totalOverallRevenue = productSales.reduce((sum, data) => sum + data.totalRevenue, 0);
-  const totalOverallUnits = productSales.reduce((sum, data) => sum + data.unitsSold, 0);
+  const totalOverallRevenue = (productSales ?? []).reduce((sum, data) => sum + (data.totalRevenue ?? 0), 0);
+  const totalOverallUnits = (productSales ?? []).reduce((sum, data) => sum + (data.unitsSold ?? 0), 0);
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
@@ -60,8 +60,8 @@ const SalesByProductPdfContent: React.FC<SalesByProductPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -71,15 +71,15 @@ const SalesByProductPdfContent: React.FC<SalesByProductPdfContentProps> = ({
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Sales Revenue:</span>
-              <span>${totalOverallRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalOverallRevenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Units Sold:</span>
-              <span>{totalOverallUnits.toLocaleString()}</span>
+              <span>{(totalOverallUnits ?? 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Number of Products:</span>
-              <span>{productSales.length}</span>
+              <span>{(productSales?.length ?? 0)}</span>
             </div>
           </div>
         </div>
@@ -98,14 +98,14 @@ const SalesByProductPdfContent: React.FC<SalesByProductPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {productSales.length > 0 ? (
-              productSales.map((data, index) => (
+            {(productSales?.length ?? 0) > 0 ? (
+              productSales?.map((data, index) => (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{data.productName}</td>
-                  <td className="py-2 px-4 border-r border-gray-200">{data.sku}</td>
-                  <td className="py-2 px-4 border-r border-gray-200">{data.category}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">{data.unitsSold.toLocaleString()}</td>
-                  <td className="py-2 px-4 text-right">${data.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.productName ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.sku ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.category ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">{(data.unitsSold ?? 0).toLocaleString()}</td>
+                  <td className="py-2 px-4 text-right">${(data.totalRevenue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))
             ) : (

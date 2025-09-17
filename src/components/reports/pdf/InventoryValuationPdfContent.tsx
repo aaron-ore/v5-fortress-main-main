@@ -49,7 +49,7 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             INVENTORY VALUATION
           </h1>
-          <p className="text-lg font-semibold text-gray-700">Grouped by: {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}</p>
+          <p className="text-lg font-semibold text-gray-700">Grouped by: {(groupBy ?? "N/A").charAt(0).toUpperCase() + (groupBy ?? "N/A").slice(1)}</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">REPORT DATE: {parseAndValidateDate(reportDate) ? format(parseAndValidateDate(reportDate)!, "MMM dd, yyyy HH:mm") : "N/A"}</p>
@@ -62,8 +62,8 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -73,33 +73,33 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Inventory Value:</span>
-              <span>${totalOverallValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalOverallValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Units On Hand:</span>
-              <span>{totalOverallQuantity.toLocaleString()}</span>
+              <span>{(totalOverallQuantity ?? 0).toLocaleString()}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="mb-8">
-        <p className="font-bold mb-2">DETAILS BY {groupBy.toUpperCase()}:</p>
+        <p className="font-bold mb-2">DETAILS BY {(groupBy ?? "N/A").toUpperCase()}:</p>
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-100 border border-gray-300">
-              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">{groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}</th>
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">{(groupBy ?? "N/A").charAt(0).toUpperCase() + (groupBy ?? "N/A").slice(1)}</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Total Quantity</th>
               <th className="py-2 px-4 text-right font-semibold">Total Value</th>
             </tr>
           </thead>
           <tbody>
-            {groupedData.length > 0 ? (
-              groupedData.map((data, index) => (
+            {(groupedData?.length ?? 0) > 0 ? (
+              groupedData?.map((data, index) => (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{data.name}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">{data.totalQuantity.toLocaleString()}</td>
-                  <td className="py-2 px-4 text-right">${data.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{data.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200">{(data.totalQuantity ?? 0).toLocaleString()}</td>
+                  <td className="py-2 px-4 text-right">${(data.totalValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))
             ) : (

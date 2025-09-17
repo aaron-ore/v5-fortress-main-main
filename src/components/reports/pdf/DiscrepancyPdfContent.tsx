@@ -56,12 +56,12 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
       : "STOCK DISCREPANCY REPORT";
 
   const getUserName = (userId: string) => {
-    const user = allProfiles.find(p => p.id === userId);
+    const user = (allProfiles ?? []).find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
   };
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundFolder = structuredLocations.find(folder => folder.id === folderId); // Find by ID
+    const foundFolder = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
     return foundFolder?.name || "Unknown Folder"; // Use folder name
   };
 
@@ -89,15 +89,15 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
       <div className="mb-8">
         <p className="font-bold mb-2">SUMMARY:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">Total {reportTitle} Records: {discrepancies.length}</p>
+          <p className="font-semibold">Total {reportTitle} Records: {(discrepancies?.length ?? 0)}</p>
           <p className="text-xs text-gray-600 mt-1">
             This report details all recorded stock discrepancies, including original vs. counted quantities and reasons.
           </p>
@@ -121,19 +121,19 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {discrepancies.length > 0 ? (
-              discrepancies.map((discrepancy) => {
+            {(discrepancies?.length ?? 0) > 0 ? (
+              discrepancies?.map((discrepancy) => {
                 const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                 return (
                   <tr key={discrepancy.id} className="border-b border-gray-200">
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getFolderDisplayName(discrepancy.folderId)} ({discrepancy.locationType.replace('_', ' ')})</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.reason}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.status}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(discrepancy.userId)}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getFolderDisplayName(discrepancy.folderId ?? "")} ({discrepancy.locationType?.replace('_', ' ') ?? "N/A"})</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity ?? 0}</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity ?? 0}</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference ?? 0}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.reason ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.status ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(discrepancy.userId ?? "")}</td>
                     <td className="py-2 px-4">{discrepancyTimestamp ? format(discrepancyTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
                   </tr>
                 );

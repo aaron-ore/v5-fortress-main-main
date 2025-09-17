@@ -204,6 +204,8 @@ const AppContent = () => {
   const renderPdfComponent = () => {
     if (!printContentData) return null;
 
+    console.log("[AppContent] Rendering PDF component for type:", printContentData.type); // NEW: Log the type
+
     switch (printContentData.type) {
       case "purchase-order":
         return <PurchaseOrderPdfContent {...printContentData.props} />;

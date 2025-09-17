@@ -30,10 +30,10 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
 
   const reportTitle = statusFilter === "all"
     ? "PURCHASE ORDER STATUS REPORT"
-    : `PURCHASE ORDERS (${statusFilter.replace(/-/g, ' ').toUpperCase()})`;
+    : `PURCHASE ORDERS (${(statusFilter ?? "N/A").replace(/-/g, ' ').toUpperCase()})`;
 
-  const totalOrders = orders.length;
-  const totalAmount = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalOrders = (orders?.length ?? 0);
+  const totalAmount = (orders ?? []).reduce((sum, order) => sum + (order.totalAmount ?? 0), 0);
 
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
@@ -59,8 +59,8 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -70,11 +70,11 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Purchase Orders:</span>
-              <span>{totalOrders.toLocaleString()}</span>
+              <span>{(totalOrders ?? 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Value of Orders:</span>
-              <span>${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
         </div>
@@ -94,18 +94,18 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
             </tr>
           </thead>
           <tbody>
-            {orders.length > 0 ? (
-              orders.map((order) => {
+            {(orders?.length ?? 0) > 0 ? (
+              orders?.map((order) => {
                 const orderDate = parseAndValidateDate(order.date);
                 const dueDate = parseAndValidateDate(order.dueDate);
                 return (
                   <tr key={order.id} className="border-b border-gray-200">
-                    <td className="py-2 px-4 border-r border-gray-200">{order.id}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{orderDate ? format(orderDate, "MMM dd, yyyy") : "N/A"}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{dueDate ? format(dueDate, "MMM dd, yyyy") : "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{order.status}</td>
-                    <td className="py-2 px-4 text-right">${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{order.status ?? "N/A"}</td>
+                    <td className="py-2 px-4 text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 );
               })

@@ -315,8 +315,8 @@ const Reports: React.FC = () => {
             <DropdownMenuContent align="end" className="w-64">
               {reportCategories.map(category => (
                 <React.Fragment key={category.title}>
-                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-primary-foreground bg-primary rounded-md mx-2 my-1 cursor-default">
-                    <category.icon className="h-4 w-4" /> {category.title}
+                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-muted-foreground rounded-md mx-2 my-1 cursor-default">
+                    {category.icon && <category.icon className="h-4 w-4" />} {category.title}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="mx-2" />
                   {category.reports.map(report => (

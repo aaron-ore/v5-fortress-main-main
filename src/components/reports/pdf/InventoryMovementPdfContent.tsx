@@ -32,13 +32,13 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
     : "All Time";
 
   const getUserName = (userId: string) => {
-    const user = allProfiles.find(p => p.id === userId);
+    const user = (allProfiles ?? []).find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
   };
 
   const getFolderName = (folderId: string | undefined) => {
     if (!folderId) return "N/A";
-    const folder = structuredLocations.find(f => f.id === folderId);
+    const folder = (structuredLocations ?? []).find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
@@ -66,8 +66,8 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -88,19 +88,19 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
             </tr>
           </thead>
           <tbody>
-            {movements.length > 0 ? (
-              movements.map((movement) => {
+            {(movements?.length ?? 0) > 0 ? (
+              movements?.map((movement) => {
                 const movementTimestamp = parseAndValidateDate(movement.timestamp);
                 return (
                   <tr key={movement.id} className="border-b border-gray-200">
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.itemName}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.type}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.amount}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.oldQuantity}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.reason}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId)}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId)}</td> {/* Display folder name */}
+                    <td className="py-2 px-4 border-r border-gray-200">{movement.itemName ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{movement.type ?? "N/A"}</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.amount ?? 0}</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.oldQuantity ?? 0}</td>
+                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity ?? 0}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{movement.reason ?? "N/A"}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId ?? "")}</td>
+                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId ?? "")}</td> {/* Display folder name */}
                     <td className="py-2 px-4">{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
                   </tr>
                 );

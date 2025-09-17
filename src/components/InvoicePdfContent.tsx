@@ -43,8 +43,8 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  const taxAmount = subtotal * taxRate;
+  const subtotal = (items ?? []).reduce((sum, item) => sum + (item.quantity ?? 0) * (item.unitPrice ?? 0), 0);
+  const taxAmount = subtotal * (taxRate ?? 0);
   const totalAmount = subtotal + taxAmount;
 
   const invoiceDateObj = parseAndValidateDate(invoiceDate);
@@ -65,7 +65,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">DATE: {invoiceDateObj && isValid(invoiceDateObj) ? format(invoiceDateObj, "MMM dd, yyyy") : "N/A"}</p>
-          <p className="text-sm font-semibold">INVOICE #: {invoiceNumber}</p>
+          <p className="text-sm font-semibold">INVOICE #: {invoiceNumber ?? "N/A"}</p>
           {invoiceQrCodeSvg && (
             <div className="mt-2 flex justify-end p-2 bg-white">
               <div dangerouslySetInnerHTML={{ __html: invoiceQrCodeSvg }} className="w-[20mm] h-[20mm] object-contain" />
@@ -80,17 +80,17 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
             <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
             <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-            <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-            <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+            <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+            <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
           </div>
         </div>
         <div>
           <p className="font-bold mb-2">BILL TO:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p className="font-semibold">{customerName}</p>
-            <p>{customerEmail}</p>
-            <p>{customerAddress.split('\n')[0]}</p>
-            <p>{customerAddress.split('\n')[1]}</p>
+            <p className="font-semibold">{customerName ?? "N/A"}</p>
+            <p>{customerEmail ?? "N/A"}</p>
+            <p>{(customerAddress?.split('\n')[0] || "N/A")}</p>
+            <p>{(customerAddress?.split('\n')[1] || "")}</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">TERMS:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p>{terms}</p>
+            <p>{terms ?? "N/A"}</p>
           </div>
         </div>
         <div>
@@ -120,15 +120,15 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
           </tr>
         </thead>
         <tbody>
-          {items.map((item, _index) => (
+          {(items ?? []).map((item, _index) => (
             <tr key={item.id} className="border-b border-gray-200">
-              <td className="py-2 px-4 border-r border-gray-200">{item.itemName}</td>
-              <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity}</td>
-              <td className="py-2 px-4 text-right border-r border-gray-200">${item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              <td className="py-2 px-4 text-right">${(item.quantity * item.unitPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
+              <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity ?? 0}</td>
+              <td className="py-2 px-4 text-right border-r border-gray-200">${(item.unitPrice ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="py-2 px-4 text-right">${((item.quantity ?? 0) * (item.unitPrice ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
-          {Array.from({ length: Math.max(0, 10 - items.length) }).map((_, i) => (
+          {Array.from({ length: Math.max(0, 10 - (items?.length ?? 0)) }).map((_, i) => (
             <tr key={`empty-${i}`} className="border-b border-gray-200">
               <td className="py-2 px-4 border-r border-gray-200">&nbsp;</td>
               <td className="py-2 px-4 border-r border-gray-200">&nbsp;</td>
@@ -143,7 +143,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">Notes</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded min-h-[80px]">
-            <p>{notes}</p>
+            <p>{notes ?? "N/A"}</p>
           </div>
         </div>
 
@@ -154,7 +154,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
               <span>${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="font-bold">Tax ({taxRate * 100}%)</span>
+              <span className="font-bold">Tax ({(taxRate ?? 0) * 100}%)</span>
               <span>${taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between py-2 border-t border-gray-300 mt-2">
