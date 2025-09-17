@@ -1,19 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface ReportCategory {
-  title: string;
-  icon: React.ElementType;
-  reports: ReportItem[];
-}
-
-interface ReportItem {
-  id: string; // Unique ID for the report, used in URL hash
-  title: string;
-  description: string;
-  icon: React.ElementType;
-}
+import { ReportCategory, ReportItem } from "@/lib/reportConfig"; // Import interfaces from new config file
 
 interface ReportSidebarProps {
   reportCategories: ReportCategory[]; // Now passed as a prop
