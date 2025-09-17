@@ -3,14 +3,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Package, Receipt, AlertTriangle, DollarSign } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Props now directly reflect the processed data from useReportData
 interface DashboardSummaryReportProps {
   totalStockValue: number;
   totalUnitsOnHand: number;
-  lowStockItems: any[]; // Use 'any' for now, or define specific item types if needed
-  outOfStockItems: any[]; // Use 'any' for now
-  recentSalesOrders: any[]; // Use 'any' for now
-  recentPurchaseOrders: any[]; // Use 'any' for now
+  lowStockItems: any[];
+  outOfStockItems: any[];
+  recentSalesOrders: any[];
+  recentPurchaseOrders: any[];
 }
 
 const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({

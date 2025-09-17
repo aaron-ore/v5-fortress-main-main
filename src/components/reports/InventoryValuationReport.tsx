@@ -10,10 +10,9 @@ interface GroupedDataItem {
   totalQuantity: number;
 }
 
-// Props now directly reflect the processed data from useReportData
 interface InventoryValuationReportProps {
   groupedData: GroupedDataItem[];
-  groupBy: "category" | "folder"; // Changed from location to folder
+  groupBy: "category" | "folder";
   totalOverallValue: number;
   totalOverallQuantity: number;
 }

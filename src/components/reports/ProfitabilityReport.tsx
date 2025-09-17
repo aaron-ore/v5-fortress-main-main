@@ -10,7 +10,6 @@ interface ProfitabilityMetricsData {
   color: string;
 }
 
-// Props now directly reflect the processed data from useReportData
 interface ProfitabilityReportProps {
   metricsData: ProfitabilityMetricsData[];
   totalSalesRevenue: number;

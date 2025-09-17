@@ -137,6 +137,20 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr className="bg-gray-100 border-t border-gray-300">
+            <td colSpan={3} className="py-2 px-4 text-right font-bold border-r border-gray-300">Subtotal</td>
+            <td className="py-2 px-4 text-right font-bold">${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+          <tr className="bg-gray-100">
+            <td colSpan={3} className="py-2 px-4 text-right font-bold border-r border-gray-300">Tax ({(taxRate ?? 0) * 100}%)</td>
+            <td className="py-2 px-4 text-right font-bold">${taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+          <tr className="bg-gray-100 border-t border-gray-300">
+            <td colSpan={3} className="py-2 px-4 text-right font-bold text-lg border-r border-gray-300">TOTAL</td>
+            <td className="py-2 px-4 text-right font-bold text-lg">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+        </tfoot>
       </table>
 
       <div className="grid grid-cols-2 gap-8 mb-8">

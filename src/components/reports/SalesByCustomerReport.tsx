@@ -11,7 +11,6 @@ interface CustomerSalesData {
   lastOrderDate: string;
 }
 
-// Props now directly reflect the processed data from useReportData
 interface SalesByCustomerReportProps {
   customerSales: CustomerSalesData[];
 }

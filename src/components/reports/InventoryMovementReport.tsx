@@ -4,22 +4,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { StockMovement } from "@/context/StockMovementContext";
 import { UserProfile } from "@/context/ProfileContext";
-import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { InventoryFolder } from "@/context/OnboardingContext";
 import { Scale } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-// Props now directly reflect the processed data from useReportData
 interface InventoryMovementReportProps {
   movements: StockMovement[];
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
+  structuredLocations: InventoryFolder[];
 }
 
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
   movements: movementsToDisplay,
   allProfiles,
-  structuredLocations, // Added structuredLocations to destructuring
+  structuredLocations,
 }) => {
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
@@ -59,27 +58,24 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                     <TableHead className="text-right">New Qty</TableHead>
                     <TableHead>Reason</TableHead>
                     <TableHead>User</TableHead>
-                    <TableHead>Folder</TableHead> {/* Added Folder column */}
+                    <TableHead>Folder</TableHead>
                     <TableHead className="w-[180px]">Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(movementsToDisplay ?? []).map((movement: StockMovement) => {
-                    const movementTimestamp = parseAndValidateDate(movement.timestamp);
-                    return (
-                      <TableRow key={movement.id}>
-                        <TableCell className="font-medium">{movement.itemName}</TableCell>
-                        <TableCell>{movement.type}</TableCell>
-                        <TableCell className="text-right">{movement.amount}</TableCell>
-                        <TableCell className="text-right">{movement.oldQuantity}</TableCell>
-                        <TableCell className="text-right">{movement.newQuantity}</TableCell>
-                        <TableCell>{movement.reason}</TableCell>
-                        <TableCell>{getUserName(movement.userId)}</TableCell>
-                        <TableCell>{getFolderName(movement.folderId)}</TableCell> {/* Display folder name */}
-                        <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {(movementsToDisplay ?? []).map((movement: StockMovement) => (
+                    <TableRow key={movement.id}>
+                      <TableCell className="font-medium">{movement.itemName}</TableCell>
+                      <TableCell>{movement.type}</TableCell>
+                      <TableCell className="text-right">{movement.amount}</TableCell>
+                      <TableCell className="text-right">{movement.oldQuantity}</TableCell>
+                      <TableCell className="text-right">{movement.newQuantity}</TableCell>
+                      <TableCell>{movement.reason}</TableCell>
+                      <TableCell>{getUserName(movement.userId)}</TableCell>
+                      <TableCell>{getFolderName(movement.folderId)}</TableCell>
+                      <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </ScrollArea>

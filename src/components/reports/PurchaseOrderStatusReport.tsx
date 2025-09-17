@@ -7,7 +7,6 @@ import { FileText } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
-// Props now directly reflect the processed data from useReportData
 interface PurchaseOrderStatusReportProps {
   orders: OrderItem[];
   statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
@@ -15,7 +14,6 @@ interface PurchaseOrderStatusReportProps {
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
   orders: ordersToDisplay,
-  // Removed statusFilter: currentStatusFilter as it's not used in this component
 }) => {
   const totalOrders = (ordersToDisplay ?? []).length;
   const totalAmount = (ordersToDisplay ?? []).reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);

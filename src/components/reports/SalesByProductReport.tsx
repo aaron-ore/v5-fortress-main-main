@@ -12,7 +12,6 @@ interface ProductSalesData {
   totalRevenue: number;
 }
 
-// Props now directly reflect the processed data from useReportData
 interface SalesByProductReportProps {
   productSales: ProductSalesData[];
 }

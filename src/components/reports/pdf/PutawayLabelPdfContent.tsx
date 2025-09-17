@@ -1,7 +1,7 @@
 import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { InventoryFolder } from "@/context/OnboardingContext";
 
 interface PutawayLabelPdfContentProps {
   itemName: string;
@@ -13,7 +13,7 @@ interface PutawayLabelPdfContentProps {
   serialNumber?: string;
   qrCodeSvg: string;
   printDate: string;
-  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
+  structuredLocations: InventoryFolder[];
 }
 
 const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
@@ -32,8 +32,8 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
   const printDateObj = parseAndValidateDate(printDate);
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundLoc = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
-    return (foundLoc?.name || folderId) ?? "N/A"; // Use folder name, correctly grouped
+    const foundLoc = (structuredLocations ?? []).find(folder => folder.id === folderId);
+    return (foundLoc?.name || folderId) ?? "N/A";
   };
 
   return (

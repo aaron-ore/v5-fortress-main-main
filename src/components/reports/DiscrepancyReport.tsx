@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { UserProfile } from "@/context/ProfileContext";
-import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { InventoryFolder } from "@/context/OnboardingContext";
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
@@ -15,7 +15,7 @@ interface DiscrepancyLog {
   organizationId: string;
   itemId: string;
   itemName: string;
-  folderId: string; // This is the fullLocationString
+  folderId: string;
   locationType: string;
   originalQuantity: number;
   countedQuantity: number;
@@ -24,12 +24,11 @@ interface DiscrepancyLog {
   status: string;
 }
 
-// Props now directly reflect the processed data from useReportData
 interface DiscrepancyReportProps {
   discrepancies: DiscrepancyLog[];
   statusFilter: "all" | "pending" | "resolved";
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
+  structuredLocations: InventoryFolder[];
 }
 
 const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
@@ -44,8 +43,8 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
   };
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundLoc = structuredLocations.find(folder => folder.id === folderId); // Find by ID
-    return foundLoc?.name || "Unknown Folder"; // Use folder name
+    const foundLoc = structuredLocations.find(folder => folder.id === folderId);
+    return foundLoc?.name || "Unknown Folder";
   };
 
   return (
@@ -71,7 +70,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Item Name</TableHead>
-                    <TableHead>Folder</TableHead> {/* Changed to Folder */}
+                    <TableHead>Folder</TableHead>
                     <TableHead className="text-right">Original Qty</TableHead>
                     <TableHead className="text-right">Counted Qty</TableHead>
                     <TableHead className="text-right">Difference</TableHead>
