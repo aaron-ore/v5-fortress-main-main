@@ -63,19 +63,22 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(movementsToDisplay ?? []).map((movement: StockMovement) => (
-                    <TableRow key={movement.id}>
-                      <TableCell className="font-medium">{movement.itemName}</TableCell>
-                      <TableCell>{movement.type}</TableCell>
-                      <TableCell className="text-right">{movement.amount}</TableCell>
-                      <TableCell className="text-right">{movement.oldQuantity}</TableCell>
-                      <TableCell className="text-right">{movement.newQuantity}</TableCell>
-                      <TableCell>{movement.reason}</TableCell>
-                      <TableCell>{getUserName(movement.userId)}</TableCell>
-                      <TableCell>{getFolderName(movement.folderId)}</TableCell>
-                      <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
-                    </TableRow>
-                  ))}
+                  {(movementsToDisplay ?? []).map((movement: StockMovement) => {
+                    const movementTimestamp = parseAndValidateDate(movement.timestamp); // Defined here
+                    return (
+                      <TableRow key={movement.id}>
+                        <TableCell className="font-medium">{movement.itemName}</TableCell>
+                        <TableCell>{movement.type}</TableCell>
+                        <TableCell className="text-right">{movement.amount}</TableCell>
+                        <TableCell className="text-right">{movement.oldQuantity}</TableCell>
+                        <TableCell className="text-right">{movement.newQuantity}</TableCell>
+                        <TableCell>{movement.reason}</TableCell>
+                        <TableCell>{getUserName(movement.userId)}</TableCell>
+                        <TableCell>{getFolderName(movement.folderId)}</TableCell>
+                        <TableCell>{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </ScrollArea>
