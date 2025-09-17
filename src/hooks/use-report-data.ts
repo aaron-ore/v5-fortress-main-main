@@ -71,7 +71,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
+  const { isLoadingVendors, refreshVendors } = useVendors(); // Removed 'vendors' from destructuring
   const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
