@@ -23,7 +23,7 @@ import CreateInvoice from "./pages/CreateInvoice";
 import SetupInstructions from "./pages/SetupInstructions";
 import WarehouseOperationsPage from "./pages/WarehouseOperationsPage";
 import ResetPassword from "./pages/ResetPassword";
-import Folders from "./pages/Locations"; // Changed import from Locations to Folders
+import Folders from "./pages/Locations";
 import Customers from "./pages/Customers";
 import Integrations from "./pages/Integrations";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -65,7 +65,7 @@ import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext";
 import Automation from "./pages/Automation";
 import ItemHistoryPage from "./pages/ItemHistoryPage";
-import FolderContentPage from "./pages/FolderContentPage"; // NEW: Import FolderContentPage
+import FolderContentPage from "./pages/FolderContentPage";
 import { Loader2 } from "lucide-react";
 
 
@@ -107,7 +107,7 @@ const AuthenticatedApp = () => {
                             <Route path="setup-instructions" element={<SetupInstructions />} />
                             <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
                             <Route path="folders" element={<Folders />} />
-                            <Route path="folders/:folderId" element={<FolderContentPage />} /> {/* NEW: Route for folder content */}
+                            <Route path="folders/:folderId" element={<FolderContentPage />} />
                             <Route path="integrations" element={<Integrations />} />
                             <Route path="automation" element={<Automation />} />
                             <Route path="*" element={<NotFound />} />
@@ -204,7 +204,7 @@ const AppContent = () => {
   const renderPdfComponent = () => {
     if (!printContentData) return null;
 
-    console.log("[AppContent] Rendering PDF component for type:", printContentData.type); // NEW: Log the type
+    console.log("[AppContent] Rendering PDF component for type:", printContentData.type);
 
     switch (printContentData.type) {
       case "purchase-order":
