@@ -43,7 +43,7 @@ const Last3MonthSalesCard: React.FC<Last3MonthSalesCardProps> = ({ data }) => {
                 return [value.toLocaleString('en-US'), name];
               }}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+            <Legend wrapperStyle={{ color: "hsl(var(--muted-foreground))", fontSize: 10 }} align="left" />
             <Bar dataKey="Sales Revenue" stackId="a" fill="#00C49F" />
             <Bar dataKey="New Inventory Added" stackId="a" fill="#00BFD8" />
             <Bar dataKey="Items Shipped" stackId="a" fill="#0088FE" />
