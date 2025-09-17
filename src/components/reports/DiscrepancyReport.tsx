@@ -63,9 +63,9 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
           <h3 className="font-semibold text-xl mt-6">
             {currentStatusFilter === "pending" ? "Pending Discrepancies" :
              currentStatusFilter === "resolved" ? "Resolved Discrepancies" :
-             "All Discrepancies"} ({itemsToDisplay.length})
+             "All Discrepancies"} ({(itemsToDisplay ?? []).length})
           </h3>
-          {itemsToDisplay.length > 0 ? (
+          {(itemsToDisplay ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -82,7 +82,7 @@ const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {itemsToDisplay.map((discrepancy: DiscrepancyLog) => {
+                  {(itemsToDisplay ?? []).map((discrepancy: DiscrepancyLog) => {
                     const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                     return (
                       <TableRow key={discrepancy.id}>

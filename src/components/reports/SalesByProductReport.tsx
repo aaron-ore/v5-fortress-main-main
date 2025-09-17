@@ -20,8 +20,8 @@ interface SalesByProductReportProps {
 const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
   productSales,
 }) => {
-  const totalOverallRevenue = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.totalRevenue, 0);
-  const totalOverallUnits = productSales.reduce((sum: number, data: ProductSalesData) => sum + data.unitsSold, 0);
+  const totalOverallRevenue = (productSales ?? []).reduce((sum: number, data: ProductSalesData) => sum + data.totalRevenue, 0);
+  const totalOverallUnits = (productSales ?? []).reduce((sum: number, data: ProductSalesData) => sum + data.unitsSold, 0);
 
   return (
     <div className="space-y-6">
@@ -46,8 +46,8 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
             </div>
           </div>
 
-          <h3 className="font-semibold text-xl mt-6">Detailed Sales by Product ({productSales.length})</h3>
-          {productSales.length > 0 ? (
+          <h3 className="font-semibold text-xl mt-6">Detailed Sales by Product ({(productSales ?? []).length})</h3>
+          {(productSales ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -60,7 +60,7 @@ const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {productSales.map((data: ProductSalesData, index: number) => (
+                  {(productSales ?? []).map((data: ProductSalesData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.productName}</TableCell>
                       <TableCell>{data.sku}</TableCell>

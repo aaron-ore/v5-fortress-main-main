@@ -17,8 +17,8 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
   orders: ordersToDisplay,
   // Removed statusFilter: currentStatusFilter as it's not used in this component
 }) => {
-  const totalOrders = ordersToDisplay.length;
-  const totalAmount = ordersToDisplay.reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
+  const totalOrders = (ordersToDisplay ?? []).length;
+  const totalAmount = (ordersToDisplay ?? []).reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
 
   return (
     <div className="space-y-6">
@@ -35,18 +35,18 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Purchase Orders</h3>
-              <p className="text-3xl font-bold">{totalOrders.toLocaleString()}</p>
+              <p className="text-3xl font-bold">{(totalOrders ?? 0).toLocaleString()}</p>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Total Value of Orders</h3>
-              <p className="text-3xl font-bold">${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              <p className="text-3xl font-bold">${(totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             </div>
           </div>
 
           <h3 className="font-semibold text-xl mt-6">
-            Detailed Purchase Orders ({ordersToDisplay.length})
+            Detailed Purchase Orders ({(ordersToDisplay ?? []).length})
           </h3>
-          {ordersToDisplay.length > 0 ? (
+          {(ordersToDisplay ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -60,7 +60,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ordersToDisplay.map((order: OrderItem) => {
+                  {(ordersToDisplay ?? []).map((order: OrderItem) => {
                     const orderDate = parseAndValidateDate(order.date);
                     const dueDate = parseAndValidateDate(order.dueDate);
                     return (
@@ -70,7 +70,7 @@ const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
                         <TableCell>{orderDate ? format(orderDate, "MMM dd, yyyy") : "N/A"}</TableCell>
                         <TableCell>{dueDate ? format(dueDate, "MMM dd, yyyy") : "N/A"}</TableCell>
                         <TableCell>{order.status}</TableCell>
-                        <TableCell className="text-right">${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        <TableCell className="text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       </TableRow>
                     );
                   })}

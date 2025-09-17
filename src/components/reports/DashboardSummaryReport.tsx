@@ -33,19 +33,19 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-green-500" /> Inventory Value</h3>
-            <p className="text-3xl font-bold">${totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-3xl font-bold">${(totalStockValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Total Units On Hand</h3>
-            <p className="text-3xl font-bold">{totalUnitsOnHand.toLocaleString()}</p>
+            <p className="text-3xl font-bold">{(totalUnitsOnHand ?? 0).toLocaleString()}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-yellow-500" /> Low Stock Items</h3>
-            <p className="text-3xl font-bold text-yellow-500">{lowStockItems.length}</p>
+            <p className="text-3xl font-bold text-yellow-500">{(lowStockItems ?? []).length}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Out of Stock Items</h3>
-            <p className="text-3xl font-bold text-destructive">{outOfStockItems.length}</p>
+            <p className="text-3xl font-bold text-destructive">{(outOfStockItems ?? []).length}</p>
           </div>
         </CardContent>
       </Card>
@@ -55,7 +55,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           <CardTitle className="text-xl font-semibold flex items-center gap-2"><Receipt className="h-5 w-5 text-blue-500" /> Recent Sales Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          {recentSalesOrders.length > 0 ? (
+          {(recentSalesOrders ?? []).length > 0 ? (
             <ScrollArea className="h-40">
               <Table>
                 <TableHeader>
@@ -66,11 +66,11 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentSalesOrders.map((order: any) => (
+                  {(recentSalesOrders ?? []).map((order: any) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
-                      <TableCell className="text-right">${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -87,7 +87,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           <CardTitle className="text-xl font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-purple-500" /> Recent Purchase Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          {recentPurchaseOrders.length > 0 ? (
+          {(recentPurchaseOrders ?? []).length > 0 ? (
             <ScrollArea className="h-40">
               <Table>
                 <TableHeader>
@@ -98,11 +98,11 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentPurchaseOrders.map((order: any) => (
+                  {(recentPurchaseOrders ?? []).map((order: any) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
-                      <TableCell className="text-right">${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right">${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

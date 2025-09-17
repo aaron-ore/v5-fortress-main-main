@@ -45,9 +45,9 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <h3 className="font-semibold text-xl mt-6">
-            All Stock Movements ({movementsToDisplay.length})
+            All Stock Movements ({(movementsToDisplay ?? []).length})
           </h3>
-          {movementsToDisplay.length > 0 ? (
+          {(movementsToDisplay ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -64,7 +64,7 @@ const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {movementsToDisplay.map((movement: StockMovement) => {
+                  {(movementsToDisplay ?? []).map((movement: StockMovement) => {
                     const movementTimestamp = parseAndValidateDate(movement.timestamp);
                     return (
                       <TableRow key={movement.id}>

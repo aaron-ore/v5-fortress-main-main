@@ -36,9 +36,9 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
           <h3 className="font-semibold text-xl mt-6">
             {currentStatusFilter === "low-stock" ? "Low Stock Items" :
              currentStatusFilter === "out-of-stock" ? "Out of Stock Items" :
-             "Low & Out of Stock Items"} ({items.length})
+             "Low & Out of Stock Items"} ({(items ?? []).length})
           </h3>
-          {items.length > 0 ? (
+          {(items ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -51,7 +51,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item: any) => (
+                  {(items ?? []).map((item: any) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>

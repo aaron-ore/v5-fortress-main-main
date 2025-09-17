@@ -52,7 +52,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
           </div>
 
           <h3 className="font-semibold text-xl mt-6">Profitability Metrics</h3>
-          {metricsData.length > 0 ? (
+          {(metricsData ?? []).length > 0 ? (
             <ScrollArea className="h-[200px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -62,7 +62,7 @@ const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {metricsData.map((metric: ProfitabilityMetricsData, index: number) => (
+                  {(metricsData ?? []).map((metric: ProfitabilityMetricsData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{metric.name}</TableCell>
                       <TableCell className="text-right">{(metric.value ?? 0).toFixed(1)}%</TableCell>

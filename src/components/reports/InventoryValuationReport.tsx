@@ -48,7 +48,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
           </div>
 
           <h3 className="font-semibold text-xl mt-6">Details by {groupBy === "category" ? "Category" : "Folder"}</h3>
-          {groupedData.length > 0 ? (
+          {(groupedData ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -59,7 +59,7 @@ const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {groupedData.map((data: GroupedDataItem, index: number) => (
+                  {(groupedData ?? []).map((data: GroupedDataItem, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.name}</TableCell>
                       <TableCell className="text-right">{(data.totalQuantity ?? 0).toLocaleString()}</TableCell>

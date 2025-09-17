@@ -19,8 +19,8 @@ interface SalesByCustomerReportProps {
 const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
   customerSales,
 }) => {
-  const totalOverallSales = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalSales, 0);
-  const totalOverallItems = customerSales.reduce((sum: number, data: CustomerSalesData) => sum + data.totalItems, 0);
+  const totalOverallSales = (customerSales ?? []).reduce((sum: number, data: CustomerSalesData) => sum + data.totalSales, 0);
+  const totalOverallItems = (customerSales ?? []).reduce((sum: number, data: CustomerSalesData) => sum + data.totalItems, 0);
 
   return (
     <div className="space-y-6">
@@ -45,8 +45,8 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
             </div>
           </div>
 
-          <h3 className="font-semibold text-xl mt-6">Detailed Sales by Customer ({customerSales.length})</h3>
-          {customerSales.length > 0 ? (
+          <h3 className="font-semibold text-xl mt-6">Detailed Sales by Customer ({(customerSales ?? []).length})</h3>
+          {(customerSales ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -58,7 +58,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customerSales.map((data: CustomerSalesData, index: number) => (
+                  {(customerSales ?? []).map((data: CustomerSalesData, index: number) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">{data.customerName}</TableCell>
                       <TableCell className="text-right">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
