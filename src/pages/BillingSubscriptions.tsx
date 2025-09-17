@@ -33,6 +33,10 @@ const plans: SubscriptionPlan[] = [
       { text: "Basic Inventory & Order Tracking", included: true },
       { text: "QR Code Generation, Basic Reports", included: true },
       { text: "Mobile-Optimized Interface", included: true },
+      { text: "Advanced Inventory Features", included: false },
+      { text: "CSV Import/Export", included: false },
+      { text: "QuickBooks Integration", included: false },
+      { text: "AI-Powered Report Summaries", included: false },
     ],
   },
   {
@@ -41,13 +45,17 @@ const plans: SubscriptionPlan[] = [
     description: "Ideal for small businesses needing more robust inventory control and basic operations.",
     monthlyPrice: 59,
     features: [
-      { text: "All Free features", included: true }, // Inherit all free features
       { text: "5 Users, 500 Items, 5 Folders", included: true },
-      { text: "Advanced Inventory Features", included: true },
+      { text: "All Free features", included: true },
+      { text: "Advanced Inventory (Picking/Overstock, Tags, Images)", included: true },
       { text: "Full Order Management, CSV Import/Export", included: true },
-      { text: "Basic Warehouse Operations", included: true },
+      { text: "Basic Warehouse Operations (Lookup, Receive, Ship, Transfer)", included: true },
       { text: "All Inventory, Sales & Purchase Reports", included: true },
-      { text: "User Role Management", included: true },
+      { text: "User Role Management (Viewer, Inventory Manager)", included: true },
+      { text: "Bulk Update", included: false },
+      { text: "Auto-Reorder & Automation", included: false },
+      { text: "QuickBooks Integration", included: false },
+      { text: "AI-Powered Report Summaries", included: false },
     ],
   },
   {
@@ -56,13 +64,15 @@ const plans: SubscriptionPlan[] = [
     description: "Unlock comprehensive inventory, order, and warehouse management with powerful integrations.",
     monthlyPrice: 169,
     features: [
-      { text: "All Standard features", included: true }, // Inherit all standard features
       { text: "Unlimited Users, 5K Items, Unlimited Folders", included: true },
+      { text: "All Standard features", included: true },
       { text: "Bulk Update, Auto-Reorder & Automation", included: true },
       { text: "Global Search, Full Warehouse Operations", included: true },
       { text: "QuickBooks & Shopify Integration", included: true },
       { text: "AI-Powered Report Summaries, Profitability Reports", included: true },
       { text: "Customizable User Roles, Priority Support", included: true },
+      { text: "Dedicated CSM", included: false },
+      { text: "API Access & Webhooks", included: false },
     ],
     isPopular: true,
   },
@@ -72,11 +82,12 @@ const plans: SubscriptionPlan[] = [
     description: "Designed for growing businesses needing higher limits and advanced support.",
     monthlyPrice: 350,
     features: [
-      { text: "All Premium features", included: true }, // Inherit all Premium features
-      { text: "Unlimited Inventory Items", included: true }, // Key differentiator from Premium
-      { text: "Advanced Analytics & Custom Dashboards", included: true }, // New feature for Ultimate
-      { text: "Dedicated Account Manager", included: true }, // New feature for Ultimate
-      { text: "Enhanced Security Features", included: true }, // New feature for Ultimate
+      { text: "Unlimited Users, Unlimited Items, Unlimited Folders", included: true },
+      { text: "All Premium features", included: true },
+      { text: "Dedicated Account Manager", included: true },
+      { text: "Enhanced Security Features", included: true },
+      { text: "Dedicated CSM", included: false },
+      { text: "Custom Integrations", included: false },
     ],
   },
   {
@@ -85,7 +96,7 @@ const plans: SubscriptionPlan[] = [
     description: "Tailored solutions for large-scale operations with custom needs and dedicated support.",
     monthlyPrice: 0, // Custom pricing, "Contact Sales"
     features: [
-      { text: "All Ultimate features", included: true }, // Inherit all Ultimate features
+      { text: "All Ultimate features", included: true },
       { text: "Dedicated Customer Success Manager (CSM)", included: true },
       { text: "API Access & Webhooks", included: true },
       { text: "Single Sign-On (SSO)", included: true },
