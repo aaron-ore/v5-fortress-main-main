@@ -1,5 +1,6 @@
 import React from "react";
 import { Diamond } from "lucide-react";
+import { format } from "date-fns"; // Import format
 
 interface LocationLabelPdfContentProps {
   folderName: string;
@@ -14,6 +15,8 @@ const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPd
   folderName,
   color,
   qrCodeSvg,
+  printDate, // Keep printDate as it's used in the original component for display
+  folderIdentifier, // Keep folderIdentifier
   className,
 }, ref) => {
   return (
