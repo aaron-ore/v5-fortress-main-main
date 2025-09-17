@@ -29,25 +29,10 @@ const plans: SubscriptionPlan[] = [
     description: "Get started with essential inventory tracking for small personal projects or very basic needs.",
     monthlyPrice: 0,
     features: [
-      { text: "1 User", included: true },
-      { text: "25 Inventory Items", included: true },
-      { text: "1 Folder", included: true },
-      { text: "Basic Inventory Management", included: true },
-      { text: "Basic Order Tracking", included: true },
-      { text: "Dashboard Overview", included: true },
-      { text: "In-App Notifications", included: true },
-      { text: "Basic Customer & Vendor Management", included: true },
-      { text: "QR Code Generation (for items)", included: true },
-      { text: "Basic Reports (Dashboard Summary, Low/Out of Stock)", included: true },
+      { text: "1 User, 25 Items, 1 Folder", included: true },
+      { text: "Basic Inventory & Order Tracking", included: true },
+      { text: "QR Code Generation, Basic Reports", included: true },
       { text: "Mobile-Optimized Interface", included: true },
-      { text: "Advanced Inventory Features", included: false },
-      { text: "CSV Import/Export", included: false },
-      { text: "QuickBooks Integration", included: false },
-      { text: "Shopify Integration", included: false },
-      { text: "AI-Powered Report Summaries", included: false },
-      { text: "Unlimited Users", included: false },
-      { text: "Unlimited Items", included: false },
-      { text: "Dedicated CSM", included: false },
     ],
   },
   {
@@ -56,27 +41,13 @@ const plans: SubscriptionPlan[] = [
     description: "Ideal for small businesses needing more robust inventory control and basic operations.",
     monthlyPrice: 59,
     features: [
-      { text: "5 Users", included: true },
-      { text: "500 Inventory Items", included: true },
-      { text: "5 Folders", included: true },
-      { text: "All Free features", included: true },
-      { text: "Advanced Inventory (Picking/Overstock, Tags, Images)", included: true },
-      { text: "Full Order Management (Sales & Purchase Orders)", included: true },
-      { text: "CSV Import/Export (Inventory, Customers)", included: true },
-      { text: "Basic Warehouse Operations (Lookup, Receive, Ship, Transfer)", included: true },
-      { text: "All Inventory Reports (Valuation, Movement, Discrepancy)", included: true },
-      { text: "All Sales & Purchase Reports (By Customer, By Product, PO Status)", included: true },
-      { text: "User Role Management (Viewer, Inventory Manager)", included: true },
-      { text: "Bulk Update", included: false },
-      { text: "Auto-Reorder Settings & Automation", included: false },
-      { text: "Global Search", included: false },
-      { text: "Full Warehouse Operations", included: false },
-      { text: "QuickBooks Integration", included: false },
-      { text: "Shopify Integration", included: false },
-      { text: "AI-Powered Report Summaries", included: false },
-      { text: "Unlimited Users", included: false },
-      { text: "Unlimited Items", included: false },
-      { text: "Dedicated CSM", included: false },
+      { text: "All Free features", included: true }, // Inherit all free features
+      { text: "5 Users, 500 Items, 5 Folders", included: true },
+      { text: "Advanced Inventory Features", included: true },
+      { text: "Full Order Management, CSV Import/Export", included: true },
+      { text: "Basic Warehouse Operations", included: true },
+      { text: "All Inventory, Sales & Purchase Reports", included: true },
+      { text: "User Role Management", included: true },
     ],
   },
   {
@@ -85,41 +56,43 @@ const plans: SubscriptionPlan[] = [
     description: "Unlock comprehensive inventory, order, and warehouse management with powerful integrations.",
     monthlyPrice: 169,
     features: [
-      { text: "Unlimited Users", included: true },
-      { text: "5,000 Inventory Items", included: true },
-      { text: "Unlimited Folders", included: true },
-      { text: "All Standard features", included: true },
-      { text: "Bulk Update (Inventory)", included: true },
-      { text: "Auto-Reorder Settings & Automation", included: true },
-      { text: "Global Search", included: true },
-      { text: "Full Warehouse Operations (Putaway, Picking Wave, Cycle Count, etc.)", included: true },
-      { text: "QuickBooks Integration", included: true },
-      { text: "Shopify Integration", included: true },
-      { text: "AI-Powered Report Summaries", included: true },
-      { text: "Profitability Reports", included: true },
-      { text: "Customizable User Roles (Demo)", included: true },
-      { text: "Priority Email Support", included: true },
-      { text: "Dedicated CSM", included: false },
-      { text: "API Access & Webhooks", included: false },
+      { text: "All Standard features", included: true }, // Inherit all standard features
+      { text: "Unlimited Users, 5K Items, Unlimited Folders", included: true },
+      { text: "Bulk Update, Auto-Reorder & Automation", included: true },
+      { text: "Global Search, Full Warehouse Operations", included: true },
+      { text: "QuickBooks & Shopify Integration", included: true },
+      { text: "AI-Powered Report Summaries, Profitability Reports", included: true },
+      { text: "Customizable User Roles, Priority Support", included: true },
     ],
     isPopular: true,
   },
   {
     id: "ultimate",
     name: "Ultimate",
-    description: "Tailored solutions for large-scale operations with advanced needs and dedicated support.",
+    description: "Designed for growing businesses needing higher limits and advanced support.",
     monthlyPrice: 350,
     features: [
-      { text: "Unlimited Users", included: true },
-      { text: "Unlimited Inventory Items", included: true },
-      { text: "Unlimited Folders", included: true },
-      { text: "All Premium features", included: true },
+      { text: "All Premium features", included: true }, // Inherit all Premium features
+      { text: "Unlimited Inventory Items", included: true }, // Key differentiator from Premium
+      { text: "Advanced Analytics & Custom Dashboards", included: true }, // New feature for Ultimate
+      { text: "Dedicated Account Manager", included: true }, // New feature for Ultimate
+      { text: "Enhanced Security Features", included: true }, // New feature for Ultimate
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    description: "Tailored solutions for large-scale operations with custom needs and dedicated support.",
+    monthlyPrice: 0, // Custom pricing, "Contact Sales"
+    features: [
+      { text: "All Ultimate features", included: true }, // Inherit all Ultimate features
       { text: "Dedicated Customer Success Manager (CSM)", included: true },
       { text: "API Access & Webhooks", included: true },
       { text: "Single Sign-On (SSO)", included: true },
       { text: "Advanced Automation & Custom Rules", included: true },
       { text: "On-site Training & Guided Setup", included: true },
       { text: "Custom Integrations", included: true },
+      { text: "24/7 Premium Support", included: true },
     ],
   },
 ];
@@ -130,7 +103,8 @@ const BillingSubscriptions: React.FC = () => {
 
   const currentPlan = plans.find(p => p.id === currentPlanId) || plans[0];
 
-  const getPriceDisplay = (monthlyPrice: number) => {
+  const getPriceDisplay = (monthlyPrice: number, planId: string) => {
+    if (planId === "enterprise") return "Contact Sales";
     if (monthlyPrice === 0) return "Free";
     if (billingCycle === "monthly") return `$${monthlyPrice}/month`;
     const annualPrice = monthlyPrice * 12 * 0.83; // Approximately 17% discount for annual
@@ -184,7 +158,8 @@ const BillingSubscriptions: React.FC = () => {
 
       {/* Plan Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {plans.map((plan) => (
+        {/* Free, Standard, Premium cards */}
+        {plans.slice(0, 3).map((plan) => (
           <Card
             key={plan.id}
             className={cn(
@@ -203,8 +178,8 @@ const BillingSubscriptions: React.FC = () => {
               <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
               <p className="text-muted-foreground text-sm">{plan.description}</p>
               <div className="mt-4 text-4xl font-extrabold text-foreground">
-                {getPriceDisplay(plan.monthlyPrice).split('/')[0]}
-                <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice).split('/')[1]}</span>
+                {getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[0]}
+                <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[1]}</span>
               </div>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
@@ -230,6 +205,104 @@ const BillingSubscriptions: React.FC = () => {
             </CardContent>
           </Card>
         ))}
+
+        {/* New column for Ultimate and Enterprise */}
+        <div className="flex flex-col gap-6">
+          {/* Ultimate Card */}
+          {plans.slice(3, 4).map((plan) => (
+            <Card
+              key={plan.id}
+              className={cn(
+                "bg-card border-border rounded-lg shadow-sm flex flex-col flex-1", // flex-1 to share space
+                plan.isPopular && "border-2 border-primary shadow-lg"
+              )}
+            >
+              <CardHeader className="pb-4 text-center">
+                {plan.isPopular && (
+                  <div className="flex justify-center mb-2">
+                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Most Popular
+                    </Badge>
+                  </div>
+                )}
+                <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                <p className="text-muted-foreground text-sm">{plan.description}</p>
+                <div className="mt-4 text-4xl font-extrabold text-foreground">
+                  {getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[0]}
+                  <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[1]}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
+                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      {feature.included ? (
+                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                      {feature.text}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="w-full mt-auto"
+                  onClick={() => handleChoosePlan(plan.id)}
+                  disabled={currentPlanId === plan.id}
+                >
+                  {currentPlanId === plan.id ? "Current Plan" : "Choose Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Enterprise Card */}
+          {plans.slice(4, 5).map((plan) => (
+            <Card
+              key={plan.id}
+              className={cn(
+                "bg-card border-border rounded-lg shadow-sm flex flex-col flex-1", // flex-1 to share space
+                plan.isPopular && "border-2 border-primary shadow-lg"
+              )}
+            >
+              <CardHeader className="pb-4 text-center">
+                {plan.isPopular && (
+                  <div className="flex justify-center mb-2">
+                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Most Popular
+                    </Badge>
+                  </div>
+                )}
+                <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                <p className="text-muted-foreground text-sm">{plan.description}</p>
+                <div className="mt-4 text-4xl font-extrabold text-foreground">
+                  {getPriceDisplay(plan.monthlyPrice, plan.id)}
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
+                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      {feature.included ? (
+                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                      {feature.text}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  className="w-full mt-auto"
+                  onClick={() => handleChoosePlan(plan.id)}
+                  disabled={currentPlanId === plan.id || plan.id === "enterprise"}
+                >
+                  {currentPlanId === plan.id ? "Current Plan" : (plan.id === "enterprise" ? "Contact Sales" : "Choose Plan")}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Current Plan Details */}
@@ -242,10 +315,10 @@ const BillingSubscriptions: React.FC = () => {
           <div className="grid gap-2">
             <p className="text-lg font-semibold text-foreground">
               {currentPlan.name} -{" "}
-              {getPriceDisplay(currentPlan.monthlyPrice)}
+              {currentPlan.id === "enterprise" ? "Custom Pricing" : getPriceDisplay(currentPlan.monthlyPrice, currentPlan.id)}
             </p>
             <p className="text-sm text-muted-foreground">Status: <span className="font-medium text-green-500">Active (Demo)</span></p>
-            {currentPlan.id !== "free" && (
+            {currentPlan.id !== "free" && currentPlan.id !== "enterprise" && (
               <p className="text-sm text-muted-foreground">Next Billing Date: 2024-10-01 (Demo)</p>
             )}
           </div>
@@ -259,7 +332,9 @@ const BillingSubscriptions: React.FC = () => {
               ))}
             </ul>
           </div>
-          <Button onClick={handleManageSubscription}>Manage Subscription</Button>
+          {currentPlan.id !== "enterprise" && (
+            <Button onClick={handleManageSubscription}>Manage Subscription</Button>
+          )}
         </CardContent>
       </Card>
 
