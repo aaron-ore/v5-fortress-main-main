@@ -202,7 +202,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         user_id: session.user.id,
         organization_id: profile.organizationId,
         // Ensure putaway_status is always a string, even for Sales orders
-        putaway_status: newOrder.type === "Purchase" ? "Pending" : "N/A", // Changed undefined to "N/A"
+        putaway_status: newOrder.type === "Purchase" ? "Pending" : null, // Changed "N/A" to null for Sales orders
       })
       .select();
 
