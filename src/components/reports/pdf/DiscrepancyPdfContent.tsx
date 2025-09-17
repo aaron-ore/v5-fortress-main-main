@@ -125,23 +125,23 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
               discrepancies?.map((discrepancy) => {
                 const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                 return (
-                  <tr key={discrepancy.id} className="border-b border-gray-200">
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName ?? "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getFolderDisplayName(discrepancy.folderId ?? "")} ({discrepancy.locationType?.replace('_', ' ') ?? "N/A"})</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity ?? 0}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity ?? 0}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference ?? 0}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.reason ?? "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{discrepancy.status ?? "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(discrepancy.userId ?? "")}</td>
-                    <td className="py-2 px-4">{discrepancyTimestamp ? format(discrepancyTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
-                  </tr>
+                  <TableRow key={discrepancy.id}>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{discrepancy.itemName ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{getFolderDisplayName(discrepancy.folderId ?? "")} ({discrepancy.locationType?.replace('_', ' ') ?? "N/A"})</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.originalQuantity ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200">{discrepancy.countedQuantity ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{discrepancy.difference ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{discrepancy.reason ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{discrepancy.status ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{getUserName(discrepancy.userId ?? "")}</TableCell>
+                    <TableCell className="py-2 px-4">{discrepancyTimestamp ? format(discrepancyTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
+                  </TableRow>
                 );
               })
             ) : (
-              <tr className="border-b border-gray-200">
-                <td colSpan={9} className="py-2 px-4 text-center text-gray-600">No discrepancies found for this report.</td>
-              </tr>
+              <TableRow className="border-b border-gray-200">
+                <TableCell colSpan={9} className="py-2 px-4 text-center text-gray-600">No discrepancies found for this report.</TableCell>
+              </TableRow>
             )}
           </tbody>
         </table>

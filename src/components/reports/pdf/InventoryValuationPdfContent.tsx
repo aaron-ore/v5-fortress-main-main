@@ -96,16 +96,16 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
           <tbody>
             {(groupedData?.length ?? 0) > 0 ? (
               groupedData?.map((data, index) => (
-                <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{data.name ?? "N/A"}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200">{(data.totalQuantity ?? 0).toLocaleString()}</td>
-                  <td className="py-2 px-4 text-right">${(data.totalValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
+                <TableRow key={index}>
+                  <TableCell className="py-2 px-4 border-r border-gray-200">{data.name ?? "N/A"}</TableCell>
+                  <TableCell className="py-2 px-4 text-right border-r border-gray-200">{(data.totalQuantity ?? 0).toLocaleString()}</TableCell>
+                  <TableCell className="py-2 px-4 text-right">${(data.totalValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                </TableRow>
               ))
             ) : (
-              <tr className="border-b border-gray-200">
-                <td colSpan={3} className="py-2 px-4 text-center text-gray-600">No data available for this report.</td>
-              </tr>
+              <TableRow className="border-b border-gray-200">
+                <TableCell colSpan={3} className="py-2 px-4 text-center text-gray-600">No data available for this report.</TableCell>
+              </TableRow>
             )}
           </tbody>
         </table>

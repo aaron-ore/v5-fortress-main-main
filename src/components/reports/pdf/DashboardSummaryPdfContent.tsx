@@ -129,17 +129,17 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           <tbody>
             {(lowStockItems?.length ?? 0) > 0 ? (
               lowStockItems?.map((item) => (
-                <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
-                  <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</td>
-                  <td className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</td>
-                </tr>
+                <TableRow key={item.id}>
+                  <TableCell className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</TableCell>
+                  <TableCell className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</TableCell>
+                  <TableCell className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</TableCell>
+                  <TableCell className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</TableCell>
+                </TableRow>
               ))
             ) : (
-              <tr className="border-b border-gray-200">
-                <td colSpan={4} className="py-2 px-4 text-center text-gray-600">No low stock items.</td>
-              </tr>
+              <TableRow className="border-b border-gray-200">
+                <TableCell colSpan={4} className="py-2 px-4 text-center text-gray-600">No low stock items.</TableCell>
+              </TableRow>
             )}
           </tbody>
         </table>
@@ -157,15 +157,15 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           <tbody>
             {(outOfStockItems?.length ?? 0) > 0 ? (
               outOfStockItems?.map((item) => (
-                <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
-                  <td className="py-2 px-4">{item.sku ?? "N/A"}</td>
-                </tr>
+                <TableRow key={item.id}>
+                  <TableCell className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</TableCell>
+                  <TableCell className="py-2 px-4">{item.sku ?? "N/A"}</TableCell>
+                </TableRow>
               ))
             ) : (
-              <tr className="border-b border-gray-200">
-                <td colSpan={2} className="py-2 px-4 text-center text-gray-600">No out of stock items.</td>
-              </tr>
+              <TableRow className="border-b border-gray-200">
+                <TableCell colSpan={2} className="py-2 px-4 text-center text-gray-600">No out of stock items.</TableCell>
+              </TableRow>
             )}
           </tbody>
         </table>

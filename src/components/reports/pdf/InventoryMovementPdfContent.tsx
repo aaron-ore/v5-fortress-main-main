@@ -11,7 +11,7 @@ interface InventoryMovementPdfContentProps {
   movements: StockMovement[];
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
+  structuredLocations: InventoryFolder[]; // Added structuredLocations to destructuring
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({
@@ -92,23 +92,23 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
               movements?.map((movement) => {
                 const movementTimestamp = parseAndValidateDate(movement.timestamp);
                 return (
-                  <tr key={movement.id} className="border-b border-gray-200">
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.itemName ?? "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.type ?? "N/A"}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.amount ?? 0}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.oldQuantity ?? 0}</td>
-                    <td className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity ?? 0}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{movement.reason ?? "N/A"}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId ?? "")}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId ?? "")}</td> {/* Display folder name */}
-                    <td className="py-2 px-4">{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
-                  </tr>
+                  <TableRow key={movement.id}>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{movement.itemName ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{movement.type ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200">{movement.amount ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200">{movement.oldQuantity ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity ?? 0}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{movement.reason ?? "N/A"}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId ?? "")}</TableCell>
+                    <TableCell className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId ?? "")}</TableCell> {/* Display folder name */}
+                    <TableCell className="py-2 px-4">{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</TableCell>
+                  </TableRow>
                 );
               })
             ) : (
-              <tr className="border-b border-gray-200">
-                <td colSpan={9} className="py-2 px-4 text-center text-gray-600">No inventory movements found for the selected criteria.</td>
-              </tr>
+              <TableRow className="border-b border-gray-200">
+                <TableCell colSpan={9} className="py-2 px-4 text-center text-gray-600">No inventory movements found for the selected criteria.</TableCell>
+              </TableRow>
             )}
           </tbody>
         </table>
