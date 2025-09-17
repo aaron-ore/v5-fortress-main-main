@@ -67,12 +67,12 @@ interface UseDashboardHookResult {
 export const useReportData = (reportId: string, dateRange: DateRange | undefined): UseDashboardHookResult => {
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
-  const { categories, isLoadingCategories, refreshCategories } = useCategories(); // Added isLoadingCategories, refreshCategories
-  const { customers, isLoadingCustomers, refreshCustomers } = useCustomers(); // Added isLoadingCustomers, refreshCustomers
+  const { categories, isLoadingCategories, refreshCategories } = useCategories();
+  const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors(); // Destructure refreshVendors
   const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
-  const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding(); // Added isLoadingFolders, fetchInventoryFolders
+  const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
   const [processedData, setProcessedData] = useState<any>(null);
   const [pdfProps, setPdfProps] = useState<any>(null);
@@ -86,10 +86,10 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     // Trigger individual context refreshes
     refreshInventory();
     fetchOrders();
-    refreshCategories(); // Refresh categories
-    refreshCustomers(); // Refresh customers
+    refreshCategories();
+    refreshCustomers();
     fetchStockMovements();
-    refreshVendors();
+    refreshVendors(); // Now correctly called
     fetchAllProfiles();
     fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, refreshCategories, refreshCustomers, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
@@ -120,9 +120,9 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       isLoadingOrders ||
       isLoadingStockMovements ||
       isLoadingVendors ||
-      isLoadingCategories || // Check categories loading
-      isLoadingCustomers || // Check customers loading
-      isLoadingFolders // Check folders loading
+      isLoadingCategories ||
+      isLoadingCustomers ||
+      isLoadingFolders
     ) {
       // If any dependency is still loading, defer report generation.
       // The useEffect below will re-trigger once all are loaded.
