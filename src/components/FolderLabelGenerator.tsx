@@ -9,7 +9,7 @@ import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
-import LocationLabelPdfContent from "@/components/LocationLabelPdfContent"; // This component will be renamed to FolderLabelPdfContent
+import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent"; // Updated import path
 import html2canvas from 'html2canvas'; // NEW: Import html2canvas
 
 // Predefined colors for labels, matching some of the designs
@@ -190,7 +190,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: c.hex }}></div>
                     {c.name}
-                  </div>
+                  </div >
                 </SelectItem>
               ))}
             </SelectContent>
@@ -215,7 +215,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
         <h3 className="text-sm font-semibold text-muted-foreground mb-2">Label Preview</h3>
         {qrCodeSvg ? (
           <div className="w-[101.6mm] h-[50.8mm] flex items-center justify-center overflow-hidden p-1 bg-white">
-            <LocationLabelPdfContent
+            <FolderLabelPdfContent
               ref={labelPreviewRef}
               folderName={folderName}
               color={selectedColor}

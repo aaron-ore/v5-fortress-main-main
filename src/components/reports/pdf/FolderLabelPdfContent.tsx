@@ -2,7 +2,7 @@ import React from "react";
 import { Diamond } from "lucide-react";
 import { format } from "date-fns"; // Import format
 
-interface LocationLabelPdfContentProps {
+interface FolderLabelPdfContentProps {
   folderName: string;
   color: string;
   qrCodeSvg: string;
@@ -11,7 +11,7 @@ interface LocationLabelPdfContentProps {
   className?: string;
 }
 
-const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPdfContentProps>(({
+const FolderLabelPdfContent = React.forwardRef<HTMLDivElement, FolderLabelPdfContentProps>(({
   folderName,
   color,
   qrCodeSvg,
@@ -39,6 +39,6 @@ const LocationLabelPdfContent = React.forwardRef<HTMLDivElement, LocationLabelPd
   );
 });
 
-LocationLabelPdfContent.displayName = "LocationLabelPdfContent";
+FolderLabelPdfContent.displayName = "FolderLabelPdfContent";
 
-export default LocationLabelPdfContent;
+export default FolderLabelPdfContent;

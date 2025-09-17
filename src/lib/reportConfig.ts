@@ -33,9 +33,11 @@ import SalesByProductPdfContent from "@/components/reports/pdf/SalesByProductPdf
 import PurchaseOrderStatusPdfContent from "@/components/reports/pdf/PurchaseOrderStatusPdfContent";
 import ProfitabilityPdfContent from "@/components/reports/pdf/ProfitabilityPdfContent";
 import DiscrepancyPdfContent from "@/components/reports/pdf/DiscrepancyPdfContent";
-import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent"; // NEW: Added import
-import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent"; // NEW: Added import
-import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent"; // NEW: Added import
+import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent";
+import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent";
+import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent";
+import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Corrected import path
+import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent"; // Corrected import path
 
 export interface ReportItem {
   id: string;
@@ -116,8 +118,10 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "purchase-order-status": PurchaseOrderStatusPdfContent,
   "profitability": ProfitabilityPdfContent,
   "stock-discrepancy": DiscrepancyPdfContent,
-  "advanced-demand-forecast": AdvancedDemandForecastPdfContent, // NEW: Added
-  "putaway-label": PutawayLabelPdfContent, // NEW: Added
-  "purchase-order": PurchaseOrderPdfContent, // NEW: Added
-  "invoice": InvoicePdfContent, // NEW: Added
+  "advanced-demand-forecast": AdvancedDemandForecastPdfContent,
+  "putaway-label": PutawayLabelPdfContent,
+  "purchase-order": PurchaseOrderPdfContent,
+  "invoice": InvoicePdfContent,
+  "location-label": FolderLabelPdfContent, // Corrected name and added to map
+  "picking-wave": PickingWavePdfContent, // Added to map
 };
