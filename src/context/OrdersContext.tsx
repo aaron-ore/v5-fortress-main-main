@@ -32,7 +32,7 @@ export interface OrderItem {
   items: POItem[];
   organizationId: string | null;
   terms?: string;
-  putawayStatus?: "Pending" | "Completed";
+  putawayStatus?: "Pending" | "Completed" | "N/A"; // Added "N/A" to type
 }
 
 interface OrdersContextType {
@@ -201,7 +201,8 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         terms: newOrder.terms,
         user_id: session.user.id,
         organization_id: profile.organizationId,
-        putaway_status: newOrder.type === "Purchase" ? "Pending" : undefined,
+        // Ensure putaway_status is always a string, even for Sales orders
+        putaway_status: newOrder.type === "Purchase" ? "Pending" : "N/A", // Changed undefined to "N/A"
       })
       .select();
 
