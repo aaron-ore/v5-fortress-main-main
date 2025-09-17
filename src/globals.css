@@ -102,7 +102,7 @@
     --secondary: 160 15% 30%; /* Muted green */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 160 10% 40%; /* Darker muted green */
+    --muted: 160 10% 40%;
     --muted-foreground: 160 10% 60%;
 
     --accent: 160 60% 80%; /* Lighter bright emerald */
@@ -115,6 +115,7 @@
     --input: 160 20% 20%;
     --ring: 160 60% 70%;
 
+    /* Sidebar specific colors for Emerald theme */
     --sidebar-background: var(--background);
     --sidebar-foreground: var(--foreground);
     --sidebar-active-background: var(--secondary);
@@ -159,6 +160,7 @@
     --input: 180 25% 16%;
     --ring: 168 43% 27%;
 
+    /* Sidebar specific colors for Deep Forest theme */
     --sidebar-background: var(--card);
     --sidebar-foreground: var(--foreground);
     --sidebar-active-background: var(--secondary);
@@ -249,7 +251,7 @@
     --ring: var(--primary); /* Primary color for ring */
 
     /* Sidebar specific colors for Light Grey Indigo theme */
-    --sidebar-background: 244 69% 74%; /* Indigo (#9792E3) */
+    --sidebar-background: 250 15% 28%; /* Darker indigo (#48435C) */
     --sidebar-foreground: 0 0% 100%; /* White text on indigo sidebar */
     --sidebar-active-background: var(--secondary);
     --sidebar-active-foreground: var(--foreground);
