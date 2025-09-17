@@ -1,3 +1,4 @@
+// @ts-ignore
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 // @ts-ignore
