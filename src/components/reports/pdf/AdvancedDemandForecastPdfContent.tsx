@@ -77,7 +77,7 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
           <tbody>
             {(forecastData?.length ?? 0) > 0 ? (
               forecastData?.map((dataPoint, index) => (
-                <tr key={index} className="border-b border-gray-200">
+                <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{dataPoint.name ?? "N/A"}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200">{(dataPoint["Historical Demand"] ?? 0) > 0 ? (dataPoint["Historical Demand"] ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200">{(dataPoint["Forecasted Demand"] ?? 0) > 0 ? (dataPoint["Forecasted Demand"] ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>

@@ -82,7 +82,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
           <tbody>
             {(ordersInWave?.length ?? 0) > 0 ? (
               ordersInWave?.map((order, _index) => (
-                <tr key={order.id} className="border-b border-gray-200">
+                <tr key={order.id}>
                   <td className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</td>
                   <td className="py-2 px-4">{order.deliveryRoute ?? 'N/A'}</td>
@@ -111,7 +111,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
           <tbody>
             {(pickListItems?.length ?? 0) > 0 ? (
               pickListItems?.map((item, _index) => (
-                <tr key={_index} className="border-b border-gray-200">
+                <tr key={_index}>
                   <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.itemSku ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{getFolderName(item.pickingBinFolderId ?? "")}</td>

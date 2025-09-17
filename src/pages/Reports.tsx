@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, LayoutDashboard, Package, Receipt, Truck, Scale, FileText, DollarSign, Users, AlertTriangle, ChevronDown, FilterX, Printer, Brain, Loader2 } from "lucide-react";
+import { BarChart, LayoutDashboard, Package, Receipt, Truck, Scale, FileText, DollarSign, Users, AlertTriangle, Printer, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  // Removed DropdownMenu imports as they are no longer needed
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
@@ -35,6 +31,9 @@ import DiscrepancyReportContent from "@/components/reports/DiscrepancyReport";
 
 // PDF content components (still needed for PrintWrapper)
 import DashboardSummaryPdfContent from "@/components/reports/pdf/DashboardSummaryPdfContent";
+import AdvancedDemandForecastPdfContent from "@/components/reports/pdf/AdvancedDemandForecastPdfContent";
+import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfContent";
+
 import InventoryValuationPdfContent from "@/components/reports/pdf/InventoryValuationPdfContent";
 import LowStockPdfContent from "@/components/reports/pdf/LowStockPdfContent";
 import InventoryMovementPdfContent from "@/components/reports/pdf/InventoryMovementPdfContent";
@@ -154,11 +153,12 @@ const Reports: React.FC = () => {
     }
   }, [location.hash, navigate]);
 
-  const handleReportSelect = (reportId: string) => {
-    setActiveReportId(reportId);
-    navigate(`/reports#${reportId}`);
-    setAiSummary("");
-  };
+  // Removed unused handleReportSelect function
+  // const handleReportSelect = (reportId: string) => {
+  //   setActiveReportId(reportId);
+  //   navigate(`/reports#${reportId}`);
+  //   setAiSummary("");
+  // };
 
   const handleClearDateFilter = () => {
     setDateRange(undefined);
@@ -252,7 +252,6 @@ const Reports: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ textToSummarize }),
       });
 
       if (!response.ok) {
