@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Loader2, FilterX } from "lucide-react"; // Only keep used icons
+import { BarChart, AlertTriangle, FileText, Printer, Brain, Loader2, FilterX } from "lucide-react"; // Re-added BarChart, AlertTriangle, FileText, Printer
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
