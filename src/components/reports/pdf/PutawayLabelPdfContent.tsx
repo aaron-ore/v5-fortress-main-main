@@ -33,7 +33,7 @@ const PutawayLabelPdfContent: React.FC<PutawayLabelPdfContentProps> = ({
 
   const getFolderDisplayName = (folderId: string) => {
     const foundLoc = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
-    return foundLoc?.name || folderId ?? "N/A"; // Use folder name
+    return (foundLoc?.name || folderId) ?? "N/A"; // Use folder name, correctly grouped
   };
 
   return (
