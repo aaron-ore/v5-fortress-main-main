@@ -156,6 +156,7 @@ const Settings: React.FC = () => {
       await updateOrganizationTheme(selectedTheme);
       setTheme(selectedTheme);
     } catch (error: any) {
+      console.error("Error updating organization theme:", error);
       showError(`Failed to update theme: ${error.message}`);
     } finally {
       setIsSavingTheme(false);
@@ -175,7 +176,7 @@ const Settings: React.FC = () => {
   const availableThemes = ['dark', 'emerald', 'deep-forest', 'tropical-indigo', 'light-grey-indigo'];
 
   return (
-    <div className="flex flex-col space-y-6 p-6">
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
 
       <Card>

@@ -18,7 +18,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
   totalStockValue,
   totalUnitsOnHand,
   lowStockItems,
-  isOutOfStockItems,
+  outOfStockItems,
   recentSalesOrders,
   recentPurchaseOrders,
 }) => {
@@ -46,7 +46,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Out of Stock Items</h3>
-            <p className="text-3xl font-bold">{(isOutOfStockItems ?? []).length}</p>
+            <p className="text-3xl font-bold">{(outOfStockItems ?? []).length}</p>
           </div>
         </CardContent>
       </Card>
