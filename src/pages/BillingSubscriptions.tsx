@@ -1,140 +1,221 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CreditCard, DollarSign, FileText, CheckCircle, XCircle, Sparkles } from "lucide-react";
-import { showSuccess } from "@/utils/toast";
+import { CreditCard, DollarSign, FileText, CheckCircle, XCircle, Sparkles, Loader2 } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-// Removed: import { planOrder } from "@/utils/planUtils"; // Import planOrder for consistency
+import { useProfile } from "@/context/ProfileContext";
+import { supabase } from "@/lib/supabaseClient";
+import { format } from "date-fns";
 
 interface PlanFeature {
   text: string;
   included: boolean;
 }
 
-interface SubscriptionPlan {
+interface StripeProduct {
   id: string;
+  active: boolean;
   name: string;
   description: string;
-  monthlyPrice: number;
-  features: PlanFeature[];
+  image: string | null;
+  metadata: any;
+}
+
+interface StripePrice {
+  id: string;
+  product_id: string;
+  active: boolean;
+  unit_amount: number; // In cents
+  currency: string;
+  type: 'one_time' | 'recurring';
+  interval: 'day' | 'week' | 'month' | 'year' | null;
+  interval_count: number | null;
+  trial_period_days: number | null;
+  metadata: any;
+}
+
+interface SubscriptionPlanDisplay extends StripeProduct {
+  prices: StripePrice[];
+  monthlyPrice: number; // Calculated monthly price for display
+  annualPrice?: number; // Calculated annual price for display
   isPopular?: boolean;
 }
 
-const plans: SubscriptionPlan[] = [
-  {
-    id: "free",
-    name: "Free",
-    description: "Get started with essential inventory tracking for small personal projects or very basic needs.",
-    monthlyPrice: 0,
-    features: [
-      { text: "1 User, 25 Items, 1 Folder", included: true },
-      { text: "Basic Inventory & Order Tracking", included: true },
-      { text: "QR Code Generation, Basic Reports", included: true },
-      { text: "Mobile-Optimized Interface", included: true },
-      { text: "Advanced Inventory Features", included: false },
-      { text: "CSV Import/Export", included: false },
-      { text: "QuickBooks Integration", included: false },
-      { text: "AI-Powered Report Summaries", included: false },
-    ],
-  },
-  {
-    id: "standard",
-    name: "Standard",
-    description: "Ideal for small businesses needing more robust inventory control and basic operations.",
-    monthlyPrice: 59,
-    features: [
-      { text: "5 Users, 500 Items, 5 Folders", included: true },
-      { text: "All Free features", included: true },
-      { text: "Advanced Inventory (Picking/Overstock, Tags, Images)", included: true },
-      { text: "Full Order Management, CSV Import/Export", included: true },
-      { text: "Basic Warehouse Operations (Lookup, Receive, Ship, Transfer)", included: true },
-      { text: "All Inventory, Sales & Purchase Reports", included: true },
-      { text: "User Role Management (Viewer, Inventory Manager)", included: true },
-      { text: "Bulk Update", included: false },
-      { text: "Auto-Reorder & Automation", included: false },
-      { text: "QuickBooks Integration", included: false },
-      { text: "AI-Powered Report Summaries", included: false },
-    ],
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    description: "Unlock comprehensive inventory, order, and warehouse management with powerful integrations.",
-    monthlyPrice: 169,
-    features: [
-      { text: "Unlimited Users, 5K Items, Unlimited Folders", included: true },
-      { text: "All Standard features", included: true },
-      { text: "Bulk Update, Auto-Reorder & Automation", included: true },
-      { text: "Global Search, Full Warehouse Operations", included: true },
-      { text: "QuickBooks & Shopify Integration", included: true },
-      { text: "AI-Powered Report Summaries, Profitability Reports", included: true },
-      { text: "Customizable User Roles, Priority Support", included: true },
-      { text: "Dedicated CSM", included: false },
-      { text: "API Access & Webhooks", included: false },
-    ],
-    isPopular: true,
-  },
-  {
-    id: "ultimate",
-    name: "Ultimate",
-    description: "Designed for growing businesses needing higher limits and advanced support.",
-    monthlyPrice: 350,
-    features: [
-      { text: "Unlimited Users, Unlimited Items, Unlimited Folders", included: true },
-      { text: "All Premium features", included: true },
-      { text: "Dedicated Account Manager", included: true },
-      { text: "Enhanced Security Features", included: true },
-      { text: "Dedicated CSM", included: false },
-      { text: "Custom Integrations", included: false },
-    ],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "Tailored solutions for large-scale operations with custom needs and dedicated support.",
-    monthlyPrice: 0, // Custom pricing, "Contact Sales"
-    features: [
-      { text: "All Ultimate features", included: true },
-      { text: "Dedicated Customer Success Manager (CSM)", included: true },
-      { text: "API Access & Webhooks", included: true },
-      { text: "Single Sign-On (SSO)", included: true },
-      { text: "Advanced Automation & Custom Rules", included: true },
-      { text: "On-site Training & Guided Setup", included: true },
-      { text: "Custom Integrations", included: true },
-      { text: "24/7 Premium Support", included: true },
-    ],
-  },
-];
-
 const BillingSubscriptions: React.FC = () => {
+  const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-  const [currentPlanId, setCurrentPlanId] = useState<string>("premium"); // Default to 'premium'
+  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlanDisplay[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
+  const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
-  const currentPlan = plans.find(p => p.id === currentPlanId) || plans[0];
+  const currentPlanId = profile?.companyProfile?.plan || "free";
+  const currentStripeSubscriptionId = profile?.stripeSubscriptionId;
+  const currentStripeCustomerId = profile?.stripeCustomerId;
 
-  const getPriceDisplay = (monthlyPrice: number, planId: string) => {
-    if (planId === "enterprise") return "Contact Sales";
-    if (monthlyPrice === 0) return "Free";
-    if (billingCycle === "monthly") return `$${monthlyPrice}/month`;
-    const annualPrice = monthlyPrice * 12 * 0.83; // Approximately 17% discount for annual
-    return `$${annualPrice.toFixed(0)}/year`;
+  useEffect(() => {
+    const fetchStripeProductsAndPrices = async () => {
+      setIsLoadingPlans(true);
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .eq('active', true);
+
+      if (productsError) {
+        console.error('Error fetching Stripe products:', productsError);
+        showError('Failed to load subscription plans.');
+        setIsLoadingPlans(false);
+        return;
+      }
+
+      const { data: prices, error: pricesError } = await supabase
+        .from('prices')
+        .select('*')
+        .eq('active', true);
+
+      if (pricesError) {
+        console.error('Error fetching Stripe prices:', pricesError);
+        showError('Failed to load subscription prices.');
+        setIsLoadingPlans(false);
+        return;
+      }
+
+      const plansWithPrices: SubscriptionPlanDisplay[] = products.map(product => {
+        const productPrices = prices.filter(price => price.product_id === product.id);
+        
+        // Find the monthly recurring price for display
+        const monthlyPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'month')?.unit_amount || 0;
+        const annualPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'year')?.unit_amount || 0;
+
+        return {
+          ...product,
+          prices: productPrices,
+          monthlyPrice: monthlyPrice / 100, // Convert cents to dollars
+          annualPrice: annualPrice / 100, // Convert cents to dollars
+          isPopular: product.metadata?.is_popular === 'true',
+        };
+      }).sort((a, b) => a.monthlyPrice - b.monthlyPrice); // Sort by price
+
+      setAvailablePlans(plansWithPrices);
+      setIsLoadingPlans(false);
+    };
+
+    fetchStripeProductsAndPrices();
+  }, []);
+
+  const getPriceDisplay = (plan: SubscriptionPlanDisplay) => {
+    if (plan.name.toLowerCase() === "enterprise") return "Contact Sales";
+    if (plan.monthlyPrice === 0) return "Free";
+
+    if (billingCycle === "monthly") {
+      return `$${plan.monthlyPrice.toFixed(0)}/month`;
+    } else {
+      // If annual price is available, use it, otherwise calculate with discount
+      const price = plan.annualPrice && plan.annualPrice > 0 ? plan.annualPrice : plan.monthlyPrice * 12 * 0.83; // Approx 17% discount
+      return `$${price.toFixed(0)}/year`;
+    }
   };
 
-  const handleChoosePlan = (planId: string) => {
-    setCurrentPlanId(planId);
-    showSuccess(`You have selected the ${plans.find(p => p.id === planId)?.name} plan! (This is a demo selection)`);
+  const handleChoosePlan = async (plan: SubscriptionPlanDisplay) => {
+    if (!profile?.organizationId) {
+      showError("Organization not found. Please ensure your company profile is set up.");
+      return;
+    }
+
+    if (plan.name.toLowerCase() === "enterprise") {
+      showSuccess("Please contact sales for Enterprise plan details.");
+      return;
+    }
+
+    setIsProcessingSubscription(true);
+    try {
+      const selectedPrice = plan.prices.find(p => 
+        p.type === 'recurring' && 
+        (billingCycle === 'monthly' ? p.interval === 'month' : p.interval === 'year')
+      );
+
+      if (!selectedPrice) {
+        throw new Error(`No ${billingCycle} recurring price found for ${plan.name}.`);
+      }
+
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("User session not found. Please log in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: JSON.stringify({
+          priceId: selectedPrice.id,
+          organizationId: profile.organizationId,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Stripe Checkout URL not returned.");
+      }
+    } catch (error: any) {
+      console.error("Error initiating Stripe Checkout:", error);
+      showError(`Failed to subscribe: ${error.message}`);
+    } finally {
+      setIsProcessingSubscription(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!profile?.organizationId || !currentStripeCustomerId) {
+      showError("You don't have an active Stripe subscription to manage.");
+      return;
+    }
+
+    setIsManagingSubscription(true);
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("User session not found. Please log in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-portal-session', {
+        body: JSON.stringify({
+          organizationId: profile.organizationId,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Stripe Customer Portal URL not returned.");
+      }
+    } catch (error: any) {
+      console.error("Error creating customer portal session:", error);
+      showError(`Failed to manage subscription: ${error.message}`);
+    } finally {
+      setIsManagingSubscription(false);
+    }
   };
 
   // Mock data for invoices and payment methods (cleared)
   const invoices: any[] = [];
   const paymentMethods: any[] = [];
-
-  const handleManageSubscription = () => {
-    showSuccess("Redirecting to subscription management portal (demo action).");
-  };
 
   const handleUpdatePaymentMethod = () => {
     showSuccess("Opening payment method update form (demo action).");
@@ -143,6 +224,15 @@ const BillingSubscriptions: React.FC = () => {
   const handleDownloadInvoice = (invoiceId: string) => {
     showSuccess(`Downloading invoice ${invoiceId} (demo action).`);
   };
+
+  if (isLoadingProfile || isLoadingPlans) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading billing information...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -170,8 +260,7 @@ const BillingSubscriptions: React.FC = () => {
 
       {/* Plan Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Free, Standard, Premium cards */}
-        {plans.slice(0, 3).map((plan) => (
+        {availablePlans.map((plan) => (
           <Card
             key={plan.id}
             className={cn(
@@ -190,8 +279,8 @@ const BillingSubscriptions: React.FC = () => {
               <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
               <p className="text-muted-foreground text-sm">{plan.description}</p>
               <div className="mt-4 text-4xl font-extrabold text-foreground">
-                {getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[0]}
-                <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[1]}</span>
+                {getPriceDisplay(plan).split('/')[0]}
+                <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan).split('/')[1]}</span>
               </div>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
@@ -209,112 +298,22 @@ const BillingSubscriptions: React.FC = () => {
               </ul>
               <Button
                 className="w-full mt-auto"
-                onClick={() => handleChoosePlan(plan.id)}
-                disabled={currentPlanId === plan.id}
+                onClick={() => handleChoosePlan(plan)}
+                disabled={currentPlanId === plan.name.toLowerCase() || isProcessingSubscription}
               >
-                {currentPlanId === plan.id ? "Current Plan" : "Choose Plan"}
+                {isProcessingSubscription ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                  </>
+                ) : currentPlanId === plan.name.toLowerCase() ? (
+                  "Current Plan"
+                ) : (
+                  "Choose Plan"
+                )}
               </Button>
             </CardContent>
           </Card>
         ))}
-
-        {/* New column for Ultimate and Enterprise */}
-        <div className="flex flex-col gap-6">
-          {/* Ultimate Card */}
-          {plans.slice(3, 4).map((plan) => (
-            <Card
-              key={plan.id}
-              className={cn(
-                "bg-card border-border rounded-lg shadow-sm flex flex-col flex-1", // flex-1 to share space
-                plan.isPopular && "border-2 border-primary shadow-lg"
-              )}
-            >
-              <CardHeader className="pb-4 text-center">
-                {plan.isPopular && (
-                  <div className="flex justify-center mb-2">
-                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" /> Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
-                <p className="text-muted-foreground text-sm">{plan.description}</p>
-                <div className="mt-4 text-4xl font-extrabold text-foreground">
-                  {getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[0]}
-                  <span className="text-lg font-medium text-muted-foreground">/{getPriceDisplay(plan.monthlyPrice, plan.id).split('/')[1]}</span>
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
-                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      {feature.included ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      )}
-                      {feature.text}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="w-full mt-auto"
-                  onClick={() => handleChoosePlan(plan.id)}
-                  disabled={currentPlanId === plan.id}
-                >
-                  {currentPlanId === plan.id ? "Current Plan" : "Choose Plan"}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Enterprise Card */}
-          {plans.slice(4, 5).map((plan) => (
-            <Card
-              key={plan.id}
-              className={cn(
-                "bg-card border-border rounded-lg shadow-sm flex flex-col flex-1", // flex-1 to share space
-                plan.isPopular && "border-2 border-primary shadow-lg"
-              )}
-            >
-              <CardHeader className="pb-4 text-center">
-                {plan.isPopular && (
-                  <div className="flex justify-center mb-2">
-                    <Badge variant="secondary" className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" /> Most Popular
-                    </Badge>
-                  </div>
-                )}
-                <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
-                <p className="text-muted-foreground text-sm">{plan.description}</p>
-                <div className="mt-4 text-4xl font-extrabold text-foreground">
-                  {getPriceDisplay(plan.monthlyPrice, plan.id)}
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
-                <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      {feature.included ? (
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      )}
-                      {feature.text}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className="w-full mt-auto"
-                  onClick={() => handleChoosePlan(plan.id)}
-                  disabled={currentPlanId === plan.id || plan.id === "enterprise"}
-                >
-                  {currentPlanId === plan.id ? "Current Plan" : (plan.id === "enterprise" ? "Contact Sales" : "Choose Plan")}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
 
       {/* Current Plan Details */}
@@ -326,26 +325,33 @@ const BillingSubscriptions: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="grid gap-2">
             <p className="text-lg font-semibold text-foreground">
-              {currentPlan.name} -{" "}
-              {currentPlan.id === "enterprise" ? "Custom Pricing" : getPriceDisplay(currentPlan.monthlyPrice, currentPlan.id)}
+              {profile?.companyProfile?.plan ? profile.companyProfile.plan.charAt(0).toUpperCase() + profile.companyProfile.plan.slice(1) : "Free"}
+              {profile?.companyProfile?.trialEndsAt && (
+                <span className="ml-2 text-sm text-yellow-500">(Trial ends: {format(new Date(profile.companyProfile.trialEndsAt), "MMM dd, yyyy")})</span>
+              )}
             </p>
-            <p className="text-sm text-muted-foreground">Status: <span className="font-medium text-green-500">Active (Demo)</span></p>
-            {currentPlan.id !== "free" && currentPlan.id !== "enterprise" && (
-              <p className="text-sm text-muted-foreground">Next Billing Date: 2024-10-01 (Demo)</p>
-            )}
+            <p className="text-sm text-muted-foreground">Status: <span className="font-medium text-green-500">Active</span></p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-foreground">Features:</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {currentPlan.features.filter(f => f.included).map((feature, index) => (
+              {availablePlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter(f => f.included).map((feature, index) => (
                 <li key={index} className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" /> {feature.text}
                 </li>
               ))}
             </ul>
           </div>
-          {currentPlan.id !== "enterprise" && (
-            <Button onClick={handleManageSubscription}>Manage Subscription</Button>
+          {currentPlanId !== "free" && (
+            <Button onClick={handleManageSubscription} disabled={isManagingSubscription}>
+              {isManagingSubscription ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Redirecting...
+                </>
+              ) : (
+                "Manage Subscription"
+              )}
+            </Button>
           )}
         </CardContent>
       </Card>

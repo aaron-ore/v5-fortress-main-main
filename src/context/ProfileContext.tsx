@@ -12,7 +12,10 @@ export interface CompanyProfile {
   companyLogoUrl?: string;
   organizationCode?: string;
   organizationTheme?: string;
-  plan?: string; // NEW: Added plan property
+  plan?: string;
+  stripeCustomerId?: string; // NEW: Added Stripe Customer ID
+  stripeSubscriptionId?: string; // NEW: Added Stripe Subscription ID
+  trialEndsAt?: string; // NEW: Added trial_ends_at
 }
 
 export interface UserProfile {
@@ -38,7 +41,7 @@ interface ProfileContextType {
   profile: UserProfile | null;
   allProfiles: UserProfile[];
   isLoadingProfile: boolean;
-  isLoadingAllProfiles: boolean; // NEW: Added loading state for all profiles
+  isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
   updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => Promise<void>;
@@ -54,7 +57,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true); // NEW: Initialize loading state for all profiles
+  const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
     const companyProfile: CompanyProfile | undefined = companyData ? {
@@ -64,7 +67,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyLogoUrl: companyData.company_logo_url || undefined,
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
-      plan: companyData.plan || undefined, // NEW: Map plan from companyData
+      plan: companyData.plan || undefined,
+      stripeCustomerId: companyData.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID
+      stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID
+      trialEndsAt: companyData.trial_ends_at || undefined, // NEW: Map trial_ends_at
     } : undefined;
 
     return {
@@ -109,7 +115,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           shopify_access_token,
           shopify_refresh_token,
           shopify_store_name,
-          plan
+          plan,
+          stripe_customer_id,
+          stripe_subscription_id,
+          trial_ends_at
         )
       `)
       .eq('id', user.id)
@@ -129,11 +138,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
       setAllProfiles([]);
-      setIsLoadingAllProfiles(false); // NEW: Set loading to false if no organization
+      setIsLoadingAllProfiles(false);
       return;
     }
 
-    setIsLoadingAllProfiles(true); // NEW: Use isLoadingAllProfiles
+    setIsLoadingAllProfiles(true);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -149,7 +158,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
-    setIsLoadingAllProfiles(false); // NEW: Set loading to false in all exit paths
+    setIsLoadingAllProfiles(false);
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
@@ -158,7 +167,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isLoadingAuth, fetchProfile]);
 
-  // NEW: Effect to fetch all profiles once the main profile is loaded and has an organizationId
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
       fetchAllProfiles();
@@ -242,7 +250,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       currency: updates.companyCurrency,
       address: updates.companyAddress,
       company_logo_url: updates.companyLogoUrl,
-      plan: updates.plan, // NEW: Include plan in payload
+      plan: updates.plan,
+      stripe_customer_id: updates.stripeCustomerId, // NEW: Include Stripe Customer ID
+      stripe_subscription_id: updates.stripeSubscriptionId, // NEW: Include Stripe Subscription ID
+      trial_ends_at: updates.trialEndsAt, // NEW: Include trial_ends_at
     };
 
     if (uniqueCode !== undefined) {
@@ -311,7 +322,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         profile,
         allProfiles,
         isLoadingProfile,
-        isLoadingAllProfiles, // NEW: Provide isLoadingAllProfiles
+        isLoadingAllProfiles,
         fetchProfile,
         fetchAllProfiles,
         updateProfile,
