@@ -17,6 +17,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
+import { showError } from "@/utils/toast"; // Import showError
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();

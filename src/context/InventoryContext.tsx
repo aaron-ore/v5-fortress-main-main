@@ -47,13 +47,14 @@ export interface InventoryItem {
   organizationId: string | null;
   autoReorderEnabled: boolean;
   autoReorderQuantity: number;
+  createdAt: string; // Added createdAt
 }
 
 interface InventoryContextType {
   inventoryItems: InventoryItem[];
   isLoadingInventory: boolean;
-  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => Promise<void>;
-  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity"> & { id: string }) => Promise<void>;
+  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt">) => Promise<void>;
+  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string }) => Promise<void>;
   deleteInventoryItem: (itemId: string) => Promise<void>;
   refreshInventory: () => Promise<void>;
 }
@@ -88,6 +89,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     const validatedLastUpdated = parseAndValidateDate(item.last_updated);
     const lastUpdatedString = validatedLastUpdated ? validatedLastUpdated.toISOString() : new Date().toISOString();
+    const validatedCreatedAt = parseAndValidateDate(item.created_at);
+    const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
+
 
     return {
       id: item.id,
@@ -116,6 +120,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       organizationId: item.organization_id,
       autoReorderEnabled: item.auto_reorder_enabled || false,
       autoReorderQuantity: isNaN(autoReorderQuantity) ? 0 : autoReorderQuantity,
+      createdAt: createdAtString,
     };
   };
 
@@ -227,7 +232,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
@@ -238,6 +243,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const totalQuantity = item.pickingBinQuantity + item.overstockQuantity;
     const status = totalQuantity > item.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
     const lastUpdated = new Date().toISOString();
+    const createdAt = new Date().toISOString();
+
 
     const { data, error } = await supabase
       .from("inventory_items")
@@ -267,6 +274,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         organization_id: profile.organizationId,
         auto_reorder_enabled: item.autoReorderEnabled,
         auto_reorder_quantity: item.autoReorderQuantity,
+        created_at: createdAt,
       })
       .select();
 
@@ -288,7 +296,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity"> & { id: string }) => {
+  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to update inventory items.";

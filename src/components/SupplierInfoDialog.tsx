@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Package, Truck, Loader2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters";
 import { useProfile } from "@/context/ProfileContext";
 

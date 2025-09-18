@@ -11,6 +11,7 @@ import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // FIXED: 
 import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // FIXED: Corrected import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // Import showError
 
 const Folders = () => { // Renamed component and removed React.FC
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding(); // Updated context functions

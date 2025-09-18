@@ -97,7 +97,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           setActionType("SEND_EMAIL");
           setActionEmailTo(ruleToEdit.actionJson.to);
           setActionEmailSubject(ruleToEdit.actionJson.subject);
-          setActionEmailBody(ruleTo.actionJson.body);
+          setActionEmailBody(ruleToEdit.actionJson.body); // Fixed typo here
         } else if (ruleToEdit.actionJson?.type === "CREATE_PURCHASE_ORDER") {
           setActionType("CREATE_PURCHASE_ORDER");
           setActionCreatePoItemId(ruleToEdit.actionJson.itemId);

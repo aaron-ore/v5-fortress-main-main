@@ -7,9 +7,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import WarehouseDashboard from "@/components/warehouse-operations/WarehouseDashboard";
 import CameraScannerDialog from "@/components/CameraScannerDialog";
 import { cn } from "@/lib/utils";
-import { showSuccess } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast"; // Import showError
 import { useNavigate, useLocation } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useSidebar } from "@/context/SidebarContext"; // Import useSidebar
+
 
 // Import new dialog wrappers
 import ItemLookupDialog from "@/components/warehouse-operations/dialogs/ItemLookupDialog";
@@ -30,6 +32,8 @@ const WarehouseOperationsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { isCollapsed } = useSidebar(); // Use isCollapsed from SidebarContext
+
 
   // NEW: Role-based permissions for warehouse operations
   const canViewWarehouseOps = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
@@ -118,7 +122,7 @@ const WarehouseOperationsPage: React.FC = () => {
         }
       }
     }
-  }, [location.hash, navigate, location.pathname, profile]); // NEW: Add profile to dependencies
+  }, [location.hash, navigate, location.pathname, profile, dialogStates]); // Added dialogStates to dependencies
 
   const requestScan = (callback: (scannedData: string) => void) => {
     setScanCallback(() => callback);

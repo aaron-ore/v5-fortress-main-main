@@ -15,6 +15,7 @@ import { useVendors, Vendor } from "@/context/VendorContext";
 import AddEditVendorDialog from "@/components/AddEditVendorDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // Import showError
 
 const Vendors: React.FC = () => {
   const { vendors, deleteVendor } = useVendors();

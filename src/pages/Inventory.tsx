@@ -25,7 +25,7 @@ import { useVendors } from "@/context/VendorContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast"; // Import showError
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
@@ -141,6 +141,9 @@ const Inventory: React.FC = () => {
   const [isConfirmDeleteItemDialogOpen, setIsConfirmDeleteItemDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
 
+  const [isConfirmDeleteFolderDialogOpen, setIsConfirmDeleteFolderDialogOpen] = useState(false); // Corrected state variable name
+  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // For folder deletion confirmation
+
   const [isQuickViewDialogOpen, setIsQuickViewDialogOpen] = useState(false);
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
 
@@ -151,7 +154,6 @@ const Inventory: React.FC = () => {
   // State for Add/Edit Folder Dialog
   const [isFolderLabelGeneratorOpen, setIsFolderLabelGeneratorOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null);
-  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // For folder deletion confirmation
 
   // NEW: Role-based permissions
   const canViewInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
@@ -267,7 +269,7 @@ const Inventory: React.FC = () => {
       return;
     }
     setFolderToDelete(folder);
-    setIsConfirmDeleteDialogOpen(true); // Reuse item deletion dialog state for simplicity
+    setIsConfirmDeleteFolderDialogOpen(true); // Corrected state variable name
   };
 
   const confirmDeleteFolder = async () => {
@@ -275,13 +277,13 @@ const Inventory: React.FC = () => {
       const { itemCount, subfolderCount } = getFolderItemCounts(folderToDelete.id);
       if (itemCount > 0 || subfolderCount > 0) {
         showError(`Cannot delete folder "${folderToDelete.name}". It contains ${itemCount} items and ${subfolderCount} subfolders. Please empty it first.`);
-        setIsConfirmDeleteDialogOpen(false);
+        setIsConfirmDeleteFolderDialogOpen(false); // Corrected state variable name
         setFolderToDelete(null);
         return;
       }
       await removeInventoryFolder(folderToDelete.id);
     }
-    setIsConfirmDeleteDialogOpen(false);
+    setIsConfirmDeleteFolderDialogOpen(false); // Corrected state variable name
     setFolderToDelete(null);
   };
 
@@ -515,8 +517,8 @@ const Inventory: React.FC = () => {
       )}
       {folderToDelete && (
         <ConfirmDialog
-          isOpen={isConfirmDeleteDialogOpen} // Reusing state
-          onClose={() => setIsConfirmDeleteDialogOpen(false)}
+          isOpen={isConfirmDeleteFolderDialogOpen} // Corrected state variable name
+          onClose={() => setIsConfirmDeleteFolderDialogOpen(false)} // Corrected state variable name
           onConfirm={confirmDeleteFolder}
           title="Confirm Folder Deletion"
           description={

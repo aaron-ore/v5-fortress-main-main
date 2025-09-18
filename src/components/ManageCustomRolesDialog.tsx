@@ -17,10 +17,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Zap, Settings, Loader2 } from "lucide-react";
 import { useAutomation, AutomationRule } from "@/context/AutomationContext";
-import { showError } from "@/utils/toast";
+import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
+import { useOnboarding, InventoryFolder, CustomRole } from "@/context/OnboardingContext"; // Import CustomRole
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
@@ -137,9 +137,9 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
   };
 
   const confirmDeleteRole = async () => {
-    if (ruleToDelete) {
-      await deleteCustomRole(ruleToDelete.id);
-      showSuccess(`Role "${ruleToDelete.name}" deleted.`);
+    if (roleToDelete) {
+      await deleteCustomRole(roleToDelete.id);
+      showSuccess(`Role "${roleToDelete.name}" deleted.`);
     }
     setIsConfirmDeleteDialogOpen(false);
     setRoleToDelete(null);
@@ -206,9 +206,9 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
       <Dialog open={isAddEditRoleDialogOpen} onOpenChange={setIsAddEditRoleDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{ruleToEdit ? "Edit Custom Role" : "Create New Custom Role"}</DialogTitle>
+            <DialogTitle>{roleToEdit ? "Edit Custom Role" : "Create New Custom Role"}</DialogTitle>
             <DialogDescription>
-              {ruleToEdit ? "Update the details and permissions for this role." : "Define a new role and assign its permissions."}
+              {roleToEdit ? "Update the details and permissions for this role." : "Define a new role and assign its permissions."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -257,19 +257,19 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
               Cancel
             </Button>
             <Button onClick={handleSaveRole} disabled={!isAdmin}>
-              {ruleToEdit ? "Save Changes" : "Create Role"}
+              {roleToEdit ? "Save Changes" : "Create Role"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {ruleToDelete && (
+      {roleToDelete && (
         <ConfirmDialog
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteRole}
           title="Confirm Rule Deletion"
-          description={`Are you sure you want to delete the custom role "${ruleToDelete.name}"? This action cannot be undone.`}
+          description={`Are you sure you want to delete the custom role "${roleToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
           cancelText="Cancel"
         />

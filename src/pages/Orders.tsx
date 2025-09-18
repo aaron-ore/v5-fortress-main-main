@@ -30,6 +30,7 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderColumns } from "@/components/orders/orders-table-columns";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardTitle } from "@/components/ui/card"; // Import Card components
 
 const Orders: React.FC = () => {
   const { orders, fetchOrders, archiveOrder } = useOrders();

@@ -222,17 +222,17 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         setJsonDataToProcess(jsonData);
 
         const duplicates: CsvDuplicateItem[] = [];
-        const seenSkus = new Set<string>();
+        const seenSkusInCsv = new Set<string>(); // Track SKUs seen in the current CSV to avoid duplicate warnings for same CSV
         jsonData.forEach(row => {
           const sku = String(row.sku || '').trim();
           if (sku && existingInventorySkus.has(sku.toLowerCase())) {
-            if (!seenSkus.has(sku.toLowerCase())) {
+            if (!seenSkusInCsv.has(sku.toLowerCase())) { // Check if this specific SKU has already been added to duplicates from this CSV
               duplicates.push({
                 sku: sku,
                 csvQuantity: parseInt(String(row.pickingBinQuantity || '0')) + parseInt(String(row.overstockQuantity || '0')),
                 itemName: String(row.name || '').trim(),
               });
-              seenSkus.add(duplicateSkusInCsv);
+              seenSkusInCsv.add(sku.toLowerCase()); // Add to the set of SKUs seen in this CSV
             }
           }
         });

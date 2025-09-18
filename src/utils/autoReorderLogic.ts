@@ -87,7 +87,7 @@ export const processAutoReorder = async (
       addNotification(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}).`, "success");
       showSuccess(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}). Email simulated to ${vendor.email || 'vendor'}.`);
       
-      if (profile.companyProfile.enableAutoReorderNotifications && vendor.email) {
+      if (profile?.companyProfile?.enableAutoReorderNotifications && vendor.email) {
         const emailSubject = `New Purchase Order: ${newPoNumber} for ${item.name}`;
         const emailHtmlContent = `
           <p>Dear ${vendor.contactPerson || vendor.name},</p>
@@ -130,7 +130,7 @@ export const processAutoReorder = async (
             addNotification(`Reorder email sent to ${vendor.email} for ${item.name}.`, "info");
           }
         }
-      } else if (profile.companyProfile.enableAutoReorderNotifications && !vendor.email) {
+      } else if (profile?.companyProfile?.enableAutoReorderNotifications && !vendor.email) {
         addNotification(`No email address for vendor ${vendor.name}. Reorder email not sent.`, "warning");
       }
     } catch (error: any) {

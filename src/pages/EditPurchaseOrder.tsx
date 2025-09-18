@@ -87,7 +87,7 @@ const EditPurchaseOrder: React.FC = () => {
         setSupplier(foundOrder.customerSupplier);
         setPoDate(foundOrder.date);
         setStatus(foundOrder.status);
-        setDueDate(foundFoundOrder.dueDate);
+        setDueDate(foundOrder.dueDate); // Fixed typo here
         setOrderType(foundOrder.orderType);
         setShippingMethod(foundOrder.shippingMethod);
         setNotes(foundOrder.notes);
