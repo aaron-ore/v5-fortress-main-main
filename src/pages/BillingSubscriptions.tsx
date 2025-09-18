@@ -47,7 +47,7 @@ interface SubscriptionPlanDisplay extends StripeProduct {
 }
 
 const BillingSubscriptions: React.FC = () => {
-  const { profile, isLoadingProfile, fetchProfile } = useProfile();
+  const { profile, isLoadingProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlanDisplay[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
@@ -55,7 +55,6 @@ const BillingSubscriptions: React.FC = () => {
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
   const currentPlanId = profile?.companyProfile?.plan || "free";
-  const currentStripeSubscriptionId = profile?.stripeSubscriptionId;
   const currentStripeCustomerId = profile?.stripeCustomerId;
 
   useEffect(() => {
@@ -279,7 +278,7 @@ const BillingSubscriptions: React.FC = () => {
 
       {/* Plan Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {availablePlans.map((plan) => (
+        {availablePlans.map((plan: SubscriptionPlanDisplay) => (
           <Card
             key={plan.id}
             className={cn(

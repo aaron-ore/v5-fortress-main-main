@@ -124,8 +124,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
           folderName: folderName,
           color: selectedColor,
           qrCodeSvg: qrSvg,
-          printDate: format(new Date(), "MMM dd, yyyy HH:mm"),
-          folderIdentifier: folderIdentifier,
+          // Removed printDate and folderIdentifier as they are no longer needed by FolderLabelPdfContent
         },
       }));
 
@@ -220,8 +219,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
               folderName={folderName}
               color={selectedColor}
               qrCodeSvg={qrCodeSvg}
-              printDate={format(new Date(), "MMM dd, yyyy HH:mm")}
-              folderIdentifier={folderIdentifier}
+              // Removed printDate and folderIdentifier from props
             />
           </div>
         ) : (
