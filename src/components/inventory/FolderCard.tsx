@@ -23,6 +23,7 @@ interface FolderCardProps {
   onDelete: (folder: InventoryFolder) => void;
   itemCount: number;
   subfolderCount: number;
+  canManageFolders: boolean; // NEW: Add canManageFolders prop
 }
 
 const FolderCard: React.FC<FolderCardProps> = ({
@@ -31,6 +32,7 @@ const FolderCard: React.FC<FolderCardProps> = ({
   onDelete,
   itemCount,
   subfolderCount,
+  canManageFolders, // NEW: Destructure canManageFolders
 }) => {
   const navigate = useNavigate();
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
@@ -41,6 +43,10 @@ const FolderCard: React.FC<FolderCardProps> = ({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
+    if (!canManageFolders) { // NEW: Check permission before deleting
+      showError("You do not have permission to delete folders.");
+      return;
+    }
     setIsConfirmDeleteDialogOpen(true);
   };
 
@@ -51,6 +57,10 @@ const FolderCard: React.FC<FolderCardProps> = ({
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
+    if (!canManageFolders) { // NEW: Check permission before editing
+      showError("You do not have permission to edit folders.");
+      return;
+    }
     onEdit(folder);
   };
 
@@ -70,22 +80,24 @@ const FolderCard: React.FC<FolderCardProps> = ({
               {folder.name}
             </CardTitle>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEditClick}>
-                <Edit className="h-4 w-4 mr-2" /> Edit Folder
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" /> Delete Folder
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canManageFolders && ( // NEW: Only show dropdown if user can manage folders
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEditClick}>
+                  <Edit className="h-4 w-4 mr-2" /> Edit Folder
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete Folder
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </CardHeader>
         <CardContent className="p-0 flex-grow flex flex-col justify-end">
           <div className="space-y-1 text-sm text-muted-foreground">

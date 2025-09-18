@@ -14,9 +14,17 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import AddEditVendorDialog from "@/components/AddEditVendorDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const Vendors: React.FC = () => {
   const { vendors, deleteVendor } = useVendors();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canViewVendors = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageVendors = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteVendors = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [isAddEditVendorDialogOpen, setIsAddEditVendorDialogOpen] = useState(false);
   const [vendorToEdit, setVendorToEdit] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,16 +33,28 @@ const Vendors: React.FC = () => {
   const [vendorToDelete, setVendorToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleAddVendorClick = () => {
+    if (!canManageVendors) { // NEW: Check permission before adding
+      showError("You do not have permission to add vendors.");
+      return;
+    }
     setVendorToEdit(null);
     setIsAddEditVendorDialogOpen(true);
   };
 
   const handleEditVendorClick = (vendor: Vendor) => {
+    if (!canManageVendors) { // NEW: Check permission before editing
+      showError("You do not have permission to edit vendors.");
+      return;
+    }
     setVendorToEdit(vendor);
     setIsAddEditVendorDialogOpen(true);
   };
 
   const handleDeleteVendorClick = (vendorId: string, vendorName: string) => {
+    if (!canDeleteVendors) { // NEW: Check permission before deleting
+      showError("You do not have permission to delete vendors.");
+      return;
+    }
     setVendorToDelete({ id: vendorId, name: vendorName });
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -61,6 +81,19 @@ const Vendors: React.FC = () => {
     );
   }, [vendors, searchTerm]);
 
+  if (!canViewVendors) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view vendors.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Vendor Management</h1>
@@ -73,9 +106,11 @@ const Vendors: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Button onClick={handleAddVendorClick}>
-          <PlusCircle className="h-4 w-4 mr-2" /> Add New Vendor
-        </Button>
+        {canManageVendors && ( // NEW: Only show if user can manage vendors
+          <Button onClick={handleAddVendorClick}>
+            <PlusCircle className="h-4 w-4 mr-2" /> Add New Vendor
+          </Button>
+        )}
       </div>
 
       <Card className="bg-card border-border rounded-lg p-4">
@@ -95,7 +130,7 @@ const Vendors: React.FC = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Address</TableHead>
-                    <TableHead className="text-center w-[100px]">Actions</TableHead>
+                    {canManageVendors && <TableHead className="text-center w-[100px]">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -106,16 +141,18 @@ const Vendors: React.FC = () => {
                       <TableCell>{vendor.email || "-"}</TableCell>
                       <TableCell>{vendor.phone || "-"}</TableCell>
                       <TableCell className="max-w-[250px] truncate">{vendor.address || "-"}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditVendorClick(vendor)}>
-                            <Edit className="h-4 w-4 text-primary" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteVendorClick(vendor.id, vendor.name)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canManageVendors && ( // NEW: Only show if user can manage vendors
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEditVendorClick(vendor)}>
+                              <Edit className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteVendorClick(vendor.id, vendor.name)} disabled={!canDeleteVendors}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

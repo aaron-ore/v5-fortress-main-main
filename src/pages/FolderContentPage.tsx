@@ -25,8 +25,13 @@ const FolderContentPage: React.FC = () => {
   const navigate = useNavigate();
   const { inventoryItems, deleteInventoryItem, isLoadingInventory, refreshInventory } = useInventory();
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
-  const { isLoadingProfile } = useProfile(); // FIXED: Get isLoadingProfile from useProfile
-  const { isCollapsed } = useSidebar();
+  const { isLoadingProfile, profile } = useProfile(); // FIXED: Get isLoadingProfile from useProfile
+
+  // NEW: Role-based permissions
+  const canViewInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canManageFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -83,9 +88,13 @@ const FolderContentPage: React.FC = () => {
   }, []);
 
   const handleDeleteItemClick = useCallback((itemId: string, itemName: string) => {
+    if (!canDeleteInventory) { // NEW: Check permission before deleting
+      showError("You do not have permission to delete inventory items.");
+      return;
+    }
     setItemToDelete({ id: itemId, name: itemName });
     setIsConfirmDeleteItemDialogOpen(true);
-  }, []);
+  }, [canDeleteInventory]);
 
   const confirmDeleteItem = async () => {
     if (itemToDelete) {
@@ -104,19 +113,31 @@ const FolderContentPage: React.FC = () => {
     navigate(`/folders/${id}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]);
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory), [handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory]);
 
   // Subfolder management handlers
   const handleAddSubfolderClick = () => {
+    if (!canManageFolders) { // NEW: Check permission before adding subfolder
+      showError("You do not have permission to add subfolders.");
+      return;
+    }
     setIsAddSubfolderDialogOpen(true);
   };
 
   const handleEditSubfolderClick = (folder: InventoryFolder) => {
+    if (!canManageFolders) { // NEW: Check permission before editing subfolder
+      showError("You do not have permission to edit subfolders.");
+      return;
+    }
     setSubfolderToEdit(folder);
     setIsEditSubfolderDialogOpen(true);
   };
 
   const handleDeleteSubfolderClick = (folder: InventoryFolder) => {
+    if (!canManageFolders) { // NEW: Check permission before deleting subfolder
+      showError("You do not have permission to delete subfolders.");
+      return;
+    }
     setFolderToDelete(folder);
     setIsConfirmDeleteFolderDialogOpen(true);
   };
@@ -138,6 +159,10 @@ const FolderContentPage: React.FC = () => {
 
   const handleSaveSubfolder = async (newFolderData: Omit<InventoryFolder, 'id' | 'createdAt' | 'userId' | 'organizationId'>, isNew: boolean) => {
     if (!currentFolder) return;
+    if (!canManageFolders) { // NEW: Check permission before saving subfolder
+      showError("You do not have permission to save subfolder changes.");
+      return;
+    }
 
     if (isNew) {
       await addInventoryFolder({ ...newFolderData, parentId: currentFolder.id });
@@ -150,8 +175,25 @@ const FolderContentPage: React.FC = () => {
   };
 
   const handleAddInventoryItemToFolderClick = () => {
+    if (!canManageInventory) { // NEW: Check permission before adding item
+      showError("You do not have permission to add inventory items.");
+      return;
+    }
     setIsAddInventoryItemToFolderDialogOpen(true);
   };
+
+  if (!canViewInventory) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view folder contents.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoadingInventory || isLoadingProfile) {
     return (
@@ -195,12 +237,16 @@ const FolderContentPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="flex items-center ml-auto space-x-2">
-          <Button onClick={handleAddSubfolderClick} size="sm">
-            <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
-          </Button>
-          <Button onClick={handleAddInventoryItemToFolderClick} size="sm">
-            <PlusCircle className="h-4 w-4 mr-2" /> Add Item
-          </Button>
+          {canManageFolders && ( // NEW: Only show if user can manage folders
+            <Button onClick={handleAddSubfolderClick} size="sm">
+              <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
+            </Button>
+          )}
+          {canManageInventory && ( // NEW: Only show if user can manage inventory
+            <Button onClick={handleAddInventoryItemToFolderClick} size="sm">
+              <PlusCircle className="h-4 w-4 mr-2" /> Add Item
+            </Button>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -256,6 +302,7 @@ const FolderContentPage: React.FC = () => {
                           onDelete={handleDeleteSubfolderClick}
                           itemCount={itemCount}
                           subfolderCount={subfolderCount}
+                          canManageFolders={canManageFolders} // NEW: Pass permission
                         />
                       );
                     })}
@@ -334,6 +381,7 @@ const FolderContentPage: React.FC = () => {
             onSave={handleSaveSubfolder}
             onClose={() => setIsAddSubfolderDialogOpen(false)}
             parentId={currentFolder?.id}
+            disabled={!canManageFolders} // NEW: Disable generator if no permission
           />
         </DialogContent>
       </Dialog>
@@ -351,6 +399,7 @@ const FolderContentPage: React.FC = () => {
               onSave={handleSaveSubfolder}
               onClose={() => { setIsEditSubfolderDialogOpen(false); setSubfolderToEdit(null); }}
               parentId={currentFolder?.id}
+              disabled={!canManageFolders} // NEW: Disable generator if no permission
             />
           </DialogContent>
         </Dialog>

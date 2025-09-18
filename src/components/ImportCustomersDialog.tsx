@@ -16,6 +16,7 @@ import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateCustomerCsvTemplate } from "@/utils/csvGenerator";
 import DuplicateCustomersWarningDialog from "@/components/DuplicateCustomersWarningDialog";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CsvDuplicateCustomer {
   name: string;
@@ -32,6 +33,10 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   onClose,
 }) => {
   const { addCustomer, updateCustomer, customers } = useCustomers();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageCustomers = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -78,6 +83,11 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   };
 
   const processCsvData = async (data: any[], actionForDuplicates: "skip" | "update") => {
+    if (!canManageCustomers) { // NEW: Check permission before processing
+      showError("You do not have permission to import customer data.");
+      setIsUploading(false);
+      return;
+    }
     setIsUploading(true);
     let successCount = 0;
     let errorCount = 0;
@@ -167,6 +177,10 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
   };
 
   const handleUpload = async () => {
+    if (!canManageCustomers) { // NEW: Check permission before uploading
+      showError("You do not have permission to import customer data.");
+      return;
+    }
     if (!selectedFile) {
       showError("Please select a CSV file to upload.");
       return;
@@ -311,6 +325,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
               accept=".csv"
               onChange={handleFileChange}
               className="col-span-3"
+              disabled={!canManageCustomers} // NEW: Disable input if no permission
             />
           </div>
           {selectedFile && (
@@ -319,7 +334,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
             </p>
           )}
           <div className="col-span-4 text-center">
-            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full">
+            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full" disabled={!canManageCustomers}>
               <Download className="h-4 w-4 mr-2" /> Download CSV Template
             </Button>
           </div>
@@ -328,7 +343,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isUploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+          <Button onClick={handleUpload} disabled={!selectedFile || isUploading || !canManageCustomers}>
             {isUploading ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>

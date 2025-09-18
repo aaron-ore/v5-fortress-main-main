@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AddEditCustomerDialogProps {
   isOpen: boolean;
@@ -27,6 +28,11 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
   customerToEdit,
 }) => {
   const { addCustomer, updateCustomer } = useCustomers();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageCustomers = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [name, setName] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [email, setEmail] = useState("");
@@ -58,6 +64,10 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!canManageCustomers) { // NEW: Check permission before submitting
+      showError("You do not have permission to add or edit customers.");
+      return;
+    }
     if (!name.trim()) {
       showError("Customer Name is required.");
       return;
@@ -97,6 +107,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., John Doe"
+              disabled={!canManageCustomers} // NEW: Disable input if no permission
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,6 +118,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
                 value={contactPerson}
                 onChange={(e) => setContactPerson(e.target.value)}
                 placeholder="e.g., Jane Smith"
+                disabled={!canManageCustomers} // NEW: Disable input if no permission
               />
             </div>
             <div className="space-y-2">
@@ -117,6 +129,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="customer@example.com"
+                disabled={!canManageCustomers} // NEW: Disable input if no permission
               />
             </div>
             <div className="space-y-2">
@@ -128,6 +141,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
                 onChange={handlePhoneChange}
                 placeholder="e.g., 555-123-4567"
                 maxLength={12}
+                disabled={!canManageCustomers} // NEW: Disable input if no permission
               />
             </div>
           </div>
@@ -139,6 +153,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Main St, City, State, Zip"
               rows={2}
+              disabled={!canManageCustomers} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
@@ -149,6 +164,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any specific notes about this customer..."
               rows={3}
+              disabled={!canManageCustomers} // NEW: Disable input if no permission
             />
           </div>
         </div>
@@ -156,7 +172,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={!canManageCustomers}>
             {customerToEdit ? "Save Changes" : "Add Customer"}
           </Button>
         </DialogFooter>

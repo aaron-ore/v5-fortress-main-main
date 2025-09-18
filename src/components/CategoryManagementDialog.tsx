@@ -14,6 +14,7 @@ import ConfirmDialog from "@/components/ConfirmDialog"; // Import ConfirmDialog
 import { useCategories } from "@/context/CategoryContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CategoryManagementDialogProps {
   isOpen: boolean;
@@ -25,6 +26,11 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
   onClose,
 }) => {
   const { categories, addCategory, removeCategory } = useCategories();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageCategories = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [newCategoryName, setNewCategoryName] = useState("");
 
   // State for delete confirmation dialog
@@ -32,6 +38,10 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const handleAddCategory = () => {
+    if (!canManageCategories) { // NEW: Check permission before adding
+      showError("You do not have permission to add categories.");
+      return;
+    }
     if (newCategoryName.trim() === "") {
       showError("Category name cannot be empty.");
       return;
@@ -46,6 +56,10 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
   };
 
   const handleRemoveCategoryClick = (id: string, name: string) => {
+    if (!canManageCategories) { // NEW: Check permission before removing
+      showError("You do not have permission to delete categories.");
+      return;
+    }
     setCategoryToDelete({ id, name });
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -82,8 +96,9 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
                     handleAddCategory();
                   }
                 }}
+                disabled={!canManageCategories} // NEW: Disable input if no permission
               />
-              <Button onClick={handleAddCategory}>
+              <Button onClick={handleAddCategory} disabled={!canManageCategories}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Add
               </Button>
             </div>
@@ -100,6 +115,7 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveCategoryClick(cat.id, cat.name)}
+                      disabled={!canManageCategories} // NEW: Disable button if no permission
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>

@@ -14,6 +14,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Download, Upload } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface BulkUpdateDialogProps {
   isOpen: boolean;
@@ -66,6 +67,11 @@ const generateBulkUpdateCsvTemplate = (): string => {
 
 const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -84,6 +90,10 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
   };
 
   const handleUpload = async () => {
+    if (!canManageInventory) { // NEW: Check permission before uploading
+      showError("You do not have permission to perform bulk inventory updates.");
+      return;
+    }
     if (!selectedFile) {
       showError("Please select a CSV file to upload.");
       return;
@@ -248,6 +258,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
               accept=".csv"
               onChange={handleFileChange}
               className="col-span-3"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           {selectedFile && (
@@ -256,7 +267,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
             </p>
           )}
           <div className="col-span-4 text-center">
-            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full">
+            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full" disabled={!canManageInventory}>
               <Download className="h-4 w-4 mr-2" /> Download Bulk Update Template
             </Button>
           </div>
@@ -265,7 +276,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
           <Button variant="outline" onClick={onClose} disabled={isUploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+          <Button onClick={handleUpload} disabled={!selectedFile || isUploading || !canManageInventory}>
             {isUploading ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>

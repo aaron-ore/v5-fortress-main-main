@@ -22,7 +22,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 // Removed parseLocationString as it's not directly used for folders
 import { supabase } from "@/lib/supabaseClient";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CsvDuplicateItem {
   sku: string;
@@ -42,7 +42,10 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   const { inventoryItems, refreshInventory } = useInventory();
   const {  } = useCategories(); // Removed categories and addCategory
   const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
-  const { profile } = useProfile();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -115,6 +118,11 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       setIsUploading(false);
       return;
     }
+    if (!canManageInventory) { // NEW: Check permission before invoking edge function
+      showError("You do not have permission to import inventory data.");
+      setIsUploading(false);
+      return;
+    }
 
     setIsUploading(true);
     let uploadedFilePath: string | null = null;
@@ -179,6 +187,10 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   };
 
   const handleUpload = async () => {
+    if (!canManageInventory) { // NEW: Check permission before uploading
+      showError("You do not have permission to import inventory data.");
+      return;
+    }
     if (!selectedFile) {
       showError("Please select a CSV file to upload.");
       return;
@@ -220,7 +232,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
                 csvQuantity: parseInt(String(row.pickingBinQuantity || '0')) + parseInt(String(row.overstockQuantity || '0')),
                 itemName: String(row.name || '').trim(),
               });
-              seenSkus.add(sku.toLowerCase());
+              seenSkus.add(duplicateSkusInCsv);
             }
           }
         });
@@ -359,6 +371,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
               accept=".csv"
               onChange={handleFileChange}
               className="col-span-3"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           {selectedFile && (
@@ -367,7 +380,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
             </p>
           )}
           <div className="col-span-4 text-center">
-            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full">
+            <Button variant="outline" onClick={handleDownloadTemplate} className="w-full" disabled={!canManageInventory}>
               <Download className="h-4 w-4 mr-2" /> Download CSV Template
             </Button>
           </div>
@@ -376,7 +389,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isUploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!selectedFile || isUploading}>
+          <Button onClick={handleUpload} disabled={!selectedFile || isUploading || !canManageInventory}>
             {isUploading ? "Uploading..." : "Upload"}
           </Button>
         </DialogFooter>

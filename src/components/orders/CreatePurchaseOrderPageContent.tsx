@@ -66,7 +66,11 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   const { initiatePrint } = usePrint();
   const {  } = useCustomers(); // Keep customers for consistency, though not directly used for Purchase
   const { vendors } = useVendors();
-  const { profile } = useProfile();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canViewOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
   const orderType: "Purchase" = "Purchase"; // Fixed to Purchase
   const [orderNumber, setOrderNumber] = useState("");
@@ -132,6 +136,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   }, [orderNumber]);
 
   const handleAddItem = () => {
+    if (!canManageOrders) { // NEW: Check permission before adding item
+      showError("You do not have permission to add items to orders.");
+      return;
+    }
     setItems([
       ...items,
       { id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1, itemName: "", quantity: 0, unitPrice: 0 },
@@ -139,6 +147,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   };
 
   const handleRemoveItem = (id: number) => {
+    if (!canManageOrders) { // NEW: Check permission before removing item
+      showError("You do not have permission to remove items from orders.");
+      return;
+    }
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -147,6 +159,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
     field: keyof POItem,
     value: string | number,
   ) => {
+    if (!canManageOrders) { // NEW: Check permission before changing item
+      showError("You do not have permission to edit order items.");
+      return;
+    }
     setItems(
       items.map((item) =>
         item.id === id ? { ...item, [field]: value } : item,
@@ -160,6 +176,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   };
 
   const handleAddSelectedInventoryItems = (selectedInventoryItems: InventoryItem[]) => {
+    if (!canManageOrders) { // NEW: Check permission before adding selected items
+      showError("You do not have permission to add items from inventory to orders.");
+      return;
+    }
     const newOrderItems: POItem[] = selectedInventoryItems.map((invItem) => ({
       id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 + Math.random() : 1 + Math.random(),
       itemName: invItem.name,
@@ -175,6 +195,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   };
 
   const handleSubmit = async () => {
+    if (!canManageOrders) { // NEW: Check permission before submitting
+      showError("You do not have permission to create orders.");
+      return;
+    }
     if (!customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
       showError(`Please fill in all required Purchase Order details and ensure all items have valid names, quantities, and prices.`);
       return;
@@ -205,6 +229,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   };
 
   const handlePrintPdf = () => {
+    if (!canViewOrders) { // NEW: Check permission before printing
+      showError("You do not have permission to print purchase orders.");
+      return;
+    }
     if (!orderNumber || !customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
       showError(`Please fill in all required Purchase Order details before generating the PDF.`);
       return;
@@ -251,6 +279,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!canManageOrders) { // NEW: Check permission before dragging
+      showError("You do not have permission to reorder items in orders.");
+      return;
+    }
     const { active, over } = event;
 
     if (active.id !== over?.id) {
@@ -284,7 +316,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customerSupplierNameSelect">Supplier Name</Label>
-                <Select value={customerSupplierId || "none-selected"} onValueChange={setCustomerSupplierId}>
+                <Select value={customerSupplierId || "none-selected"} onValueChange={setCustomerSupplierId} disabled={!canManageOrders}>
                   <SelectTrigger id="customerSupplierNameSelect">
                     <SelectValue placeholder="Select an existing supplier" />
                   </SelectTrigger>
@@ -304,6 +336,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                     onChange={(e) => setCustomerSupplierName(e.target.value)}
                     placeholder="Or enter new supplier name"
                     className="mt-2"
+                    disabled={!canManageOrders} // NEW: Disable input if no permission
                   />
                 )}
               </div>
@@ -315,6 +348,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   value={customerSupplierEmail}
                   onChange={(e) => setCustomerSupplierEmail(e.target.value)}
                   placeholder="supplier@example.com"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -326,6 +360,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   onChange={handleCustomerSupplierContactChange}
                   placeholder="e.g., 555-123-4567"
                   maxLength={12}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -336,6 +371,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   onChange={(e) => setCustomerSupplierAddress(e.target.value)}
                   placeholder="123 Supplier St, City, State, Zip"
                   rows={2}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -345,6 +381,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   type="date"
                   value={orderDate}
                   onChange={(e) => setOrderDate(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -354,6 +391,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                   placeholder="e.g., Net 30"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -363,6 +401,8 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  placeholder="e.g., 555-123-4567"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2 flex items-center justify-between">
@@ -383,10 +423,10 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
             <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-xl font-semibold">Items</CardTitle>
               <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => setIsInventorySelectionDialogOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => setIsInventorySelectionDialogOpen(true)} disabled={!canManageOrders}>
                   <PackageOpen className="h-4 w-4 mr-2" /> Add from Inventory
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleAddItem}>
+                <Button variant="outline" size="sm" onClick={handleAddItem} disabled={!canManageOrders}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Add Item
                 </Button>
               </div>
@@ -417,6 +457,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                             item={item}
                             handleItemChange={handleItemChange}
                             handleRemoveItem={handleRemoveItem}
+                            disabled={!canManageOrders} // NEW: Disable row actions if no permission
                           />
                         ))}
                       </SortableContext>
@@ -442,6 +483,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
                   placeholder="Add any additional notes or instructions here..."
                   rows={4}
                   className="flex-grow"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </ScrollArea>
             </CardContent>
@@ -454,8 +496,8 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>Create Purchase Order</Button>
-        <Button variant="secondary" onClick={handlePrintPdf} disabled={!orderNumber}>
+        <Button onClick={handleSubmit} disabled={!canManageOrders}>Create Purchase Order</Button>
+        <Button variant="secondary" onClick={handlePrintPdf} disabled={!canViewOrders}>
           <Printer className="h-4 w-4 mr-2" /> Print/PDF
         </Button>
       </div>

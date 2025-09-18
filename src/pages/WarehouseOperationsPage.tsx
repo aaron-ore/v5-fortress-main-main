@@ -9,6 +9,7 @@ import CameraScannerDialog from "@/components/CameraScannerDialog";
 import { cn } from "@/lib/utils";
 import { showSuccess } from "@/utils/toast";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 // Import new dialog wrappers
 import ItemLookupDialog from "@/components/warehouse-operations/dialogs/ItemLookupDialog";
@@ -28,6 +29,24 @@ const WarehouseOperationsPage: React.FC = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions for warehouse operations
+  const canViewWarehouseOps = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canLookupItems = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canReceiveInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canPutaway = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canFulfillOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canShipOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canManageReplenishment = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canVerifyShipping = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canProcessReturns = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canTransferStock = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canCycleCount = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canReportIssues = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+
+
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [isCameraScannerDialogOpen, setIsCameraScannerDialogOpen] = useState(false);
@@ -48,40 +67,40 @@ const WarehouseOperationsPage: React.FC = () => {
   const [isPutawayDialogOpen, setIsPutawayDialogOpen] = useState(false);
 
   const dialogStates = {
-    "item-lookup": { isOpen: isItemLookupDialogOpen, setIsOpen: setIsItemLookupDialogOpen },
-    "receive-inventory": { isOpen: isReceiveInventoryDialogOpen, setIsOpen: setIsReceiveInventoryDialogOpen },
-    "fulfill-order": { isOpen: isFulfillOrderDialogOpen, setIsOpen: setIsFulfillOrderDialogOpen },
-    "ship-order": { isOpen: isShipOrderDialogOpen, setIsOpen: setIsShipOrderDialogOpen },
-    "picking-wave": { isOpen: isPickingWaveManagementDialogOpen, setIsOpen: setIsPickingWaveManagementDialogOpen },
-    "replenishment": { isOpen: isReplenishmentManagementDialogOpen, setIsOpen: setIsReplenishmentManagementDialogOpen },
-    "shipping-verify": { isOpen: isShippingVerificationDialogOpen, setIsOpen: setIsShippingVerificationDialogOpen },
-    "returns-process": { isOpen: isReturnsProcessingDialogOpen, setIsOpen: setIsReturnsProcessingDialogOpen },
-    "stock-transfer": { isOpen: isStockTransferDialogOpen, setIsOpen: setIsStockTransferDialogOpen },
-    "cycle-count": { isOpen: isCycleCountDialogOpen, setIsOpen: setIsCycleCountDialogOpen },
-    "issue-report": { isOpen: isIssueReportDialogOpen, setIsOpen: setIsIssueReportDialogOpen },
-    "putaway": { isOpen: isPutawayDialogOpen, setIsOpen: setIsPutawayDialogOpen },
+    "item-lookup": { isOpen: isItemLookupDialogOpen, setIsOpen: setIsItemLookupDialogOpen, canAccess: canLookupItems },
+    "receive-inventory": { isOpen: isReceiveInventoryDialogOpen, setIsOpen: setIsReceiveInventoryDialogOpen, canAccess: canReceiveInventory },
+    "fulfill-order": { isOpen: isFulfillOrderDialogOpen, setIsOpen: setIsFulfillOrderDialogOpen, canAccess: canFulfillOrders },
+    "ship-order": { isOpen: isShipOrderDialogOpen, setIsOpen: setIsShipOrderDialogOpen, canAccess: canShipOrders },
+    "picking-wave": { isOpen: isPickingWaveManagementDialogOpen, setIsOpen: setIsPickingWaveManagementDialogOpen, canAccess: canManagePickingWaves },
+    "replenishment": { isOpen: isReplenishmentManagementDialogOpen, setIsOpen: setIsReplenishmentManagementDialogOpen, canAccess: canManageReplenishment },
+    "shipping-verify": { isOpen: isShippingVerificationDialogOpen, setIsOpen: setIsShippingVerificationDialogOpen, canAccess: canVerifyShipping },
+    "returns-process": { isOpen: isReturnsProcessingDialogOpen, setIsOpen: setIsReturnsProcessingDialogOpen, canAccess: canProcessReturns },
+    "stock-transfer": { isOpen: isStockTransferDialogOpen, setIsOpen: setIsStockTransferDialogOpen, canAccess: canTransferStock },
+    "cycle-count": { isOpen: isCycleCountDialogOpen, setIsOpen: setIsCycleCountDialogOpen, canAccess: canCycleCount },
+    "issue-report": { isOpen: isIssueReportDialogOpen, setIsOpen: setIsIssueReportDialogOpen, canAccess: canReportIssues },
+    "putaway": { isOpen: isPutawayDialogOpen, setIsOpen: setIsPutawayDialogOpen, canAccess: canPutaway },
   };
 
   const operationButtons = [
-    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, type: "tab" },
-    { value: "item-lookup", label: "Lookup", icon: SearchIcon, type: "dialog" },
-    { value: "receive-inventory", label: "Receive", icon: Package, type: "dialog" },
-    { value: "putaway", label: "Putaway", icon: MapPin, type: "dialog" },
-    { value: "fulfill-order", label: "Fulfill", icon: ShoppingCart, type: "dialog" },
-    { value: "ship-order", label: "Ship", icon: Truck, type: "dialog" },
-    { value: "picking-wave", label: "Pick Wave", icon: ListOrdered, type: "dialog" },
-    { value: "replenishment", label: "Replenish", icon: Repeat, type: "dialog" },
-    { value: "shipping-verify", label: "Verify Ship", icon: CheckCircle, type: "dialog" },
-    { value: "returns-process", label: "Returns", icon: Undo2, type: "dialog" },
-    { value: "stock-transfer", label: "Transfer", icon: Scan, type: "dialog" },
-    { value: "cycle-count", label: "Count", icon: CheckCircle, type: "dialog" },
-    { value: "issue-report", label: "Report Issue", icon: AlertTriangle, type: "dialog" },
+    { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, type: "tab", canAccess: canViewWarehouseOps },
+    { value: "item-lookup", label: "Lookup", icon: SearchIcon, type: "dialog", canAccess: canLookupItems },
+    { value: "receive-inventory", label: "Receive", icon: Package, type: "dialog", canAccess: canReceiveInventory },
+    { value: "putaway", label: "Putaway", icon: MapPin, type: "dialog", canAccess: canPutaway },
+    { value: "fulfill-order", label: "Fulfill", icon: ShoppingCart, type: "dialog", canAccess: canFulfillOrders },
+    { value: "ship-order", label: "Ship", icon: Truck, type: "dialog", canAccess: canShipOrders },
+    { value: "picking-wave", label: "Pick Wave", icon: ListOrdered, type: "dialog", canAccess: canManagePickingWaves },
+    { value: "replenishment", label: "Replenish", icon: Repeat, type: "dialog", canAccess: canManageReplenishment },
+    { value: "shipping-verify", label: "Verify Ship", icon: CheckCircle, type: "dialog", canAccess: canVerifyShipping },
+    { value: "returns-process", label: "Returns", icon: Undo2, type: "dialog", canAccess: canProcessReturns },
+    { value: "stock-transfer", label: "Transfer", icon: Scan, type: "dialog", canAccess: canTransferStock },
+    { value: "cycle-count", label: "Count", icon: CheckCircle, type: "dialog", canAccess: canCycleCount },
+    { value: "issue-report", label: "Report Issue", icon: AlertTriangle, type: "dialog", canAccess: canReportIssues },
   ];
 
   useEffect(() => {
     const hash = location.hash.replace("#", "");
 
-    Object.values(dialogStates).forEach(state => {
+    Object.entries(dialogStates).forEach(([key, state]) => {
       if (state.isOpen) state.setIsOpen(false);
     });
 
@@ -89,7 +108,7 @@ const WarehouseOperationsPage: React.FC = () => {
       setActiveTab("dashboard");
     } else {
       const dialogKey = hash as keyof typeof dialogStates;
-      if (dialogStates[dialogKey]) {
+      if (dialogStates[dialogKey] && dialogStates[dialogKey].canAccess) { // NEW: Check canAccess
         dialogStates[dialogKey].setIsOpen(true);
         setActiveTab("");
       } else {
@@ -99,7 +118,7 @@ const WarehouseOperationsPage: React.FC = () => {
         }
       }
     }
-  }, [location.hash, navigate, location.pathname]);
+  }, [location.hash, navigate, location.pathname, profile]); // NEW: Add profile to dependencies
 
   const requestScan = (callback: (scannedData: string) => void) => {
     setScanCallback(() => callback);
@@ -112,15 +131,20 @@ const WarehouseOperationsPage: React.FC = () => {
       setScanCallback(null);
     } else {
       setScannedDataForTool(decodedText);
-      Object.values(dialogStates).forEach(state => {
-        if (state.isOpen && state !== dialogStates["item-lookup"]) {
+      // Automatically open Item Lookup if no specific tool is active
+      Object.entries(dialogStates).forEach(([key, state]) => {
+        if (state.isOpen && key !== "item-lookup") {
           state.setIsOpen(false);
         }
       });
-      dialogStates["item-lookup"].setIsOpen(true);
-      navigate(`${location.pathname}#item-lookup`, { replace: true });
-      setActiveTab("");
-      showSuccess(`Scanned: ${decodedText}. Opening Item Lookup.`);
+      if (canLookupItems) { // NEW: Check permission before opening Item Lookup
+        dialogStates["item-lookup"].setIsOpen(true);
+        navigate(`${location.pathname}#item-lookup`, { replace: true });
+        setActiveTab("");
+        showSuccess(`Scanned: ${decodedText}. Opening Item Lookup.`);
+      } else {
+        showError("You do not have permission to use Item Lookup.");
+      }
     }
     setIsCameraScannerDialogOpen(false);
   };
@@ -160,6 +184,19 @@ const WarehouseOperationsPage: React.FC = () => {
     );
   }
 
+  if (!canViewWarehouseOps) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view warehouse operations.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full w-full p-4 bg-background text-foreground">
       <h1 className="text-2xl font-bold text-center mb-6">Warehouse Operations</h1>
@@ -167,6 +204,7 @@ const WarehouseOperationsPage: React.FC = () => {
       <Button
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 flex items-center justify-center gap-2 mb-4"
         onClick={() => requestScan(() => {})}
+        disabled={!canLookupItems} // NEW: Disable global scan if no lookup permission
       >
         <Scan className="h-6 w-6" />
         Scan Item
@@ -186,14 +224,18 @@ const WarehouseOperationsPage: React.FC = () => {
                   : "text-foreground hover:bg-muted/50 hover:text-primary"
             )}
             onClick={() => {
+              if (!op.canAccess) { // NEW: Check permission before clicking
+                showError("You do not have permission to access this operation.");
+                return;
+              }
               if (op.type === "tab") {
                 setActiveTab(op.value);
                 navigate(`${location.pathname}#${op.value}`, { replace: true });
               } else if (op.type === "dialog") {
                 const dialogKey = op.value as keyof typeof dialogStates;
                 if (dialogStates[dialogKey]) {
-                  Object.values(dialogStates).forEach(state => {
-                    if (state.isOpen && state !== dialogStates[dialogKey]) {
+                  Object.entries(dialogStates).forEach(([key, state]) => {
+                    if (state.isOpen && key !== dialogKey) {
                       state.setIsOpen(false);
                     }
                   });
@@ -205,6 +247,7 @@ const WarehouseOperationsPage: React.FC = () => {
                 navigate(`/${op.value}`);
               }
             }}
+            disabled={!op.canAccess} // NEW: Disable button if no permission
           >
             <op.icon className="h-6 w-6 sm:h-7 sm:w-7 mb-1" />
             <span className="text-xs sm:text-sm font-semibold">{op.label}</span>

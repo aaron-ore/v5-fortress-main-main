@@ -11,9 +11,10 @@ interface SortableItemRowProps {
   item: POItem;
   handleItemChange: (id: number, field: keyof POItem, value: string | number) => void;
   handleRemoveItem: (id: number) => void;
+  disabled?: boolean; // NEW: Add disabled prop
 }
 
-const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChange, handleRemoveItem }) => {
+const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChange, handleRemoveItem, disabled = false }) => { // NEW: Default disabled to false
   const {
     attributes,
     listeners,
@@ -21,7 +22,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id });
+  } = useSortable({ id: item.id, disabled: disabled }); // NEW: Pass disabled to useSortable
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -33,7 +34,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
 
   return (
     <TableRow ref={setNodeRef} style={style} {...attributes} className="relative group">
-      <TableCell className="w-[20px] cursor-grab" {...listeners}>
+      <TableCell className="w-[20px] cursor-grab" {...(disabled ? {} : listeners)}> {/* NEW: Conditionally apply listeners */}
         <span className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">⠿</span>
       </TableCell>
       <TableCell>
@@ -44,6 +45,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
           }
           placeholder="Product Name"
           className="min-w-[120px]"
+          disabled={disabled} // NEW: Disable input
         />
       </TableCell>
       <TableCell className="text-right w-[100px]">
@@ -59,6 +61,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
           }
           min="0"
           className="min-w-[60px]"
+          disabled={disabled} // NEW: Disable input
         />
       </TableCell>
       <TableCell className="text-right w-[120px]">
@@ -75,6 +78,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
           step="0.01"
           min="0"
           className="min-w-[80px]"
+          disabled={disabled} // NEW: Disable input
         />
       </TableCell>
       <TableCell className="text-right font-semibold w-[120px]">
@@ -85,6 +89,7 @@ const SortableItemRow: React.FC<SortableItemRowProps> = ({ item, handleItemChang
           variant="ghost"
           size="icon"
           onClick={() => handleRemoveItem(item.id)}
+          disabled={disabled} // NEW: Disable button
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>

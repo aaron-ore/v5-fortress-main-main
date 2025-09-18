@@ -66,7 +66,11 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   const { initiatePrint } = usePrint();
   const { customers } = useCustomers();
   const {  } = useVendors(); // Keep vendors for consistency, though not directly used for Sales
-  const { profile } = useProfile();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canViewOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
   const orderType: "Sales" = "Sales"; // Fixed to Sales
   const [orderNumber, setOrderNumber] = useState("");
@@ -132,6 +136,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   }, [orderNumber]);
 
   const handleAddItem = () => {
+    if (!canManageOrders) { // NEW: Check permission before adding item
+      showError("You do not have permission to add items to orders.");
+      return;
+    }
     setItems([
       ...items,
       { id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1, itemName: "", quantity: 0, unitPrice: 0 },
@@ -139,6 +147,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   };
 
   const handleRemoveItem = (id: number) => {
+    if (!canManageOrders) { // NEW: Check permission before removing item
+      showError("You do not have permission to remove items from orders.");
+      return;
+    }
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -147,6 +159,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
     field: keyof POItem,
     value: string | number,
   ) => {
+    if (!canManageOrders) { // NEW: Check permission before changing item
+      showError("You do not have permission to edit order items.");
+      return;
+    }
     setItems(
       items.map((item) =>
         item.id === id ? { ...item, [field]: value } : item,
@@ -160,6 +176,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   };
 
   const handleAddSelectedInventoryItems = (selectedInventoryItems: InventoryItem[]) => {
+    if (!canManageOrders) { // NEW: Check permission before adding selected items
+      showError("You do not have permission to add items from inventory to orders.");
+      return;
+    }
     const newOrderItems: POItem[] = selectedInventoryItems.map((invItem) => ({
       id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 + Math.random() : 1 + Math.random(),
       itemName: invItem.name,
@@ -175,6 +195,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   };
 
   const handleSubmit = async () => {
+    if (!canManageOrders) { // NEW: Check permission before submitting
+      showError("You do not have permission to create orders.");
+      return;
+    }
     if (!customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
       showError(`Please fill in all required Invoice details and ensure all items have valid names, quantities, and prices.`);
       return;
@@ -205,6 +229,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   };
 
   const handlePrintPdf = () => {
+    if (!canViewOrders) { // NEW: Check permission before printing
+      showError("You do not have permission to print invoices.");
+      return;
+    }
     if (!orderNumber || !customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
       showError(`Please fill in all required Invoice details before generating the PDF.`);
       return;
@@ -250,6 +278,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!canManageOrders) { // NEW: Check permission before dragging
+      showError("You do not have permission to reorder items in orders.");
+      return;
+    }
     const { active, over } = event;
 
     if (active.id !== over?.id) {
@@ -283,7 +315,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customerSupplierNameSelect">Customer Name</Label>
-                <Select value={customerSupplierId || "none-selected"} onValueChange={setCustomerSupplierId}>
+                <Select value={customerSupplierId || "none-selected"} onValueChange={setCustomerSupplierId} disabled={!canManageOrders}>
                   <SelectTrigger id="customerSupplierNameSelect">
                     <SelectValue placeholder="Select an existing customer" />
                   </SelectTrigger>
@@ -303,6 +335,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                     onChange={(e) => setCustomerSupplierName(e.target.value)}
                     placeholder="Or enter new customer name"
                     className="mt-2"
+                    disabled={!canManageOrders} // NEW: Disable input if no permission
                   />
                 )}
               </div>
@@ -314,6 +347,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   value={customerSupplierEmail}
                   onChange={(e) => setCustomerSupplierEmail(e.target.value)}
                   placeholder="customer@example.com"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -325,6 +359,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   onChange={handleCustomerSupplierContactChange}
                   placeholder="e.g., 555-123-4567"
                   maxLength={12}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -335,6 +370,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   onChange={(e) => setCustomerSupplierAddress(e.target.value)}
                   placeholder="456 Customer St, City, State, Zip"
                   rows={2}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -344,6 +380,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   type="date"
                   value={orderDate}
                   onChange={(e) => setOrderDate(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -353,6 +390,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                   placeholder="e.g., Net 30"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -362,6 +400,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2 flex items-center justify-between">
@@ -382,10 +421,10 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
             <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-xl font-semibold">Items</CardTitle>
               <div className="flex gap-2 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => setIsInventorySelectionDialogOpen(true)}>
+                <Button variant="outline" size="sm" onClick={() => setIsInventorySelectionDialogOpen(true)} disabled={!canManageOrders}>
                   <PackageOpen className="h-4 w-4 mr-2" /> Add from Inventory
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleAddItem}>
+                <Button variant="outline" size="sm" onClick={handleAddItem} disabled={!canManageOrders}>
                   <PlusCircle className="h-4 w-4 mr-2" /> Add Item
                 </Button>
               </div>
@@ -416,6 +455,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                             item={item}
                             handleItemChange={handleItemChange}
                             handleRemoveItem={handleRemoveItem}
+                            disabled={!canManageOrders} // NEW: Disable row actions if no permission
                           />
                         ))}
                       </SortableContext>
@@ -441,6 +481,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   placeholder="Add any additional notes or instructions here..."
                   rows={4}
                   className="flex-grow"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </ScrollArea>
             </CardContent>
@@ -453,8 +494,8 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>Create Invoice</Button>
-        <Button variant="secondary" onClick={handlePrintPdf} disabled={!orderNumber}>
+        <Button onClick={handleSubmit} disabled={!canManageOrders}>Create Invoice</Button>
+        <Button variant="secondary" onClick={handlePrintPdf} disabled={!canViewOrders}>
           <Printer className="h-4 w-4 mr-2" /> Print/PDF
         </Button>
       </div>

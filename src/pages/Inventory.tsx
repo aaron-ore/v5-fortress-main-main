@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
 import ManageFoldersDialog from "@/components/ManageFoldersDialog"; // FIXED: Corrected import path
@@ -44,7 +45,7 @@ import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Renamed
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void, canManageInventory: boolean, canDeleteInventory: boolean): ColumnDef<InventoryItem>[] => [ // NEW: Add canManageInventory, canDeleteInventory
   {
     accessorKey: "name",
     header: "Item Name",
@@ -126,6 +127,7 @@ const Inventory: React.FC = () => {
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
   const { isCollapsed } = useSidebar();
   const navigate = useNavigate();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
@@ -136,7 +138,7 @@ const Inventory: React.FC = () => {
   const [isImportCsvDialogOpen, setIsImportCsvDialogOpen] = useState(false);
   const [isAutoReorderSettingsDialogOpen, setIsAutoReorderSettingsDialogOpen] = useState(false);
 
-  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
+  const [isConfirmDeleteItemDialogOpen, setIsConfirmDeleteItemDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const [isQuickViewDialogOpen, setIsQuickViewDialogOpen] = useState(false);
@@ -150,6 +152,15 @@ const Inventory: React.FC = () => {
   const [isFolderLabelGeneratorOpen, setIsFolderLabelGeneratorOpen] = useState(false);
   const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // For folder deletion confirmation
+
+  // NEW: Role-based permissions
+  const canViewInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager'; // Often delete is restricted to admin, but for now, manager can too.
+  const canManageFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canManageCategories = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canUseTools = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
 
   useEffect(() => {
     refreshInventory();
@@ -192,15 +203,19 @@ const Inventory: React.FC = () => {
   }, [inventoryItems, searchTerm, vendorNameMap, categoryFilter, statusFilter, inventoryFolders]);
 
   const handleDeleteItemClick = useCallback((itemId: string, itemName: string) => {
+    if (!canDeleteInventory) {
+      showError("You do not have permission to delete inventory items.");
+      return;
+    }
     setItemToDelete({ id: itemId, name: itemName });
-    setIsConfirmDeleteDialogOpen(true);
-  }, []);
+    setIsConfirmDeleteItemDialogOpen(true);
+  }, [canDeleteInventory]);
 
   const confirmDeleteItem = async () => {
     if (itemToDelete) {
       await deleteInventoryItem(itemToDelete.id);
     }
-    setIsConfirmDeleteDialogOpen(false);
+    setIsConfirmDeleteItemDialogOpen(false);
     setItemToDelete(null);
   };
 
@@ -210,31 +225,47 @@ const Inventory: React.FC = () => {
   }, []);
 
   const handleScanItem = () => {
+    if (!canUseTools) {
+      showError("You do not have permission to use inventory tools.");
+      return;
+    }
     setIsScanItemDialogOpen(true);
   };
 
   const handleCreateOrder = useCallback((item: InventoryItem) => {
-    showSuccess(`Create order for ${item.name} (placeholder)`);
+    showError(`Create order for ${item.name} (placeholder)`);
   }, []);
 
   const navigateToFolder = useCallback((folderId: string) => {
     navigate(`/folders/${folderId}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory), [handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory]); // Updated structuredLocations to inventoryFolders
 
   // Folder management handlers
   const handleAddFolderClick = () => {
+    if (!canManageFolders) {
+      showError("You do not have permission to add folders.");
+      return;
+    }
     setFolderToEdit(null); // Clear any existing folder data
     setIsFolderLabelGeneratorOpen(true);
   };
 
   const handleEditFolderClick = (folder: InventoryFolder) => {
+    if (!canManageFolders) {
+      showError("You do not have permission to edit folders.");
+      return;
+    }
     setFolderToEdit(folder);
     setIsFolderLabelGeneratorOpen(true);
   };
 
   const handleDeleteFolderClick = (folder: InventoryFolder) => {
+    if (!canManageFolders) {
+      showError("You do not have permission to delete folders.");
+      return;
+    }
     setFolderToDelete(folder);
     setIsConfirmDeleteDialogOpen(true); // Reuse item deletion dialog state for simplicity
   };
@@ -262,6 +293,19 @@ const Inventory: React.FC = () => {
     }
     setIsFolderLabelGeneratorOpen(false);
   };
+
+  if (!canViewInventory) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view inventory.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col space-y-6 flex-grow" data-testid="inventory-page-root">
@@ -333,37 +377,45 @@ const Inventory: React.FC = () => {
         <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-xl font-semibold">Inventory Overview</CardTitle>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
-            <Button onClick={handleAddFolderClick} size="sm">
-              <PlusCircle className="h-4 w-4 mr-2" /> Add New Folder
-            </Button>
-            <Button onClick={() => setIsAddInventoryDialogOpen(true)} size="sm">
-              <PlusCircle className="h-4 w-4 mr-2" /> Add New Item
-            </Button>
-            <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
-              Manage Categories
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <PackagePlus className="h-4 w-4 mr-2" /> Tools <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleScanItem}>
-                  <ScanIcon className="h-4 w-4 mr-2" /> Scan Item
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsImportCsvDialogOpen(true)}>
-                  <Upload className="h-4 w-4 mr-2" /> Import CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsBulkUpdateDialogOpen(true)}>
-                  <PackagePlus className="h-4 w-4 mr-2" /> Bulk Update
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsAutoReorderSettingsDialogOpen(true)}>
-                  <Repeat className="h-4 w-4 mr-2" /> Auto-Reorder Settings
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {canManageFolders && (
+              <Button onClick={handleAddFolderClick} size="sm">
+                <PlusCircle className="h-4 w-4 mr-2" /> Add New Folder
+              </Button>
+            )}
+            {canManageInventory && (
+              <Button onClick={() => setIsAddInventoryDialogOpen(true)} size="sm">
+                <PlusCircle className="h-4 w-4 mr-2" /> Add New Item
+              </Button>
+            )}
+            {canManageCategories && (
+              <Button variant="outline" onClick={() => setIsManageCategoriesDialogOpen(true)} size="sm">
+                Manage Categories
+              </Button>
+            )}
+            {canUseTools && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <PackagePlus className="h-4 w-4 mr-2" /> Tools <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleScanItem}>
+                    <ScanIcon className="h-4 w-4 mr-2" /> Scan Item
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsImportCsvDialogOpen(true)}>
+                    <Upload className="h-4 w-4 mr-2" /> Import CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsBulkUpdateDialogOpen(true)}>
+                    <PackagePlus className="h-4 w-4 mr-2" /> Bulk Update
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsAutoReorderSettingsDialogOpen(true)}>
+                    <Repeat className="h-4 w-4 mr-2" /> Auto-Reorder Settings
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto">
@@ -387,6 +439,7 @@ const Inventory: React.FC = () => {
                         onDelete={handleDeleteFolderClick}
                         itemCount={itemCount}
                         subfolderCount={subfolderCount}
+                        canManageFolders={canManageFolders} // NEW: Pass permission
                       />
                     );
                   })}
@@ -451,8 +504,8 @@ const Inventory: React.FC = () => {
       />
       {itemToDelete && (
         <ConfirmDialog
-          isOpen={isConfirmDeleteDialogOpen}
-          onClose={() => setIsConfirmDeleteDialogOpen(false)}
+          isOpen={isConfirmDeleteItemDialogOpen}
+          onClose={() => setIsConfirmDeleteItemDialogOpen(false)}
           onConfirm={confirmDeleteItem}
           title="Confirm Item Deletion"
           description={`Are you sure you want to delete "${itemToDelete.name}" (SKU: ${itemToDelete.id})? This action cannot be undone.`}

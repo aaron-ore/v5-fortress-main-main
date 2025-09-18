@@ -6,6 +6,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryCardProps {
   item: InventoryItem;
@@ -26,6 +27,11 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
 }) => {
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const navigate = useNavigate(); // Initialize useNavigate
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager'; // Often delete is restricted to admin, but for now, manager can too.
 
   let statusVariant: "success" | "warning" | "destructive" | "info" | "muted" = "info";
   switch (item.status) {
@@ -91,16 +97,16 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
       </CardContent>
 
       <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-4 space-y-2">
-        <Button className="w-full" onClick={() => onAdjustStock(item)}>
+        <Button className="w-full" onClick={() => onAdjustStock(item)} disabled={!canManageInventory}>
           <PlusCircle className="h-4 w-4 mr-2" /> Adjust Stock
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => onCreateOrder(item)}>
+        <Button variant="outline" className="w-full" onClick={() => onCreateOrder(item)} disabled={!canManageInventory}>
           <MinusCircle className="h-4 w-4 mr-2" /> Create Order
         </Button>
         <Button variant="secondary" className="w-full" onClick={() => onViewDetails(item)}>
           <Eye className="h-4 w-4 mr-2" /> View Details
         </Button>
-        <Button variant="destructive" className="w-full" onClick={() => onDeleteItem(item.id, item.name)}>
+        <Button variant="destructive" className="w-full" onClick={() => onDeleteItem(item.id, item.name)} disabled={!canDeleteInventory}>
           <Trash2 className="h-4 w-4 mr-2" /> Delete
         </Button>
       </div>

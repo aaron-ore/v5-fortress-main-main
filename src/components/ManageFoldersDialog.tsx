@@ -15,6 +15,7 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; //
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ManageFoldersDialogProps { // Renamed interface
   isOpen: boolean;
@@ -26,6 +27,11 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   onClose,
 }) => {
   const { inventoryFolders, addInventoryFolder, removeInventoryFolder, updateInventoryFolder } = useOnboarding(); // Updated context functions
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [newFolderName, setNewFolderName] = useState(""); // Renamed from newLocationName
   const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null); // State for editing
   const [editingFolderName, setEditingFolderName] = useState("");
@@ -35,6 +41,10 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null);
 
   const handleAddFolder = async () => { // Renamed from handleAddLocation
+    if (!canManageFolders) { // NEW: Check permission before adding
+      showError("You do not have permission to add folders.");
+      return;
+    }
     if (newFolderName.trim() === "") {
       showError("Folder name cannot be empty.");
       return;
@@ -63,11 +73,19 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   };
 
   const handleEditFolderClick = (folder: InventoryFolder) => {
+    if (!canManageFolders) { // NEW: Check permission before editing
+      showError("You do not have permission to edit folders.");
+      return;
+    }
     setFolderToEdit(folder);
     setEditingFolderName(folder.name);
   };
 
   const handleSaveEditedFolder = async () => {
+    if (!canManageFolders) { // NEW: Check permission before saving
+      showError("You do not have permission to save folder changes.");
+      return;
+    }
     if (!folderToEdit || !editingFolderName.trim()) {
       showError("Folder name cannot be empty.");
       return;
@@ -89,6 +107,10 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   };
 
   const handleRemoveFolderClick = (folder: InventoryFolder) => { // Renamed from handleRemoveLocationClick
+    if (!canManageFolders) { // NEW: Check permission before deleting
+      showError("You do not have permission to delete folders.");
+      return;
+    }
     setFolderToDelete(folder);
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -127,8 +149,9 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                     handleAddFolder();
                   }
                 }}
+                disabled={!canManageFolders} // NEW: Disable input if no permission
               />
-              <Button onClick={handleAddFolder}>
+              <Button onClick={handleAddFolder} disabled={!canManageFolders}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Add
               </Button>
             </div>
@@ -152,6 +175,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                             }
                           }}
                           autoFocus
+                          disabled={!canManageFolders} // NEW: Disable input if no permission
                         />
                       ) : (
                         <span>{folder.name}</span>
@@ -162,6 +186,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                           size="sm"
                           onClick={() => handleEditFolderClick(folder)}
                           aria-label={`Edit folder ${folder.name}`}
+                          disabled={!canManageFolders} // NEW: Disable button if no permission
                         >
                           <Edit className="h-4 w-4 text-primary" />
                         </Button>
@@ -170,6 +195,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
                           size="sm"
                           onClick={() => handleRemoveFolderClick(folder)}
                           aria-label={`Remove folder ${folder.name}`}
+                          disabled={!canManageFolders} // NEW: Disable button if no permission
                         >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>

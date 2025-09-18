@@ -23,9 +23,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const Customers: React.FC = () => {
   const { customers, deleteCustomer } = useCustomers();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canViewCustomers = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageCustomers = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteCustomers = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [isAddEditCustomerDialogOpen, setIsAddEditCustomerDialogOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,16 +43,28 @@ const Customers: React.FC = () => {
   const [isImportCustomersDialogOpen, setIsImportCustomersDialogOpen] = useState(false);
 
   const handleAddCustomerClick = () => {
+    if (!canManageCustomers) { // NEW: Check permission before adding
+      showError("You do not have permission to add customers.");
+      return;
+    }
     setCustomerToEdit(null);
     setIsAddEditCustomerDialogOpen(true);
   };
 
   const handleEditCustomerClick = (customer: Customer) => {
+    if (!canManageCustomers) { // NEW: Check permission before editing
+      showError("You do not have permission to edit customers.");
+      return;
+    }
     setCustomerToEdit(customer);
     setIsAddEditCustomerDialogOpen(true);
   };
 
   const handleDeleteCustomerClick = (customerId: string, customerName: string) => {
+    if (!canDeleteCustomers) { // NEW: Check permission before deleting
+      showError("You do not have permission to delete customers.");
+      return;
+    }
     setCustomerToDelete({ id: customerId, name: customerName });
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -71,6 +91,19 @@ const Customers: React.FC = () => {
     );
   }, [customers, searchTerm]);
 
+  if (!canViewCustomers) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view customers.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Customer Management</h1>
@@ -83,23 +116,25 @@ const Customers: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Customer <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Customer Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleAddCustomerClick}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Add New Customer
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsImportCustomersDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" /> Import CSV
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canManageCustomers && ( // NEW: Only show if user can manage customers
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <PlusCircle className="h-4 w-4 mr-2" /> Add Customer <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Customer Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddCustomerClick}>
+                <PlusCircle className="h-4 w-4 mr-2" /> Add New Customer
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsImportCustomersDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" /> Import CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <Card className="bg-card border-border rounded-lg p-4">
@@ -119,7 +154,7 @@ const Customers: React.FC = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Address</TableHead>
-                    <TableHead className="text-center w-[100px]">Actions</TableHead>
+                    {canManageCustomers && <TableHead className="text-center w-[100px]">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -130,16 +165,18 @@ const Customers: React.FC = () => {
                       <TableCell>{customer.email || "-"}</TableCell>
                       <TableCell>{customer.phone || "-"}</TableCell>
                       <TableCell className="max-w-[250px] truncate">{customer.address || "-"}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditCustomerClick(customer)}>
-                            <Edit className="h-4 w-4 text-primary" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteCustomerClick(customer.id, customer.name)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canManageCustomers && ( // NEW: Only show if user can manage customers
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEditCustomerClick(customer)}>
+                              <Edit className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteCustomerClick(customer.id, customer.name)} disabled={!canDeleteCustomers}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

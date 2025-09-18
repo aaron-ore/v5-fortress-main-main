@@ -28,6 +28,7 @@ interface FolderLabelGeneratorProps {
   onClose: () => void;
   onGenerateAndPrint?: (data: PrintContentData[]) => void;
   parentId?: string; // New prop for subfolders
+  disabled?: boolean; // NEW: Add disabled prop
 }
 
 const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
@@ -36,6 +37,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
   onClose,
   onGenerateAndPrint,
   parentId,
+  disabled = false, // NEW: Default disabled to false
 }) => {
   const { initiatePrint } = usePrint();
   const { inventoryFolders: existingFoldersInContext } = useOnboarding();
@@ -75,6 +77,10 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
   }, [folderIdentifier]);
 
   const handleSaveFolderDetails = async () => {
+    if (disabled) { // NEW: Check disabled prop
+      showError("You do not have permission to save folder details.");
+      return;
+    }
     if (!folderName || !selectedColor) {
       showError("Please fill in the folder name and select a color.");
       return;
@@ -104,6 +110,10 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
   };
 
   const handleGenerateAndPrint = async () => {
+    if (disabled) { // NEW: Check disabled prop
+      showError("You do not have permission to generate and print labels.");
+      return;
+    }
     if (!folderName || !selectedColor || !quantity) {
       showError("Please fill in the folder name and select a color.");
       return;
@@ -142,6 +152,10 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
   };
 
   const handleDownloadPng = async () => {
+    if (disabled) { // NEW: Check disabled prop
+      showError("You do not have permission to download labels.");
+      return;
+    }
     if (!labelPreviewRef.current) {
       showError("No label preview available to download.");
       return;
@@ -168,18 +182,18 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
     }
   };
 
-  const isSaveDisabled = !folderName || !selectedColor;
+  const isSaveDisabled = !folderName || !selectedColor || disabled; // NEW: Include disabled prop
 
   return (
     <div className="space-y-4 flex-grow flex flex-col p-4">
       <div className="space-y-2">
         <Label htmlFor="folderName">Folder Name <span className="text-red-500">*</span></Label>
-        <Input id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Folder Name" />
+        <Input id="folderName" value={folderName} onChange={(e) => setFolderName(e.target.value)} placeholder="e.g., Main Warehouse" aria-label="Folder Name" disabled={disabled} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="color">Label Color</Label>
-          <Select value={selectedColor} onValueChange={setSelectedColor}>
+          <Select value={selectedColor} onValueChange={setSelectedColor} disabled={disabled}>
             <SelectTrigger id="color" aria-label="Select label color">
               <SelectValue placeholder="Select a color" />
             </SelectTrigger>
@@ -207,6 +221,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
           min="1"
           max="100"
           aria-label="Number of labels to print"
+          disabled={disabled} // NEW: Disable input if no permission
         />
       </div>
 

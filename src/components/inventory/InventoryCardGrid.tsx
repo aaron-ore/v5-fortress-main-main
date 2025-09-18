@@ -1,6 +1,7 @@
 import React from "react";
 import InventoryCard from "@/components/InventoryCard"; // Assuming this component exists and is suitable
 import { InventoryItem } from "@/context/InventoryContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryCardGridProps {
   items: InventoryItem[];
@@ -19,6 +20,12 @@ const InventoryCardGrid: React.FC<InventoryCardGridProps> = ({
   onDeleteItem,
   isSidebarCollapsed, // NEW: Destructure isSidebarCollapsed
 }) => {
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   if (items.length === 0) {
     return <p className="text-center text-muted-foreground py-8">No inventory items found.</p>;
   }

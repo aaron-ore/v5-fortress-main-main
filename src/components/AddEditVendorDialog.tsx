@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import { showError } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters"; // Import the new formatter
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AddEditVendorDialogProps {
   isOpen: boolean;
@@ -27,6 +28,11 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
   vendorToEdit,
 }) => {
   const { addVendor, updateVendor } = useVendors();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageVendors = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [name, setName] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [email, setEmail] = useState("");
@@ -59,6 +65,10 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!canManageVendors) { // NEW: Check permission before submitting
+      showError("You do not have permission to add or edit vendors.");
+      return;
+    }
     if (!name.trim()) {
       showError("Vendor Name is required.");
       return;
@@ -98,6 +108,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Global Suppliers Inc."
+              disabled={!canManageVendors} // NEW: Disable input if no permission
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -108,6 +119,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
                 value={contactPerson}
                 onChange={(e) => setContactPerson(e.target.value)}
                 placeholder="e.g., Jane Doe"
+                disabled={!canManageVendors} // NEW: Disable input if no permission
               />
             </div>
             <div className="space-y-2">
@@ -118,6 +130,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vendor@example.com"
+                disabled={!canManageVendors} // NEW: Disable input if no permission
               />
             </div>
             <div className="space-y-2">
@@ -129,6 +142,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
                 onChange={handlePhoneChange}
                 placeholder="e.g., 555-123-4567"
                 maxLength={12} // Max length for XXX-XXX-XXXX
+                disabled={!canManageVendors} // NEW: Disable input if no permission
               />
             </div>
           </div>
@@ -140,6 +154,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
               onChange={(e) => setAddress(e.target.value)}
               placeholder="123 Vendor St, City, State, Zip"
               rows={2}
+              disabled={!canManageVendors} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
@@ -150,6 +165,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any specific notes about this vendor..."
               rows={3}
+              disabled={!canManageVendors} // NEW: Disable input if no permission
             />
           </div>
         </div>
@@ -157,7 +173,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={!canManageVendors}>
             {vendorToEdit ? "Save Changes" : "Add Vendor"}
           </Button>
         </DialogFooter>

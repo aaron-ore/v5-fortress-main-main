@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,6 +36,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -66,6 +67,8 @@ const EditInventoryItem: React.FC = () => {
   const { categories, addCategory } = useCategories();
   const { vendors } = useVendors();
   const { inventoryFolders } = useOnboarding(); // Now imports InventoryFolder
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
   const [itemNotFound, setItemNotFound] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -76,6 +79,9 @@ const EditInventoryItem: React.FC = () => {
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isImageCleared, setIsImageCleared] = useState(false);
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   // Removed mainLocationParts and pickingBinLocationParts states
 
@@ -219,6 +225,10 @@ const EditInventoryItem: React.FC = () => {
       showError("Item not found for update.");
       return;
     }
+    if (!canManageInventory) { // NEW: Check permission before saving
+      showError("You do not have permission to update inventory items.");
+      return;
+    }
     setIsSaving(true);
     let finalImageUrl: string | undefined = item.imageUrl;
 
@@ -289,6 +299,10 @@ const EditInventoryItem: React.FC = () => {
   };
 
   const handleAddCategory = async () => {
+    if (!canManageInventory) { // NEW: Check permission before adding category
+      showError("You do not have permission to add categories.");
+      return;
+    }
     if (newCategoryName.trim()) {
       const newCat = await addCategory(newCategoryName.trim());
       if (newCat) {
@@ -340,7 +354,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem>
                     <FormLabel>Item Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} disabled={!canManageInventory} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -353,7 +367,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem>
                     <FormLabel>SKU</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} disabled={!canManageInventory} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,7 +388,7 @@ const EditInventoryItem: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
@@ -386,7 +400,7 @@ const EditInventoryItem: React.FC = () => {
                             {category.name}
                           </SelectItem>
                         ))}
-                        <SelectItem value="add-new-category" onClick={() => setIsAddingCategory(true)}>
+                        <SelectItem value="add-new-category" onClick={() => setIsAddingCategory(true)} disabled={!canManageInventory}>
                           <PlusCircle className="mr-2 h-4 w-4" /> Add New Category
                         </SelectItem>
                       </SelectContent>
@@ -401,11 +415,12 @@ const EditInventoryItem: React.FC = () => {
                     placeholder="New category name"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
+                    disabled={!canManageInventory}
                   />
-                  <Button type="button" onClick={handleAddCategory}>
+                  <Button type="button" onClick={handleAddCategory} disabled={!canManageInventory}>
                     Add
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsAddingCategory(false)}>
+                  <Button type="button" variant="outline" onClick={() => setIsAddingCategory(false)} disabled={!canManageInventory}>
                     Cancel
                   </Button>
                 </div>
@@ -416,7 +431,7 @@ const EditInventoryItem: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Vendor</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a vendor (optional)" />
@@ -442,7 +457,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} />
+                      <Textarea {...field} disabled={!canManageInventory} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -455,7 +470,7 @@ const EditInventoryItem: React.FC = () => {
                 file={imageFile}
                 onChange={handleImageFileChange}
                 onClear={handleClearImage}
-                disabled={isUploadingImage}
+                disabled={isUploadingImage || !canManageInventory}
                 accept="image/*"
                 isUploading={isUploadingImage}
                 previewUrl={imageUrlPreview}
@@ -473,7 +488,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Picking Bin Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -486,7 +501,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Overstock Quantity</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -501,7 +516,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Reorder Level (Total)</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -514,7 +529,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Picking Reorder Level</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -529,7 +544,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Committed Stock</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -542,7 +557,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Incoming Stock</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} />
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -557,7 +572,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Unit Cost</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} />
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -570,7 +585,7 @@ const EditInventoryItem: React.FC = () => {
                     <FormItem>
                       <FormLabel>Retail Price</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} />
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -584,7 +599,7 @@ const EditInventoryItem: React.FC = () => {
                 render={({ field }) => (
                   <FormItem className="col-span-2">
                     <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory || inventoryFolders.length === 0}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a folder" />
@@ -624,7 +639,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem className="col-span-2">
                     <FormLabel>Tags (comma-separated)</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., fragile, electronics, high-value" />
+                      <Input {...field} placeholder="e.g., fragile, electronics, high-value" disabled={!canManageInventory} />
                     </FormControl>
                     <FormDescription>
                       Add keywords to help categorize and search for items.
@@ -641,7 +656,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem className="col-span-2">
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} />
+                      <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} disabled={!canManageInventory} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -669,6 +684,7 @@ const EditInventoryItem: React.FC = () => {
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      disabled={!canManageInventory}
                     />
                   </FormControl>
                 </FormItem>
@@ -682,7 +698,7 @@ const EditInventoryItem: React.FC = () => {
                   <FormItem>
                     <FormLabel>Quantity to Auto-Reorder</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" />
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
                     </FormControl>
                     <FormDescription>
                       This quantity will be ordered when stock drops to or below the overall reorder level.
@@ -694,7 +710,7 @@ const EditInventoryItem: React.FC = () => {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage}>
+          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
             {isSaving || isUploadingImage ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...

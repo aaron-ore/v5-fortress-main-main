@@ -50,7 +50,8 @@ const EditPurchaseOrder: React.FC = () => {
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
   const { initiatePrint } = usePrint();
-  const { profile } = useProfile();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
   const [order, setOrder] = useState<OrderItem | null>(null);
 
   const [poNumber, setPoNumber] = useState("");
@@ -72,6 +73,11 @@ const EditPurchaseOrder: React.FC = () => {
 
   const taxRate = 0.05;
 
+  // NEW: Role-based permissions
+  const canViewOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canArchiveOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   useEffect(() => {
     if (id) {
       const foundOrder = orders.find((ord) => ord.id === id);
@@ -81,7 +87,7 @@ const EditPurchaseOrder: React.FC = () => {
         setSupplier(foundOrder.customerSupplier);
         setPoDate(foundOrder.date);
         setStatus(foundOrder.status);
-        setDueDate(foundOrder.dueDate);
+        setDueDate(foundFoundOrder.dueDate);
         setOrderType(foundOrder.orderType);
         setShippingMethod(foundOrder.shippingMethod);
         setNotes(foundOrder.notes);
@@ -115,6 +121,10 @@ const EditPurchaseOrder: React.FC = () => {
   }, [poNumber]);
 
   const handleAddItem = () => {
+    if (!canManageOrders) { // NEW: Check permission before adding item
+      showError("You do not have permission to add items to orders.");
+      return;
+    }
     setItems([
       ...items,
       { id: items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1, itemName: "", quantity: 0, unitPrice: 0 },
@@ -122,6 +132,10 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleRemoveItem = (id: number) => {
+    if (!canManageOrders) { // NEW: Check permission before removing item
+      showError("You do not have permission to remove items from orders.");
+      return;
+    }
     setItems(items.filter((item) => item.id !== id));
   };
 
@@ -130,6 +144,10 @@ const EditPurchaseOrder: React.FC = () => {
     field: keyof POItem,
     value: string | number,
   ) => {
+    if (!canManageOrders) { // NEW: Check permission before changing item
+      showError("You do not have permission to edit order items.");
+      return;
+    }
     setItems(
       items.map((item) =>
         item.id === id ? { ...item, [field]: value } : item,
@@ -143,6 +161,10 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    if (!canManageOrders) { // NEW: Check permission before submitting
+      showError("You do not have permission to save order changes.");
+      return;
+    }
     if (!poNumber || !supplier || !poDate || !status || !dueDate || !orderType || !shippingMethod || items.some(item => !item.itemName || item.quantity <= 0 || item.unitPrice <= 0)) {
       showError("Please fill in all required fields and ensure all items have valid names, quantities, and prices.");
       return;
@@ -169,6 +191,10 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleArchiveClick = () => {
+    if (!canArchiveOrders) { // NEW: Check permission before archiving
+      showError("You do not have permission to archive orders.");
+      return;
+    }
     setIsConfirmArchiveDialogOpen(true);
   };
 
@@ -182,6 +208,10 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handlePrintPdf = () => {
+    if (!canViewOrders) { // NEW: Check permission before printing
+      showError("You do not have permission to print orders.");
+      return;
+    }
     if (!poNumber || !supplier || items.some(item => !item.itemName || item.quantity <= 0 || item.unitPrice <= 0)) {
       showError("Please fill in all required PO details before generating the PDF.");
       return;
@@ -219,6 +249,10 @@ const EditPurchaseOrder: React.FC = () => {
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!canManageOrders) { // NEW: Check permission before dragging
+      showError("You do not have permission to reorder items in orders.");
+      return;
+    }
     const { active, over } = event;
 
     if (active.id !== over?.id) {
@@ -229,6 +263,19 @@ const EditPurchaseOrder: React.FC = () => {
       });
     }
   };
+
+  if (!canViewOrders) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view this order.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -246,12 +293,12 @@ const EditPurchaseOrder: React.FC = () => {
         <Button variant="outline" onClick={() => navigate("/orders")}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit}>Save Changes</Button>
-        <Button variant="secondary" onClick={handlePrintPdf}>
+        <Button onClick={handleSubmit} disabled={!canManageOrders}>Save Changes</Button>
+        <Button variant="secondary" onClick={handlePrintPdf} disabled={!canViewOrders}>
           <Printer className="h-4 w-4 mr-2" /> Print/PDF
         </Button>
         {order.status !== "Archived" && (
-          <Button variant="secondary" onClick={handleArchiveClick}>
+          <Button variant="secondary" onClick={handleArchiveClick} disabled={!canArchiveOrders}>
             <Archive className="h-4 w-4 mr-2" /> Archive Order
           </Button>
         )}
@@ -279,6 +326,7 @@ const EditPurchaseOrder: React.FC = () => {
                   id="supplier"
                   value={supplier}
                   onChange={(e) => setSupplier(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -288,6 +336,7 @@ const EditPurchaseOrder: React.FC = () => {
                   type="date"
                   value={poDate}
                   onChange={(e) => setPoDate(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -297,11 +346,12 @@ const EditPurchaseOrder: React.FC = () => {
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={status} onValueChange={(value) => setStatus(value as OrderItem['status'])}>
+                <Select value={status} onValueChange={(value) => setStatus(value as OrderItem['status'])} disabled={!canManageOrders}>
                   <SelectTrigger id="status">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -317,7 +367,7 @@ const EditPurchaseOrder: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="orderType">Order Type</Label>
-                <Select value={orderType} onValueChange={(value) => setOrderType(value as OrderItem['orderType'])}>
+                <Select value={orderType} onValueChange={(value) => setOrderType(value as OrderItem['orderType'])} disabled={!canManageOrders}>
                   <SelectTrigger id="orderType">
                     <SelectValue placeholder="Select order type" />
                   </SelectTrigger>
@@ -329,7 +379,7 @@ const EditPurchaseOrder: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="shippingMethod">Shipping Method</Label>
-                <Select value={shippingMethod} onValueChange={(value) => setShippingMethod(value as OrderItem['shippingMethod'])}>
+                <Select value={shippingMethod} onValueChange={(value) => setShippingMethod(value as OrderItem['shippingMethod'])} disabled={!canManageOrders}>
                   <SelectTrigger id="shippingMethod">
                     <SelectValue placeholder="Select shipping method" />
                   </SelectTrigger>
@@ -346,6 +396,7 @@ const EditPurchaseOrder: React.FC = () => {
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                   placeholder="e.g., Net 30"
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -370,6 +421,7 @@ const EditPurchaseOrder: React.FC = () => {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add any special instructions or notes..."
                   rows={3}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>
             </CardContent>
@@ -378,7 +430,7 @@ const EditPurchaseOrder: React.FC = () => {
           <Card className="bg-card border-border rounded-lg shadow-sm p-6">
             <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-xl font-semibold">Items</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleAddItem}>
+              <Button variant="outline" size="sm" onClick={handleAddItem} disabled={!canManageOrders}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Add Item
               </Button>
             </CardHeader>
@@ -408,6 +460,7 @@ const EditPurchaseOrder: React.FC = () => {
                             item={item}
                             handleItemChange={handleItemChange}
                             handleRemoveItem={handleRemoveItem}
+                            disabled={!canManageOrders} // NEW: Disable row actions if no permission
                           />
                         ))}
                       </SortableContext>

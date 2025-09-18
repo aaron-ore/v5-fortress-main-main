@@ -70,9 +70,19 @@ const Orders: React.FC = () => {
     return searchFiltered;
   }, [orders, searchTerm, activeTab]);
 
+  // NEW: Role-based permissions
+  const canViewOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canArchiveOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canSyncQuickBooks = profile?.role === 'admin'; // Only admins can sync QuickBooks
+
   const columns = useMemo(() => createOrderColumns(archiveOrder), [archiveOrder]);
 
   const handleSyncSalesOrders = async () => {
+    if (!canSyncQuickBooks) { // NEW: Check permission before syncing
+      showError("You do not have permission to sync with QuickBooks.");
+      return;
+    }
     if (!profile?.quickbooksAccessToken || !profile?.quickbooksRealmId) {
       showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected in Settings.");
       return;
@@ -115,6 +125,19 @@ const Orders: React.FC = () => {
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isAdmin = profile?.role === 'admin';
 
+  if (!canViewOrders) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view orders.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col space-y-6 p-6 flex-grow">
       <h1 className="text-3xl font-bold">Order Management</h1>
@@ -127,28 +150,30 @@ const Orders: React.FC = () => {
           className="max-w-xs flex-grow"
         />
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                Order Actions <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setIsOrderReceiveShipmentDialogOpe(true)}>
-                <PackagePlus className="h-4 w-4 mr-2" /> Receive Shipment
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsOrderFulfillmentDialogOpen(true)}>
-                <PackageCheck className="h-4 w-4 mr-2" /> Fulfill Order
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canManageOrders && ( // NEW: Only show if user can manage orders
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  Order Actions <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setIsOrderReceiveShipmentDialogOpe(true)}>
+                  <PackagePlus className="h-4 w-4 mr-2" /> Receive Shipment
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsOrderFulfillmentDialogOpen(true)}>
+                  <PackageCheck className="h-4 w-4 mr-2" /> Fulfill Order
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {isAdmin && isQuickBooksConnected && (
+        {isAdmin && isQuickBooksConnected && canSyncQuickBooks && ( // NEW: Check permission for QuickBooks sync
           <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks}>
             {isSyncingQuickBooks ? (
               <>
@@ -162,23 +187,25 @@ const Orders: React.FC = () => {
           </Button>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Create New Order <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>New Order Type</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => navigate("/create-invoice")}>
-              <Receipt className="h-4 w-4 mr-2" /> Sales Order (Invoice)
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate("/create-po")}>
-              <PackagePlus className="h-4 w-4 mr-2" /> Purchase Order
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canManageOrders && ( // NEW: Only show if user can manage orders
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" /> Create New Order <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>New Order Type</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/create-invoice")}>
+                <Receipt className="h-4 w-4 mr-2" /> Sales Order (Invoice)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/create-po")}>
+                <PackagePlus className="h-4 w-4 mr-2" /> Purchase Order
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-grow">

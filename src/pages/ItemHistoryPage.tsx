@@ -27,6 +27,10 @@ const ItemHistoryPage: React.FC = () => {
   const { inventoryItems, isLoadingInventory } = useInventory();
   const { allProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canViewInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
   const currentItem = useMemo(() => inventoryItems.find((item) => item.id === id), [inventoryItems, id]);
 
@@ -54,6 +58,19 @@ const ItemHistoryPage: React.FC = () => {
     const folder = inventoryFolders.find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
+
+  if (!canViewInventory) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view item history.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoadingInventory) {
     return (

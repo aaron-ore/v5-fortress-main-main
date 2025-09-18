@@ -42,7 +42,10 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders
   const { categories } = useCategories();
   const { vendors } = useVendors();
-  const { profile } = useProfile();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [viewMode, setViewMode] = useState<"simple" | "detailed">("simple");
 
@@ -147,6 +150,10 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!canManageInventory) { // NEW: Check permission before submitting
+      showError("You do not have permission to add inventory items.");
+      return;
+    }
     setIsAddingItem(true); // Set loading state to true
 
     let finalPickingBinQuantity: number;
@@ -191,6 +198,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       isNaN(parseFloat(retailPrice)) || parseFloat(retailPrice) < 0 ||
       !finalMainFolderId || finalMainFolderId === "no-folders" ||
       !finalPickingBinFolderId || finalPickingBinFolderId === "no-folders" ||
+      categories.length === 0 ||
       (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
     ) {
       showError("Please fill in all required fields with valid numbers.");
@@ -309,7 +317,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     categories.length === 0 ||
     (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity))) ||
     isUploadingImage ||
-    isAddingItem; // NEW: Disable if item is already being added
+    isAddingItem || // NEW: Disable if item is already being added
+    !canManageInventory; // NEW: Disable if user cannot manage inventory
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -327,6 +336,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
             onValueChange={(value: "simple" | "detailed") => value && setViewMode(value)}
             aria-label="Inventory item view mode"
             className="bg-muted rounded-md p-1"
+            disabled={!canManageInventory} // NEW: Disable toggle if no permission
           >
             <ToggleGroupItem value="simple" aria-label="Simple view" className="px-4 py-2 text-sm data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm">
               Simple View
@@ -344,6 +354,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               placeholder="e.g., Laptop Pro X"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
@@ -353,6 +364,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               value={sku}
               onChange={(e) => setSku(e.target.value)}
               placeholder="e.g., LPX-512-16"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -363,11 +375,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detailed product description..."
               rows={2}
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
-            <Select value={category} onValueChange={setCategory} disabled={categories.length === 0}>
+            <Select value={category} onValueChange={setCategory} disabled={!canManageInventory || categories.length === 0}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
@@ -396,6 +409,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                 onChange={(e) => setSimpleQuantity(e.target.value)}
                 placeholder="e.g., 150"
                 min="0"
+                disabled={!canManageInventory} // NEW: Disable input if no permission
               />
             </div>
           ) : (
@@ -409,6 +423,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   onChange={(e) => setPickingBinQuantity(e.target.value)}
                   placeholder="e.g., 50"
                   min="0"
+                  disabled={!canManageInventory} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
@@ -420,6 +435,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   onChange={(e) => setOverstockQuantity(e.target.value)}
                   placeholder="e.g., 100"
                   min="0"
+                  disabled={!canManageInventory} // NEW: Disable input if no permission
                 />
               </div>
             </>
@@ -433,6 +449,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               onChange={(e) => setReorderLevel(e.target.value)}
               placeholder="e.g., 20"
               min="0"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           {viewMode === "detailed" && (
@@ -446,11 +463,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                   onChange={(e) => setPickingReorderLevel(e.target.value)}
                   placeholder="e.g., 10"
                   min="0"
+                  disabled={!canManageInventory} // NEW: Disable input if no permission
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="selectedMainFolderId">Main Storage Folder <span className="text-red-500">*</span></Label>
-                <Select value={selectedMainFolderId} onValueChange={setSelectedMainFolderId} disabled={inventoryFolders.length === 0}>
+                <Select value={selectedMainFolderId} onValueChange={setSelectedMainFolderId} disabled={!canManageInventory || inventoryFolders.length === 0}>
                   <SelectTrigger id="selectedMainFolderId">
                     <SelectValue placeholder="Select a folder" />
                   </SelectTrigger>
@@ -473,7 +491,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="selectedPickingBinFolderId">Picking Bin Folder <span className="text-red-500">*</span></Label>
-                <Select value={selectedPickingBinFolderId} onValueChange={setSelectedPickingBinFolderId} disabled={inventoryFolders.length === 0}>
+                <Select value={selectedPickingBinFolderId} onValueChange={setSelectedPickingBinFolderId} disabled={!canManageInventory || inventoryFolders.length === 0}>
                   <SelectTrigger id="selectedPickingBinFolderId">
                     <SelectValue placeholder="Select a folder" />
                   </SelectTrigger>
@@ -520,6 +538,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               placeholder="e.g., 900.00"
               step="0.01"
               min="0"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
@@ -532,11 +551,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               placeholder="e.g., 1200.00"
               step="0.01"
               min="0"
+              disabled={!canManageInventory} // NEW: Disable input if no permission
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="vendor">Primary Vendor</Label>
-            <Select value={selectedVendorId} onValueChange={setSelectedVendorId}>
+            <Select value={selectedVendorId} onValueChange={setSelectedVendorId} disabled={!canManageInventory}>
               <SelectTrigger id="vendor">
                 <SelectValue placeholder="Select a vendor (Optional)" />
               </SelectTrigger>
@@ -557,7 +577,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               value={barcodeValue}
               onChange={(e) => setSku(e.target.value)}
               placeholder="Enter SKU or custom value"
-              disabled
+              disabled // Always disabled as it's derived from SKU
             />
             {qrCodeSvgPreview && (
               <div className="mt-2 p-4 border border-border rounded-md bg-white flex justify-center">
@@ -572,7 +592,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
               file={imageFile}
               onChange={handleImageChange}
               onClear={handleClearImage}
-              disabled={isUploadingImage}
+              disabled={isUploadingImage || !canManageInventory}
               accept="image/*"
               isUploading={isUploadingImage}
               previewUrl={imageUrlPreview}
@@ -586,6 +606,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                 id="autoReorderEnabled"
                 checked={autoReorderEnabled}
                 onCheckedChange={setAutoReorderEnabled}
+                disabled={!canManageInventory} // NEW: Disable switch if no permission
               />
             </div>
             {autoReorderEnabled && (
@@ -607,6 +628,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
                       }}
                   placeholder="e.g., 50"
                   min="1"
+                  disabled={!canManageInventory} // NEW: Disable input if no permission
                 />
                 <p className="text-xs text-muted-foreground">
                   This quantity will be ordered when stock drops to or below the overall reorder level.

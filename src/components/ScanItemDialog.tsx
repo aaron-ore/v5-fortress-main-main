@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ScanItemDialogProps {
   isOpen: boolean;
@@ -23,9 +24,18 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
   onClose,
 }) => {
   const { inventoryItems } = useInventory();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canUseTools = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
   const [barcode, setBarcode] = useState("");
 
   const handleScan = () => {
+    if (!canUseTools) { // NEW: Check permission before scanning
+      showError("You do not have permission to scan items.");
+      return;
+    }
     if (!barcode) {
       showError("Please enter a barcode or SKU to scan.");
       return;
@@ -71,6 +81,7 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
                   handleScan();
                 }
               }}
+              disabled={!canUseTools} // NEW: Disable input if no permission
             />
           </div>
         </div>
@@ -78,7 +89,7 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleScan}>Scan</Button>
+          <Button onClick={handleScan} disabled={!canUseTools}>Scan</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

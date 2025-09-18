@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -53,6 +54,13 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const { vendors } = useVendors();
   const { inventoryFolders } = useOnboarding(); // Use inventoryFolders from OnboardingContext
   const navigate = useNavigate();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canDeleteInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+  const canCreateOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
 
   const currentItem = useMemo(() => {
     return item ? inventoryItems.find(invItem => invItem.id === item.id) : null;
@@ -113,6 +121,10 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
   const handleAdjustStock = async () => {
     if (!currentItem) return;
+    if (!canManageInventory) {
+      showError("You do not have permission to adjust stock.");
+      return;
+    }
 
     const amount = parseInt(adjustmentAmount);
     if (isNaN(amount) || amount <= 0) {
@@ -182,6 +194,10 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
   const handleToggleAutoReorder = async (checked: boolean) => {
     if (!currentItem) return;
+    if (!canManageInventory) {
+      showError("You do not have permission to manage auto-reorder settings.");
+      return;
+    }
     setAutoReorderEnabled(checked);
 
     const parsedAutoReorderQuantity = parseInt(autoReorderQuantity) || 0;
@@ -210,6 +226,10 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const handleManualReorder = async () => {
     if (!currentItem || !currentItem.vendorId) {
       showError("Cannot manually reorder: Item or vendor not specified.");
+      return;
+    }
+    if (!canCreateOrders) {
+      showError("You do not have permission to create orders.");
       return;
     }
     if (currentItem.autoReorderQuantity <= 0) {
@@ -261,6 +281,10 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   };
 
   const handleDeleteItemClick = () => {
+    if (!canDeleteInventory) {
+      showError("You do not have permission to delete inventory items.");
+      return;
+    }
     setIsConfirmDeleteDialogOpen(true);
   };
 
@@ -384,133 +408,137 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
             </div>
 
             {/* Stock Adjustment Section */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <h3 className="text-lg font-semibold mb-3">Adjust Stock</h3>
-              <div className="grid gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="adjustmentAmount">Adjustment Quantity</Label>
-                  <Input
-                    id="adjustmentAmount"
-                    type="number"
-                    value={adjustmentAmount}
-                    onChange={(e) => setAdjustmentAmount(e.target.value)}
-                    placeholder="e.g., 10"
-                    min="1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Adjustment Type</Label>
-                  <RadioGroup
-                    value={adjustmentType}
-                    onValueChange={(value: "add" | "subtract") => setAdjustmentType(value)}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="add" id="add-stock" />
-                      <Label htmlFor="add-stock" className="flex items-center gap-1">
-                        <ArrowUp className="h-4 w-4 text-green-500" /> Add Stock
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="subtract" id="subtract-stock" />
-                      <Label htmlFor="subtract-stock" className="flex items-center gap-1">
-                        <ArrowDown className="h-4 w-4 text-red-500" /> Remove Stock
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                <div className="space-y-2">
-                  <Label>Adjustment Target</Label>
-                  <RadioGroup
-                    value={adjustmentTarget}
-                    onValueChange={(value: "pickingBin" | "overstock") => setAdjustmentTarget(value)}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pickingBin" id="target-picking-bin" />
-                      <Label htmlFor="target-picking-bin">Picking Bin</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="overstock" id="target-overstock" />
-                      <Label htmlFor="target-overstock">Overstock</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adjustmentReason">Reason</Label>
-                  <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
-                    <SelectTrigger id="adjustmentReason">
-                      <SelectValue placeholder="Select a reason" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {adjustmentReasons.map((reason) => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleAdjustStock} className="w-full mt-2">
-                  Apply Adjustment
-                </Button>
-              </div>
-            </div>
-
-            {/* NEW: Auto-Reorder Settings */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Repeat className="h-5 w-5 text-primary" /> Auto-Reorder Settings
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between space-x-2">
-                  <Label htmlFor="autoReorderEnabled">Enable Auto-Reorder</Label>
-                  <Switch
-                    id="autoReorderEnabled"
-                    checked={autoReorderEnabled}
-                    onCheckedChange={handleToggleAutoReorder}
-                  />
-                </div>
-                {autoReorderEnabled && (
-                  <div className="space-y-2 mt-2">
-                    <Label htmlFor="autoReorderQuantity">Quantity to Auto-Reorder</Label>
+            {canManageInventory && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <h3 className="text-lg font-semibold mb-3">Adjust Stock</h3>
+                <div className="grid gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustmentAmount">Adjustment Quantity</Label>
                     <Input
-                      id="autoReorderQuantity"
+                      id="adjustmentAmount"
                       type="number"
-                      value={autoReorderQuantity}
-                      onChange={(e) => {
-                        const newQty = parseInt(e.target.value) || 0;
-                        setAutoReorderQuantity(e.target.value);
-                        if (newQty > 0) {
-                          // Only update if valid and positive
-                          if (currentItem) {
-                            const updatedItem: Omit<InventoryItem, "quantity"> & { id: string } = {
-                              ...currentItem,
-                              autoReorderQuantity: newQty,
-                              lastUpdated: new Date().toISOString().split('T')[0],
-                            };
-                            updateInventoryItem(updatedItem); // Update immediately
-                            showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
-                          }
-                        }
-                      }}
-                      placeholder="e.g., 50"
+                      value={adjustmentAmount}
+                      onChange={(e) => setAdjustmentAmount(e.target.value)}
+                      placeholder="e.g., 10"
                       min="1"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      This quantity will be ordered when stock drops to or below the overall reorder level.
-                    </p>
                   </div>
-                )}
-                <Button
-                  onClick={handleManualReorder}
-                  className="w-full mt-2"
-                  disabled={!currentItem.vendorId || currentItem.autoReorderQuantity <= 0}
-                >
-                  Manually Reorder Now
-                </Button>
+                  <div className="space-y-2">
+                    <Label>Adjustment Type</Label>
+                    <RadioGroup
+                      value={adjustmentType}
+                      onValueChange={(value: "add" | "subtract") => setAdjustmentType(value)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="add" id="add-stock" />
+                        <Label htmlFor="add-stock" className="flex items-center gap-1">
+                          <ArrowUp className="h-4 w-4 text-green-500" /> Add Stock
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="subtract" id="subtract-stock" />
+                        <Label htmlFor="subtract-stock" className="flex items-center gap-1">
+                          <ArrowDown className="h-4 w-4 text-red-500" /> Remove Stock
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Adjustment Target</Label>
+                    <RadioGroup
+                      value={adjustmentTarget}
+                      onValueChange={(value: "pickingBin" | "overstock") => setAdjustmentTarget(value)}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pickingBin" id="target-picking-bin" />
+                        <Label htmlFor="target-picking-bin">Picking Bin</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="overstock" id="target-overstock" />
+                        <Label htmlFor="target-overstock">Overstock</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adjustmentReason">Reason</Label>
+                    <Select value={adjustmentReason} onValueChange={setAdjustmentReason}>
+                      <SelectTrigger id="adjustmentReason">
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {adjustmentReasons.map((reason) => (
+                          <SelectItem key={reason} value={reason}>
+                            {reason}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleAdjustStock} className="w-full mt-2">
+                    Apply Adjustment
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* NEW: Auto-Reorder Settings */}
+            {canManageInventory && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Repeat className="h-5 w-5 text-primary" /> Auto-Reorder Settings
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between space-x-2">
+                    <Label htmlFor="autoReorderEnabled">Enable Auto-Reorder</Label>
+                    <Switch
+                      id="autoReorderEnabled"
+                      checked={autoReorderEnabled}
+                      onCheckedChange={handleToggleAutoReorder}
+                    />
+                  </div>
+                  {autoReorderEnabled && (
+                    <div className="space-y-2 mt-2">
+                      <Label htmlFor="autoReorderQuantity">Quantity to Auto-Reorder</Label>
+                      <Input
+                        id="autoReorderQuantity"
+                        type="number"
+                        value={autoReorderQuantity}
+                        onChange={(e) => {
+                          const newQty = parseInt(e.target.value) || 0;
+                          setAutoReorderQuantity(e.target.value);
+                          if (newQty > 0) {
+                            // Only update if valid and positive
+                            if (currentItem) {
+                              const updatedItem: Omit<InventoryItem, "quantity"> & { id: string } = {
+                                ...currentItem,
+                                autoReorderQuantity: newQty,
+                                lastUpdated: new Date().toISOString().split('T')[0],
+                              };
+                              updateInventoryItem(updatedItem); // Update immediately
+                              showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
+                            }
+                          }
+                        }}
+                        placeholder="e.g., 50"
+                        min="1"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        This quantity will be ordered when stock drops to or below the overall reorder level.
+                      </p>
+                    </div>
+                  )}
+                  <Button
+                    onClick={handleManualReorder}
+                    className="w-full mt-2"
+                    disabled={!currentItem.vendorId || currentItem.autoReorderQuantity <= 0 || !canCreateOrders}
+                  >
+                    Manually Reorder Now
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Stock Movement History */}
             <div className="mt-4 pt-4 border-t border-border">
@@ -556,7 +584,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
               Close
             </Button>
             <div className="flex space-x-2">
-              <Button variant="destructive" onClick={handleDeleteItemClick}>
+              <Button variant="destructive" onClick={handleDeleteItemClick} disabled={!canDeleteInventory}>
                 <Trash2 className="h-4 w-4 mr-2" /> Delete Item
               </Button>
               <Button variant="secondary" onClick={handleViewFullDetails}>
