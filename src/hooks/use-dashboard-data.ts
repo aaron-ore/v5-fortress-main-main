@@ -1,7 +1,5 @@
-// @ts-ignore
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-// @ts-ignore
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -12,9 +10,8 @@ import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// @ts-ignore
 import { showError } from "@/utils/toast";
-import { useVendors } from "@/context/VendorContext"; // Ensure useVendors is imported
+import { useVendors } from "@/context/VendorContext";
 
 interface DashboardContentData {
   metrics: {
@@ -87,7 +84,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     fetchStockMovements();
     refreshVendors();
     fetchAllProfiles();
-    fetchInventoryFolders(); // Updated to fetchInventoryFolders
+    fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
 
   const filterDataByDateRange = useCallback((items: any[], dateKey: string) => {
@@ -199,7 +196,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     const totalSalesRevenue = filteredOrders.filter(order => order.type === "Sales").reduce((sum, order) => sum + order.totalAmount, 0);
     const totalPurchaseCost = filteredOrders.filter(order => order.type === "Purchase").reduce((sum, order) => sum + order.totalAmount, 0);
     const totalIncome = totalSalesRevenue;
-    const totalLosses = totalPurchaseCost; // Losses are now tied to purchase cost
+    const totalLosses = totalPurchaseCost;
 
     const totalOrders = filteredOrders.length;
     const fulfilledOrders = filteredOrders.filter(
@@ -209,11 +206,9 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     const pendingPercentage = 100 - fulfillmentPercentage;
 
     const totalInventoryCost = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    // Inventory Turnover Rate: Cost of Goods Sold / Average Inventory
-    // For simplicity, let's use totalSalesRevenue as a proxy for COGS and totalInventoryCost for average inventory
     const inventoryTurnoverRate = totalInventoryCost > 0 ? `${(totalSalesRevenue / totalInventoryCost).toFixed(1)}x` : "N/A";
 
-    const supplierPerformanceScore: "good" | "average" | "bad" = "good"; // Placeholder for now
+    const supplierPerformanceScore: "good" | "average" | "bad" = "good";
 
     const last3MonthSalesData = (() => {
       const monthlyData: { [key: string]: { salesRevenue: number; newInventory: number; itemsShipped: number } } = {};
@@ -236,11 +231,11 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       });
 
       inventoryItems.forEach(item => {
-        const itemDate = parseAndValidateDate(item.createdAt); // Use createdAt for new inventory
+        const itemDate = parseAndValidateDate(item.createdAt);
         if (!itemDate || !isValid(itemDate)) return;
         const monthKey = format(itemDate, "MMM yyyy");
         if (monthlyData[monthKey]) {
-          monthlyData[monthKey].newInventory += item.quantity; // Sum of initial quantity
+          monthlyData[monthKey].newInventory += item.quantity;
         }
       });
 
@@ -280,7 +275,6 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      // For inventory value, use the current total value and project backwards/forwards
       const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
       Object.keys(monthlyData).sort((a, b) => {
         const dateA = parseAndValidateDate(a);
@@ -288,12 +282,11 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
       }).forEach((monthKey, index, array) => {
-        // Simple linear projection for past inventory value, current month is actual
         if (monthKey === format(today, "MMM yyyy")) {
           monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
         } else {
-          const factor = (index + 1) / array.length; // Scale factor based on position in array
-          monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue * (0.8 + 0.4 * factor); // Simulate some growth/fluctuation
+          const factor = (index + 1) / array.length;
+          monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue * (0.8 + 0.4 * factor);
         }
       });
 
@@ -509,8 +502,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
           if (inventoryItem) {
             totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
           } else {
-            // Fallback for items not found in inventory (e.g., deleted or external)
-            totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Assume 30% margin if cost unknown
+            totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7;
           }
         });
       });
@@ -551,18 +543,18 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       } = {};
 
       structuredLocations.forEach(loc => {
-        locationMetrics[loc.id] = { // Use folder ID as key
+        locationMetrics[loc.id] = {
           totalMovements: 0,
           currentStock: 0,
           netChange: 0,
-          displayName: loc.name, // Use folder name as display name
+          displayName: loc.name,
         };
       });
 
       stockMovements.forEach(movement => {
         const item = inventoryItems.find(inv => inv.id === movement.itemId);
         if (item) {
-          const movementFolderId = item.folderId; // Use item's folderId
+          const movementFolderId = item.folderId;
           if (locationMetrics[movementFolderId]) {
             locationMetrics[movementFolderId].totalMovements += movement.amount;
             if (movement.type === "add") {
@@ -575,10 +567,10 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       });
 
       inventoryItems.forEach(item => {
-        if (locationMetrics[item.folderId]) { // Use item's folderId
+        if (locationMetrics[item.folderId]) {
           locationMetrics[item.folderId].currentStock += item.quantity;
         }
-        if (item.pickingBinFolderId && item.pickingBinFolderId !== item.folderId && locationMetrics[item.pickingBinFolderId]) { // Use pickingBinFolderId and folderId
+        if (item.pickingBinFolderId && item.pickingBinFolderId !== item.folderId && locationMetrics[item.pickingBinFolderId]) {
           locationMetrics[item.pickingBinFolderId].currentStock += item.pickingBinQuantity;
         }
       });

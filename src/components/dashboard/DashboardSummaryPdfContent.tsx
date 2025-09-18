@@ -61,8 +61,8 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[0] || "N/A"}</p>
-          <p>{profile.companyProfile.companyAddress?.split('\n')[1] || ""}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 
@@ -72,19 +72,19 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <div className="flex justify-between">
               <span className="font-semibold">Total Stock Value:</span>
-              <span>${totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${(totalStockValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-semibold">Total Units On Hand:</span>
-              <span>{totalUnitsOnHand.toLocaleString()}</span>
+              <span>{(totalUnitsOnHand ?? 0).toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className={lowStockItems.length > 0 ? "font-semibold text-red-600" : "font-semibold"}>Low Stock Items:</span>
-              <span className={lowStockItems.length > 0 ? "text-red-600" : ""}>{lowStockItems.length}</span>
+              <span className={(lowStockItems?.length ?? 0) > 0 ? "font-semibold text-red-600" : "font-semibold"}>Low Stock Items:</span>
+              <span className={(lowStockItems?.length ?? 0) > 0 ? "text-red-600" : ""}>{(lowStockItems?.length ?? 0)}</span>
             </div>
             <div className="flex justify-between">
-              <span className={outOfStockItems.length > 0 ? "font-semibold text-red-600" : "font-semibold"}>Out-of-Stock Items:</span>
-              <span className={outOfStockItems.length > 0 ? "text-red-600" : ""}>{outOfStockItems.length}</span>
+              <span className={(outOfStockItems?.length ?? 0) > 0 ? "font-semibold text-red-600" : "font-semibold"}>Out-of-Stock Items:</span>
+              <span className={(outOfStockItems?.length ?? 0) > 0 ? "text-red-600" : ""}>{(outOfStockItems?.length ?? 0)}</span>
             </div>
           </div>
         </div>
@@ -92,20 +92,20 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           <p className="font-bold mb-2">RECENT ORDERS:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded space-y-2">
             <p className="font-semibold">Recent Sales Orders:</p>
-            {recentSalesOrders.length > 0 ? (
+            {(recentSalesOrders?.length ?? 0) > 0 ? (
               <ul className="list-disc list-inside ml-4">
-                {recentSalesOrders.map(order => (
-                  <li key={order.id}>{order.id} - {order.customerSupplier} (${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
+                {recentSalesOrders?.map(order => (
+                  <li key={order.id}>{order.id ?? "N/A"} - {order.customerSupplier ?? "N/A"} (${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
                 ))}
               </ul>
             ) : (
               <p className="text-gray-600 ml-4">No recent sales orders.</p>
             )}
             <p className="font-semibold mt-4">Recent Purchase Orders:</p>
-            {recentPurchaseOrders.length > 0 ? (
+            {(recentPurchaseOrders?.length ?? 0) > 0 ? (
               <ul className="list-disc list-inside ml-4">
-                {recentPurchaseOrders.map(order => (
-                  <li key={order.id}>{order.id} - {order.customerSupplier} (${order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
+                {recentPurchaseOrders?.map(order => (
+                  <li key={order.id}>{order.id ?? "N/A"} - {order.customerSupplier ?? "N/A"} (${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
                 ))}
               </ul>
             ) : (
@@ -127,13 +127,13 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {lowStockItems.length > 0 ? (
-              lowStockItems.map((item) => (
-                <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
-                  <td className="py-2 px-4 border-r border-gray-200">{item.sku}</td>
-                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity}</td>
-                  <td className="py-2 px-4 text-right">{item.reorderLevel}</td>
+            {(lowStockItems?.length ?? 0) > 0 ? (
+              lowStockItems?.map((item) => (
+                <tr key={item.id}>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>
+                  <td className="py-2 px-4 text-right border-r border-gray-200 text-red-600">{item.quantity ?? 0}</td>
+                  <td className="py-2 px-4 text-right">{item.reorderLevel ?? 0}</td>
                 </tr>
               ))
             ) : (
@@ -155,11 +155,11 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
             </tr>
           </thead>
           <tbody>
-            {outOfStockItems.length > 0 ? (
-              outOfStockItems.map((item) => (
-                <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-4 border-r border-gray-200">{item.name}</td>
-                  <td className="py-2 px-4">{item.sku}</td>
+            {(outOfStockItems?.length ?? 0) > 0 ? (
+              outOfStockItems?.map((item) => (
+                <tr key={item.id}>
+                  <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
+                  <td className="py-2 px-4">{item.sku ?? "N/A"}</td>
                 </tr>
               ))
             ) : (

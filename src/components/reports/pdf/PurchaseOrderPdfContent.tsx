@@ -123,7 +123,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         </thead>
         <tbody>
           {(items ?? []).map((item, _index) => (
-            <tr key={item.id} className="border-b border-gray-200">
+            <tr key={item.id}>
               <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity ?? 0}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">${(item.unitPrice ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

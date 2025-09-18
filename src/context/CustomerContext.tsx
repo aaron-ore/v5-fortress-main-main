@@ -18,7 +18,7 @@ export interface Customer {
 
 interface CustomerContextType {
   customers: Customer[];
-  isLoadingCustomers: boolean; // NEW: Add isLoadingCustomers
+  isLoadingCustomers: boolean;
   addCustomer: (customer: Omit<Customer, "id" | "createdAt" | "organizationId">) => Promise<void>;
   updateCustomer: (updatedCustomer: Customer) => Promise<void>;
   deleteCustomer: (customerId: string) => Promise<void>;
@@ -29,15 +29,15 @@ const CustomerContext = createContext<CustomerContextType | undefined>(undefined
 
 export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true); // NEW: Add isLoadingCustomers state
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const fetchCustomers = useCallback(async () => {
-    setIsLoadingCustomers(true); // NEW: Set loading to true
+    setIsLoadingCustomers(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setCustomers([]);
-      setIsLoadingCustomers(false); // NEW: Set loading to false
+      setIsLoadingCustomers(false);
       return;
     }
 
@@ -66,7 +66,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       }));
       setCustomers(fetchedCustomers);
     }
-    setIsLoadingCustomers(false); // NEW: Set loading to false
+    setIsLoadingCustomers(false);
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {

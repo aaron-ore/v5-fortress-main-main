@@ -12,11 +12,11 @@ import React,
 } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile } from "./ProfileContext";
+import { useProfile, UserProfile } from "./ProfileContext";
 import { useOrders } from "./OrdersContext";
 import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
-import { useNotifications } from "./NotificationContext";
+import { useNotifications, AppNotification } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
 
@@ -35,10 +35,10 @@ export interface InventoryItem {
   incomingStock: number;
   unitCost: number;
   retailPrice: number;
-  folderId: string; // Changed from location to folderId
-  pickingBinFolderId: string; // NEW: Added pickingBinFolderId
-  tags?: string[]; // Added tags
-  notes?: string; // Added notes
+  folderId: string;
+  pickingBinFolderId: string;
+  tags?: string[];
+  notes?: string;
   status: string;
   lastUpdated: string;
   imageUrl?: string;
@@ -104,10 +104,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       incomingStock: isNaN(incomingStock) ? 0 : incomingStock,
       unitCost: isNaN(unitCost) ? 0 : unitCost,
       retailPrice: isNaN(retailPrice) ? 0 : retailPrice,
-      folderId: item.folder_id || "", // Updated to folderId
-      pickingBinFolderId: item.picking_bin_folder_id || item.folder_id || "", // Added pickingBinFolderId, fallback to folder_id
-      tags: item.tags || undefined, // Added tags
-      notes: item.notes || undefined, // Added notes
+      folderId: item.folder_id || "",
+      pickingBinFolderId: item.picking_bin_folder_id || item.folder_id || "",
+      tags: item.tags || undefined,
+      notes: item.notes || undefined,
       status: item.status || "In Stock",
       lastUpdated: lastUpdatedString,
       imageUrl: item.image_url || undefined,
@@ -209,7 +209,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   }, [profile?.organizationId]);
 
   useEffect(() => {
-    // Check if auto-reorder is globally enabled from profile.companyProfile
     const isAutoReorderGloballyEnabled = profile?.companyProfile?.enableAutoReorder || false;
 
     if (!isAutoReorderGloballyEnabled) {
@@ -224,9 +223,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
       console.log("[InventoryContext] Auto-reorder is globally enabled. Triggering check due to inventory/vendor/profile change.");
-      processAutoReorder(inventoryItems, addOrder, vendors, profile, addNotification); -- NEW: Pass full profile
+      processAutoReorder(inventoryItems, addOrder, vendors, profile as UserProfile, addNotification);
     }
-  }, [inventoryItems, vendors, profile, addOrder, addNotification]); -- NEW: Add profile to dependencies
+  }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -255,10 +254,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: 0,
         unit_cost: item.unitCost,
         retail_price: item.retailPrice,
-        folder_id: item.folderId, // Updated to folderId
-        picking_bin_folder_id: item.pickingBinFolderId, // NEW: Added picking_bin_folder_id
-        tags: item.tags, // Added tags
-        notes: item.notes, // Added notes
+        folder_id: item.folderId,
+        picking_bin_folder_id: item.pickingBinFolderId,
+        tags: item.tags,
+        notes: item.notes,
         status: status,
         last_updated: lastUpdated,
         image_url: item.imageUrl,
@@ -276,7 +275,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       await logActivity("Add Inventory Item Failed", `Failed to add inventory item: ${item.name} (SKU: ${item.sku}).`, profile, { error_message: error.message, item_details: item }, true);
       throw new Error(error.message || 'Failed to add item: Unknown error.');
     } else if (data && data.length > 0) {
-      // Optimistically update state
       const newItem: InventoryItem = mapSupabaseItemToInventoryItem(data[0]);
       setInventoryItems((prevItems) => [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name)));
 
@@ -317,10 +315,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         incoming_stock: updatedItem.incomingStock,
         unit_cost: updatedItem.unitCost,
         retail_price: updatedItem.retailPrice,
-        folder_id: updatedItem.folderId, // Updated to folderId
-        picking_bin_folder_id: updatedItem.pickingBinFolderId, // NEW: Added picking_bin_folder_id
-        tags: updatedItem.tags, // Added tags
-        notes: updatedItem.notes, // Added notes
+        folder_id: updatedItem.folderId,
+        picking_bin_folder_id: updatedItem.pickingBinFolderId,
+        tags: updatedItem.tags,
+        notes: updatedItem.notes,
         status: newStatus,
         last_updated: lastUpdated,
         image_url: updatedItem.imageUrl,

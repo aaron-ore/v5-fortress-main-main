@@ -1,7 +1,5 @@
-// @ts-ignore
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-// @ts-ignore
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
@@ -12,9 +10,8 @@ import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// @ts-ignore
 import { showError } from "@/utils/toast";
-import { useVendors } from "@/context/VendorContext"; // Ensure useVendors is imported
+import { useVendors } from "@/context/VendorContext";
 
 interface DashboardContentData {
   metrics: {
@@ -74,7 +71,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { isLoadingVendors, refreshVendors } = useVendors(); // Removed 'vendors' from destructuring
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
   const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
@@ -85,9 +82,8 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const refresh = useCallback(() => {
-    setError(null); // Clear previous errors on refresh
+    setError(null);
     setRefreshTrigger(prev => prev + 1);
-    // Trigger individual context refreshes
     refreshInventory();
     fetchOrders();
     refreshCategories();
@@ -117,7 +113,6 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       return;
     }
 
-    // Check if any critical data dependencies are still loading
     if (
       isLoadingProfile ||
       isLoadingAllProfiles ||
@@ -129,14 +124,12 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       isLoadingCustomers ||
       isLoadingFolders
     ) {
-      // If any dependency is still loading, defer report generation.
-      // The useEffect below will re-trigger once all are loaded.
-      setIsLoading(true); // Keep loading state true
+      setIsLoading(true);
       return;
     }
 
     setIsLoading(true);
-    setError(null); // Clear error at the start of a new generation attempt
+    setError(null);
 
     const basePdfProps = {
       companyName: profile.companyProfile.companyName,
@@ -194,7 +187,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         }
         case "inventory-valuation": {
           const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const groupBy = 'category'; // Default or from a filter option
+          const groupBy = 'category';
 
           let groupedData: { name: string; totalValue: number; totalQuantity: number }[] = [];
           let totalOverallValue = 0;
@@ -216,7 +209,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               totalValue: data.totalValue,
               totalQuantity: data.totalQuantity,
             })).sort((a, b) => b.totalValue - a.totalValue);
-          } else { // Group by folder
+          } else {
             const locationMap: { [key: string]: { totalValue: number; totalQuantity: number, displayName: string } } = {};
             filteredInventory.forEach((item: InventoryItem) => {
               const folderIdKey = item.folderId;
@@ -252,14 +245,14 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           
           currentProcessedData = {
             items: itemsToDisplay,
-            statusFilter: 'all', // Default or from a filter option
+            statusFilter: 'all',
             structuredLocations,
           };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
           break;
         }
         case "inventory-movement": {
-          const movementTypeFilter = 'all'; // Default or from a filter option
+          const movementTypeFilter = 'all';
 
           const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: StockMovement) => {
             return movementTypeFilter === "all" || movement.type === movementTypeFilter;
@@ -330,7 +323,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             return order.type === "Purchase";
           });
 
-          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all'; // Default or from a filter option
+          const statusFilter: 'all' | 'new-order' | 'processing' | 'packed' | 'shipped' | 'on-hold-problem' | 'archived' = 'all';
           currentProcessedData = { orders: filteredOrders, statusFilter };
           currentPdfProps = { ...basePdfProps, ...currentProcessedData };
           break;
@@ -348,17 +341,17 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               if (inventoryItem) {
                 totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
               } else {
-                totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Fallback if item not found
+                totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7;
               }
             });
           });
 
           const grossProfit = totalSalesRevenue - totalCostOfGoodsSold;
           const grossProfitMargin = totalSalesRevenue > 0 ? (grossProfit / totalSalesRevenue) * 100 : 0;
-          const simulatedOperatingExpenses = totalSalesRevenue * 0.20; // Example
+          const simulatedOperatingExpenses = totalSalesRevenue * 0.20;
           const netProfit = grossProfit - simulatedOperatingExpenses;
           const netProfitMargin = totalSalesRevenue > 0 ? (netProfit / totalSalesRevenue) * 100 : 0;
-          const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0; // Example
+          const simulatedLossesPercentage = totalSalesRevenue > 0 ? (totalSalesRevenue * 0.05 / totalSalesRevenue) * 100 : 0;
 
           const metricsData = [
             { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
@@ -375,7 +368,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "stock-discrepancy": {
-          const statusFilter: 'all' | 'pending' | 'resolved' = 'all'; // Default or from a filter option
+          const statusFilter: 'all' | 'pending' | 'resolved' = 'all';
 
           let query = supabase
             .from('discrepancies')
@@ -446,10 +439,9 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
-    // Only trigger report generation if all contexts are loaded
     if (
       !isLoadingProfile &&
-      !isLoadingAllProfiles && // NEW: Check isLoadingAllProfiles
+      !isLoadingAllProfiles &&
       !isLoadingInventory &&
       !isLoadingOrders &&
       !isLoadingStockMovements &&
@@ -458,10 +450,9 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       !isLoadingCustomers &&
       !isLoadingFolders
     ) {
-      // Introduce a small debounce to prevent rapid re-runs
       timeoutId = setTimeout(() => {
         generateReportData();
-      }, 100); // 100ms debounce
+      }, 100);
     }
 
     return () => {
@@ -473,5 +464,11 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     isLoadingCustomers, isLoadingFolders, isLoadingAllProfiles
   ]);
 
-  return { data: processedData, pdfProps, isLoading, error, refresh };
+  return {
+    data: processedData,
+    pdfProps: pdfProps,
+    isLoading,
+    error,
+    refresh,
+  };
 };

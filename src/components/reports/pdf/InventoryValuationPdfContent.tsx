@@ -13,7 +13,7 @@ interface GroupedDataItem {
 interface InventoryValuationPdfContentProps {
   reportDate: string;
   groupedData: GroupedDataItem[];
-  groupBy: "category" | "folder"; // Changed from location to folder
+  groupBy: "category" | "folder";
   totalOverallValue: number;
   totalOverallQuantity: number;
   dateRange?: DateRange;

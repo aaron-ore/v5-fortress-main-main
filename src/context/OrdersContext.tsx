@@ -32,15 +32,15 @@ export interface OrderItem {
   items: POItem[];
   organizationId: string | null;
   terms?: string;
-  putawayStatus?: "Pending" | "Completed" | "N/A"; // Added "N/A" to type
+  putawayStatus?: "Pending" | "Completed" | "N/A" | null;
 }
 
 interface OrdersContextType {
   orders: OrderItem[];
   isLoadingOrders: boolean;
-  updateOrder: (updatedOrder: OrderItem) => void;
+  updateOrder: (updatedOrder: OrderItem) => Promise<void>;
   addOrder: (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => Promise<void>;
-  archiveOrder: (orderId: string) => void;
+  archiveOrder: (orderId: string) => Promise<void>;
   fetchOrders: () => Promise<void>;
 }
 
@@ -201,8 +201,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         terms: newOrder.terms,
         user_id: session.user.id,
         organization_id: profile.organizationId,
-        // Ensure putaway_status is always a string, even for Sales orders
-        putaway_status: newOrder.type === "Purchase" ? "Pending" : null, // Changed "N/A" to null for Sales orders
+        putaway_status: newOrder.type === "Purchase" ? "Pending" : null,
       })
       .select();
 

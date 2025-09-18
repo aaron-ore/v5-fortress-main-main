@@ -3,7 +3,7 @@ import { format, isValid } from "date-fns";
 import { OrderItem } from "@/context/OrdersContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext"; // Corrected import path
+import { useProfile } from "@/context/ProfileContext";
 
 interface PurchaseOrderStatusPdfContentProps {
   reportDate: string;

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, MapPin } from "lucide-react";
-import { showError } from "@/utils/toast"; // Removed showSuccess
+import { showError } from "@/utils/toast";
 import { useProfile } from "@/context/ProfileContext";
 import { formatPhoneNumber } from "@/utils/formatters";
 

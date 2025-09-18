@@ -3,7 +3,7 @@ import { format, isValid } from "date-fns";
 import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext";
 
 interface DiscrepancyLog {
@@ -24,11 +24,11 @@ interface DiscrepancyLog {
 
 interface DiscrepancyPdfContentProps {
   reportDate: string;
-  discrepancies: DiscrepancyLog[]; // Fixed typo here
+  discrepancies: DiscrepancyLog[];
   statusFilter: "all" | "pending" | "resolved";
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[]; // Updated to InventoryFolder
+  structuredLocations: InventoryFolder[];
 }
 
 const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
@@ -61,8 +61,8 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
   };
 
   const getFolderDisplayName = (folderId: string) => {
-    const foundFolder = (structuredLocations ?? []).find(folder => folder.id === folderId); // Find by ID
-    return foundFolder?.name || "Unknown Folder"; // Use folder name
+    const foundFolder = (structuredLocations ?? []).find(folder => folder.id === folderId);
+    return foundFolder?.name || "Unknown Folder";
   };
 
   return (
@@ -110,7 +110,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
           <thead>
             <tr className="bg-gray-100 border border-gray-300">
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Item Name</th>
-              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Folder</th> {/* Changed to Folder */}
+              <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Folder</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Original Qty</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Counted Qty</th>
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">Diff</th>

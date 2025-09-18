@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
@@ -16,12 +18,12 @@ export interface StockMovement {
   timestamp: string;
   organizationId: string | null;
   userId: string;
-  folderId?: string; // Added folderId
+  folderId?: string;
 }
 
 interface StockMovementContextType {
   stockMovements: StockMovement[];
-  isLoadingStockMovements: boolean; // NEW: Add isLoadingStockMovements
+  isLoadingStockMovements: boolean;
   addStockMovement: (movement: Omit<StockMovement, "id" | "timestamp" | "organizationId" | "userId">) => Promise<void>;
   fetchStockMovements: (itemId?: string) => Promise<void>;
 }
@@ -30,7 +32,7 @@ const StockMovementContext = createContext<StockMovementContextType | undefined>
 
 export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
-  const [isLoadingStockMovements, setIsLoadingStockMovements] = useState(true); // NEW: State for loading
+  const [isLoadingStockMovements, setIsLoadingStockMovements] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const mapSupabaseMovementToStockMovement = (movement: any): StockMovement => {
@@ -38,7 +40,6 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
     const oldQuantity = parseInt(movement.old_quantity || '0');
     const newQuantity = parseInt(movement.new_quantity || '0');
 
-    // Ensure timestamp is always a valid ISO string
     const validatedTimestamp = parseAndValidateDate(movement.timestamp);
     const timestampString = validatedTimestamp ? validatedTimestamp.toISOString() : new Date().toISOString();
 
@@ -54,16 +55,16 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
       timestamp: timestampString,
       organizationId: movement.organization_id,
       userId: movement.user_id || "",
-      folderId: movement.folder_id || undefined, // Added folderId
+      folderId: movement.folder_id || undefined,
     };
   };
 
   const fetchStockMovements = useCallback(async (itemId?: string) => {
-    setIsLoadingStockMovements(true); // NEW: Set loading to true
+    setIsLoadingStockMovements(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setStockMovements([]);
-      setIsLoadingStockMovements(false); // NEW: Set loading to false
+      setIsLoadingStockMovements(false);
       return;
     }
 
@@ -86,8 +87,8 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
       const fetchedMovements: StockMovement[] = data.map(mapSupabaseMovementToStockMovement);
       setStockMovements(fetchedMovements);
     }
-    setIsLoadingStockMovements(false); // NEW: Set loading to false
-  }, [profile?.organizationId]);
+    setIsLoadingStockMovements(false);
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -114,7 +115,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
         reason: movement.reason,
         user_id: session.user.id,
         organization_id: profile.organizationId,
-        folder_id: movement.folderId, // Added folder_id
+        folder_id: movement.folderId,
       })
       .select();
 

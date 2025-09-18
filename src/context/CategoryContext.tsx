@@ -11,7 +11,7 @@ export interface Category {
 
 interface CategoryContextType {
   categories: Category[];
-  isLoadingCategories: boolean; // NEW: Add isLoadingCategories
+  isLoadingCategories: boolean;
   addCategory: (name: string) => Promise<Category | null>;
   removeCategory: (id: string) => Promise<void>;
   refreshCategories: () => Promise<void>;
@@ -21,15 +21,15 @@ const CategoryContext = createContext<CategoryContextType | undefined>(undefined
 
 export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true); // NEW: Add isLoadingCategories state
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const fetchCategories = useCallback(async () => {
-    setIsLoadingCategories(true); // NEW: Set loading to true
+    setIsLoadingCategories(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setCategories([]);
-      setIsLoadingCategories(false); // NEW: Set loading to false
+      setIsLoadingCategories(false);
       return;
     }
 
@@ -51,7 +51,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
       }));
       setCategories(fetchedCategories);
     }
-    setIsLoadingCategories(false); // NEW: Set loading to false
+    setIsLoadingCategories(false);
   }, [profile?.organizationId]);
 
   useEffect(() => {

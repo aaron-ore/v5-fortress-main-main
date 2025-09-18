@@ -2,21 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Package, Receipt, AlertTriangle, DollarSign } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { InventoryItem } from "@/context/InventoryContext";
+import { OrderItem } from "@/context/OrdersContext";
 
 interface DashboardSummaryReportProps {
   totalStockValue: number;
   totalUnitsOnHand: number;
-  lowStockItems: any[];
-  outOfStockItems: any[];
-  recentSalesOrders: any[];
-  recentPurchaseOrders: any[];
+  lowStockItems: InventoryItem[];
+  outOfStockItems: InventoryItem[];
+  recentSalesOrders: OrderItem[];
+  recentPurchaseOrders: OrderItem[];
 }
 
 const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
   totalStockValue,
   totalUnitsOnHand,
   lowStockItems,
-  outOfStockItems,
+  isOutOfStockItems,
   recentSalesOrders,
   recentPurchaseOrders,
 }) => {
@@ -40,11 +42,11 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-yellow-500" /> Low Stock Items</h3>
-            <p className="text-3xl font-bold text-yellow-500">{(lowStockItems ?? []).length}</p>
+            <p className="text-3xl font-bold">{(lowStockItems ?? []).length}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Out of Stock Items</h3>
-            <p className="text-3xl font-bold text-destructive">{(outOfStockItems ?? []).length}</p>
+            <p className="text-3xl font-bold">{(isOutOfStockItems ?? []).length}</p>
           </div>
         </CardContent>
       </Card>
@@ -65,7 +67,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(recentSalesOrders ?? []).map((order: any) => (
+                  {(recentSalesOrders ?? []).map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
@@ -97,7 +99,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(recentPurchaseOrders ?? []).map((order: any) => (
+                  {(recentPurchaseOrders ?? []).map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>

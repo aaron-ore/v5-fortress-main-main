@@ -24,7 +24,7 @@ import {
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
-import { useDashboardData } from "@/hooks/use-dashboard-data"; // NEW: Import the new hook
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 const ClassicDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -70,7 +70,6 @@ const ClassicDashboard: React.FC = () => {
 
   const { metrics, lists } = dashboardData;
 
-  // Combine recent sales and purchase orders for a generic "Recent Orders" list
   const recentOrders = useMemo(() => [...lists.recentSalesOrders, ...lists.recentPurchaseOrders].sort((a, b) => {
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
@@ -79,7 +78,6 @@ const ClassicDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header and Date Filter in the same row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">Classic Dashboard</h1>
         <div className="flex items-center gap-2">
@@ -94,7 +92,6 @@ const ClassicDashboard: React.FC = () => {
 
       <p className="text-muted-foreground">A streamlined overview of your inventory and orders.</p>
 
-      {/* Section 1: Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card border-border rounded-lg shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -138,7 +135,6 @@ const ClassicDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Section 2: Quick Actions */}
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
@@ -172,7 +168,6 @@ const ClassicDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Section 3: Overviews */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border rounded-lg shadow-sm">
           <CardHeader className="pb-4">

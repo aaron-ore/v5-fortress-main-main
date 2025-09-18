@@ -7,7 +7,6 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 
-// Import new dashboard components
 import WalletCard from "@/components/dashboard/WalletCard";
 import LossesCard from "@/components/dashboard/LossesCard";
 import IncomeCard from "@/components/dashboard/IncomeCard";
@@ -21,25 +20,8 @@ import MonthlyOverviewChartCard from "@/components/dashboard/MonthlyOverviewChar
 import TopSellingProductsCard from "@/components/dashboard/TopSellingProductsCard";
 import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
-import { FilterX, Loader2, AlertTriangle } from "lucide-react"; // Added Loader2 and AlertTriangle
-import { useDashboardData } from "@/hooks/use-dashboard-data"; // NEW: Import the new hook
-// Removed LiveMetricsCard
-// Removed OpenPurchaseOrdersCard
-// Removed PendingInvoicesCard
-// Removed LowStockAlertsCard
-// Removed RecentShipmentsCard
-// Removed StockOnHandCard
-// Removed SupplierPerformanceCard
-// Removed InventoryTurnoverRateCard
-// Removed SalesInventoryTrendCard
-// Removed DemandForecastCard
-// Removed ProfitabilityMetricsCard
-// Removed RecentOrdersCard
-// Removed OverviewBarChart
-// Removed WeeklyRevenueBarChart
-// Removed SalesOverviewChart
-// Removed OutOfStockItemsCard
-// Removed SlowMovingDeadstockCard
+import { FilterX, Loader2, AlertTriangle } from "lucide-react";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 
 const DefaultDashboardContent: React.FC = () => {
@@ -86,7 +68,6 @@ const DefaultDashboardContent: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header and Date Filter in the same row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
@@ -100,7 +81,6 @@ const DefaultDashboardContent: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {/* Row 1: 3 cards + 1 column of 3 small cards */}
         <div className="col-span-full md:col-span-1">
           <OrderFulfillmentRateCard
             fulfillmentPercentage={metrics.fulfillmentPercentage}
@@ -122,7 +102,7 @@ const DefaultDashboardContent: React.FC = () => {
         </div>
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
           <WalletCard
-            totalStockValue={metrics.totalStockValue} // Pass totalStockValue
+            totalStockValue={metrics.totalStockValue}
           />
           <LossesCard
             totalLosses={metrics.totalLosses}
@@ -141,7 +121,6 @@ const DefaultDashboardContent: React.FC = () => {
           />
         </div>
 
-        {/* Row 2: 1 wide card + 2 regular cards */}
         <div className="col-span-full md:col-span-2 lg:col-span-2 xl:col-span-2">
           <LiveInformationAreaChartCard
             data={charts.liveActivityData}
@@ -160,7 +139,6 @@ const DefaultDashboardContent: React.FC = () => {
           />
         </div>
 
-        {/* Row 3: 1 very wide card + 1 regular card */}
         <div className="col-span-full md:col-span-2 lg:col-span-3 xl:col-span-3">
           <MonthlyOverviewChartCard
             data={charts.monthlyOverviewData}
@@ -170,27 +148,6 @@ const DefaultDashboardContent: React.FC = () => {
           <TopSellingProductsCard
             topSellingProducts={lists.topSellingProducts}
           />
-        </div>
-
-        {/* NEW Row 4: Operational Overview Cards */}
-        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {/* Removed LiveMetricsCard */}
-          {/* Removed OpenPurchaseOrdersCard */}
-          {/* Removed PendingInvoicesCard */}
-          {/* Removed LowStockAlertsCard */}
-          {/* Removed RecentShipmentsCard */}
-          {/* Removed StockOnHandCard */}
-          {/* Removed SupplierPerformanceCard */}
-          {/* Removed InventoryTurnoverRateCard */}
-          {/* Removed SalesInventoryTrendCard */}
-          {/* Removed DemandForecastCard */}
-          {/* Removed ProfitabilityMetricsCard */}
-          {/* Removed RecentOrdersCard */}
-          {/* Removed OverviewBarChart */}
-          {/* Removed WeeklyRevenueBarChart */}
-          {/* Removed SalesOverviewChart */}
-          {/* Removed OutOfStockItemsCard */}
-          {/* Removed SlowMovingDeadstockCard */}
         </div>
       </div>
 

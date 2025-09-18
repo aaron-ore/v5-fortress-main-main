@@ -3,9 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InventoryFolder } from "@/context/OnboardingContext";
+import { InventoryItem } from "@/context/InventoryContext";
 
 interface LowStockReportProps {
-  items: any[];
+  items: InventoryItem[];
   statusFilter: "all" | "low-stock" | "out-of-stock";
   structuredLocations: InventoryFolder[];
 }
@@ -50,7 +51,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(items ?? []).map((item: any) => (
+                  {(items ?? []).map((item: InventoryItem) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>

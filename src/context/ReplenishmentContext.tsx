@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
@@ -8,8 +10,8 @@ export interface ReplenishmentTask {
   id: string;
   itemId: string;
   itemName: string;
-  fromFolderId: string; // Changed from fromLocation to fromFolderId
-  toFolderId: string; // Changed from toLocation to toFolderId
+  fromFolderId: string;
+  toFolderId: string;
   quantity: number;
   status: "Pending" | "Assigned" | "Completed" | "Cancelled";
   assignedTo?: string;
@@ -44,8 +46,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       id: task.id || "",
       itemId: task.item_id || "",
       itemName: task.item_name || "",
-      fromFolderId: task.from_folder_id || "", // Updated to fromFolderId
-      toFolderId: task.to_folder_id || "", // Updated to toFolderId
+      fromFolderId: task.from_folder_id || "",
+      toFolderId: task.to_folder_id || "",
       quantity: isNaN(quantity) ? 0 : quantity,
       status: task.status || "Pending",
       assignedTo: task.assigned_to || undefined,
@@ -96,8 +98,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       .insert({
         item_id: task.itemId,
         item_name: task.itemName,
-        from_folder_id: task.fromFolderId, // Updated to from_folder_id
-        to_folder_id: task.toFolderId, // Updated to to_folder_id
+        from_folder_id: task.fromFolderId,
+        to_folder_id: task.toFolderId,
         quantity: task.quantity,
         status: "Pending",
         user_id: session.user.id,
@@ -110,7 +112,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       showError(`Failed to add replenishment task: ${error.message}`);
     } else if (data && data.length > 0) {
       const newTask: ReplenishmentTask = mapSupabaseTaskToReplenishmentTask(data[0]);
-      setReplenishmentTasks((prev) => [newTask, ...prev]);
+      setReplenishmentTasks((prev) => [...prev, newTask]);
       showSuccess(`Replenishment task for ${task.itemName} created!`);
     }
   };
@@ -127,8 +129,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       .update({
         item_id: updatedTask.itemId,
         item_name: updatedTask.itemName,
-        from_folder_id: updatedTask.fromFolderId, // Updated to from_folder_id
-        to_folder_id: updatedTask.toFolderId, // Updated to to_folder_id
+        from_folder_id: updatedTask.fromFolderId,
+        to_folder_id: updatedTask.toFolderId,
         quantity: updatedTask.quantity,
         status: updatedTask.status,
         assigned_to: updatedTask.assignedTo,

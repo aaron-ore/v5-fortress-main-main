@@ -1,6 +1,7 @@
 import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext";
 
 interface ForecastDataPoint {
   name: string;
@@ -12,32 +13,30 @@ interface ForecastDataPoint {
 }
 
 interface AdvancedDemandForecastPdfContentProps {
-  companyName: string;
-  companyAddress: string;
-  companyContact: string;
-  companyLogoUrl?: string;
   reportDate: string;
   forecastData: ForecastDataPoint[];
   selectedItemName: string;
 }
 
 const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfContentProps> = ({
-  companyName,
-  companyAddress,
-  companyContact,
-  companyLogoUrl,
   reportDate,
   forecastData,
   selectedItemName,
 }) => {
+  const { profile } = useProfile();
+
+  if (!profile || !profile.companyProfile) {
+    return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
+  }
+
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
       <div className="flex justify-between items-start mb-8">
         <div>
-          {companyLogoUrl ? (
-            <img src={companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
+          {profile.companyProfile.companyLogoUrl ? (
+            <img src={profile.companyProfile.companyLogoUrl} alt="Company Logo" className="max-h-20 object-contain mb-2" style={{ maxWidth: '1.5in' }} />
           ) : (
-            <div className="text-xs text-gray-600 mb-1">YOUR LOGO</div>
+            <div className="max-h-20 mb-2" style={{ maxWidth: '1.5in' }}></div>
           )}
           <h1 className="text-5xl font-extrabold uppercase tracking-tight mb-2">
             DEMAND FORECAST
@@ -54,10 +53,10 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
       <div className="mb-8">
         <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-          <p className="font-semibold">{companyName ?? "N/A"}</p>
-          <p>{companyContact ?? "N/A"}</p>
-          <p>{(companyAddress?.split('\n')[0] || "N/A")}</p>
-          <p>{(companyAddress?.split('\n')[1] || "")}</p>
+          <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
+          <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
+          <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
         </div>
       </div>
 

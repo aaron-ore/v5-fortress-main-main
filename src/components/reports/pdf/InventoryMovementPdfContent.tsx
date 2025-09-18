@@ -3,7 +3,7 @@ import { StockMovement } from "@/context/StockMovementContext";
 import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext";
 
 interface InventoryMovementPdfContentProps {
@@ -11,7 +11,7 @@ interface InventoryMovementPdfContentProps {
   movements: StockMovement[];
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[]; // Added structuredLocations to destructuring
+  structuredLocations: InventoryFolder[];
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({
@@ -19,7 +19,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
   movements,
   dateRange,
   allProfiles,
-  structuredLocations, // Added structuredLocations to destructuring
+  structuredLocations,
 }) => {
   const { profile } = useProfile();
 
@@ -83,7 +83,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
               <th className="py-2 px-4 text-right font-semibold border-r border-gray-300">New Qty</th>
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">Reason</th>
               <th className="py-2 px-4 text-left font-semibold border-r border-gray-300">User</th>
-              <th className="py-2 px-4 text-left font-semibold">Folder</th> {/* Added Folder column */}
+              <th className="py-2 px-4 text-left font-semibold">Folder</th>
               <th className="py-2 px-4 text-left font-semibold">Timestamp</th>
             </tr>
           </thead>
@@ -100,7 +100,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
                     <td className="py-2 px-4 text-right border-r border-gray-200">{movement.newQuantity ?? 0}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{movement.reason ?? "N/A"}</td>
                     <td className="py-2 px-4 border-r border-gray-200">{getUserName(movement.userId ?? "")}</td>
-                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId ?? "")}</td> {/* Display folder name */}
+                    <td className="py-2 px-4 border-r border-gray-200">{getFolderName(movement.folderId ?? "")}</td>
                     <td className="py-2 px-4">{movementTimestamp ? format(movementTimestamp, "MMM dd, yyyy HH:mm") : "N/A"}</td>
                   </tr>
                 );
