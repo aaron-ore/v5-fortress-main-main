@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
@@ -13,12 +15,12 @@ export interface CompanyProfile {
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
-  stripeCustomerId?: string; // NEW: Added Stripe Customer ID
-  stripeSubscriptionId?: string; // NEW: Added Stripe Subscription ID
-  trialEndsAt?: string; // NEW: Added trial_ends_at
-  defaultReorderLevel?: number; -- NEW: Added defaultReorderLevel
-  enableAutoReorderNotifications?: boolean; -- NEW: Added enableAutoReorderNotifications
-  enableAutoReorder?: boolean; -- NEW: Added enableAutoReorder
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  trialEndsAt?: string;
+  defaultReorderLevel?: number;
+  enableAutoReorderNotifications?: boolean;
+  enableAutoReorder?: boolean;
 }
 
 export interface UserProfile {
@@ -37,8 +39,8 @@ export interface UserProfile {
   shopifyAccessToken?: string;
   shopifyRefreshToken?: string;
   shopifyStoreName?: string;
-  stripeCustomerId?: string; // NEW: Added Stripe Customer ID to UserProfile
-  stripeSubscriptionId?: string; // NEW: Added Stripe Subscription ID to UserProfile
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
 }
 
@@ -73,12 +75,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
-      stripeCustomerId: companyData.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID
-      stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID
-      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial_ends_at
-      defaultReorderLevel: companyData.default_reorder_level || 0, -- NEW: Map default_reorder_level
-      enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false, -- NEW: Map enable_auto_reorder_notifications
-      enableAutoReorder: companyData.enable_auto_reorder || false, -- NEW: Map enable_auto_reorder
+      stripeCustomerId: companyData.stripe_customer_id || undefined,
+      stripeSubscriptionId: companyData.stripe_subscription_id || undefined,
+      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined,
+      defaultReorderLevel: companyData.default_reorder_level || 0,
+      enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
+      enableAutoReorder: companyData.enable_auto_reorder || false,
     } : undefined;
 
     return {
@@ -97,8 +99,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopifyAccessToken: companyData?.shopify_access_token || undefined,
       shopifyRefreshToken: companyData?.shopify_refresh_token || undefined,
       shopifyStoreName: companyData?.shopify_store_name || undefined,
-      stripeCustomerId: companyData?.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID directly to UserProfile
-      stripeSubscriptionId: companyData?.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID directly to UserProfile
+      stripeCustomerId: companyData?.stripe_customer_id || undefined,
+      stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
     };
   };
@@ -129,9 +131,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           stripe_customer_id,
           stripe_subscription_id,
           trial_ends_at,
-          default_reorder_level, -- NEW: Select default_reorder_level
-          enable_auto_reorder_notifications, -- NEW: Select enable_auto_reorder_notifications
-          enable_auto_reorder -- NEW: Select enable_auto_reorder
+          default_reorder_level,
+          enable_auto_reorder_notifications,
+          enable_auto_reorder
         )
       `)
       .eq('id', user.id)
@@ -146,7 +148,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(mapSupabaseProfileToUserProfile(data, data.organizations));
     }
     setIsLoadingProfile(false);
-  }, [user]);
+  }, [user, profile]);
 
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {
@@ -264,12 +266,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       address: updates.companyAddress,
       company_logo_url: updates.companyLogoUrl,
       plan: updates.plan,
-      stripe_customer_id: updates.stripeCustomerId, // NEW: Include Stripe Customer ID
-      stripe_subscription_id: updates.stripeSubscriptionId, // NEW: Include Stripe Subscription ID
-      trial_ends_at: updates.trialEndsAt, // NEW: Include trial_ends_at
-      default_reorder_level: updates.defaultReorderLevel, -- NEW: Include default_reorder_level
-      enable_auto_reorder_notifications: updates.enableAutoReorderNotifications, -- NEW: Include enable_auto_reorder_notifications
-      enable_auto_reorder: updates.enableAutoReorder, -- NEW: Include enable_auto_reorder
+      stripe_customer_id: updates.stripeCustomerId,
+      stripe_subscription_id: updates.stripeSubscriptionId,
+      trial_ends_at: updates.trialEndsAt,
+      default_reorder_level: updates.defaultReorderLevel,
+      enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
+      enable_auto_reorder: updates.enableAutoReorder,
     };
 
     if (uniqueCode !== undefined) {
@@ -280,13 +282,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
       if (oldFilePath) {
         const { error: deleteError } = await supabase.storage.from('company-logos').remove([oldFilePath]);
-        if (deleteError) {
-          console.warn("Failed to delete old company logo from storage:", deleteError);
-          await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: profile.companyProfile.companyLogoUrl }, true);
-        } else {
-          console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
-          await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: profile.companyProfile.companyLogoUrl });
-        }
+        if (deleteError) console.warn("Failed to delete old company logo from storage:", deleteError);
+        else console.log(`[ProfileContext] Old logo file ${oldFilePath} deleted successfully.`);
       }
     }
 

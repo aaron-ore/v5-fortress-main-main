@@ -12,13 +12,14 @@ import { Package, Truck, Loader2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import { showError } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters";
+import { useProfile } from "@/context/ProfileContext";
 
 interface SupplierInfoDialogProps {
   isOpen: boolean;
   onClose: () => void;
   itemName: string;
   itemSku: string;
-  vendorId?: string; -- NEW: Add vendorId prop
+  vendorId?: string;
 }
 
 const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
@@ -26,11 +27,15 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
   onClose,
   itemName,
   itemSku,
-  vendorId, -- NEW: Destructure vendorId
+  vendorId,
 }) => {
-  const { vendors } = useVendors(); -- NEW: Use useVendors context
-  const [supplier, setSupplier] = useState<Vendor | null>(null); -- NEW: State for actual supplier data
-  const [isLoadingSupplier, setIsLoadingSupplier] = useState(true); -- NEW: Loading state
+  const { vendors } = useVendors();
+  const [supplier, setSupplier] = useState<Vendor | null>(null);
+  const [isLoadingSupplier, setIsLoadingSupplier] = useState(true);
+  const { profile } = useProfile();
+
+  // Role-based permissions
+  const canViewVendors = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
   useEffect(() => {
     if (isOpen && vendorId) {
@@ -50,6 +55,31 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
       showError(`No vendor assigned to ${itemName}.`);
     }
   }, [isOpen, vendorId, vendors, itemName]);
+
+  if (!canViewVendors) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="h-6 w-6 text-primary" /> Supplier for "{itemName}"
+            </DialogTitle>
+            <DialogDescription>
+              Details for the primary supplier of {itemName} (SKU: {itemSku}).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4 text-sm">
+            <div className="text-center text-muted-foreground py-4">
+              <p>You do not have permission to view supplier information.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={onClose}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

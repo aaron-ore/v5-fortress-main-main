@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
-import { Repeat, Loader2 } from "lucide-react"; -- NEW: Import Loader2
-import { useProfile } from "@/context/ProfileContext"; -- NEW: Import useProfile
+import { Repeat, Loader2 } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext";
 
 interface AutoReorderSettingsDialogProps {
   isOpen: boolean;
@@ -21,13 +21,13 @@ interface AutoReorderSettingsDialogProps {
 }
 
 const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ isOpen, onClose }) => {
-  const { profile, isLoadingProfile, updateCompanyProfile } = useProfile(); -- NEW: Use useProfile
-  const [defaultReorderLevel, setDefaultReorderLevel] = useState("0"); -- Changed default to "0"
+  const { profile, isLoadingProfile, updateCompanyProfile } = useProfile();
+  const [defaultReorderLevel, setDefaultReorderLevel] = useState("0");
   const [enableAutoReorderNotifications, setEnableAutoReorderNotifications] = useState(false);
   const [enableAutoReorder, setEnableAutoReorder] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); -- NEW: Add saving state
+  const [isSaving, setIsSaving] = useState(false);
 
-  // NEW: Role-based permissions
+  // Role-based permissions
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   useEffect(() => {
@@ -43,8 +43,8 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
     }
   }, [isOpen, isLoadingProfile, profile?.companyProfile]);
 
-  const handleSaveSettings = async () => { -- NEW: Made async
-    if (!canManageInventory) { // NEW: Check permission before saving
+  const handleSaveSettings = async () => {
+    if (!canManageInventory) {
       showError("You do not have permission to save auto-reorder settings.");
       return;
     }
@@ -59,7 +59,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
       return;
     }
 
-    setIsSaving(true); -- NEW: Set saving state
+    setIsSaving(true);
     try {
       await updateCompanyProfile({
         defaultReorderLevel: parsedLevel,
@@ -72,7 +72,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
       console.error("Error saving auto-reorder settings:", error);
       showError(`Failed to save settings: ${error.message}`);
     } finally {
-      setIsSaving(false); -- NEW: Reset saving state
+      setIsSaving(false);
     }
   };
 
@@ -97,7 +97,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               onChange={(e) => setDefaultReorderLevel(e.target.value)}
               placeholder="e.g., 10"
               min="0"
-              disabled={isLoadingProfile || !canManageInventory} -- NEW: Disable while loading profile or no permission
+              disabled={isLoadingProfile || !canManageInventory}
             />
             <p className="text-xs text-muted-foreground">
               This value will be suggested for new items' reorder levels.
@@ -111,7 +111,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               id="enableAutoReorder"
               checked={enableAutoReorder}
               onCheckedChange={setEnableAutoReorder}
-              disabled={isLoadingProfile || !canManageInventory} -- NEW: Disable while loading profile or no permission
+              disabled={isLoadingProfile || !canManageInventory}
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -125,7 +125,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               id="enableAutoReorderNotifications"
               checked={enableAutoReorderNotifications}
               onCheckedChange={setEnableAutoReorderNotifications}
-              disabled={isLoadingProfile || !canManageInventory} -- NEW: Disable while loading profile or no permission
+              disabled={isLoadingProfile || !canManageInventory}
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -133,11 +133,11 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSaving}> -- NEW: Disable if saving
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSaveSettings} disabled={isSaving || isLoadingProfile || !canManageInventory}> -- NEW: Disable if saving or loading profile or no permission
-            {isSaving ? ( -- NEW: Add saving spinner
+          <Button onClick={handleSaveSettings} disabled={isSaving || isLoadingProfile || !canManageInventory}>
+            {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
               </>

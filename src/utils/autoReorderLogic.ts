@@ -3,9 +3,9 @@ import { OrderItem, POItem } from "@/context/OrdersContext";
 import { Vendor } from "@/context/VendorContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
-import { AppNotification } from "@/context/NotificationContext"; // Import AppNotification type
-import { supabase } from "@/lib/supabaseClient"; // NEW: Import supabase
-import { UserProfile } from "@/context/ProfileContext"; -- NEW: Import UserProfile
+import { AppNotification } from "@/context/NotificationContext";
+import { supabase } from "@/lib/supabaseClient";
+import { UserProfile } from "@/context/ProfileContext";
 
 // Simple debounce to prevent multiple orders for the same item in a short period
 const lastReorderAttempt: { [itemId: string]: number } = {};
@@ -13,15 +13,15 @@ const REORDER_DEBOUNCE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export const processAutoReorder = async (
   inventoryItems: InventoryItem[],
-  addOrder: (order: Omit<OrderItem, "id" | "organizationId">) => Promise<void>, // Updated addOrder type
+  addOrder: (order: Omit<OrderItem, "id" | "organizationId">) => Promise<void>,
   vendors: Vendor[],
-  profile: UserProfile | null, -- NEW: Pass full profile instead of just organizationId
-  addNotification: (message: string, type?: AppNotification['type']) => void // NEW: addNotification passed as argument
+  profile: UserProfile | null,
+  addNotification: (message: string, type?: AppNotification['type']) => void
 ) => {
   // All global auto-reorder checks are now handled by the calling useEffect in InventoryContext.tsx.
   // This function assumes it is only called when auto-reorder is globally enabled.
 
-  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) { -- NEW: Check enableAutoReorder from profile
+  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) {
     console.warn("[Auto-Reorder] Cannot process auto-reorder: Auto-reorder is not globally enabled or organization ID is missing.");
     return;
   }
@@ -71,7 +71,7 @@ export const processAutoReorder = async (
       date: new Date().toISOString().split("T")[0],
       status: "New Order",
       totalAmount: totalAmount,
-      dueDate: new Date().toISOString().split("T")[0], -- NEW: Set due date to today for immediate processing
+      dueDate: new Date().toISOString().split("T")[0],
       itemCount: poItems.length,
       notes: `Auto-generated reorder for low stock of ${item.name}.`,
       orderType: "Wholesale",
@@ -87,7 +87,7 @@ export const processAutoReorder = async (
       addNotification(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}).`, "success");
       showSuccess(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}). Email simulated to ${vendor.email || 'vendor'}.`);
       
-      if (profile.companyProfile.enableAutoReorderNotifications && vendor.email) { -- NEW: Check enableAutoReorderNotifications
+      if (profile.companyProfile.enableAutoReorderNotifications && vendor.email) {
         const emailSubject = `New Purchase Order: ${newPoNumber} for ${item.name}`;
         const emailHtmlContent = `
           <p>Dear ${vendor.contactPerson || vendor.name},</p>
@@ -130,7 +130,7 @@ export const processAutoReorder = async (
             addNotification(`Reorder email sent to ${vendor.email} for ${item.name}.`, "info");
           }
         }
-      } else if (profile.companyProfile.enableAutoReorderNotifications && !vendor.email) { -- NEW: Warn if notifications enabled but no email
+      } else if (profile.companyProfile.enableAutoReorderNotifications && !vendor.email) {
         addNotification(`No email address for vendor ${vendor.name}. Reorder email not sent.`, "warning");
       }
     } catch (error: any) {
