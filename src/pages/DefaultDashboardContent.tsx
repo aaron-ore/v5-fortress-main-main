@@ -122,8 +122,7 @@ const DefaultDashboardContent: React.FC = () => {
         </div>
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
           <WalletCard
-            totalStockValue={metrics.totalStockValue}
-            // Removed totalIncome and totalLosses as they are not used in WalletCard
+            totalStockValue={metrics.totalStockValue} // Pass totalStockValue
           />
           <LossesCard
             totalLosses={metrics.totalLosses}

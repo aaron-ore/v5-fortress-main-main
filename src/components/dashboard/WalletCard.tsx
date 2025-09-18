@@ -4,20 +4,17 @@ import { Settings, Edit, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from "@/utils/toast";
 import { useNavigate } from "react-router-dom";
-import EditWalletBalanceDialog from "./EditWalletBalanceDialog"; // Import the new dialog
+import EditTotalWalletBalanceDialog from "./EditWalletBalanceDialog"; // Updated import name
 
 interface WalletCardProps {
   totalStockValue: number;
-  // Removed totalIncome and totalLosses as they are not used in this component
 }
 
-const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => { // Removed totalIncome and totalLosses from destructuring
+const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => {
   const navigate = useNavigate();
 
-  // Initial simulated cash balance if nothing is in local storage
-  const initialSimulatedCashBalance = 0; // Changed to 0 for fresh account
+  const initialSimulatedCashBalance = 0;
 
-  // State for the editable cash balance, loaded from local storage
   const [editableCashBalance, setEditableCashBalance] = useState<number>(() => {
     if (typeof window !== 'undefined') {
       const storedBalance = localStorage.getItem("fortress_cash_balance");
@@ -28,7 +25,6 @@ const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => { // Remo
 
   const [isEditBalanceDialogOpen, setIsEditBalanceDialogOpen] = useState(false);
 
-  // Update local storage whenever editableCashBalance changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem("fortress_cash_balance", String(editableCashBalance));
@@ -41,8 +37,9 @@ const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => { // Remo
     setIsEditBalanceDialogOpen(true);
   };
 
-  const handleSaveBalance = (newBalance: number) => {
-    setEditableCashBalance(newBalance);
+  const handleSaveTotalBalance = (newTotalBalance: number, stockValue: number) => {
+    const newCashBalance = newTotalBalance - stockValue;
+    setEditableCashBalance(Math.max(0, newCashBalance)); // Ensure cash balance doesn't go negative
   };
 
   const handleSettings = () => {
@@ -72,11 +69,12 @@ const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => { // Remo
         </div>
       </Card>
 
-      <EditWalletBalanceDialog
+      <EditTotalWalletBalanceDialog
         isOpen={isEditBalanceDialogOpen}
         onClose={() => setIsEditBalanceDialogOpen(false)}
-        currentCashBalance={editableCashBalance}
-        onSave={handleSaveBalance}
+        currentTotalBalance={totalWalletValue} // Pass total wallet value
+        currentStockValue={totalStockValue} // Pass total stock value
+        onSave={handleSaveTotalBalance}
       />
     </>
   );

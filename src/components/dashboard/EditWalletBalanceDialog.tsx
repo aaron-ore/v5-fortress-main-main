@@ -13,35 +13,37 @@ import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { Wallet } from "lucide-react";
 
-interface EditWalletBalanceDialogProps {
+interface EditTotalWalletBalanceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  currentCashBalance: number;
-  onSave: (newBalance: number) => void;
+  currentTotalBalance: number; // Now represents total wallet value
+  currentStockValue: number; // New prop for current inventory stock value
+  onSave: (newTotalBalance: number, stockValue: number) => void; // Updated signature
 }
 
-const EditWalletBalanceDialog: React.FC<EditWalletBalanceDialogProps> = ({
+const EditTotalWalletBalanceDialog: React.FC<EditTotalWalletBalanceDialogProps> = ({
   isOpen,
   onClose,
-  currentCashBalance,
+  currentTotalBalance,
+  currentStockValue,
   onSave,
 }) => {
-  const [cashBalanceInput, setCashBalanceInput] = useState(String(currentCashBalance));
+  const [totalBalanceInput, setTotalBalanceInput] = useState(String(currentTotalBalance));
 
   useEffect(() => {
     if (isOpen) {
-      setCashBalanceInput(String(currentCashBalance));
+      setTotalBalanceInput(String(currentTotalBalance));
     }
-  }, [isOpen, currentCashBalance]);
+  }, [isOpen, currentTotalBalance]);
 
   const handleSave = () => {
-    const newBalance = parseFloat(cashBalanceInput);
-    if (isNaN(newBalance) || newBalance < 0) {
-      showError("Please enter a valid non-negative number for the cash balance.");
+    const newTotalBalance = parseFloat(totalBalanceInput);
+    if (isNaN(newTotalBalance) || newTotalBalance < 0) {
+      showError("Please enter a valid non-negative number for the total wallet balance.");
       return;
     }
-    onSave(newBalance);
-    showSuccess("Cash balance updated successfully!");
+    onSave(newTotalBalance, currentStockValue); // Pass stock value for calculation in parent
+    showSuccess("Total wallet balance updated successfully!");
     onClose();
   };
 
@@ -50,20 +52,20 @@ const EditWalletBalanceDialog: React.FC<EditWalletBalanceDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-primary" /> Edit Cash Balance
+            <Wallet className="h-6 w-6 text-primary" /> Edit Total Wallet Balance
           </DialogTitle>
           <DialogDescription>
-            Adjust the cash balance in your wallet. This value is separate from inventory value.
+            Adjust the total value of your wallet (cash + inventory stock value).
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="cashBalance">Cash Balance</Label>
+            <Label htmlFor="totalBalance">Total Wallet Balance</Label>
             <Input
-              id="cashBalance"
+              id="totalBalance"
               type="number"
-              value={cashBalanceInput}
-              onChange={(e) => setCashBalanceInput(e.target.value)}
+              value={totalBalanceInput}
+              onChange={(e) => setTotalBalanceInput(e.target.value)}
               placeholder="e.g., 1500000000"
               step="0.01"
               min="0"
@@ -81,4 +83,4 @@ const EditWalletBalanceDialog: React.FC<EditWalletBalanceDialogProps> = ({
   );
 };
 
-export default EditWalletBalanceDialog;
+export default EditTotalWalletBalanceDialog;
