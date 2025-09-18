@@ -236,11 +236,11 @@ const BillingSubscriptions: React.FC = () => {
   const paymentMethods: any[] = [];
 
   const handleUpdatePaymentMethod = () => {
-    showSuccess("Opening payment method update form (demo action).");
+    showError("Payment methods are managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); -- NEW: Updated toast
   };
 
   const handleDownloadInvoice = (invoiceId: string) => {
-    showSuccess(`Downloading invoice ${invoiceId} (demo action).`);
+    showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); -- NEW: Updated toast
   };
 
   if (isLoadingProfile || isLoadingPlans) {
@@ -446,6 +446,7 @@ const BillingSubscriptions: React.FC = () => {
           ) : (
             <p className="text-center text-muted-foreground py-4">No invoices available.</p>
           )}
+          <Button onClick={() => showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it.")}>View All Invoices</Button> -- NEW: Added button with toast
         </CardContent>
       </Card>
     </div>

@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
-import { Repeat } from "lucide-react";
+import { Repeat, Loader2 } from "lucide-react"; -- NEW: Import Loader2
+import { useProfile } from "@/context/ProfileContext"; -- NEW: Import useProfile
 
 interface AutoReorderSettingsDialogProps {
   isOpen: boolean;
@@ -20,49 +21,52 @@ interface AutoReorderSettingsDialogProps {
 }
 
 const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ isOpen, onClose }) => {
-  const [defaultReorderLevel, setDefaultReorderLevel] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("autoReorderDefaultLevel") || "10";
-    }
-    return "10";
-  });
-  const [enableAutoReorderNotifications, setEnableAutoReorderNotifications] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("enableAutoReorderNotifications") === "true";
-    }
-    return true;
-  });
-  const [enableAutoReorder, setEnableAutoReorder] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("enableAutoReorder") === "true";
-    }
-    return false;
-  });
+  const { profile, isLoadingProfile, updateCompanyProfile } = useProfile(); -- NEW: Use useProfile
+  const [defaultReorderLevel, setDefaultReorderLevel] = useState("0"); -- Changed default to "0"
+  const [enableAutoReorderNotifications, setEnableAutoReorderNotifications] = useState(false);
+  const [enableAutoReorder, setEnableAutoReorder] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); -- NEW: Add saving state
 
   useEffect(() => {
-    if (isOpen) {
-      if (typeof window !== 'undefined') {
-        setDefaultReorderLevel(localStorage.getItem("autoReorderDefaultLevel") || "10");
-        setEnableAutoReorderNotifications(localStorage.getItem("enableAutoReorderNotifications") === "true");
-        setEnableAutoReorder(localStorage.getItem("enableAutoReorder") === "true");
-      }
+    if (isOpen && !isLoadingProfile && profile?.companyProfile) {
+      setDefaultReorderLevel(String(profile.companyProfile.defaultReorderLevel || 0));
+      setEnableAutoReorderNotifications(profile.companyProfile.enableAutoReorderNotifications || false);
+      setEnableAutoReorder(profile.companyProfile.enableAutoReorder || false);
+    } else if (isOpen && !isLoadingProfile && !profile?.companyProfile) {
+      // If no company profile, reset to defaults
+      setDefaultReorderLevel("0");
+      setEnableAutoReorderNotifications(false);
+      setEnableAutoReorder(false);
     }
-  }, [isOpen]);
+  }, [isOpen, isLoadingProfile, profile?.companyProfile]);
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => { -- NEW: Made async
     const parsedLevel = parseInt(defaultReorderLevel);
     if (isNaN(parsedLevel) || parsedLevel < 0) {
       showError("Default Reorder Level must be a non-negative number.");
       return;
     }
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("autoReorderDefaultLevel", defaultReorderLevel);
-      localStorage.setItem("enableAutoReorderNotifications", String(enableAutoReorderNotifications));
-      localStorage.setItem("enableAutoReorder", String(enableAutoReorder));
+    if (!profile?.organizationId) {
+      showError("Organization not found. Cannot save auto-reorder settings.");
+      return;
     }
-    showSuccess("Auto-reorder settings saved successfully!");
-    onClose();
+
+    setIsSaving(true); -- NEW: Set saving state
+    try {
+      await updateCompanyProfile({
+        defaultReorderLevel: parsedLevel,
+        enableAutoReorderNotifications: enableAutoReorderNotifications,
+        enableAutoReorder: enableAutoReorder,
+      });
+      showSuccess("Auto-reorder settings saved successfully!");
+      onClose();
+    } catch (error: any) {
+      console.error("Error saving auto-reorder settings:", error);
+      showError(`Failed to save settings: ${error.message}`);
+    } finally {
+      setIsSaving(false); -- NEW: Reset saving state
+    }
   };
 
   return (
@@ -86,6 +90,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               onChange={(e) => setDefaultReorderLevel(e.target.value)}
               placeholder="e.g., 10"
               min="0"
+              disabled={isLoadingProfile} -- NEW: Disable while loading profile
             />
             <p className="text-xs text-muted-foreground">
               This value will be suggested for new items' reorder levels.
@@ -99,6 +104,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               id="enableAutoReorder"
               checked={enableAutoReorder}
               onCheckedChange={setEnableAutoReorder}
+              disabled={isLoadingProfile} -- NEW: Disable while loading profile
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -112,6 +118,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
               id="enableAutoReorderNotifications"
               checked={enableAutoReorderNotifications}
               onCheckedChange={setEnableAutoReorderNotifications}
+              disabled={isLoadingProfile} -- NEW: Disable while loading profile
             />
           </div>
           <p className="text-xs text-muted-foreground">
@@ -119,10 +126,18 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}> -- NEW: Disable if saving
             Cancel
           </Button>
-          <Button onClick={handleSaveSettings}>Save Settings</Button>
+          <Button onClick={handleSaveSettings} disabled={isSaving || isLoadingProfile}> -- NEW: Disable if saving or loading profile
+            {isSaving ? ( -- NEW: Add saving spinner
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+              </>
+            ) : (
+              "Save Settings"
+            )}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

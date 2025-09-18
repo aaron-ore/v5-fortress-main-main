@@ -27,17 +27,33 @@ export interface InventoryFolder {
   tags?: string[]; // For folder tags
 }
 
+export interface CustomRole { -- NEW: Added CustomRole interface
+  id: string;
+  organizationId: string;
+  userId: string;
+  name: string;
+  description?: string;
+  features: string[];
+  createdAt: string;
+}
+
 interface OnboardingContextType {
   isOnboardingComplete: boolean;
   companyProfile: ProfileCompanyProfile | null;
   inventoryFolders: InventoryFolder[]; // Renamed from locations to inventoryFolders
   isLoadingFolders: boolean; // NEW: Add isLoadingFolders
+  customRoles: CustomRole[]; -- NEW: Added customRoles
+  isLoadingCustomRoles: boolean; -- NEW: Added isLoadingCustomRoles
   markOnboardingComplete: () => void;
   setCompanyProfile: (profile: CompanyProfile, uniqueCode?: string) => Promise<void>;
   addInventoryFolder: (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">) => Promise<InventoryFolder | null>; // Renamed from addLocation
   updateInventoryFolder: (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => Promise<void>; // Renamed from updateLocation
   removeInventoryFolder: (folderId: string) => Promise<void>; // Renamed from removeLocation
   fetchInventoryFolders: () => Promise<void>; // Renamed from fetchLocations
+  addCustomRole: (role: Omit<CustomRole, "id" | "createdAt" | "userId" | "organizationId">) => Promise<void>; -- NEW: Added addCustomRole
+  updateCustomRole: (role: Omit<CustomRole, "createdAt" | "userId" | "organizationId">) => Promise<void>; -- NEW: Added updateCustomRole
+  deleteCustomRole: (roleId: string) => Promise<void>; -- NEW: Added deleteCustomRole
+  fetchCustomRoles: () => Promise<void>; -- NEW: Added fetchCustomRoles
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
@@ -55,6 +71,8 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const [inventoryFolders, setInventoryFolders] = useState<InventoryFolder[]>([]); // Renamed from locations
   const [isLoadingFolders, setIsLoadingFolders] = useState(true); // NEW: Add isLoadingFolders state
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([]); -- NEW: Added customRoles state
+  const [isLoadingCustomRoles, setIsLoadingCustomRoles] = useState(true); -- NEW: Added isLoadingCustomRoles state
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -80,6 +98,16 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     createdAt: data.created_at,
     userId: data.user_id,
     tags: data.tags || undefined,
+  });
+
+  const mapSupabaseRoleToCustomRole = (data: any): CustomRole => ({ -- NEW: Added mapSupabaseRoleToCustomRole
+    id: data.id,
+    organizationId: data.organization_id,
+    userId: data.user_id,
+    name: data.name,
+    description: data.description || undefined,
+    features: data.features || [],
+    createdAt: data.created_at,
   });
 
   // Renamed from fetchLocations
@@ -109,14 +137,43 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     setIsLoadingFolders(false); // NEW: Set loading to false
   }, [profile?.organizationId, profile]);
 
+  const fetchCustomRoles = useCallback(async () => { -- NEW: Added fetchCustomRoles
+    setIsLoadingCustomRoles(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !profile?.organizationId) {
+      setCustomRoles([]);
+      setIsLoadingCustomRoles(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("custom_roles")
+      .select("*")
+      .eq("organization_id", profile.organizationId)
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching custom roles:", error);
+      showError("Failed to load custom roles.");
+      await logActivity("Custom Role Fetch Failed", `Failed to load custom roles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
+      setCustomRoles([]);
+    } else {
+      setCustomRoles(data.map(mapSupabaseRoleToCustomRole));
+    }
+    setIsLoadingCustomRoles(false);
+  }, [profile?.organizationId, profile]);
+
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
       fetchInventoryFolders();
+      fetchCustomRoles(); -- NEW: Fetch custom roles
     } else if (!isLoadingProfile && !profile?.organizationId) {
       setInventoryFolders([]);
       setIsLoadingFolders(false); // NEW: Set loading to false
+      setCustomRoles([]); -- NEW: Clear custom roles
+      setIsLoadingCustomRoles(false); -- NEW: Set loading to false
     }
-  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
+  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders, fetchCustomRoles]);
 
 
   const markOnboardingComplete = async () => {
@@ -278,11 +335,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       return null;
     }
 
+    const trimmedName = folder.name.trim();
     const { data: existingDbFolder, error: fetchError } = await supabase
       .from("inventory_folders") // Updated table name
       .select("*")
       .eq("organization_id", profile.organizationId)
-      .eq("name", folder.name) // Check by name for uniqueness
+      .eq("name", trimmedName) // Check by name for uniqueness
       .single();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
@@ -293,7 +351,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
 
     if (existingDbFolder) {
-      console.log(`Folder "${folder.name}" already exists in DB. Skipping insert.`);
+      console.log(`Folder "${trimmedName}" already exists in DB. Skipping insert.`);
       const mappedExistingFolder = mapSupabaseFolderToInventoryFolder(existingDbFolder);
       setInventoryFolders(prev => {
         if (!prev.some(f => f.id === mappedExistingFolder.id)) {
@@ -301,7 +359,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         return prev;
       });
-      await logActivity("Add Inventory Folder Skipped", `Folder "${folder.name}" already exists.`, profile, { folder_id: mappedExistingFolder.id, folder_name: mappedExistingFolder.name });
+      await logActivity("Add Inventory Folder Skipped", `Folder "${trimmedName}" already exists.`, profile, { folder_id: mappedExistingFolder.id, folder_name: mappedExistingFolder.name });
       return mappedExistingFolder;
     }
 
@@ -309,7 +367,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       .from("inventory_folders") // Updated table name
       .insert({
         organization_id: profile.organizationId,
-        name: folder.name,
+        name: trimmedName,
         description: folder.description,
         parent_id: folder.parentId,
         image_url: folder.imageUrl,
@@ -328,7 +386,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     } else if (data) {
       const newFolder = mapSupabaseFolderToInventoryFolder(data);
       setInventoryFolders((prev) => [...prev, newFolder]);
-      showSuccess(`Folder "${folder.name}" added.`);
+      showSuccess(`Folder "${trimmedName}" added.`);
       await logActivity("Add Inventory Folder Success", `Added new folder: ${newFolder.name}.`, profile, { folder_id: newFolder.id, folder_name: newFolder.name });
       return newFolder;
     }
@@ -402,6 +460,83 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
+  const addCustomRole = async (role: Omit<CustomRole, "id" | "createdAt" | "userId" | "organizationId">) => { -- NEW: Added addCustomRole
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !profile?.organizationId) {
+      showError("You must be logged in and have an organization ID to add custom roles.");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("custom_roles")
+      .insert({
+        organization_id: profile.organizationId,
+        user_id: session.user.id,
+        name: role.name,
+        description: role.description,
+        features: role.features,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding custom role:", error);
+      showError(`Failed to add role: ${error.message}`);
+    } else if (data) {
+      showSuccess(`Custom role "${role.name}" added successfully!`);
+    }
+  };
+
+  const updateCustomRole = async (role: Omit<CustomRole, "createdAt" | "userId" | "organizationId">) => { -- NEW: Added updateCustomRole
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !profile?.organizationId) {
+      showError("You must be logged in and have an organization ID to update custom roles.");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("custom_roles")
+      .update({
+        name: role.name,
+        description: role.description,
+        features: role.features,
+      })
+      .eq("id", role.id)
+      .eq("organization_id", profile.organizationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating custom role:", error);
+      showError(`Failed to update role: ${error.message}`);
+    } else if (data) {
+      showSuccess(`Custom role "${role.name}" updated successfully!`);
+    }
+  };
+
+  const deleteCustomRole = async (roleId: string) => { -- NEW: Added deleteCustomRole
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !profile?.organizationId) {
+      showError("You must be logged in and have an organization ID to delete custom roles.");
+      return;
+    }
+
+    const roleToDelete = customRoles.find(r => r.id === roleId);
+
+    const { error } = await supabase
+      .from("custom_roles")
+      .delete()
+      .eq("id", roleId)
+      .eq("organization_id", profile.organizationId);
+
+    if (error) {
+      console.error("Error deleting custom role:", error);
+      showError(`Failed to delete role: ${error.message}`);
+    } else {
+      showSuccess(`Custom role "${roleToDelete?.name || roleId}" deleted.`);
+    }
+  };
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -409,12 +544,18 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         companyProfile,
         inventoryFolders, // Renamed
         isLoadingFolders, // NEW: Provide isLoadingFolders
+        customRoles, -- NEW: Provide customRoles
+        isLoadingCustomRoles, -- NEW: Provide isLoadingCustomRoles
         markOnboardingComplete,
         setCompanyProfile,
         addInventoryFolder, // Renamed
         updateInventoryFolder, // Renamed
         removeInventoryFolder, // Renamed
         fetchInventoryFolders, // Renamed
+        addCustomRole, -- NEW: Provide addCustomRole
+        updateCustomRole, -- NEW: Provide updateCustomRole
+        deleteCustomRole, -- NEW: Provide deleteCustomRole
+        fetchCustomRoles, -- NEW: Provide fetchCustomRoles
       }}
     >
       {children}

@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Edit, Trash2, Settings } from "lucide-react";
+import { PlusCircle, Edit, Trash2, Settings, Loader2 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useOnboarding, CustomRole } from "@/context/OnboardingContext"; -- NEW: Import useOnboarding and CustomRole
 
 // Mock data for features and roles (not persisted)
 const availableFeatures = [
@@ -35,43 +36,6 @@ const availableFeatures = [
   "Change Account Settings",
 ];
 
-interface CustomRole {
-  id: string;
-  name: string;
-  description: string;
-  features: string[];
-}
-
-const initialMockRoles: CustomRole[] = [
-  {
-    id: "role-1",
-    name: "Warehouse Manager",
-    description: "Manages daily warehouse operations and inventory.",
-    features: [
-      "View Dashboard",
-      "Manage Inventory",
-      "Create/Edit Orders",
-      "Access Warehouse Operations",
-      "Generate Labels",
-      "Adjust Stock",
-      "Import/Export Data",
-      "Manage Categories",
-      "Manage Locations",
-    ],
-  },
-  {
-    id: "role-2",
-    name: "Sales Associate",
-    description: "Handles sales orders and customer interactions.",
-    features: [
-      "View Dashboard",
-      "Create/Edit Orders",
-      "View Reports",
-      "Manage Vendors",
-    ],
-  },
-];
-
 interface ManageCustomRolesDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -81,7 +45,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  const [roles, setRoles] = useState<CustomRole[]>(initialMockRoles);
+  const { customRoles, isLoadingCustomRoles, addCustomRole, updateCustomRole, deleteCustomRole } = useOnboarding(); -- NEW: Use customRoles from context
   const [isAddEditRoleDialogOpen, setIsAddEditRoleDialogOpen] = useState(false);
   const [roleToEdit, setRoleToEdit] = useState<CustomRole | null>(null);
 
@@ -100,7 +64,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
       setRoleToEdit(null);
     } else if (roleToEdit) {
       setNewRoleName(roleToEdit.name);
-      setNewRoleDescription(roleToEdit.description);
+      setNewRoleDescription(roleToEdit.description || "");
       setSelectedFeatures(new Set(roleToEdit.features));
     }
   }, [isAddEditRoleDialogOpen, roleToEdit]);
@@ -117,30 +81,23 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
     });
   };
 
-  const handleSaveRole = () => {
+  const handleSaveRole = async () => { -- NEW: Made async
     if (!newRoleName.trim()) {
       showError("Role name cannot be empty.");
       return;
     }
 
+    const roleData: Omit<CustomRole, "id" | "createdAt" | "userId" | "organizationId"> = {
+      name: newRoleName.trim(),
+      description: newRoleDescription.trim(),
+      features: Array.from(selectedFeatures),
+    };
+
     if (roleToEdit) {
-      setRoles(prev => prev.map(role =>
-        role.id === roleToEdit.id
-          ? { ...role, name: newRoleName.trim(), description: newRoleDescription.trim(), features: Array.from(selectedFeatures) }
-          : role
-      ));
+      await updateCustomRole({ ...roleData, id: roleToEdit.id }); -- NEW: Use updateCustomRole
       showSuccess(`Role "${newRoleName.trim()}" updated.`);
     } else {
-      const newId = `role-${Date.now()}`;
-      setRoles(prev => [
-        ...prev,
-        {
-          id: newId,
-          name: newRoleName.trim(),
-          description: newRoleDescription.trim(),
-          features: Array.from(selectedFeatures),
-        },
-      ]);
+      await addCustomRole(roleData); -- NEW: Use addCustomRole
       showSuccess(`Role "${newRoleName.trim()}" created.`);
     }
     setIsAddEditRoleDialogOpen(false);
@@ -156,9 +113,9 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
     setIsConfirmDeleteDialogOpen(true);
   };
 
-  const confirmDeleteRole = () => {
+  const confirmDeleteRole = async () => { -- NEW: Made async
     if (roleToDelete) {
-      setRoles(prev => prev.filter(role => role.id !== roleToDelete.id));
+      await deleteCustomRole(roleToDelete.id); -- NEW: Use deleteCustomRole
       showSuccess(`Role "${roleToDelete.name}" deleted.`);
     }
     setIsConfirmDeleteDialogOpen(false);
@@ -176,7 +133,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
             <DialogDescription>
               Create, edit, or delete custom roles and define their permissions.
               <p className="text-red-500 font-semibold mt-2">
-                Note: This is a UI demonstration. Custom roles are not persisted to the database and are not assigned to users in this demo.
+                Note: Custom roles are now persisted to the database. User assignment is a future feature.
               </p>
             </DialogDescription>
           </DialogHeader>
@@ -185,12 +142,17 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
               <PlusCircle className="h-4 w-4 mr-2" /> Create New Role
             </Button>
 
-            {roles.length === 0 ? (
+            {isLoadingCustomRoles ? ( -- NEW: Add loading state
+              <div className="flex items-center justify-center h-40">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading roles...</span>
+              </div>
+            ) : customRoles.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">No custom roles defined yet.</p>
             ) : (
               <ScrollArea className="h-60 border border-border rounded-md p-3 bg-muted/20">
                 <div className="space-y-3">
-                  {roles.map(role => (
+                  {customRoles.map(role => ( -- NEW: Use customRoles from context
                     <div key={role.id} className="flex items-center justify-between p-2 bg-card rounded-md shadow-sm">
                       <div>
                         <h4 className="font-semibold text-foreground">{role.name}</h4>

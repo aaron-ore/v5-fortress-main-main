@@ -16,6 +16,9 @@ export interface CompanyProfile {
   stripeCustomerId?: string; // NEW: Added Stripe Customer ID
   stripeSubscriptionId?: string; // NEW: Added Stripe Subscription ID
   trialEndsAt?: string; // NEW: Added trial_ends_at
+  defaultReorderLevel?: number; -- NEW: Added defaultReorderLevel
+  enableAutoReorderNotifications?: boolean; -- NEW: Added enableAutoReorderNotifications
+  enableAutoReorder?: boolean; -- NEW: Added enableAutoReorder
 }
 
 export interface UserProfile {
@@ -73,6 +76,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripeCustomerId: companyData.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID
       trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial_ends_at
+      defaultReorderLevel: companyData.default_reorder_level || 0, -- NEW: Map default_reorder_level
+      enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false, -- NEW: Map enable_auto_reorder_notifications
+      enableAutoReorder: companyData.enable_auto_reorder || false, -- NEW: Map enable_auto_reorder
     } : undefined;
 
     return {
@@ -122,7 +128,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           plan,
           stripe_customer_id,
           stripe_subscription_id,
-          trial_ends_at
+          trial_ends_at,
+          default_reorder_level, -- NEW: Select default_reorder_level
+          enable_auto_reorder_notifications, -- NEW: Select enable_auto_reorder_notifications
+          enable_auto_reorder -- NEW: Select enable_auto_reorder
         )
       `)
       .eq('id', user.id)
@@ -258,6 +267,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripe_customer_id: updates.stripeCustomerId, // NEW: Include Stripe Customer ID
       stripe_subscription_id: updates.stripeSubscriptionId, // NEW: Include Stripe Subscription ID
       trial_ends_at: updates.trialEndsAt, // NEW: Include trial_ends_at
+      default_reorder_level: updates.defaultReorderLevel, -- NEW: Include default_reorder_level
+      enable_auto_reorder_notifications: updates.enableAutoReorderNotifications, -- NEW: Include enable_auto_reorder_notifications
+      enable_auto_reorder: updates.enableAutoReorder, -- NEW: Include enable_auto_reorder
     };
 
     if (uniqueCode !== undefined) {

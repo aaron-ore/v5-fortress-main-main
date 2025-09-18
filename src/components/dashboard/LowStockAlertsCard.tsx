@@ -15,10 +15,10 @@ interface LowStockAlertsCardProps {
 const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }) => {
   const { addNotification } = useNotifications();
   const [isSupplierInfoDialogOpen, setIsSupplierInfoDialogOpen] = useState(false);
-  const [selectedItemForSupplier, setSelectedItemForSupplier] = useState<{ name: string; sku: string } | null>(null);
+  const [selectedItemForSupplier, setSelectedItemForSupplier] = useState<{ name: string; sku: string; vendorId?: string } | null>(null); -- NEW: Add vendorId to state
 
-  const handleReorder = (itemName: string, itemSku: string) => {
-    setSelectedItemForSupplier({ name: itemName, sku: itemSku });
+  const handleReorder = (itemName: string, itemSku: string, vendorId?: string) => { -- NEW: Add vendorId parameter
+    setSelectedItemForSupplier({ name: itemName, sku: itemSku, vendorId: vendorId }); -- NEW: Pass vendorId
     setIsSupplierInfoDialogOpen(true);
     addNotification(`Reorder initiated for ${itemName} (SKU: ${itemSku}).`, "info");
   };
@@ -29,14 +29,14 @@ const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }
         <CardTitle className="text-lg font-bold text-foreground">Low Stock Alerts</CardTitle>
         <Bell className="h-4 w-4 text-yellow-500" />
       </CardHeader>
-      <CardContent className="p-4 pt-0 flex-grow flex flex-col justify-between">
+      <CardContent className="p-4 pt-0 flex-grow flex-col justify-between">
         {lowStockItems.length > 0 ? (
           <ScrollArea className="flex-grow max-h-[180px] pr-2">
             <ul className="text-sm space-y-2">
               {lowStockItems.slice(0, 5).map(item => (
                 <li key={item.id} className="flex justify-between items-center">
                   <span>{item.name} <span className="text-yellow-400">({item.quantity} units)</span></span>
-                  <Button variant="link" size="sm" onClick={() => handleReorder(item.name, item.sku)} className="text-primary">Reorder</Button>
+                  <Button variant="link" size="sm" onClick={() => handleReorder(item.name, item.sku, item.vendorId)} className="text-primary">Reorder</Button> -- NEW: Pass item.vendorId
                 </li>
               ))}
             </ul>
@@ -44,7 +44,7 @@ const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }
         ) : (
           <p className="text-center text-muted-foreground text-sm py-4 flex-grow flex items-center justify-center">No low stock items currently. Good job!</p>
         )}
-        <Button className="w-full mt-auto" onClick={() => lowStockItems.length > 0 ? handleReorder("Multiple Items", "N/A") : showSuccess("No items to reorder.")} disabled={lowStockItems.length === 0}>
+        <Button className="w-full mt-auto" onClick={() => lowStockItems.length > 0 ? handleReorder("Multiple Items", "N/A", undefined) : showSuccess("No items to reorder.")} disabled={lowStockItems.length === 0}> -- NEW: Pass undefined for vendorId
           Reorder Now <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardContent>
@@ -55,6 +55,7 @@ const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }
           onClose={() => setIsSupplierInfoDialogOpen(false)}
           itemName={selectedItemForSupplier.name}
           itemSku={selectedItemForSupplier.sku}
+          vendorId={selectedItemForSupplier.vendorId} -- NEW: Pass vendorId
         />
       )}
     </Card>

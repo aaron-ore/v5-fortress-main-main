@@ -209,9 +209,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   }, [profile?.organizationId]);
 
   useEffect(() => {
-    const isAutoReorderGloballyEnabled = typeof window !== 'undefined' 
-      ? localStorage.getItem("enableAutoReorder") === "true" 
-      : false;
+    // Check if auto-reorder is globally enabled from profile.companyProfile
+    const isAutoReorderGloballyEnabled = profile?.companyProfile?.enableAutoReorder || false;
 
     if (!isAutoReorderGloballyEnabled) {
       if (!hasLoggedDisabledRef.current) {
@@ -225,9 +224,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     if (isInitialLoadComplete.current && profile?.organizationId && inventoryItems.length > 0) {
       console.log("[InventoryContext] Auto-reorder is globally enabled. Triggering check due to inventory/vendor/profile change.");
-      processAutoReorder(inventoryItems, addOrder, vendors, profile.organizationId, addNotification);
+      processAutoReorder(inventoryItems, addOrder, vendors, profile, addNotification); -- NEW: Pass full profile
     }
-  }, [inventoryItems, vendors, profile?.organizationId, addOrder, addNotification, profile]);
+  }, [inventoryItems, vendors, profile, addOrder, addNotification]); -- NEW: Add profile to dependencies
 
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity">) => {
     const { data: { session } } = await supabase.auth.getSession();
