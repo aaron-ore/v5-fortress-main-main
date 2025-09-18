@@ -8,7 +8,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { format } from "date-fns";
+// Removed: import { format } from "date-fns";
 import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent"; // Updated import path
 import html2canvas from 'html2canvas'; // NEW: Import html2canvas
 
