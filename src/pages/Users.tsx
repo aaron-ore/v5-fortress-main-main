@@ -32,12 +32,16 @@ const Users: React.FC = () => {
   }, [profile?.role, fetchAllProfiles]);
 
   const handleDeleteUserClick = (user: UserProfile) => {
+    if (profile?.role !== 'admin') {
+      showError("You do not have permission to delete users.");
+      return;
+    }
     setUserToDelete(user);
     setIsConfirmDeleteDialogOpen(true);
   };
 
   const confirmDeleteUser = async () => {
-    if (!userToDelete || !profile?.organizationId) return;
+    if (!userToDelete || !profile?.organizationId || profile?.role !== 'admin') return;
 
     const { error } = await supabase
       .from("profiles")
@@ -56,6 +60,10 @@ const Users: React.FC = () => {
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
+    if (profile?.role !== 'admin') {
+      showError("You do not have permission to update user roles.");
+      return;
+    }
     if (!profile?.organizationId) {
       showError("Organization ID not found for role update.");
       return;
@@ -131,7 +139,7 @@ const Users: React.FC = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={() => setIsManageCustomRolesDialogOpen(true)}>
+        <Button onClick={() => setIsManageCustomRolesDialogOpen(true)} disabled={!isAdmin}>
           <SettingsIcon className="h-4 w-4 mr-2" /> Manage Custom Roles
         </Button>
       </div>
@@ -167,6 +175,7 @@ const Users: React.FC = () => {
                           <Select
                             value={user.role}
                             onValueChange={(newRole) => handleUpdateUserRole(user.id, newRole)}
+                            disabled={!isAdmin}
                           >
                             <SelectTrigger className="w-[250px]">
                               <SelectValue placeholder="Select role" />
@@ -186,6 +195,7 @@ const Users: React.FC = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteUserClick(user)}
+                            disabled={!isAdmin}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>

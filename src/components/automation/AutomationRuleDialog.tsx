@@ -20,6 +20,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed unused imports: useOrders, useVendors, useCustomers
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -32,6 +33,10 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const isAdmin = profile?.role === 'admin';
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -92,7 +97,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           setActionType("SEND_EMAIL");
           setActionEmailTo(ruleToEdit.actionJson.to);
           setActionEmailSubject(ruleToEdit.actionJson.subject);
-          setActionEmailBody(ruleToEdit.actionJson.body);
+          setActionEmailBody(ruleTo.actionJson.body);
         } else if (ruleToEdit.actionJson?.type === "CREATE_PURCHASE_ORDER") {
           setActionType("CREATE_PURCHASE_ORDER");
           setActionCreatePoItemId(ruleToEdit.actionJson.itemId);
@@ -129,6 +134,10 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   }, [isOpen, ruleToEdit]);
 
   const handleSubmit = async () => {
+    if (!isAdmin) { // NEW: Check permission before submitting
+      showError("You do not have permission to create or edit automation rules.");
+      return;
+    }
     if (!name.trim()) {
       showError("Rule Name is required.");
       return;
@@ -227,7 +236,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="conditionField">Field</Label>
-                <Select value={conditionField} onValueChange={setConditionField}>
+                <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin}>
                   <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="quantity">Total Quantity</SelectItem>
@@ -239,7 +248,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               </div>
               <div className="space-y-2">
                 <Label htmlFor="conditionOperator">Operator</Label>
-                <Select value={conditionOperator} onValueChange={setConditionOperator}>
+                <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin}>
                   <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
                   <SelectContent>
                     {["quantity", "unitCost", "retailPrice"].includes(conditionField) && (
@@ -268,9 +277,10 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     placeholder="e.g., 10"
                     min="0"
                     step={["unitCost", "retailPrice"].includes(conditionField) ? "0.01" : "1"}
+                    disabled={!isAdmin}
                   />
                 ) : conditionField === "status" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select status" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="In Stock">In Stock</SelectItem>
@@ -279,14 +289,14 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     </SelectContent>
                   </Select>
                 ) : conditionField === "category" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
                       {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : conditionField === "folderId" ? ( // Updated to folderId
-                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
                     <SelectContent>
                       {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
@@ -302,7 +312,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="conditionOrderType">Order Type</Label>
-              <Select value={conditionOrderType} onValueChange={setConditionOrderType}>
+              <Select value={conditionOrderType} onValueChange={setConditionOrderType} disabled={!isAdmin}>
                 <SelectTrigger id="conditionOrderType"><SelectValue placeholder="Select order type" /></SelectTrigger>
                 <SelectContent>
                   {orderTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
@@ -312,7 +322,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="conditionOldStatus">From Status (Optional)</Label>
-                <Select value={conditionOldStatus} onValueChange={setConditionOldStatus}>
+                <Select value={conditionOldStatus} onValueChange={setConditionOldStatus} disabled={!isAdmin}>
                   <SelectTrigger id="conditionOldStatus"><SelectValue placeholder="Any status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any Status</SelectItem>
@@ -322,7 +332,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               </div>
               <div className="space-y-2">
                 <Label htmlFor="conditionNewStatus">To Status</Label>
-                <Select value={conditionNewStatus} onValueChange={setConditionNewStatus}>
+                <Select value={conditionNewStatus} onValueChange={setConditionNewStatus} disabled={!isAdmin}>
                   <SelectTrigger id="conditionNewStatus"><SelectValue placeholder="Select new status" /></SelectTrigger>
                   <SelectContent>
                     {orderStatuses.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
@@ -338,7 +348,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="conditionField">Field</Label>
-                <Select value={conditionField} onValueChange={setConditionField}>
+                <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin}>
                   <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="category">Category</SelectItem>
@@ -350,7 +360,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               </div>
               <div className="space-y-2">
                 <Label htmlFor="conditionOperator">Operator</Label>
-                <Select value={conditionOperator} onValueChange={setConditionOperator}>
+                <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin}>
                   <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
                   <SelectContent>
                     {["unitCost", "retailPrice"].includes(conditionField) && (
@@ -379,16 +389,17 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                     placeholder="e.g., 50.00"
                     min="0"
                     step="0.01"
+                    disabled={!isAdmin}
                   />
                 ) : conditionField === "category" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
                       {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : conditionField === "folderId" ? ( // Updated to folderId
-                  <Select value={conditionValue} onValueChange={setConditionValue}>
+                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
                     <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
                     <SelectContent>
                       {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
@@ -415,6 +426,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               value={actionNotificationMessage}
               onChange={(e) => setActionNotificationMessage(e.target.value)}
               placeholder="e.g., Item {itemName} is critically low in stock!"
+              disabled={!isAdmin}
             />
             <p className="text-xs text-muted-foreground">
               Use <code>{`{itemName}`}</code>, <code>{`{sku}`}</code>, <code>{`{quantity}`}</code>, <code>{`{oldStatus}`}</code>, <code>{`{newStatus}`}</code> as placeholders.
@@ -426,7 +438,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionEmailTo">Recipient <span className="text-red-500">*</span></Label>
-              <Select value={actionEmailTo} onValueChange={setActionEmailTo}>
+              <Select value={actionEmailTo} onValueChange={setActionEmailTo} disabled={!isAdmin}>
                 <SelectTrigger id="actionEmailTo"><SelectValue placeholder="Select recipient" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Organization Admin</SelectItem>
@@ -441,6 +453,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                   onChange={(e) => setActionEmailTo(e.target.value)}
                   placeholder="e.g., alerts@yourcompany.com"
                   className="mt-2"
+                  disabled={!isAdmin}
                 />
               )}
             </div>
@@ -451,6 +464,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 value={actionEmailSubject}
                 onChange={(e) => setActionEmailSubject(e.target.value)}
                 placeholder="e.g., Low Stock Alert: {itemName}"
+                disabled={!isAdmin}
               />
             </div>
             <div className="space-y-2">
@@ -461,6 +475,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionEmailBody(e.target.value)}
                 placeholder="e.g., Dear team, item {itemName} (SKU: {sku}) is now at {quantity} units."
                 rows={4}
+                disabled={!isAdmin}
               />
               <p className="text-xs text-muted-foreground">
                 Use <code>{`{itemName}`}</code>, <code>{`{sku}`}</code>, <code>{`{quantity}`}</code>, <code>{`{oldStatus}`}</code>, <code>{`{newStatus}`}</code> as placeholders.
@@ -473,7 +488,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionCreatePoItemId">Item to Order <span className="text-red-500">*</span></Label>
-              <Select value={actionCreatePoItemId} onValueChange={setActionCreatePoItemId}>
+              <Select value={actionCreatePoItemId} onValueChange={setActionCreatePoItemId} disabled={!isAdmin}>
                 <SelectTrigger id="actionCreatePoItemId"><SelectValue placeholder="Select item" /></SelectTrigger>
                 <SelectContent>
                   {inventoryItems.map(item => (
@@ -493,6 +508,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionCreatePoQuantity(e.target.value)}
                 placeholder="e.g., 100"
                 min="1"
+                disabled={!isAdmin}
               />
             </div>
           </>
@@ -521,6 +537,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Low Stock Alert for Electronics"
+              disabled={!isAdmin}
             />
           </div>
           <div className="space-y-2">
@@ -531,6 +548,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Briefly describe what this rule does."
               rows={2}
+              disabled={!isAdmin}
             />
           </div>
           <div className="flex items-center justify-between space-x-2 pt-2">
@@ -539,6 +557,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               id="isActive"
               checked={isActive}
               onCheckedChange={setIsActive}
+              disabled={!isAdmin}
             />
           </div>
 
@@ -547,7 +566,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               <AlertTriangle className="h-5 w-5 text-yellow-500" /> Trigger (When...)
             </h3>
             <Label htmlFor="triggerType">Trigger Type <span className="text-red-500">*</span></Label>
-            <Select value={triggerType} onValueChange={(value: AutomationRule['triggerType']) => setTriggerType(value)}>
+            <Select value={triggerType} onValueChange={(value: AutomationRule['triggerType']) => setTriggerType(value)} disabled={!isAdmin}>
               <SelectTrigger id="triggerType"><SelectValue placeholder="Select a trigger event" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ON_STOCK_LEVEL_CHANGE">On Stock Level Change</SelectItem>
@@ -569,7 +588,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               <BellRing className="h-5 w-5 text-green-500" /> Action (Then...)
             </h3>
             <Label htmlFor="actionType">Action Type <span className="text-red-500">*</span></Label>
-            <Select value={actionType} onValueChange={setActionType}>
+            <Select value={actionType} onValueChange={setActionType} disabled={!isAdmin}>
               <SelectTrigger id="actionType"><SelectValue placeholder="Select an action" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="SEND_NOTIFICATION">Send In-App Notification</SelectItem>
@@ -584,7 +603,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={!isAdmin}>
             {ruleToEdit ? "Save Changes" : "Create Rule"}
           </Button>
         </DialogFooter>

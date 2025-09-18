@@ -13,6 +13,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { format } from "date-fns";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PickListItem {
   itemName: string;
@@ -26,6 +27,10 @@ const PickingWaveManagementTool: React.FC = () => {
   const { inventoryItems } = useInventory();
   const { companyProfile, inventoryFolders } = useOnboarding(); // Added inventoryFolders
   const { initiatePrint } = usePrint();
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
@@ -65,6 +70,10 @@ const PickingWaveManagementTool: React.FC = () => {
   };
 
   const handleCreatePickingWave = () => {
+    if (!canManagePickingWaves) { // NEW: Check permission before creating wave
+      showError("You do not have permission to create picking waves.");
+      return;
+    }
     if (selectedOrderIds.size === 0) {
       showError("Please select at least one order to create a picking wave.");
       return;
@@ -115,6 +124,10 @@ const PickingWaveManagementTool: React.FC = () => {
   };
 
   const handlePrintPickList = () => {
+    if (!canManagePickingWaves) { // NEW: Check permission before printing
+      showError("You do not have permission to print picking lists.");
+      return;
+    }
     if (!currentWaveId || generatedPickList.length === 0) {
       showError("No picking wave generated to print.");
       return;
@@ -147,6 +160,10 @@ const PickingWaveManagementTool: React.FC = () => {
   };
 
   const handleOrderSelection = (orderId: string, checked: boolean) => {
+    if (!canManagePickingWaves) { // NEW: Check permission before selecting order
+      showError("You do not have permission to select orders for picking waves.");
+      return;
+    }
     setSelectedOrderIds(prev => {
       const newSet = new Set(prev);
       if (checked) {
@@ -171,7 +188,7 @@ const PickingWaveManagementTool: React.FC = () => {
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryRouteFilter" className="font-semibold">Filter by Delivery Route</Label>
-            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute}>
+            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
               <SelectTrigger id="deliveryRouteFilter">
                 <SelectValue placeholder="All Routes" />
               </SelectTrigger>
@@ -199,6 +216,7 @@ const PickingWaveManagementTool: React.FC = () => {
                           id={`order-${order.id}`}
                           checked={selectedOrderIds.has(order.id)}
                           onCheckedChange={(checked: boolean) => handleOrderSelection(order.id, checked)}
+                          disabled={!canManagePickingWaves} // NEW: Disable checkbox if no permission
                         />
                         <span>{order.id} - {order.customerSupplier} (Route: {order.deliveryRoute || 'N/A'})</span>
                       </Label>
@@ -209,7 +227,7 @@ const PickingWaveManagementTool: React.FC = () => {
               )}
             </ScrollArea>
           </div>
-          <Button onClick={handleCreatePickingWave} className="w-full" disabled={selectedOrderIds.size === 0}>
+          <Button onClick={handleCreatePickingWave} className="w-full" disabled={selectedOrderIds.size === 0 || !canManagePickingWaves}> {/* NEW: Disable if no permission */}
             <ListOrdered className="h-4 w-4 mr-2" /> Create Picking Wave ({selectedOrderIds.size} Orders)
           </Button>
         </CardContent>
@@ -239,10 +257,10 @@ const PickingWaveManagementTool: React.FC = () => {
                 ))}
               </div>
             </ScrollArea>
-            <Button onClick={handlePrintPickList} className="w-full">
+            <Button onClick={handlePrintPickList} className="w-full" disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
               <Printer className="h-4 w-4 mr-2" /> Print Pick List
             </Button>
-            <Button variant="secondary" className="w-full" onClick={() => { setSelectedOrderIds(new Set<string>()); setGeneratedPickList([]); setCurrentWaveId(null); showSuccess("Picking wave cleared."); }}>
+            <Button variant="secondary" className="w-full" onClick={() => { setSelectedOrderIds(new Set<string>()); setGeneratedPickList([]); setCurrentWaveId(null); showSuccess("Picking wave cleared."); }} disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
               <CheckCircle className="h-4 w-4 mr-2" /> Complete Wave (Clear)
             </Button>
           </CardContent>

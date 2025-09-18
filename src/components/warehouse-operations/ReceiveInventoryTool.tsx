@@ -15,6 +15,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
@@ -37,6 +38,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   const { addStockMovement } = useStockMovement();
   const { inventoryFolders } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { initiatePrint } = usePrint();
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canReceiveInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
@@ -85,6 +90,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handlePoNumberSubmit = async (poNum?: string) => {
+    if (!canReceiveInventory) { // NEW: Check permission before submitting PO
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     const currentPoNum = poNum || poNumberInput.trim();
     if (!currentPoNum) {
       showError("Please enter a Purchase Order Number.");
@@ -121,6 +130,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handleReceivedQuantityChange = (itemId: number, quantity: string) => {
+    if (!canReceiveInventory) { // NEW: Check permission before changing quantity
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     setReceivedItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, receivedQuantity: parseInt(quantity || '0') } : item
@@ -129,6 +142,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handleLotNumberChange = (itemId: number, lot: string) => {
+    if (!canReceiveInventory) { // NEW: Check permission before changing lot number
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     setReceivedItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, lotNumber: lot } : item
@@ -137,6 +154,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handleExpirationDateChange = (itemId: number, date: string) => {
+    if (!canReceiveInventory) { // NEW: Check permission before changing expiration date
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     setReceivedItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, expirationDate: date } : item
@@ -146,6 +167,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
+    if (!canReceiveInventory) { // NEW: Check permission before scanning
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     if (!selectedPO) {
       showError("Please load a Purchase Order before scanning items.");
       return;
@@ -172,11 +197,19 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handleScanClick = () => {
+    if (!canReceiveInventory) { // NEW: Check permission before scanning
+      showError("You do not have permission to receive inventory.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handlePrintPutawayLabel = async (item: ReceivedItemDisplay) => {
+    if (!canReceiveInventory) { // NEW: Check permission before printing label
+      showError("You do not have permission to print putaway labels.");
+      return;
+    }
     if (!item.inventoryItemDetails || !item.suggestedPutawayFolderId) {
       showError("Cannot print label: Missing item details or putaway folder.");
       return;
@@ -214,6 +247,10 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   };
 
   const handleCompleteReceive = async () => {
+    if (!canReceiveInventory) { // NEW: Check permission before completing receive
+      showError("You do not have permission to complete receiving.");
+      return;
+    }
     if (!selectedPO) {
       showError("No Purchase Order selected to complete receiving.");
       return;
@@ -270,7 +307,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     }
   };
 
-  const isCompleteButtonDisabled = !selectedPO || receivedItems.every(item => item.receivedQuantity === 0);
+  const isCompleteButtonDisabled = !selectedPO || receivedItems.every(item => item.receivedQuantity === 0) || !canReceiveInventory; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -290,13 +327,14 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                 handlePoNumberSubmit();
               }
             }}
+            disabled={!canReceiveInventory} // NEW: Disable input if no permission
           />
-          <Button onClick={() => handlePoNumberSubmit()} disabled={!poNumberInput.trim()}>Load PO</Button>
+          <Button onClick={() => handlePoNumberSubmit()} disabled={!poNumberInput.trim() || !canReceiveInventory}>Load PO</Button>
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanClick}
-          disabled={isScanning}
+          disabled={isScanning || !canReceiveInventory} // NEW: Disable button if no permission
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}
@@ -328,6 +366,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                           className="w-24 text-right"
                           min="0"
                           max={item.quantity}
+                          disabled={!canReceiveInventory} // NEW: Disable input if no permission
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2 mt-2">
@@ -339,6 +378,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                             onChange={(e) => handleLotNumberChange(item.id, e.target.value)}
                             placeholder="Lot number"
                             className="h-8 text-xs"
+                            disabled={!canReceiveInventory} // NEW: Disable input if no permission
                           />
                         </div>
                         <div className="space-y-1">
@@ -349,6 +389,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                             value={item.expirationDate || ""}
                             onChange={(e) => handleExpirationDateChange(item.id, e.target.value)}
                             className="h-8 text-xs"
+                            disabled={!canReceiveInventory} // NEW: Disable input if no permission
                           />
                         </div>
                       </div>
@@ -357,7 +398,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
                         size="sm"
                         className="mt-3 w-full"
                         onClick={() => handlePrintPutawayLabel(item)}
-                        disabled={item.receivedQuantity === 0 || !item.suggestedPutawayFolderId}
+                        disabled={item.receivedQuantity === 0 || !item.suggestedPutawayFolderId || !canReceiveInventory} // NEW: Disable button if no permission
                       >
                         <Printer className="h-4 w-4 mr-2" /> Print Putaway Label
                       </Button>

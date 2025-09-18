@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import ReplenishmentManagementTool from "@/components/warehouse-operations/ReplenishmentManagementTool";
 import { Repeat } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ReplenishmentManagementDialogProps {
   isOpen: boolean;
@@ -20,6 +22,26 @@ const ReplenishmentManagementDialog: React.FC<ReplenishmentManagementDialogProps
   isOpen,
   onClose,
 }) => {
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permission
+  const canManageReplenishment = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
+  if (!canManageReplenishment) { // NEW: Check permission for viewing dialog
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[600px] flex flex-col h-[90vh] max-h-[800px] p-0">
+          <Card className="p-6 text-center bg-card border-border">
+            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+            <CardContent>
+              <p className="text-muted-foreground">You do not have permission to manage replenishment.</p>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] flex flex-col h-[90vh] max-h-[800px] p-0">

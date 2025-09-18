@@ -11,6 +11,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 // Removed useStockMovement as updates will go through Edge Function
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CountedItem {
   id: string;
@@ -35,6 +36,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   const { inventoryItems, refreshInventory } = useInventory();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
   // Removed useStockMovement as updates will go through Edge Function
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canCycleCount = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedFolder, setSelectedFolder] = useState("all"); // Changed from selectedLocation to selectedFolder
   const [itemsToCount, setItemsToCount] = useState<CountedItem[]>([]);
@@ -66,6 +71,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   };
 
   const startCycleCount = () => {
+    if (!canCycleCount) { // NEW: Check permission before starting count
+      showError("You do not have permission to start a cycle count.");
+      return;
+    }
     if (filteredInventory.length === 0) {
       showError("No items found for the selected folder to start a cycle count.");
       return;
@@ -88,6 +97,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   };
 
   const handleCountedQuantityChange = (itemId: string, locationType: 'pickingBin' | 'overstock', quantity: string) => {
+    if (!canCycleCount) { // NEW: Check permission before changing quantity
+      showError("You do not have permission to perform cycle counts.");
+      return;
+    }
     setItemsToCount(prev =>
       prev.map(item => {
         if (item.id === itemId) {
@@ -105,6 +118,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
+    if (!canCycleCount) { // NEW: Check permission before scanning
+      showError("You do not have permission to perform cycle counts.");
+      return;
+    }
     if (!isCounting) {
       showError("Please start a cycle count before scanning items.");
       return;
@@ -130,11 +147,19 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   };
 
   const handleScanClick = () => {
+    if (!canCycleCount) { // NEW: Check permission before scanning
+      showError("You do not have permission to perform cycle counts.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const completeCycleCount = async () => {
+    if (!canCycleCount) { // NEW: Check permission before completing count
+      showError("You do not have permission to complete cycle counts.");
+      return;
+    }
     let discrepanciesFound = 0;
     let updatesSuccessful = 0;
 
@@ -222,7 +247,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="folderSelect" className="font-semibold">Folder to Count</Label> {/* Updated label */}
-              <Select value={selectedFolder} onValueChange={setSelectedFolder}> {/* Updated to selectedFolder */}
+              <Select value={selectedFolder} onValueChange={setSelectedFolder} disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
                 <SelectTrigger id="folderSelect">
                   <SelectValue placeholder="Select a folder" /> {/* Updated placeholder */}
                 </SelectTrigger>
@@ -236,7 +261,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={startCycleCount} className="w-full" disabled={filteredInventory.length === 0}>
+            <Button onClick={startCycleCount} className="w-full" disabled={filteredInventory.length === 0 || !canCycleCount}> {/* NEW: Disable if no permission */}
               Start Cycle Count
             </Button>
           </CardContent>
@@ -246,7 +271,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning}
+            disabled={isScanning || !canCycleCount} // NEW: Disable if no permission
           >
             <Barcode className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item"}
@@ -277,6 +302,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                           onChange={(e) => handleCountedQuantityChange(item.id, 'pickingBin', e.target.value)}
                           className="w-24 text-right"
                           min="0"
+                          disabled={!canCycleCount} // NEW: Disable input if no permission
                         />
                       </div>
                     </div>
@@ -300,6 +326,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                           onChange={(e) => handleCountedQuantityChange(item.id, 'overstock', e.target.value)}
                           className="w-24 text-right"
                           min="0"
+                          disabled={!canCycleCount} // NEW: Disable input if no permission
                         />
                       </div>
                     </div>
@@ -315,10 +342,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           </ScrollArea>
 
           <div className="mt-6 flex gap-2">
-            <Button variant="outline" onClick={() => setIsCounting(false)} className="flex-grow">
+            <Button variant="outline" onClick={() => setIsCounting(false)} className="flex-grow" disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
               Cancel Count
             </Button>
-            <Button onClick={completeCycleCount} className="flex-grow">
+            <Button onClick={completeCycleCount} className="flex-grow" disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
               Complete Count
             </Button>
           </div>

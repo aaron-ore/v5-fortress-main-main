@@ -12,6 +12,7 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface FulfilledItemDisplay extends POItem {
   fulfilledQuantity: number;
@@ -29,6 +30,10 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
   const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canFulfillOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [soNumberInput, setSoNumberInput] = useState("");
   const [selectedSO, setSelectedSO] = useState<OrderItem | null>(null);
@@ -48,7 +53,17 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleSoNumberSubmit = async () => {
+    if (!canFulfillOrders) { // NEW: Check permission before submitting SO
+      showError("You do not have permission to fulfill orders.");
+      return;
+    }
     if (!soNumberInput.trim()) {
       showError("Please enter a Sales Order Number.");
       return;
@@ -80,6 +95,10 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   };
 
   const handleFulfilledQuantityChange = (itemId: number, quantity: string) => {
+    if (!canFulfillOrders) { // NEW: Check permission before changing quantity
+      showError("You do not have permission to fulfill orders.");
+      return;
+    }
     setFulfilledItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, fulfilledQuantity: parseInt(quantity) || 0 } : item
@@ -89,6 +108,10 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false); // Scanning is complete
+    if (!canFulfillOrders) { // NEW: Check permission before scanning
+      showError("You do not have permission to fulfill orders.");
+      return;
+    }
     if (!selectedSO) {
       showError("Please load a Sales Order before scanning items.");
       return;
@@ -115,11 +138,19 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   };
 
   const handleScanItem = () => {
+    if (!canFulfillOrders) { // NEW: Check permission before scanning
+      showError("You do not have permission to fulfill orders.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handleCompleteOrder = async () => {
+    if (!canFulfillOrders) { // NEW: Check permission before completing order
+      showError("You do not have permission to fulfill orders.");
+      return;
+    }
     if (!selectedSO) {
       showError("No Sales Order selected to complete fulfillment.");
       return;
@@ -180,13 +211,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
     }
   };
 
-  const isCompleteButtonDisabled = !selectedSO || fulfilledItems.every(item => item.fulfilledQuantity === 0);
-
-  // Helper to get folder name from ID
-  const getFolderName = (folderId: string) => {
-    const folder = inventoryFolders.find(f => f.id === folderId);
-    return folder?.name || "Unknown Folder";
-  };
+  const isCompleteButtonDisabled = !selectedSO || fulfilledItems.every(item => item.fulfilledQuantity === 0) || !canFulfillOrders; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -206,13 +231,14 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
                 handleSoNumberSubmit();
               }
             }}
+            disabled={!canFulfillOrders} // NEW: Disable input if no permission
           />
-          <Button onClick={handleSoNumberSubmit} disabled={!soNumberInput.trim()}>Load SO</Button>
+          <Button onClick={handleSoNumberSubmit} disabled={!soNumberInput.trim() || !canFulfillOrders}>Load SO</Button>
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanItem}
-          disabled={isScanning}
+          disabled={isScanning || !canFulfillOrders} // NEW: Disable button if no permission
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}
@@ -244,6 +270,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
                           className="w-24 text-right"
                           min="0"
                           max={item.quantity}
+                          disabled={!canFulfillOrders} // NEW: Disable input if no permission
                         />
                       </div>
                     </CardContent>

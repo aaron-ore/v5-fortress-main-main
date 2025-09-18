@@ -31,16 +31,28 @@ const Automation: React.FC = () => {
   const isAdmin = profile?.role === 'admin';
 
   const handleCreateRuleClick = () => {
+    if (!isAdmin) {
+      showError("You do not have permission to create automation rules.");
+      return;
+    }
     setRuleToEdit(null);
     setIsAutomationRuleDialogOpen(true);
   };
 
   const handleEditRuleClick = (rule: AutomationRule) => {
+    if (!isAdmin) {
+      showError("You do not have permission to edit automation rules.");
+      return;
+    }
     setRuleToEdit(rule);
     setIsAutomationRuleDialogOpen(true);
   };
 
   const handleDeleteRuleClick = (rule: AutomationRule) => {
+    if (!isAdmin) {
+      showError("You do not have permission to delete automation rules.");
+      return;
+    }
     setRuleToDelete(rule);
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -54,6 +66,10 @@ const Automation: React.FC = () => {
   };
 
   const handleToggleRuleActive = async (rule: AutomationRule, newActiveState: boolean) => {
+    if (!isAdmin) {
+      showError("You do not have permission to toggle automation rules.");
+      return;
+    }
     await updateRule({ ...rule, isActive: newActiveState });
   };
 
@@ -155,7 +171,7 @@ const Automation: React.FC = () => {
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> Automation Rules
           </CardTitle>
-          <Button onClick={handleCreateRuleClick}>
+          <Button onClick={handleCreateRuleClick} disabled={!isAdmin}>
             <PlusCircle className="h-4 w-4 mr-2" /> Create New Rule
           </Button>
         </CardHeader>
@@ -183,6 +199,7 @@ const Automation: React.FC = () => {
                           checked={rule.isActive}
                           onCheckedChange={(checked) => handleToggleRuleActive(rule, checked)}
                           aria-label={`Toggle rule ${rule.name}`}
+                          disabled={!isAdmin}
                         />
                       </TableCell>
                       <TableCell className="font-medium">{rule.name}</TableCell>
@@ -191,10 +208,10 @@ const Automation: React.FC = () => {
                       <TableCell>{getActionSummary(rule)}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)} disabled={!isAdmin}>
                             <Edit className="h-4 w-4 text-primary" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)} disabled={!isAdmin}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>

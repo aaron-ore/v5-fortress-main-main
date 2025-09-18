@@ -9,6 +9,7 @@ import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ShippingVerificationToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -19,6 +20,10 @@ interface ShippingVerificationToolProps {
 const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems } = useInventory();
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canVerifyShipping = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
   const [truckId, setTruckId] = useState("");
@@ -84,7 +89,11 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    setVerificationStatus("verifying");
+    if (!canVerifyShipping) { // NEW: Check permission before scanning
+      showError("You do not have permission to perform shipping verification.");
+      setVerificationStatus("error");
+      return;
+    }
 
     const lowerCaseScannedData = scannedData.toLowerCase();
     const foundItem = inventoryItems.find(
@@ -127,11 +136,19 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
   };
 
   const handleScanItem = () => {
+    if (!canVerifyShipping) { // NEW: Check permission before scanning
+      showError("You do not have permission to perform shipping verification.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handleCompleteShipment = async () => {
+    if (!canVerifyShipping) { // NEW: Check permission before completing shipment
+      showError("You do not have permission to complete shipments.");
+      return;
+    }
     if (verificationStatus !== "success") {
       showError("Please verify all items before completing the shipment.");
       return;
@@ -149,7 +166,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     await fetchOrders(); // Refresh orders
   };
 
-  const isCompleteButtonDisabled = verificationStatus !== "success";
+  const isCompleteButtonDisabled = verificationStatus !== "success" || !canVerifyShipping; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -164,7 +181,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryRoute">Select Delivery Route</Label>
-            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute}>
+            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canVerifyShipping}> {/* NEW: Disable if no permission */}
               <SelectTrigger id="deliveryRoute">
                 <SelectValue placeholder="All Routes" />
               </SelectTrigger>
@@ -184,12 +201,13 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
               value={truckId}
               onChange={(e) => setTruckId(e.target.value)}
               placeholder="e.g., TRK-001, ABC-123"
+              disabled={!canVerifyShipping} // NEW: Disable input if no permission
             />
           </div>
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanItem}
-            disabled={isScanning || !truckId || ordersForRoute.length === 0}
+            disabled={isScanning || !truckId || ordersForRoute.length === 0 || !canVerifyShipping} // NEW: Disable if no permission
           >
             <Scan className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item / Pallet"}

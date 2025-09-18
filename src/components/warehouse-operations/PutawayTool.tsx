@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
@@ -36,6 +37,10 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
   const { inventoryFolders } = useOnboarding(); // Renamed from structuredLocations
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canPutaway = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
@@ -71,6 +76,10 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
 
   const handleScannedData = (scannedData: string) => {
     setIsScanning(false);
+    if (!canPutaway) { // NEW: Check permission before processing scanned data
+      showError("You do not have permission to use Putaway.");
+      return;
+    }
     const lowerCaseScannedData = scannedData.toLowerCase();
 
     if (currentScanMode === "po") {
@@ -121,12 +130,20 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   const handleScanClick = (mode: "po" | "folder" | "item") => { // Changed from location to folder
+    if (!canPutaway) { // NEW: Check permission before scanning
+      showError("You do not have permission to use Putaway.");
+      return;
+    }
     setIsScanning(true);
     setCurrentScanMode(mode);
     onScanRequest(handleScannedData);
   };
 
   const handlePoSelect = async (orderId: string) => {
+    if (!canPutaway) { // NEW: Check permission before selecting PO
+      showError("You do not have permission to use Putaway.");
+      return;
+    }
     const foundPO = orders.find(
       (order) => order.id === orderId && order.type === "Purchase" && order.putawayStatus === "Pending"
     );
@@ -154,6 +171,10 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   };
 
   const confirmPutaway = async (itemToPutAway: PutawayItemDisplay) => {
+    if (!canPutaway) { // NEW: Check permission before confirming putaway
+      showError("You do not have permission to use Putaway.");
+      return;
+    }
     if (!selectedPO || !scannedFolderId || !itemToPutAway.inventoryItemDetails) {
       showError("Missing data for putaway confirmation.");
       return;
@@ -216,7 +237,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     return inventoryFolders[Math.floor(Math.random() * inventoryFolders.length)].id;
   };
 
-  const isCompleteButtonDisabled = !selectedPO || itemsToPutAway.some(item => !item.isPutAway);
+  const isCompleteButtonDisabled = !selectedPO || itemsToPutAway.some(item => !item.isPutAway) || !canPutaway; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -225,7 +246,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       <div className="space-y-4">
         <Label htmlFor="poSelect" className="text-lg font-semibold">Select Purchase Order</Label>
         <div className="flex gap-2">
-          <Select value={selectedPO?.id || ""} onValueChange={handlePoSelect} disabled={isScanning}>
+          <Select value={selectedPO?.id || ""} onValueChange={handlePoSelect} disabled={isScanning || !canPutaway}> {/* NEW: Disable if no permission */}
             <SelectTrigger id="poSelect">
               <SelectValue placeholder="Select a received PO" />
             </SelectTrigger>
@@ -241,7 +262,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
               )}
             </SelectContent>
           </Select>
-          <Button onClick={() => handleScanClick("po")} disabled={isScanning}>
+          <Button onClick={() => handleScanClick("po")} disabled={isScanning || !canPutaway}> {/* NEW: Disable if no permission */}
             <Scan className="h-4 w-4 mr-2" /> Scan PO
           </Button>
         </div>
@@ -254,7 +275,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
               onClick={() => handleScanClick("folder")} // Changed to folder
-              disabled={isScanning}
+              disabled={isScanning || !canPutaway} // NEW: Disable if no permission
             >
               <Folder className="h-6 w-6" /> {/* Updated icon */}
               {isScanning && currentScanMode === "folder" ? "Scanning Folder..." : "Scan Folder"} {/* Updated text */}
@@ -262,7 +283,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
               onClick={() => handleScanClick("item")}
-              disabled={isScanning || !scannedFolderId}
+              disabled={isScanning || !scannedFolderId || !canPutaway} // NEW: Disable if no permission
             >
               <Package className="h-6 w-6" />
               {isScanning && currentScanMode === "item" ? "Scanning Item..." : "Scan Item"}
@@ -305,7 +326,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                           size="sm"
                           className="mt-2"
                           onClick={() => confirmPutaway(item)}
-                          disabled={!scannedFolderId}
+                          disabled={!scannedFolderId || !canPutaway} // NEW: Disable if no permission
                         >
                           Confirm Putaway to {scannedFolderId ? getFolderName(scannedFolderId) : "Scanned Folder"} {/* Updated to folder name */}
                         </Button>

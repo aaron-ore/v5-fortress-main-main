@@ -28,6 +28,9 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const { profile } = useProfile();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
 
+  // NEW: Role-based permissions
+  const canReportIssues = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+
   const [issueType, setIssueType] = useState("");
   const [itemId, setItemId] = useState("");
   const [folderId, setFolderId] = useState(""); // Changed from location to folderId
@@ -44,8 +47,19 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string | undefined) => {
+    if (!folderId) return "N/A";
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
+    if (!canReportIssues) { // NEW: Check permission before scanning
+      showError("You do not have permission to report issues.");
+      return;
+    }
     const lowerCaseScannedData = scannedData.toLowerCase();
     const foundItem = inventoryItems.find(
       (item) =>
@@ -63,11 +77,19 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   };
 
   const handleScanClick = () => {
+    if (!canReportIssues) { // NEW: Check permission before scanning
+      showError("You do not have permission to report issues.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handleSubmitReport = async () => {
+    if (!canReportIssues) { // NEW: Check permission before submitting report
+      showError("You do not have permission to report issues.");
+      return;
+    }
     if (!issueType || !description || !contactInfo) {
       showError("Please fill in all required fields (Issue Type, Description, Contact Info).");
       return;
@@ -115,6 +137,8 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     setContactInfo("");
   };
 
+  const isSubmitButtonDisabled = !issueType || !description || !contactInfo || !canReportIssues; // NEW: Disable if no permission
+
   return (
     <div className="flex flex-col h-full space-y-4">
       <h2 className="text-xl font-bold text-center">Report an Issue</h2>
@@ -130,7 +154,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="issueType" className="font-semibold">Issue Type <span className="text-red-500">*</span></Label>
-                <Select value={issueType} onValueChange={setIssueType}>
+                <Select value={issueType} onValueChange={setIssueType} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
                   <SelectTrigger id="issueType">
                     <SelectValue placeholder="Select issue type" />
                   </SelectTrigger>
@@ -148,7 +172,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
                 onClick={handleScanClick}
-                disabled={isScanning}
+                disabled={isScanning || !canReportIssues} // NEW: Disable button if no permission
               >
                 <Barcode className="h-6 w-6" />
                 {isScanning ? "Scanning..." : "Scan Affected Item"}
@@ -156,7 +180,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
               <div className="space-y-2">
                 <Label htmlFor="itemId" className="font-semibold">Affected Item (Optional)</Label>
-                <Select value={itemId} onValueChange={setItemId}>
+                <Select value={itemId} onValueChange={setItemId} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
                   <SelectTrigger id="itemId">
                     <SelectValue placeholder="Select an item (if applicable)" />
                   </SelectTrigger>
@@ -173,7 +197,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
               <div className="space-y-2">
                 <Label htmlFor="folderId" className="font-semibold">Folder (Optional)</Label> {/* Updated label */}
-                <Select value={folderId} onValueChange={setFolderId}> {/* Updated to folderId */}
+                <Select value={folderId} onValueChange={setFolderId} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
                   <SelectTrigger id="folderId">
                     <SelectValue placeholder="Select folder" /> {/* Updated placeholder */}
                   </SelectTrigger>
@@ -196,6 +220,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Provide a detailed description of the issue..."
                   rows={4}
+                  disabled={!canReportIssues} // NEW: Disable input if no permission
                 />
               </div>
 
@@ -206,6 +231,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                   value={contactInfo}
                   onChange={(e) => setContactInfo(e.target.value)}
                   placeholder="Email or Phone Number"
+                  disabled={!canReportIssues} // NEW: Disable input if no permission
                 />
               </div>
             </CardContent>
@@ -214,7 +240,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       </ScrollArea>
 
       <div className="mt-6">
-        <Button onClick={handleSubmitReport} className="w-full" disabled={!issueType || !description || !contactInfo}>
+        <Button onClick={handleSubmitReport} className="w-full" disabled={isSubmitButtonDisabled}>
           <MessageSquare className="h-4 w-4 mr-2" /> Submit Report
         </Button>
       </div>

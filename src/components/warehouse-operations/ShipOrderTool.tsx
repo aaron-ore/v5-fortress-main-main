@@ -12,6 +12,7 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PickedItemDisplay extends POItem {
   pickedQuantity: number;
@@ -29,6 +30,10 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
   const { inventoryItems, refreshInventory, updateInventoryItem } = useInventory();
   const { addStockMovement } = useStockMovement();
   const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canShipOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [soNumberInput, setSoNumberInput] = useState("");
   const [selectedSO, setSelectedSO] = useState<OrderItem | null>(null);
@@ -49,7 +54,17 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed, selectedSO]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string) => {
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleSoNumberSubmit = async () => {
+    if (!canShipOrders) { // NEW: Check permission before submitting SO
+      showError("You do not have permission to ship orders.");
+      return;
+    }
     if (!soNumberInput.trim()) {
       showError("Please enter a Sales Order Number.");
       return;
@@ -81,6 +96,10 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
   };
 
   const handlePickedQuantityChange = (itemId: number, quantity: string) => {
+    if (!canShipOrders) { // NEW: Check permission before changing quantity
+      showError("You do not have permission to ship orders.");
+      return;
+    }
     setPickedItems((prev) =>
       prev.map((item) =>
         item.id === itemId ? { ...item, pickedQuantity: parseInt(quantity) || 0 } : item
@@ -90,6 +109,10 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
+    if (!canShipOrders) { // NEW: Check permission before scanning
+      showError("You do not have permission to ship orders.");
+      return;
+    }
     if (!selectedSO) {
       showError("Please load a Sales Order before scanning items.");
       return;
@@ -116,11 +139,19 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
   };
 
   const handleScanItemClick = () => {
+    if (!canShipOrders) { // NEW: Check permission before scanning
+      showError("You do not have permission to ship orders.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handleCompleteShipment = async () => {
+    if (!canShipOrders) { // NEW: Check permission before completing shipment
+      showError("You do not have permission to ship orders.");
+      return;
+    }
     if (!selectedSO) {
       showError("No Sales Order selected to complete shipment.");
       return;
@@ -181,13 +212,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
     }
   };
 
-  const isCompleteButtonDisabled = !selectedSO || pickedItems.every(item => item.pickedQuantity === 0);
-
-  // Helper to get folder name from ID
-  const getFolderName = (folderId: string) => {
-    const folder = inventoryFolders.find(f => f.id === folderId);
-    return folder?.name || "Unknown Folder";
-  };
+  const isCompleteButtonDisabled = !selectedSO || pickedItems.every(item => item.pickedQuantity === 0) || !canShipOrders; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -207,13 +232,14 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
                 handleSoNumberSubmit();
               }
             }}
+            disabled={!canShipOrders} // NEW: Disable input if no permission
           />
-          <Button onClick={handleSoNumberSubmit} disabled={!soNumberInput.trim()}>Load SO</Button>
+          <Button onClick={handleSoNumberSubmit} disabled={!soNumberInput.trim() || !canShipOrders}>Load SO</Button>
         </div>
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanItemClick}
-          disabled={isScanning}
+          disabled={isScanning || !canShipOrders} // NEW: Disable button if no permission
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}
@@ -245,6 +271,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
                           className="w-24 text-right"
                           min="0"
                           max={item.quantity}
+                          disabled={!canShipOrders} // NEW: Disable input if no permission
                         />
                       </div>
                     </CardContent>

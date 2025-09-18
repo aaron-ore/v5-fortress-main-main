@@ -12,6 +12,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ReturnsProcessingToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -23,6 +24,10 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
   const { addStockMovement } = useStockMovement();
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canProcessReturns = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [scannedItem, setScannedItem] = useState<InventoryItem | null>(null);
   const [returnQuantity, setReturnQuantity] = useState("");
@@ -52,8 +57,19 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
+  // Helper to get folder name from ID
+  const getFolderName = (folderId: string | undefined) => {
+    if (!folderId) return "N/A";
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unknown Folder";
+  };
+
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
+    if (!canProcessReturns) { // NEW: Check permission before scanning
+      showError("You do not have permission to process returns.");
+      return;
+    }
     const lowerCaseScannedData = scannedData.toLowerCase();
     const foundItem = inventoryItems.find(
       (item) =>
@@ -76,11 +92,19 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   };
 
   const handleScanClick = () => {
+    if (!canProcessReturns) { // NEW: Check permission before scanning
+      showError("You do not have permission to process returns.");
+      return;
+    }
     setIsScanning(true);
     onScanRequest(handleScannedBarcode);
   };
 
   const handleProcessReturn = async () => {
+    if (!canProcessReturns) { // NEW: Check permission before processing return
+      showError("You do not have permission to process returns.");
+      return;
+    }
     if (!scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId) {
       showError("Please scan an item and fill in all return details.");
       return;
@@ -140,14 +164,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     setNotes("");
   };
 
-  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId || parseInt(returnQuantity) <= 0;
-
-  // Helper to get folder name from ID
-  const getFolderName = (folderId: string | undefined) => {
-    if (!folderId) return "N/A";
-    const folder = inventoryFolders.find(f => f.id === folderId);
-    return folder?.name || "Unknown Folder";
-  };
+  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId || parseInt(returnQuantity) <= 0 || !canProcessReturns; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -163,7 +180,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning}
+            disabled={isScanning || !canProcessReturns} // NEW: Disable if no permission
           >
             <Scan className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item Barcode"}
@@ -195,6 +212,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 onChange={(e) => setReturnQuantity(e.target.value)}
                 placeholder="e.g., 1"
                 min="1"
+                disabled={!canProcessReturns} // NEW: Disable input if no permission
               />
             </div>
             <div className="space-y-2">
@@ -209,7 +227,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 } else {
                   setReturnDestinationFolderId(scannedItem.folderId);
                 }
-              }}>
+              }} disabled={!canProcessReturns}> {/* NEW: Disable select if no permission */}
                 <SelectTrigger id="returnReason">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
@@ -224,7 +242,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
             </div>
             <div className="space-y-2">
               <Label htmlFor="returnDestinationFolderId">Direct to Folder</Label> {/* Updated label */}
-              <Select value={returnDestinationFolderId} onValueChange={setReturnDestinationFolderId}> {/* Updated to returnDestinationFolderId */}
+              <Select value={returnDestinationFolderId} onValueChange={setReturnDestinationFolderId} disabled={!canProcessReturns}> {/* NEW: Disable select if no permission */}
                 <SelectTrigger id="returnDestinationFolderId">
                   <SelectValue placeholder="Select destination folder" /> {/* Updated placeholder */}
                 </SelectTrigger>
@@ -249,6 +267,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 placeholder="Add any additional notes about this return..."
                 rows={3}
                 className="flex-grow"
+                disabled={!canProcessReturns} // NEW: Disable input if no permission
               />
             </div>
           </CardContent>

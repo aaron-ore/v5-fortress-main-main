@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import ReturnsProcessingTool from "@/components/warehouse-operations/ReturnsProcessingTool";
 import { Undo2 } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ReturnsProcessingDialogProps {
   isOpen: boolean;
@@ -26,6 +28,26 @@ const ReturnsProcessingDialog: React.FC<ReturnsProcessingDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permission
+  const canProcessReturns = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
+  if (!canProcessReturns) { // NEW: Check permission for viewing dialog
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
+          <Card className="p-6 text-center bg-card border-border">
+            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+            <CardContent>
+              <p className="text-muted-foreground">You do not have permission to process returns.</p>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">

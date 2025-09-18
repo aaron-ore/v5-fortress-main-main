@@ -18,6 +18,10 @@ const ReplenishmentManagementTool: React.FC = () => {
   const { replenishmentTasks, addReplenishmentTask, updateReplenishmentTask } = useReplenishment();
   const { allProfiles } = useProfile();
   const { inventoryFolders } = useOnboarding(); // Get inventory folders
+  const { profile } = useProfile(); // NEW: Import useProfile
+
+  // NEW: Role-based permissions
+  const canManageReplenishment = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<ReplenishmentTask['status'] | "all">("Pending");
   const [selectedTask, setSelectedTask] = useState<ReplenishmentTask | null>(null);
@@ -53,6 +57,10 @@ const ReplenishmentManagementTool: React.FC = () => {
   };
 
   const handleCreateTask = async (item: InventoryItem) => {
+    if (!canManageReplenishment) { // NEW: Check permission before creating task
+      showError("You do not have permission to create replenishment tasks.");
+      return;
+    }
     if (item.overstockQuantity <= 0) {
       showError(`No overstock available for ${item.name} to replenish.`);
       return;
@@ -78,6 +86,10 @@ const ReplenishmentManagementTool: React.FC = () => {
   };
 
   const handleAssignTask = async () => {
+    if (!canManageReplenishment) { // NEW: Check permission before assigning task
+      showError("You do not have permission to assign replenishment tasks.");
+      return;
+    }
     if (!selectedTask || assignedTo === "unassigned") {
       showError("Please select a task and an operator to assign.");
       return;
@@ -100,6 +112,10 @@ const ReplenishmentManagementTool: React.FC = () => {
   };
 
   const handleCompleteTask = async () => {
+    if (!canManageReplenishment) { // NEW: Check permission before completing task
+      showError("You do not have permission to complete replenishment tasks.");
+      return;
+    }
     if (!selectedTask) {
       showError("No task selected to complete.");
       return;
@@ -154,7 +170,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                     <span>{item.name} (SKU: {item.sku})</span>
                     <div className="flex items-center gap-2">
                       <span className="text-red-400">Picking: {item.pickingBinQuantity}/{item.pickingReorderLevel}</span>
-                      <Button variant="outline" size="sm" onClick={() => handleCreateTask(item)}>
+                      <Button variant="outline" size="sm" onClick={() => handleCreateTask(item)} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
                         Create Task
                       </Button>
                     </div>
@@ -175,7 +191,7 @@ const ReplenishmentManagementTool: React.FC = () => {
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="taskStatusFilter" className="font-semibold">Filter by Status</Label>
-            <Select value={selectedTaskStatus} onValueChange={(value: ReplenishmentTask['status'] | "all") => setSelectedTaskStatus(value)}>
+            <Select value={selectedTaskStatus} onValueChange={(value: ReplenishmentTask['status'] | "all") => setSelectedTaskStatus(value)} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
               <SelectTrigger id="taskStatusFilter">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
@@ -251,7 +267,7 @@ const ReplenishmentManagementTool: React.FC = () => {
               {selectedTask.status === "Pending" && (
                 <div className="space-y-2">
                   <Label htmlFor="assignTo">Assign To</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo}>
+                  <Select value={assignedTo} onValueChange={setAssignedTo} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
                     <SelectTrigger id="assignTo">
                       <SelectValue placeholder="Select operator" />
                     </SelectTrigger>
@@ -264,14 +280,14 @@ const ReplenishmentManagementTool: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleAssignTask} className="w-full" disabled={assignedTo === "unassigned"}>
+                  <Button onClick={handleAssignTask} className="w-full" disabled={assignedTo === "unassigned" || !canManageReplenishment}> {/* NEW: Disable if no permission */}
                     <User className="h-4 w-4 mr-2" /> Assign Task
                   </Button>
                 </div>
               )}
 
               {selectedTask.status === "Assigned" && (
-                <Button onClick={handleCompleteTask} className="w-full bg-green-600 hover:bg-green-700">
+                <Button onClick={handleCompleteTask} className="w-full bg-green-600 hover:bg-green-700" disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
                   <CheckCircle className="h-4 w-4 mr-2" /> Mark as Completed
                 </Button>
               )}

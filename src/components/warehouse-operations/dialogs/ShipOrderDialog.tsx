@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import ShipOrderTool from "@/components/warehouse-operations/ShipOrderTool";
 import { Truck } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ShipOrderDialogProps {
   isOpen: boolean;
@@ -26,6 +28,26 @@ const ShipOrderDialog: React.FC<ShipOrderDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permission
+  const canShipOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
+  if (!canShipOrders) { // NEW: Check permission for viewing dialog
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
+          <Card className="p-6 text-center bg-card border-border">
+            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+            <CardContent>
+              <p className="text-muted-foreground">You do not have permission to ship orders.</p>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">

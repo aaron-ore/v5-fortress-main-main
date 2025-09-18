@@ -9,6 +9,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ItemLookupToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -19,6 +20,11 @@ interface ItemLookupToolProps {
 const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems } = useInventory();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canLookupItems = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null); // State for QR code SVG
@@ -61,6 +67,11 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
   }, [inventoryItems, searchTerm]);
 
   const handleSearch = (term: string = searchTerm) => {
+    if (!canLookupItems) { // NEW: Check permission before searching
+      showError("You do not have permission to lookup items.");
+      setSelectedItem(null);
+      return;
+    }
     if (!term.trim()) {
       showError("Please enter a search term.");
       setSelectedItem(null);
@@ -89,6 +100,10 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
   };
 
   const handleScanClick = () => {
+    if (!canLookupItems) { // NEW: Check permission before scanning
+      showError("You do not have permission to scan items.");
+      return;
+    }
     onScanRequest(handleScannedBarcode);
   };
 
@@ -119,8 +134,9 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => { if (e.key === 'Enter') handleSearch(); }}
+              disabled={!canLookupItems} // NEW: Disable input if no permission
             />
-            <Button onClick={() => handleSearch()}><Search className="h-4 w-4" /></Button>
+            <Button onClick={() => handleSearch()} disabled={!canLookupItems}><Search className="h-4 w-4" /></Button>
           </div>
           {searchTerm && filteredItems.length > 0 && (
             <ScrollArea className="h-24 border border-border rounded-md">
@@ -131,6 +147,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
                     variant="ghost"
                     className="w-full justify-start text-sm"
                     onClick={() => handleItemSelect(item)}
+                    disabled={!canLookupItems} // NEW: Disable button if no permission
                   >
                     {item.name} (SKU: {item.sku})
                   </Button>
@@ -145,6 +162,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
       <Button
         className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
         onClick={handleScanClick}
+        disabled={!canLookupItems} // NEW: Disable button if no permission
       >
         <Barcode className="h-6 w-6" />
         Scan Barcode/QR
@@ -162,7 +180,11 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
             <CardContent className="space-y-3">
               <div className="flex justify-center mb-3">
                 {selectedItem.imageUrl ? (
-                  <img src={selectedItem.imageUrl} alt={selectedItem.name} className="max-h-32 object-contain rounded-md border border-border" />
+                  <img
+                    src={selectedItem.imageUrl}
+                    alt={selectedItem.name}
+                    className="max-h-32 object-contain rounded-md border border-border"
+                  />
                 ) : (
                   <div className="h-32 w-32 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
                     <Image className="h-10 w-10" />
