@@ -14,7 +14,7 @@ serve(async (req) => {
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
-    const realmIdFromUrl = url.searchParams.get('realmId');
+    const realmIdFromUrl = url.searchParams.get('realmId'); // Correctly capture realmId from URL
 
     console.log('QuickBooks OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
@@ -27,7 +27,7 @@ serve(async (req) => {
         const decodedState = JSON.parse(atob(state));
         userId = decodedState.userId;
         redirectToFrontend = decodedState.redirectToFrontend;
-        console.log('Shopify OAuth Callback: Decoded state - userId:', userId, 'redirectToFrontend:', redirectToFrontend);
+        console.log('QuickBooks OAuth Callback: Decoded state - userId:', userId, 'redirectToFrontend:', redirectToFrontend);
       } catch (e) {
         console.error('Error decoding state parameter:', e);
       }
@@ -36,12 +36,18 @@ serve(async (req) => {
 
     if (error) {
       console.error('QuickBooks OAuth Error:', error, errorDescription);
-      return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_error=${encodeURIComponent(errorDescription || error)}`, 302);
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
     if (!code || !userId) {
       console.error('Missing authorization code or userId in QuickBooks OAuth callback.');
-      return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
+    }
+
+    // CRITICAL: Ensure realmId is present from the URL. If not, it's a configuration issue.
+    if (!realmIdFromUrl) {
+      console.error('QuickBooks OAuth Callback: Realm ID is missing from the redirect URL. This is required for API calls.');
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent('QuickBooks company (realmId) not provided in callback. Please ensure you select a company during authorization and your Intuit app settings are correct.')}`, 302);
     }
 
     const QUICKBOOKS_CLIENT_ID = Deno.env.get('QUICKBOOKS_CLIENT_ID');
@@ -51,7 +57,7 @@ serve(async (req) => {
 
     if (!QUICKBOOKS_CLIENT_ID || !QUICKBOOKS_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Missing Supabase or QuickBooks environment variables.');
-      return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_error=${encodeURIComponent('Server configuration error: Missing environment variables.')}`, 302);
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent('Server configuration error: Missing environment variables.')}`, 302);
     }
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/quickbooks-oauth-callback`;
@@ -74,7 +80,7 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('Error exchanging QuickBooks code for tokens:', errorData);
-      return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_error=${encodeURIComponent(errorData.error_description || 'Failed to get QuickBooks tokens.')}`, 302);
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent(errorData.error_description || 'Failed to get QuickBooks tokens.')}`, 302);
     }
 
     const tokens = await tokenResponse.json();
@@ -83,57 +89,7 @@ serve(async (req) => {
     const accessToken = tokens.access_token;
     const refreshToken = tokens.refresh_token;
 
-    let finalRealmId: string | null = realmIdFromUrl;
-
-    console.log('QuickBooks OAuth Callback: Received Realm ID (from URL parameters):', realmIdFromUrl || 'null (missing from URL)');
-    console.log('QuickBooks OAuth Callback: tokens.id_token value:', tokens.id_token || 'null (not present in token response)');
-
-    if (!finalRealmId && accessToken) {
-      console.log('QuickBooks OAuth Callback: Realm ID not found in URL. Attempting to fetch from userinfo endpoint...');
-      try {
-        const userinfoResponse = await fetch('https://sandbox-accounts.platform.intuit.com/v1/openid_connect/userinfo', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/json',
-          },
-        });
-
-        if (!userinfoResponse.ok) {
-          const userinfoErrorData = await userinfoResponse.json();
-          console.error('Error fetching userinfo from QuickBooks:', userinfoErrorData);
-        } else {
-          const userinfo = await userinfoResponse.json();
-          console.log('QuickBooks OAuth Callback: Userinfo response:', JSON.stringify(userinfo, null, 2));
-          finalRealmId = userinfo.sub || null;
-
-          if (!finalRealmId) {
-            console.log('QuickBooks OAuth Callback: Realm ID still not found. Attempting to fetch company info...');
-            try {
-              const companyInfoResponse = await fetch(`https://quickbooks.api.intuit.com/v3/company/${userinfo.realmId}/companyinfo/${userinfo.realmId}?minorversion=69`, {
-                method: 'GET',
-                headers: {
-                  'Authorization': `Bearer ${accessToken}`,
-                  'Accept': 'application/json',
-                },
-              });
-              if (companyInfoResponse.ok) {
-                const companyInfo = await companyInfoResponse.json();
-                finalRealmId = companyInfo.CompanyInfo.Id;
-                console.log('QuickBooks OAuth Callback: Realm ID from CompanyInfo API:', finalRealmId);
-              } else {
-                console.warn('QuickBooks OAuth Callback: Failed to fetch company info.');
-              }
-            } catch (e) {
-              console.error('QuickBooks OAuth Callback: Error fetching company info:', e);
-            }
-          }
-        }
-      } catch (e) {
-        console.error('QuickBooks OAuth Callback: Error fetching userinfo:', e);
-      }
-    }
-
-    console.log('QuickBooks OAuth Callback: Final Realm ID to be stored:', finalRealmId || 'null');
+    console.log('QuickBooks OAuth Callback: Final Realm ID to be stored:', realmIdFromUrl);
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -142,7 +98,7 @@ serve(async (req) => {
       .update({
         quickbooks_access_token: accessToken,
         quickbooks_refresh_token: refreshToken,
-        quickbooks_realm_id: finalRealmId,
+        quickbooks_realm_id: realmIdFromUrl, // Use the realmId directly from the URL
       })
       .eq('id', userId)
       .select()
@@ -151,13 +107,13 @@ serve(async (req) => {
     if (updateError) {
       console.error('Error updating user profile with QuickBooks tokens:', updateError);
       console.error('QuickBooks OAuth Callback: Profile update error details:', JSON.stringify(updateError, null, 2));
-      return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_error=${encodeURIComponent('Failed to save QuickBooks tokens.')}`, 302);
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent('Failed to save QuickBooks tokens.')}`, 302);
     }
 
     console.log('QuickBooks OAuth Callback: Profile updated successfully. Data returned:', JSON.stringify(updatedProfileData, null, 2));
 
     console.log('QuickBooks tokens and Realm ID successfully stored for user:', userId);
-    return Response.redirect(`${finalRedirectBase}/quickbooks-oauth-callback?quickbooks_success=true&realmId_present=${!!finalRealmId}`, 302);
+    return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_success=true&realmId_present=${!!realmIdFromUrl}`, 302);
   } catch (error) {
     console.error('QuickBooks OAuth callback Edge Function error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
