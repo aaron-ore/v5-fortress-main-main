@@ -1,13 +1,13 @@
 import React from "react";
 import { Diamond } from "lucide-react";
-import { format } from "date-fns"; // Import format
+// Removed: import { format } from "date-fns"; // Import format
 
 interface FolderLabelPdfContentProps {
   folderName: string;
   color: string;
   qrCodeSvg: string;
-  printDate: string;
-  folderIdentifier: string;
+  // Removed: printDate: string;
+  // Removed: folderIdentifier: string;
   className?: string;
 }
 
@@ -15,8 +15,8 @@ const FolderLabelPdfContent = React.forwardRef<HTMLDivElement, FolderLabelPdfCon
   folderName,
   color,
   qrCodeSvg,
-  printDate, // Keep printDate as it's used in the original component for display
-  folderIdentifier, // Keep folderIdentifier
+  // Removed: printDate,
+  // Removed: folderIdentifier,
   className,
 }, ref) => {
   return (

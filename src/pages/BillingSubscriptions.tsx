@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -43,6 +43,7 @@ interface SubscriptionPlanDisplay extends StripeProduct {
   monthlyPrice: number; // Calculated monthly price for display
   annualPrice?: number; // Calculated annual price for display
   isPopular?: boolean;
+  features: PlanFeature[]; // Added features array
 }
 
 const BillingSubscriptions: React.FC = () => {
@@ -91,12 +92,30 @@ const BillingSubscriptions: React.FC = () => {
         const monthlyPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'month')?.unit_amount || 0;
         const annualPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'year')?.unit_amount || 0;
 
+        // Mock features for display, as they are not coming from Stripe directly in this setup
+        const features: PlanFeature[] = [
+          { text: "Basic Inventory Management", included: true },
+          { text: "Dashboard Overview", included: true },
+          { text: "Up to 500 Items", included: product.name.toLowerCase() === 'free' },
+          { text: "Up to 1000 Items", included: product.name.toLowerCase() === 'standard' },
+          { text: "Unlimited Items", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "Basic Order Management", included: true },
+          { text: "Customer & Vendor Management", included: product.name.toLowerCase() !== 'free' },
+          { text: "Advanced Reporting", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "AI Summary for Reports", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "QuickBooks Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "Shopify Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "Automation Engine", included: product.name.toLowerCase() === 'enterprise' },
+          { text: "Dedicated Support", included: product.name.toLowerCase() === 'enterprise' },
+        ];
+
         return {
           ...product,
           prices: productPrices,
           monthlyPrice: monthlyPrice / 100, // Convert cents to dollars
           annualPrice: annualPrice / 100, // Convert cents to dollars
           isPopular: product.metadata?.is_popular === 'true',
+          features: features, // Assign mock features
         };
       }).sort((a, b) => a.monthlyPrice - b.monthlyPrice); // Sort by price
 
@@ -285,7 +304,7 @@ const BillingSubscriptions: React.FC = () => {
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
               <ul className="space-y-2 text-sm text-muted-foreground mb-6">
-                {plan.features.map((feature, index) => (
+                {plan.features.map((feature: PlanFeature, index: number) => (
                   <li key={index} className="flex items-center gap-2">
                     {feature.included ? (
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -335,7 +354,7 @@ const BillingSubscriptions: React.FC = () => {
           <div className="space-y-2">
             <h3 className="font-semibold text-foreground">Features:</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {availablePlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter(f => f.included).map((feature, index) => (
+              {availablePlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
                 <li key={index} className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" /> {feature.text}
                 </li>
@@ -374,7 +393,7 @@ const BillingSubscriptions: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paymentMethods.map((method) => (
+                {paymentMethods.map((method: any) => (
                   <TableRow key={method.id}>
                     <TableCell className="font-medium">{method.type}</TableCell>
                     <TableCell>•••• {method.last4}</TableCell>
@@ -412,7 +431,7 @@ const BillingSubscriptions: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoices.map((invoice: any) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">{invoice.id}</TableCell>
                     <TableCell>{invoice.date}</TableCell>

@@ -34,6 +34,8 @@ export interface UserProfile {
   shopifyAccessToken?: string;
   shopifyRefreshToken?: string;
   shopifyStoreName?: string;
+  stripeCustomerId?: string; // NEW: Added Stripe Customer ID to UserProfile
+  stripeSubscriptionId?: string; // NEW: Added Stripe Subscription ID to UserProfile
   companyProfile?: CompanyProfile;
 }
 
@@ -44,7 +46,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -70,7 +72,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       stripeCustomerId: companyData.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID
-      trialEndsAt: companyData.trial_ends_at || undefined, // NEW: Map trial_ends_at
+      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial_ends_at
     } : undefined;
 
     return {
@@ -89,6 +91,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopifyAccessToken: companyData?.shopify_access_token || undefined,
       shopifyRefreshToken: companyData?.shopify_refresh_token || undefined,
       shopifyStoreName: companyData?.shopify_store_name || undefined,
+      stripeCustomerId: companyData?.stripe_customer_id || undefined, // NEW: Map Stripe Customer ID directly to UserProfile
+      stripeSubscriptionId: companyData?.stripe_subscription_id || undefined, // NEW: Map Stripe Subscription ID directly to UserProfile
       companyProfile: companyProfile,
     };
   };
@@ -176,7 +180,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);

@@ -27,7 +27,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useProfile } from "@/context/ProfileContext";
-import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
+// Removed: import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
 
 import {
   DndContext,

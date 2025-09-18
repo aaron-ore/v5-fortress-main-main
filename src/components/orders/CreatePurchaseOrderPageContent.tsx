@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
+// Removed: import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
 
 import {
   DndContext,
