@@ -13,61 +13,8 @@ import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 
-interface ForecastDataPoint {
-  name: string;
-  "Historical Demand": number;
-  "Forecasted Demand": number;
-  "Upper Confidence": number;
-  "Lower Confidence": number;
-  "External Factor (Trend)": number;
-}
-
-interface DashboardContentData {
-  metrics: {
-    totalStockValue: number;
-    totalUnitsOnHand: number;
-    lowStockItemsCount: number;
-    outOfStockItemsCount: number;
-    ordersDueTodayCount: number;
-    incomingShipmentsCount: number;
-    recentAdjustmentsCount: number;
-    totalIncome: number;
-    totalLosses: number;
-    fulfillmentPercentage: number;
-    pendingPercentage: number;
-    inventoryTurnoverRate: string;
-    supplierPerformanceScore: "good" | "average" | "bad";
-  };
-  charts: {
-    last3MonthSalesData: any[];
-    monthlyOverviewData: any[];
-    liveActivityData: any[];
-    totalStockValueTrendData: any[];
-    salesInventoryTrendData: any[];
-    demandForecastData: any[];
-    weeklyRevenueData: any[];
-    profitabilityMetricsData: any[];
-    topStockBulletGraphData: any[];
-    locationStockHealthData: any[];
-  };
-  lists: {
-    lowStockItems: InventoryItem[];
-    outOfStockItems: InventoryItem[];
-    recentSalesOrders: OrderItem[];
-    recentPurchaseOrders: OrderItem[];
-    openPurchaseOrders: OrderItem[];
-    pendingInvoices: OrderItem[];
-    recentShipments: OrderItem[];
-    topSellingProducts: { name: string; unitsSold: number }[];
-    pendingDiscrepanciesCount: number;
-    previousPeriodDiscrepanciesCount: number;
-    dailyIssuesCount: number;
-    previousPeriodIssuesCount: number;
-  };
-}
-
 interface UseDashboardHookResult {
-  data: DashboardContentData | null;
+  data: any | null; // Changed to any as specific types are no longer imported
   pdfProps: any;
   isLoading: boolean;
   error: string | null;
@@ -98,7 +45,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     refreshCategories();
     refreshCustomers();
     fetchStockMovements();
-    refreshVendors();
+    refreshVendors(); // Re-enabled
     fetchAllProfiles();
     fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, refreshCategories, refreshCustomers, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);

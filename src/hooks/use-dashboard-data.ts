@@ -79,7 +79,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     refreshInventory();
     fetchOrders();
     fetchStockMovements();
-    refreshVendors();
+    refreshVendors(); // Re-enabled
     fetchAllProfiles();
     fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
