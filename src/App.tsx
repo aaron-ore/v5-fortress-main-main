@@ -1,18 +1,15 @@
 import { Toaster as SonnerToaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-// import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // Temporarily removed
 import { BrowserRouter } from "react-router-dom";
 import { OnboardingProvider } from "./context/OnboardingContext";
 import { ProfileProvider } from "./context/ProfileContext";
-import { PrintProvider } from "./context/PrintContext";
+import { PrintProvider } from "./context/PrintProvider";
 import ThemedAppContent from "./components/ThemedAppContent";
 import { AuthProvider } from "./context/AuthContext";
 
-// const queryClient = new QueryClient(); // Temporarily removed
-
 const App = () => {
   return (
-    // <QueryClientProvider client={queryClient}> // Temporarily removed
+    <> {/* Added React Fragment here */}
       <SonnerToaster
         richColors
         position="top-right"
@@ -31,7 +28,7 @@ const App = () => {
           </ProfileProvider>
         </AuthProvider>
       </BrowserRouter>
-    // </QueryClientProvider> // Temporarily removed
+    </> {/* Closed React Fragment here */}
   );
 };
 
