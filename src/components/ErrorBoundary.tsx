@@ -2,11 +2,10 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile import
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  // Removed profile prop, as it will now be fetched from context
 }
 
 interface ErrorBoundaryState {
@@ -15,7 +14,7 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> { // Renamed class to avoid conflict
+class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   public state: ErrorBoundaryState = {
     hasError: false,
     error: null,
@@ -33,12 +32,6 @@ class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundary
       errorInfo: errorInfo,
     });
 
-    // Access profile from context within componentDidCatch
-    // This is a workaround as hooks cannot be called in class components directly.
-    // For a more robust solution, ErrorBoundary could be a functional component
-    // using a wrapper to catch errors, or profile could be passed via a HOC.
-    // For now, we'll log a warning if profile is not available.
-    // In a real app, you might pass a logging function from context.
     console.warn("ErrorBoundary: Profile not directly accessible in componentDidCatch of class component. Error will be logged without user context.");
     logActivity(
       "Client-side Error",
@@ -100,8 +93,10 @@ class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundary
 
 // Wrapper to inject context into the class component
 const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
-  const { profile } = useProfile(); // Use the hook here
-  return <ErrorBoundaryComponent {...props} profile={profile} />; // Pass profile as a prop to the class component
+  // The profile is not needed here as logActivity in the class component
+  // is designed to handle a null profile when called from componentDidCatch.
+  // const { profile } = useProfile(); // Removed as it's not used for passing to ErrorBoundaryComponent
+  return <ErrorBoundaryComponent {...props} />; // Removed profile prop
 };
 
 export default ErrorBoundary;
