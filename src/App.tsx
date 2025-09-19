@@ -25,11 +25,11 @@ const App = () => {
                     <ThemedAppContent />
                   </TooltipProvider>
                 </PrintProvider>
-              </OnboardingProvider> {/* Added missing closing tag here */}
+              </OnboardingProvider>
           </ProfileProvider>
         </AuthProvider>
       </BrowserRouter>
-    </> {/* Closed React Fragment here */}
+    </>
   );
 };
 
