@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
+import { getFilePathFromPublicUrl, uploadFileToSupabase } from '@/integrations/supabase/storage';
+import { deepEqual } from '@/lib/utils'; // Import deepEqual
 
 export interface CompanyProfile {
   companyName: string;
@@ -145,10 +146,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message }, true);
       setProfile(null);
     } else if (data) {
-      setProfile(mapSupabaseProfileToUserProfile(data, data.organizations));
+      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
+      setProfile(prevProfile => {
+        // Only update if the new profile data is actually different from the previous one
+        if (deepEqual(prevProfile, newProfileData)) {
+          return prevProfile; // No change, return previous object to prevent re-render
+        }
+        return newProfileData; // Data changed, update state
+      });
     }
     setIsLoadingProfile(false);
-  }, [user, profile]);
+  }, [user]); // Removed 'profile' from dependency array here.
 
   const fetchAllProfiles = useCallback(async () => {
     if (!profile?.organizationId) {

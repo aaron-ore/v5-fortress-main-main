@@ -84,7 +84,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       setAutomationRules(fetchedRules);
     }
     setIsLoadingRules(false);
-  }, [profile?.organizationId]);
+  }, [profile]); // Changed dependency to just 'profile'
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {

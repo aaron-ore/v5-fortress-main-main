@@ -158,7 +158,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       isInitialLoadComplete.current = true;
       return fetchedItems;
     }
-  }, [profile?.organizationId, profile]);
+  }, [profile]); // Changed dependency to just 'profile'
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -397,4 +397,5 @@ export const useInventory = () => {
     throw new Error("useInventory must be used within an InventoryProvider");
   }
   return context;
+;
 };
