@@ -7,35 +7,31 @@ import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
 import ThemedAppContent from "./components/ThemedAppContent";
 import { AuthProvider } from "./context/AuthContext";
-import * as Sentry from "@sentry/react"; // NEW: Import Sentry
 
 const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <Sentry.ErrorBoundary fallback={<p>An error has occurred</p>}> {/* NEW: Wrap with Sentry.ErrorBoundary */}
-      <QueryClientProvider client={queryClient}>
-        <SonnerToaster
-          richColors
-          position="top-right"
-          duration={3000}
-          closeButton
-        />
-        <BrowserRouter>
-          <AuthProvider>
-            <ProfileProvider>
-                <OnboardingProvider>
-                  <PrintProvider>
-                    <TooltipProvider>
-                      <ThemedAppContent />
-                    </TooltipProvider>
-                  </PrintProvider>
-                </OnboardingProvider>
-            </ProfileProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </Sentry.ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <SonnerToaster
+        richColors
+        position="top-right"
+        duration={3000}
+        closeButton
+      />
+      <BrowserRouter>
+        <AuthProvider>
+          <ProfileProvider>
+              <OnboardingProvider>
+                <PrintProvider>
+                  <TooltipProvider>
+                    <ThemedAppContent />
+                  </TooltipProvider>
+                </PrintProvider>
+          </ProfileProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

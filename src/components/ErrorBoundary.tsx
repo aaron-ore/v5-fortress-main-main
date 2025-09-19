@@ -1,9 +1,12 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
+import { UserProfile } from "@/context/ProfileContext"; // NEW: Import UserProfile
 
 interface ErrorBoundaryProps {
   children: ReactNode;
+  profile: UserProfile | null; // NEW: Accept profile as a prop
 }
 
 interface ErrorBoundaryState {
@@ -29,6 +32,24 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       error: error,
       errorInfo: errorInfo,
     });
+
+    // NEW: Log the error to Supabase activity_logs
+    if (this.props.profile) {
+      logActivity(
+        "Client-side Error",
+        `Unhandled UI error: ${error.message}`,
+        this.props.profile,
+        {
+          componentStack: errorInfo.componentStack,
+          errorName: error.name,
+          errorMessage: error.message,
+          errorStack: error.stack,
+        },
+        true // Mark as an error
+      );
+    } else {
+      console.warn("ErrorBoundary: Cannot log error to Supabase, profile is not available.");
+    }
   }
 
   public render() {
