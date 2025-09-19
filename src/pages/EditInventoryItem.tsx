@@ -214,9 +214,10 @@ const EditInventoryItem: React.FC = () => {
   };
 
   const handleClearImage = () => {
-    setCompanyLogoFile(null);
-    setCompanyLogoUrlPreview(undefined);
-    showSuccess("Logo cleared. Save changes to apply.");
+    setImageFile(null);
+    setImageUrlPreview(null); // Set to null for consistency
+    setIsImageCleared(true); // Mark that the image was intentionally cleared
+    showSuccess("Image cleared. Save changes to apply.");
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {

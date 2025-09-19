@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { PlusCircle, List, LayoutGrid, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2 } from "lucide-react";
+import { PlusCircle, List, LayoutGrid, PackagePlus, Upload, Repeat, Scan as ScanIcon, ChevronDown, Loader2, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,11 +26,11 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showError } from "@/utils/toast";
-import { useNavigate } from "react-router-dom";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useNavigate, Link, useLocation } from "react-router-dom"; // Added Link and useLocation
+import { useProfile } from "@/context/ProfileContext";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
-import ManageFoldersDialog from "@/components/ManageFoldersDialog"; // FIXED: Corrected import path
+import ManageFoldersDialog from "@/components/ManageFoldersDialog";
 import CategoryManagementDialog from "@/components/CategoryManagementDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import BulkUpdateDialog from "@/components/BulkUpdateDialog";
@@ -40,12 +40,19 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import InventoryItemQuickViewDialog from "@/components/InventoryItemQuickViewDialog";
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import { useSidebar } from "@/context/SidebarContext";
-import FolderCard from "@/components/inventory/FolderCard"; // Import the new FolderCard
-import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Renamed import
+import FolderCard from "@/components/inventory/FolderCard";
+import FolderLabelGenerator from "@/components/FolderLabelGenerator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [
+export const createInventoryColumns = (
+  handleQuickView: (item: InventoryItem) => void,
+  inventoryFolders: InventoryFolder[],
+  navigateToFolder: (folderId: string) => void,
+  handleDeleteItemClick: (itemId: string, itemName: string) => void, // Added this parameter
+  canManageInventory: boolean, // Added this parameter
+  canDeleteInventory: boolean // Added this parameter
+): ColumnDef<InventoryItem>[] => [
   {
     accessorKey: "name",
     header: "Item Name",
@@ -117,6 +124,33 @@ export const createInventoryColumns = (handleQuickView: (item: InventoryItem) =>
     accessorKey: "retailPrice",
     header: "Retail Price",
     cell: ({ row }) => `$${parseFloat(row.original.retailPrice.toString() || '0').toFixed(2)}`,
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => (
+      <div className="flex space-x-2">
+        <Button variant="outline" size="sm" onClick={() => handleQuickView(row.original)}>
+          <Eye className="h-4 w-4 mr-1" /> View
+        </Button>
+        {canManageInventory && (
+          <Link to={`/inventory/${row.original.id}`}>
+            <Button variant="outline" size="sm">
+              <Edit className="h-4 w-4 mr-1" /> Edit
+            </Button>
+          </Link>
+        )}
+        {canDeleteInventory && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleDeleteItemClick(row.original.id, row.original.name)}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        )}
+      </div>
+    ),
   },
 ];
 
@@ -242,7 +276,14 @@ const Inventory: React.FC = () => {
     navigate(`/folders/${folderId}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
+  const columnsForDataTable = useMemo(() => createInventoryColumns(
+    handleQuickView,
+    inventoryFolders,
+    navigateToFolder,
+    handleDeleteItemClick, // Pass handleDeleteItemClick
+    canManageInventory,
+    canDeleteInventory
+  ), [handleQuickView, inventoryFolders, navigateToFolder, handleDeleteItemClick, canManageInventory, canDeleteInventory]);
 
   // Folder management handlers
   const handleAddFolderClick = () => {
@@ -509,7 +550,7 @@ const Inventory: React.FC = () => {
           isOpen={isConfirmDeleteItemDialogOpen}
           onClose={() => setIsConfirmDeleteItemDialogOpen(false)}
           onConfirm={confirmDeleteItem}
-          title="Confirm Item Deletion"
+          title="Confirm Item Dletion"
           description={`Are you sure you want to delete "${itemToDelete.name}" (SKU: ${itemToDelete.id})? This action cannot be undone.`}
           confirmText="Delete"
           cancelText="Cancel"

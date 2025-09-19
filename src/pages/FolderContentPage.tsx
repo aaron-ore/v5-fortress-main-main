@@ -115,7 +115,14 @@ const FolderContentPage: React.FC = () => {
     navigate(`/folders/${id}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory), [handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory]);
+  const columnsForDataTable = useMemo(() => createInventoryColumns(
+    handleQuickView,
+    inventoryFolders,
+    navigateToFolder,
+    handleDeleteItemClick, // Pass handleDeleteItemClick
+    canManageInventory,
+    canDeleteInventory
+  ), [handleQuickView, inventoryFolders, navigateToFolder, handleDeleteItemClick, canManageInventory, canDeleteInventory]);
 
   // Subfolder management handlers
   const handleAddSubfolderClick = () => {
@@ -352,7 +359,7 @@ const FolderContentPage: React.FC = () => {
           isOpen={isConfirmDeleteFolderDialogOpen}
           onClose={() => setIsConfirmDeleteFolderDialogOpen(false)}
           onConfirm={confirmDeleteFolder}
-          title="Confirm Folder Deletion"
+          title="Confirm Folder Dletion"
           description={
             <div>
               <p>Are you sure you want to delete the folder "<span className="font-semibold">{folderToDelete.name}</span>"?</p>
