@@ -237,7 +237,7 @@ const Automation: React.FC = () => {
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteRule}
-          title="Confirm Rule Deletion"
+          title="Confirm Rule Dletion"
           description={`Are you sure you want to delete the automation rule "${ruleToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete Rule"
           cancelText="Cancel"
