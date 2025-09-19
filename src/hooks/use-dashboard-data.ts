@@ -231,7 +231,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       });
 
       inventoryItems.forEach(item => {
-        const itemDate = parseAndValidateDate(item.createdAt);
+        const itemDate = parseAndValidateDate(item.createdAt); // Accessing createdAt
         if (!itemDate || !isValid(itemDate)) return;
         const monthKey = format(itemDate, "MMM yyyy");
         if (monthlyData[monthKey]) {

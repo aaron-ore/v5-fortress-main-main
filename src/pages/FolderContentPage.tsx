@@ -26,6 +26,8 @@ const FolderContentPage: React.FC = () => {
   const { inventoryItems, deleteInventoryItem, isLoadingInventory, refreshInventory } = useInventory();
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding();
   const { isLoadingProfile, profile } = useProfile(); // FIXED: Get isLoadingProfile from useProfile
+  const { isCollapsed } = useSidebar(); // Use isCollapsed from SidebarContext
+
 
   // NEW: Role-based permissions
   const canViewInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';

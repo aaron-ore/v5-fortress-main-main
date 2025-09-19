@@ -4,9 +4,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, PackageCheck, PackagePlus, ChevronDown, Loader2, Plug, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  // Removed unused Dialog imports
-} from "@/components/ui/dialog";
 import { DataTable } from "@/components/ui/data-table";
 import { useOrders } from "@/context/OrdersContext";
 import { useProfile } from "@/context/ProfileContext";
