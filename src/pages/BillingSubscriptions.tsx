@@ -277,7 +277,7 @@ const BillingSubscriptions: React.FC = () => {
       </div>
 
       {/* Plan Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {availablePlans.map((plan: SubscriptionPlanDisplay) => (
           <Card
             key={plan.id}

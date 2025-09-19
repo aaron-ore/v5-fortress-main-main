@@ -210,6 +210,9 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                     ))}
                   </SelectContent>
                 </Select>
+                {folderId && folderId !== "N/A" && (
+                  <p className="text-xs text-muted-foreground">Selected Folder: <span className="font-semibold">{getFolderName(folderId)}</span></p>
+                )}
               </div>
 
               <div className="space-y-2">

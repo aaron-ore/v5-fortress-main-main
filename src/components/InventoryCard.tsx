@@ -6,7 +6,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { showError } from "@/utils/toast"; // Import showError
+// Removed: import { showError } from "@/utils/toast"; // Import showError
 
 interface InventoryCardProps {
   item: InventoryItem;
