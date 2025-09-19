@@ -2,7 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface PickListItem {
   itemName: string;

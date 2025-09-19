@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
-import { useCategories } from "@/context/CategoryContext";
-import { useCustomers } from "@/context/CustomerContext";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useStockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-import { showError } from "@/utils/toast";
 import { useVendors } from "@/context/VendorContext";
 
 interface DashboardContentData {
@@ -69,8 +66,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
-  const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
+  const { refreshVendors } = useVendors();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, fetchInventoryFolders } = useOnboarding();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -140,11 +137,11 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         query = query.eq('activity_type', activityType);
       }
 
-      const { count, error } = await query;
+      const { count, error: countError } = await query;
 
-      if (error) {
-        console.error(`Error fetching ${table} count:`, error);
-        showError(`Failed to load ${table} count.`);
+      if (countError) {
+        console.error(`Error fetching ${table} count:`, countError);
+        // showError(`Failed to load ${table} count.`); // Removed showError to prevent toast spam
         return 0;
       }
       return count || 0;
@@ -170,7 +167,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
 
   const dashboardData = useMemo<DashboardContentData | null>(() => {
-    if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingVendors || isLoadingProfile) {
+    if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingProfile) {
       return null;
     }
 
@@ -714,8 +711,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       },
     };
   }, [
-    isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingProfile,
-    inventoryItems, orders, stockMovements, vendors, profile, structuredLocations, dateRange,
+    isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingProfile,
+    inventoryItems, orders, stockMovements, profile, structuredLocations, dateRange,
     pendingDiscrepanciesCount, previousPeriodDiscrepanciesCount, dailyIssuesCount, previousPeriodIssuesCount,
     filterDataByDateRange, refreshTrigger
   ]);
@@ -724,12 +721,12 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     if (dashboardData) {
       setIsLoading(false);
     } else if (
-      !isLoadingInventory && !isLoadingOrders && !isLoadingStockMovements && !isLoadingVendors && !isLoadingProfile
+      !isLoadingInventory && !isLoadingOrders && !isLoadingStockMovements && !isLoadingProfile
     ) {
       setError("Failed to load dashboard data.");
       setIsLoading(false);
     }
-  }, [dashboardData, isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingVendors, isLoadingProfile]);
+  }, [dashboardData, isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingProfile]);
 
   return {
     data: dashboardData,

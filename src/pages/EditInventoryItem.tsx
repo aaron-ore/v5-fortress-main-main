@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -214,10 +214,9 @@ const EditInventoryItem: React.FC = () => {
   };
 
   const handleClearImage = () => {
-    setImageFile(null);
-    setImageUrlPreview(null);
-    setIsImageCleared(true);
-    showSuccess("Image cleared. Save changes to apply.");
+    setCompanyLogoFile(null);
+    setCompanyLogoUrlPreview(undefined);
+    showSuccess("Logo cleared. Save changes to apply.");
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -326,8 +325,8 @@ const EditInventoryItem: React.FC = () => {
   if (!item) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading item details...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading item details...</span>
       </div>
     );
   }
@@ -395,9 +394,9 @@ const EditInventoryItem: React.FC = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
-                            {category.name}
+                        {categories.map(cat => (
+                          <SelectItem key={cat.id} value={cat.name}>
+                            {cat.name}
                           </SelectItem>
                         ))}
                         <SelectItem value="add-new-category" onClick={() => setIsAddingCategory(true)} disabled={!canManageInventory}>
@@ -499,7 +498,7 @@ const EditInventoryItem: React.FC = () => {
                   name="overstockQuantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Overstock Quantity</FormLabel>
+                      <FormLabel>Overstock Quantity</Label>
                       <FormControl>
                         <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>

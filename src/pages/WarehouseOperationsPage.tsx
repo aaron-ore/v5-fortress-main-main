@@ -32,7 +32,7 @@ const WarehouseOperationsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useProfile(); // NEW: Get profile for role checks
-  const { isCollapsed } = useSidebar(); // Use isCollapsed from SidebarContext
+  const { isCollapsed: _isCollapsed } = useSidebar(); // Use isCollapsed from SidebarContext
 
 
   // NEW: Role-based permissions for warehouse operations
@@ -104,7 +104,7 @@ const WarehouseOperationsPage: React.FC = () => {
   useEffect(() => {
     const hash = location.hash.replace("#", "");
 
-    Object.entries(dialogStates).forEach(([key, state]) => {
+    Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
       if (state.isOpen) state.setIsOpen(false);
     });
 
@@ -136,8 +136,8 @@ const WarehouseOperationsPage: React.FC = () => {
     } else {
       setScannedDataForTool(decodedText);
       // Automatically open Item Lookup if no specific tool is active
-      Object.entries(dialogStates).forEach(([key, state]) => {
-        if (state.isOpen && key !== "item-lookup") {
+      Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
+        if (state.isOpen && _key !== "item-lookup") {
           state.setIsOpen(false);
         }
       });
@@ -238,8 +238,8 @@ const WarehouseOperationsPage: React.FC = () => {
               } else if (op.type === "dialog") {
                 const dialogKey = op.value as keyof typeof dialogStates;
                 if (dialogStates[dialogKey]) {
-                  Object.entries(dialogStates).forEach(([key, state]) => {
-                    if (state.isOpen && key !== dialogKey) {
+                  Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
+                    if (state.isOpen && _key !== dialogKey) {
                       state.setIsOpen(false);
                     }
                   });

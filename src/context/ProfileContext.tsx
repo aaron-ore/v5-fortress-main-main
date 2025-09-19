@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getFilePathFromPublicUrl, uploadFileToSupabase } from '@/integrations/supabase/storage';
+import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
 import { deepEqual } from '@/lib/utils'; // Import deepEqual
 
 export interface CompanyProfile {

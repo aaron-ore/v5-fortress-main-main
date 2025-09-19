@@ -11,19 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { PlusCircle, Edit, Trash2, Zap, Settings, Loader2 } from "lucide-react";
-import { useAutomation, AutomationRule } from "@/context/AutomationContext";
+import { PlusCircle, Edit, Trash2, Settings, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
-import { useInventory } from "@/context/InventoryContext";
-import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding, InventoryFolder, CustomRole } from "@/context/OnboardingContext"; // Import CustomRole
+import { CustomRole } from "@/context/OnboardingContext"; // Import CustomRole
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
 
 // Mock data for features and roles (not persisted)
 const availableFeatures = [
@@ -268,7 +262,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteRole}
-          title="Confirm Rule Deletion"
+          title="Confirm Rule Dletion"
           description={`Are you sure you want to delete the custom role "${roleToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete Role"
           cancelText="Cancel"

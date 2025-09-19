@@ -2,16 +2,24 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
-import { useCategories } from "@/context/CategoryContext";
-import { useCustomers } from "@/context/CustomerContext";
-import { useStockMovement, StockMovement } from "@/context/StockMovementContext";
+import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
 import { useVendors } from "@/context/VendorContext";
+import { useCategories } from "@/context/CategoryContext";
+import { useStockMovement } from "@/context/StockMovementContext";
+
+interface ForecastDataPoint {
+  name: string;
+  "Historical Demand": number;
+  "Forecasted Demand": number;
+  "Upper Confidence": number;
+  "Lower Confidence": number;
+  "External Factor (Trend)": number;
+}
 
 interface DashboardContentData {
   metrics: {
@@ -254,7 +262,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         case "inventory-movement": {
           const movementTypeFilter = 'all';
 
-          const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: StockMovement) => {
+          const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: any) => {
             return movementTypeFilter === "all" || movement.type === movementTypeFilter;
           });
 
@@ -298,7 +306,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
           const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
           filteredOrders.forEach((order: OrderItem) => {
-            order.items.forEach((orderItem: POItem) => {
+            order.items.forEach((orderItem: any) => {
               const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
               const sku = inventoryItem?.sku || "N/A";
               const category = inventoryItem?.category || "Uncategorized";
@@ -336,7 +344,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
           filteredOrders.forEach((order: OrderItem) => {
             totalSalesRevenue += order.totalAmount;
-            order.items.forEach((orderItem: POItem) => {
+            order.items.forEach((orderItem: any) => {
               const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
               if (inventoryItem) {
                 totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
@@ -432,7 +440,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   }, [
     reportId, dateRange, inventoryItems, orders, categories, customers, stockMovements,
     profile, allProfiles, structuredLocations, isLoadingInventory, isLoadingOrders,
-    isLoadingStockMovements, isLoadingVendors, isLoadingProfile, isLoadingCategories,
+    isLoadingStockMovements, isLoadingVendors, isLoadingCategories,
     isLoadingCustomers, isLoadingFolders
   ]);
 

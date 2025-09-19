@@ -16,7 +16,7 @@ import { useProfile, UserProfile } from "./ProfileContext";
 import { useOrders } from "./OrdersContext";
 import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
-import { useNotifications, AppNotification } from "./NotificationContext";
+import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
 

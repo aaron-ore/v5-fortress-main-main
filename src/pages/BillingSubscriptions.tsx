@@ -47,7 +47,7 @@ interface SubscriptionPlanDisplay extends StripeProduct {
 }
 
 const BillingSubscriptions: React.FC = () => {
-  const { profile, isLoadingProfile } = useProfile();
+  const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [availablePlans, setAvailablePlans] = useState<SubscriptionPlanDisplay[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
@@ -239,7 +239,7 @@ const BillingSubscriptions: React.FC = () => {
     showError("Payment methods are managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
   };
 
-  const handleDownloadInvoice = (invoiceId: string) => {
+  const handleDownloadInvoice = (_invoiceId: string) => { // Marked as unused
     showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
   };
 

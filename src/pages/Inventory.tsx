@@ -25,7 +25,7 @@ import { useVendors } from "@/context/VendorContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { showSuccess, showError } from "@/utils/toast"; // Import showError
+import { showError } from "@/utils/toast"; // Import showError
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
@@ -45,7 +45,7 @@ import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Renamed
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 
-export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void, canManageInventory: boolean, canDeleteInventory: boolean): ColumnDef<InventoryItem>[] => [ // NEW: Add canManageInventory, canDeleteInventory
+export const createInventoryColumns = (handleQuickView: (item: InventoryItem) => void, inventoryFolders: InventoryFolder[], navigateToFolder: (folderId: string) => void): ColumnDef<InventoryItem>[] => [ // NEW: Removed canManageInventory, canDeleteInventory
   {
     accessorKey: "name",
     header: "Item Name",
@@ -242,7 +242,7 @@ const Inventory: React.FC = () => {
     navigate(`/folders/${folderId}`);
   }, [navigate]);
 
-  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory), [handleQuickView, inventoryFolders, navigateToFolder, canManageInventory, canDeleteInventory]); // Updated structuredLocations to inventoryFolders
+  const columnsForDataTable = useMemo(() => createInventoryColumns(handleQuickView, inventoryFolders, navigateToFolder), [handleQuickView, inventoryFolders, navigateToFolder]); // Updated structuredLocations to inventoryFolders
 
   // Folder management handlers
   const handleAddFolderClick = () => {
