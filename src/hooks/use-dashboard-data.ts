@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
@@ -8,7 +8,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-import { useVendors } from "@/context/VendorContext";
+// Removed: import { useVendors } from "@/context/VendorContext";
 
 interface DashboardContentData {
   metrics: {
@@ -66,8 +66,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { refreshVendors } = useVendors();
-  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
+  // Removed: const { refreshVendors } = useVendors();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile(); // Removed allProfiles, isLoadingAllProfiles
   const { inventoryFolders: structuredLocations, fetchInventoryFolders } = useOnboarding();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -79,10 +79,10 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     refreshInventory();
     fetchOrders();
     fetchStockMovements();
-    refreshVendors();
+    // Removed: refreshVendors();
     fetchAllProfiles();
     fetchInventoryFolders();
-  }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
+  }, [refreshInventory, fetchOrders, fetchStockMovements, fetchAllProfiles, fetchInventoryFolders]); // Removed refreshVendors
 
   const filterDataByDateRange = useCallback((items: any[], dateKey: string) => {
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;

@@ -1,15 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react"; // Removed useMemo
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns"; // Removed subMonths, subDays, startOfMonth
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-import { showError } from "@/utils/toast";
-import { useVendors } from "@/context/VendorContext";
+// Removed: import { showError } from "@/utils/toast";
+// Removed: import { useVendors } from "@/context/VendorContext";
 import { useCategories } from "@/context/CategoryContext";
+import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 
 interface ForecastDataPoint {
@@ -79,7 +80,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { vendors, isLoadingVendors, refreshVendors } = useVendors();
+  const { vendors, isLoadingVendors, refreshVendors } = useVendors(); // Kept vendors as it's used in profitability calculation
   const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
