@@ -2,7 +2,6 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
-// The 'useProfile' import is not needed in this file and has been removed.
 
 interface ErrorBoundaryProps {
   children: ReactNode;
