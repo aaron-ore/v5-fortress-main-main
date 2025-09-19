@@ -57,6 +57,14 @@ const BillingSubscriptions: React.FC = () => {
   const currentPlanId = profile?.companyProfile?.plan || "free";
   const currentStripeCustomerId = profile?.stripeCustomerId;
 
+  // NEW: Use effect to fetch profile on mount and after subscription actions
+  useEffect(() => {
+    if (!isLoadingProfile) {
+      fetchProfile();
+    }
+  }, [isLoadingProfile, fetchProfile, isProcessingSubscription, isManagingSubscription]);
+
+
   useEffect(() => {
     const fetchStripeProductsAndPrices = async () => {
       setIsLoadingPlans(true);
