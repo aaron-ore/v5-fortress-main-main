@@ -552,6 +552,7 @@ const Inventory: React.FC = () => {
             initialFolder={folderToEdit}
             onSave={handleSaveFolder}
             onClose={() => setIsFolderLabelGeneratorOpen(false)}
+            disabled={!canManageFolders} // NEW: Disable generator if no permission
           />
         </DialogContent>
       </Dialog>

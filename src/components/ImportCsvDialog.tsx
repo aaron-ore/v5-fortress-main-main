@@ -47,7 +47,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
   // NEW: Role-based permissions
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(selectedFile);
   const [isUploading, setIsUploading] = useState(false);
   const [jsonDataToProcess, setJsonDataToProcess] = useState<any[] | null>(null);
 
