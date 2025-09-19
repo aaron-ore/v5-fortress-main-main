@@ -531,31 +531,8 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
-  const fetchCustomRoles = async () => {
-    setIsLoadingCustomRoles(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session || !profile?.organizationId) {
-      setCustomRoles([]);
-      setIsLoadingCustomRoles(false);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("custom_roles")
-      .select("*")
-      .eq("organization_id", profile.organizationId)
-      .order("name", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching custom roles:", error);
-      showError("Failed to load custom roles.");
-      await logActivity("Custom Role Fetch Failed", `Failed to load custom roles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
-      setCustomRoles([]);
-    } else {
-      setCustomRoles(data.map(mapSupabaseRoleToCustomRole));
-    }
-    setIsLoadingCustomRoles(false);
-  };
+  // Removed duplicate fetchCustomRoles declaration
+  // const fetchCustomRoles = async () => { ... };
 
   return (
     <OnboardingContext.Provider

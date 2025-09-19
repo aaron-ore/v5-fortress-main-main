@@ -37,6 +37,7 @@ import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/s
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Label } from "@/components/ui/label"; // NEW: Import Label
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -499,7 +500,7 @@ const EditInventoryItem = () => {
                   name="overstockQuantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Overstock Quantity</Label>
+                      <FormLabel>Overstock Quantity</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>

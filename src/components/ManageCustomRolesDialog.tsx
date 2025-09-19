@@ -15,7 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Settings, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
-import { CustomRole } from "@/context/OnboardingContext"; // Import CustomRole
+import { CustomRole, useOnboarding } from "@/context/OnboardingContext"; // NEW: Import CustomRole and useOnboarding
 import { useProfile } from "@/context/ProfileContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
