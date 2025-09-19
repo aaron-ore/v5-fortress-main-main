@@ -2,7 +2,7 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
-// Removed: import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile import
+// The 'useProfile' import is not needed in this file and has been removed.
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -95,8 +95,7 @@ class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundary
 const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
   // The profile is not needed here as logActivity in the class component
   // is designed to handle a null profile when called from componentDidCatch.
-  // const { profile } = useProfile(); // Removed as it's not used for passing to ErrorBoundaryComponent
-  return <ErrorBoundaryComponent {...props} />; // Removed profile prop
+  return <ErrorBoundaryComponent {...props} />;
 };
 
 export default ErrorBoundary;
