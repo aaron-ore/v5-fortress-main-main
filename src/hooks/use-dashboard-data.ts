@@ -8,7 +8,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// Removed: import { useVendors } from "@/context/VendorContext";
+import { useVendors } from "@/context/VendorContext";
 
 interface DashboardContentData {
   metrics: {
@@ -66,8 +66,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  // Removed: const { refreshVendors } = useVendors();
-  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile(); // Removed allProfiles, isLoadingAllProfiles
+  const { refreshVendors } = useVendors();
+  const { profile, isLoadingProfile, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, fetchInventoryFolders } = useOnboarding();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -79,10 +79,10 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     refreshInventory();
     fetchOrders();
     fetchStockMovements();
-    // Removed: refreshVendors();
+    refreshVendors();
     fetchAllProfiles();
     fetchInventoryFolders();
-  }, [refreshInventory, fetchOrders, fetchStockMovements, fetchAllProfiles, fetchInventoryFolders]); // Removed refreshVendors
+  }, [refreshInventory, fetchOrders, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);
 
   const filterDataByDateRange = useCallback((items: any[], dateKey: string) => {
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;

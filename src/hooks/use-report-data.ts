@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from "react"; // Removed useMemo
+import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns"; // Removed subMonths, subDays, startOfMonth
+import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// Removed: import { showError } from "@/utils/toast";
-// Removed: import { useVendors } from "@/context/VendorContext";
+import { showError } from "@/utils/toast";
+import { useVendors } from "@/context/VendorContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
 import { useStockMovement } from "@/context/StockMovementContext";

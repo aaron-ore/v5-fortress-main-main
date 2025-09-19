@@ -307,7 +307,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         console.log("[OnboardingContext] Organization updated successfully.");
         showSuccess(`Company profile for "${profileData.name}" updated successfully!`);
-        await logActivity("Company Profile Update Success", `Company profile for "${profileData.name}" updated.`, profile, { organization_id: profile.organizationId, updated_fields: updatePayload });
+        await logActivity("Company Profile Update Success", `Company profile for "${profileData.name}" updated.`, profile, { organization_id: organizationIdToUse, updated_fields: updatePayload });
       }
       
       console.log("[OnboardingContext] Calling fetchProfile to refresh user data.");
