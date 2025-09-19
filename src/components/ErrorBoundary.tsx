@@ -1,12 +1,12 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
-import { UserProfile } from "@/context/ProfileContext"; // NEW: Import UserProfile
+import { logActivity } from "@/utils/logActivity";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  profile: UserProfile | null; // NEW: Accept profile as a prop
+  // Removed profile prop, as it will now be fetched from context
 }
 
 interface ErrorBoundaryState {
@@ -15,7 +15,7 @@ interface ErrorBoundaryState {
   errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundaryComponent extends Component<ErrorBoundaryProps, ErrorBoundaryState> { // Renamed class to avoid conflict
   public state: ErrorBoundaryState = {
     hasError: false,
     error: null,
@@ -33,23 +33,25 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       errorInfo: errorInfo,
     });
 
-    // NEW: Log the error to Supabase activity_logs
-    if (this.props.profile) {
-      logActivity(
-        "Client-side Error",
-        `Unhandled UI error: ${error.message}`,
-        this.props.profile,
-        {
-          componentStack: errorInfo.componentStack,
-          errorName: error.name,
-          errorMessage: error.message,
-          errorStack: error.stack,
-        },
-        true // Mark as an error
-      );
-    } else {
-      console.warn("ErrorBoundary: Cannot log error to Supabase, profile is not available.");
-    }
+    // Access profile from context within componentDidCatch
+    // This is a workaround as hooks cannot be called in class components directly.
+    // For a more robust solution, ErrorBoundary could be a functional component
+    // using a wrapper to catch errors, or profile could be passed via a HOC.
+    // For now, we'll log a warning if profile is not available.
+    // In a real app, you might pass a logging function from context.
+    console.warn("ErrorBoundary: Profile not directly accessible in componentDidCatch of class component. Error will be logged without user context.");
+    logActivity(
+      "Client-side Error",
+      `Unhandled UI error: ${error.message}`,
+      null, // Pass null for profile here, as it's not directly available in class componentDidCatch
+      {
+        componentStack: errorInfo.componentStack,
+        errorName: error.name,
+        errorMessage: error.message,
+        errorStack: error.stack,
+      },
+      true // Mark as an error
+    );
   }
 
   public render() {
@@ -95,5 +97,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return this.props.children;
   }
 }
+
+// Wrapper to inject context into the class component
+const ErrorBoundary: React.FC<ErrorBoundaryProps> = (props) => {
+  const { profile } = useProfile(); // Use the hook here
+  return <ErrorBoundaryComponent {...props} profile={profile} />; // Pass profile as a prop to the class component
+};
 
 export default ErrorBoundary;

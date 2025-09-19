@@ -9,7 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 const App = () => {
   return (
-    <> {/* Added React Fragment here */}
+    <>
       <SonnerToaster
         richColors
         position="top-right"

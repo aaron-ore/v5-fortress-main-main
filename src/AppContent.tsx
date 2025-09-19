@@ -5,7 +5,7 @@ import Layout from "./components/Layout";
 import { pdfContentComponents } from "./lib/reportConfig";
 
 import { useOnboarding } from "./context/OnboardingContext";
-import { useProfile, UserProfile } from "./context/ProfileContext"; // NEW: Import UserProfile
+import { useProfile } from "./context/ProfileContext"; // Removed UserProfile import as it's not directly used here
 import { usePrint } from "./context/PrintContext";
 import { showSuccess, showError } from "./utils/toast";
 
@@ -62,7 +62,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-const AuthenticatedApp = ({ profile }: { profile: UserProfile | null }) => { // NEW: Accept profile prop
+const AuthenticatedApp = () => { // Removed profile prop
   const {  } = useOnboarding();
 
   return (
@@ -182,9 +182,9 @@ const AppContent = () => {
   }
 
   const mainAppRoutes = profile ? (
-    <ErrorBoundary profile={profile}> {/* NEW: Pass profile to ErrorBoundary */}
+    <ErrorBoundary> {/* Removed profile prop */}
       <Routes>
-        <Route path="/*" element={<AuthenticatedApp profile={profile} />} /> {/* NEW: Pass profile to AuthenticatedApp */}
+        <Route path="/*" element={<AuthenticatedApp />} /> {/* Removed profile prop */}
         <Route path="/onboarding" element={<OnboardingPage />} />
       </Routes>
     </ErrorBoundary>
