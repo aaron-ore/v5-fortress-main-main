@@ -41,6 +41,8 @@ const InventoryCardGrid: React.FC<InventoryCardGridProps> = ({
           onViewDetails={onViewDetails}
           onDeleteItem={onDeleteItem}
           isSidebarCollapsed={isSidebarCollapsed} // NEW: Pass isSidebarCollapsed
+          canManageInventory={canManageInventory} // Pass to InventoryCard
+          canDeleteInventory={canDeleteInventory} // Pass to InventoryCard
         />
       ))}
     </div>

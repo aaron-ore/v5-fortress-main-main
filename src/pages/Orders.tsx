@@ -74,7 +74,7 @@ const Orders: React.FC = () => {
   const canArchiveOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
   const canSyncQuickBooks = profile?.role === 'admin'; // Only admins can sync QuickBooks
 
-  const columns = useMemo(() => createOrderColumns(archiveOrder), [archiveOrder]);
+  const columns = useMemo(() => createOrderColumns(archiveOrder, canArchiveOrders), [archiveOrder, canArchiveOrders]);
 
   const handleSyncSalesOrders = async () => {
     if (!canSyncQuickBooks) { // NEW: Check permission before syncing

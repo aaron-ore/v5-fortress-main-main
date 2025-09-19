@@ -8,7 +8,7 @@ import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { cn } from "@/lib/utils";
 
-export const createOrderColumns = (archiveOrder: (id: string) => void): ColumnDef<OrderItem>[] => [
+export const createOrderColumns = (archiveOrder: (id: string) => void, canArchiveOrders: boolean): ColumnDef<OrderItem>[] => [
   {
     accessorKey: "id",
     header: "Order ID",
@@ -111,6 +111,7 @@ export const createOrderColumns = (archiveOrder: (id: string) => void): ColumnDe
             variant="destructive"
             size="sm"
             onClick={() => archiveOrder(row.original.id)}
+            disabled={!canArchiveOrders} // NEW: Disable if user cannot archive orders
           >
             <Archive className="h-4 w-4 mr-1" /> Archive
           </Button>
