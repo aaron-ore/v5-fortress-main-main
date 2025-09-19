@@ -104,7 +104,7 @@ const WarehouseOperationsPage: React.FC = () => {
   useEffect(() => {
     const hash = location.hash.replace("#", "");
 
-    Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
+    Object.entries(dialogStates).forEach(([_key, state]) => {
       if (state.isOpen) state.setIsOpen(false);
     });
 
@@ -136,7 +136,7 @@ const WarehouseOperationsPage: React.FC = () => {
     } else {
       setScannedDataForTool(decodedText);
       // Automatically open Item Lookup if no specific tool is active
-      Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
+      Object.entries(dialogStates).forEach(([_key, state]) => {
         if (state.isOpen && _key !== "item-lookup") {
           state.setIsOpen(false);
         }
@@ -238,7 +238,7 @@ const WarehouseOperationsPage: React.FC = () => {
               } else if (op.type === "dialog") {
                 const dialogKey = op.value as keyof typeof dialogStates;
                 if (dialogStates[dialogKey]) {
-                  Object.entries(dialogStates).forEach(([_key, state]) => { // Marked key as unused
+                  Object.entries(dialogStates).forEach(([_key, state]) => {
                     if (state.isOpen && _key !== dialogKey) {
                       state.setIsOpen(false);
                     }
