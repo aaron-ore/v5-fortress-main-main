@@ -57,13 +57,8 @@ const BillingSubscriptions: React.FC = () => {
   const currentPlanId = profile?.companyProfile?.plan || "free";
   const currentStripeCustomerId = profile?.stripeCustomerId;
 
-  // NEW: Use effect to fetch profile on mount and after subscription actions
-  useEffect(() => {
-    if (!isLoadingProfile) {
-      fetchProfile();
-    }
-  }, [isLoadingProfile, fetchProfile, isProcessingSubscription, isManagingSubscription]);
-
+  // The fetchProfile calls in handleChoosePlan and handleManageSubscription's finally blocks are sufficient.
+  // The previous useEffect here caused an infinite re-render loop.
 
   useEffect(() => {
     const fetchStripeProductsAndPrices = async () => {
@@ -197,6 +192,7 @@ const BillingSubscriptions: React.FC = () => {
       showError(`Failed to subscribe: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);
+      await fetchProfile(); // Refresh profile after potential subscription change
     }
   };
 
@@ -236,6 +232,7 @@ const BillingSubscriptions: React.FC = () => {
       showError(`Failed to manage subscription: ${error.message}`);
     } finally {
       setIsManagingSubscription(false);
+      await fetchProfile(); // Refresh profile after potential subscription change
     }
   };
 
