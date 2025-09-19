@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
-// import dyadComponentTagger from "@dyad-sh/react-vite-component-tagger"; // Temporarily removed
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react"; // Changed import to @vitejs/plugin-react
 import path from "path";
 
 export default defineConfig(() => ({
@@ -9,10 +8,7 @@ export default defineConfig(() => ({
     port: 8080,
   },
   plugins: [
-    react({
-      // Explicitly set the JSX runtime for SWC to ensure it's correctly interpreted
-      jsxRuntime: 'automatic'
-    })
+    react() // Removed jsxRuntime as it's automatic by default for this plugin
   ],
   resolve: {
     alias: {
