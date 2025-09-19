@@ -2,7 +2,7 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
-import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile import
+// Removed: import { useProfile } from "@/context/ProfileContext"; // Removed UserProfile import
 
 interface ErrorBoundaryProps {
   children: ReactNode;
