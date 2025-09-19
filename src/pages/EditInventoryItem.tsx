@@ -60,7 +60,7 @@ const formSchema = z.object({
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
 });
 
-const EditInventoryItem: React.FC = () => {
+const EditInventoryItem = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { inventoryItems, updateInventoryItem } = useInventory();
