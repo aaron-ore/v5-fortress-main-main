@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react"; // Changed import to @vitejs/plugin-react
+import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig(() => ({
@@ -8,11 +8,16 @@ export default defineConfig(() => ({
     port: 8080,
   },
   plugins: [
-    react() // Removed jsxRuntime as it's automatic by default for this plugin
+    react()
   ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      external: ['react-resizable-panels'],
     },
   },
   optimizeDeps: {
