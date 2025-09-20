@@ -112,6 +112,9 @@ const Integrations: React.FC = () => {
   }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
 
   const handleConnectQuickBooks = () => {
+    showSuccess("QuickBooks integration coming soon!");
+    // Original logic commented out:
+    /*
     if (!profile?.id) {
       showError("You must be logged in to connect to QuickBooks.");
       return;
@@ -138,6 +141,7 @@ const Integrations: React.FC = () => {
     const authUrl = `https://appcenter.intuit.com/app/connect/oauth2?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&state=${encodedState}`;
     
     window.location.href = authUrl;
+    */
   };
 
   const handleDisconnectQuickBooks = async () => {
@@ -203,6 +207,9 @@ const Integrations: React.FC = () => {
   };
 
   const handleConnectShopify = () => {
+    showSuccess("Shopify integration coming soon!");
+    // Original logic commented out:
+    /*
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
       return;
@@ -246,6 +253,7 @@ const Integrations: React.FC = () => {
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
     window.location.href = authUrl;
+    */
   };
 
   const handleDisconnectShopify = async () => {
@@ -515,13 +523,6 @@ const Integrations: React.FC = () => {
                   Please log in to connect to QuickBooks.
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-2">
-                <AlertTriangle className="inline h-3 w-3 mr-1" />
-                **Important:** Ensure the following `redirect_uri` is registered in your Intuit Developer application settings:
-                <code className="block bg-muted/20 p-1 rounded-sm mt-1 text-xs font-mono break-all">
-                  https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/quickbooks-oauth-callback
-                </code>
-              </p>
             </div>
           )}
         </CardContent>
@@ -687,13 +688,6 @@ const Integrations: React.FC = () => {
                   Please log in to connect to Shopify.
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-2">
-                <AlertTriangle className="inline h-3 w-3 mr-1" />
-                **Important:** Ensure the following `redirect_uri` is registered in your Shopify Partner Dashboard application settings:
-                <code className="block bg-muted/20 p-1 rounded-sm mt-1 text-xs font-mono break-all">
-                  https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback
-                </code>
-              </p>
             </div>
           )}
         </CardContent>
