@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2, MapPin, Link as LinkIcon, Trash2, Edit } from "lucide-react";
+import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -89,9 +89,10 @@ const Integrations: React.FC = () => {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
       qbCallbackProcessedRef.current = true;
-      navigate(location.pathname, { replace: true });
+      navigate('/integrations', { replace: true });
     }
 
+    // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected successfully!");
@@ -700,19 +701,22 @@ const Integrations: React.FC = () => {
 
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
-          <Plug className="h-6 w-6 text-muted-foreground" />
-          <CardTitle className="text-xl font-semibold">Future Integrations</CardTitle>
+          <Hourglass className="h-6 w-6 text-muted-foreground" />
+          <CardTitle className="text-xl font-semibold">More Integrations Coming Soon!</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            We're constantly working to bring you more integrations with popular business tools.
-            Stay tuned for updates!
+            We're actively working on expanding our integration capabilities to connect with even more of your essential business tools.
+            Stay tuned for updates on new platforms like:
           </p>
           <ul className="list-disc list-inside text-muted-foreground mt-4 space-y-1">
             <li>Amazon Seller Central</li>
             <li>Stripe</li>
-            <li>And more...</li>
+            <li>And many more...</li>
           </ul>
+          <p className="text-sm text-muted-foreground mt-4">
+            Have a specific integration in mind? Let us know through the feedback button in the header!
+          </p>
         </CardContent>
       </Card>
 
