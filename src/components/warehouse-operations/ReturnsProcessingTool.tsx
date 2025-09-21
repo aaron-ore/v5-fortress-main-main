@@ -176,7 +176,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning || !canProcessReturns} // NEW: Disable if no permission
+            disabled={isScanning || !canProcessReturns} // NEW: Disable button if no permission
           >
             <Scan className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item Barcode"}

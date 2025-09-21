@@ -129,7 +129,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
                   baseButtonClass,
                   "py-2 px-3 flex items-center justify-between rounded-md",
                   currentIsActive ? activeLinkClass : inactiveLinkClass,
-                  "hover:no-underline"
+                  "hover:no-underline",
+                  isCollapsed && "justify-center px-0"
                 )}>
                   <div className="flex items-center">
                     <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} />

@@ -272,7 +272,6 @@ const ReplenishmentManagementTool: React.FC = () => {
                       <SelectValue placeholder="Select operator" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {allProfiles.filter((p: UserProfile) => p.role !== 'admin').map((user: UserProfile) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.fullName}

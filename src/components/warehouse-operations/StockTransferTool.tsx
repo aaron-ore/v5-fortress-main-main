@@ -175,6 +175,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
       setSearchTerm("");
       setSelectedItemId("");
       setFromFolderId("");
+      setFromFolderId("");
       setToFolderId("");
       setTransferQuantity("");
       setNotes("");
