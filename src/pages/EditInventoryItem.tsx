@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm } from "@tanstack/react-form"; // Corrected import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 // Removed: import { Label } from "@/components/ui/label"; // NEW: Import Label
 
 const formSchema = z.object({
@@ -283,7 +283,7 @@ const EditInventoryItem = () => {
         ...item,
         ...values,
         folderId: values.folderId, // Updated to folderId
-        tags: values.tags?.split(',').map(tag => tag.trim()).filter(Boolean), // Process tags
+        tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean), // Process tags
         notes: values.notes, // Process notes
         imageUrl: finalImageUrl,
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,

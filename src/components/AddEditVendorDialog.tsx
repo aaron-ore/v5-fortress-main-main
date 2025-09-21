@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import { showError } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters"; // Import the new formatter
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AddEditVendorDialogProps {
   isOpen: boolean;

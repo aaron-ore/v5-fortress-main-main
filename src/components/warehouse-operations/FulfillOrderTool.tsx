@@ -12,7 +12,7 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface FulfilledItemDisplay extends POItem {
   fulfilledQuantity: number;
@@ -238,7 +238,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanItem}
-          disabled={isScanning || !canFulfillOrders} // NEW: Disable button if no permission
+          disabled={isScanning || !canFulfillOrders} // NEW: Disable input if no permission
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}

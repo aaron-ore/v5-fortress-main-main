@@ -7,7 +7,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";

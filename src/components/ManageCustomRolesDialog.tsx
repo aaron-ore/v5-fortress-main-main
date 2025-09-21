@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PlusCircle, Edit, Trash2, Settings, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast"; // Import showSuccess
 import { CustomRole, useOnboarding } from "@/context/OnboardingContext"; // NEW: Import CustomRole and useOnboarding
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 // Mock data for features and roles (not persisted)

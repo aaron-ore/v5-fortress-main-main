@@ -3,7 +3,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreatePurchaseOrderPageContent from "@/components/orders/CreatePurchaseOrderPageContent"; // Import the new component
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 const CreatePurchaseOrder: React.FC = () => {

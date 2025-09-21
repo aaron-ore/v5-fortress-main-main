@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Settings as SettingsIcon, Lock, Globe, Palette } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 const AccountSettings: React.FC = () => {
   const { profile } = useProfile();
@@ -77,7 +77,7 @@ const AccountSettings: React.FC = () => {
             </Label>
             <Input
               id="theme"
-              value={profile?.companyProfile?.organizationTheme ? profile.companyProfile.organizationTheme.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Loading..."}
+              value={profile?.companyProfile?.organizationTheme ? profile.companyProfile.organizationTheme.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : "Loading..."}
               disabled
               className="capitalize"
             />

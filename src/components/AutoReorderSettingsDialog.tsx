@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { showSuccess, showError } from "@/utils/toast";
 import { Repeat, Loader2 } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface AutoReorderSettingsDialogProps {
   isOpen: boolean;

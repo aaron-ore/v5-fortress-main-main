@@ -13,7 +13,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { format } from "date-fns";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PickListItem {
   itemName: string;
@@ -151,7 +151,7 @@ const PickingWaveManagementTool: React.FC = () => {
       pickDate: format(new Date(), "MMM dd, yyyy"),
       ordersInWave: ordersInWaveDetails,
       pickListItems: generatedPickList,
-      pickerName: companyProfile.companyName,
+      pickerName: profile?.fullName || "N/A", // Use current user's full name
       inventoryFolders: inventoryFolders, // Pass inventoryFolders
     };
 

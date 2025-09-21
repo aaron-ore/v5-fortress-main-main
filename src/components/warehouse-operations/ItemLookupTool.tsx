@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ItemLookupToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -114,7 +114,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
   };
 
   // Function to get folder display name
-  const getFolderDisplayName = (folderId: string) => {
+  const getFolderName = (folderId: string) => {
     const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
     return foundFolder?.name || "Unassigned";
   };
@@ -141,7 +141,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
           {searchTerm && filteredItems.length > 0 && (
             <ScrollArea className="h-24 border border-border rounded-md">
               <div className="p-2 space-y-1">
-                {filteredItems.map(item => (
+                {filteredItems.map((item: InventoryItem) => ( // Explicitly type item
                   <Button
                     key={item.id}
                     variant="ghost"
@@ -197,7 +197,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
               </p>
               <p className="flex items-center gap-2 text-sm">
                 <Folder className="h-4 w-4 text-muted-foreground" /> {/* Updated icon */}
-                <span className="font-semibold">Folder:</span> {getFolderDisplayName(selectedItem.folderId)} {/* Updated to folderId */}
+                <span className="font-semibold">Folder:</span> {getFolderName(selectedItem.folderId)} {/* Updated to folderId */}
               </p>
               <p className="flex items-center gap-2 text-sm">
                 <Info className="h-4 w-4 text-muted-foreground" />

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { showError } from "@/utils/toast";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { formatPhoneNumber } from "@/utils/formatters";
 
 const MyProfile: React.FC = () => {
@@ -65,7 +65,7 @@ const MyProfile: React.FC = () => {
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <Avatar className="h-20 w-20">
             <AvatarImage src={avatarUrl} alt={fullName} />
-            <AvatarFallback>{fullName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            <AvatarFallback>{fullName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div>
             <CardTitle className="text-2xl font-semibold">{fullName}</CardTitle>

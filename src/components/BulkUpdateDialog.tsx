@@ -14,7 +14,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Download, Upload } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface BulkUpdateDialogProps {
   isOpen: boolean;
@@ -165,7 +165,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
               }
 
               // Map to camelCase for context update function
-              const camelCaseField = field.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+              const camelCaseField = field.replace(/_([a-z])/g, (g: string) => g[1].toUpperCase()); // Explicitly type g
 
               if ((existingItem as any)[camelCaseField] !== value) {
                 (updatedFields as any)[camelCaseField] = value;

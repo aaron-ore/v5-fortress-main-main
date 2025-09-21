@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;

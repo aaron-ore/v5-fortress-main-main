@@ -1,17 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useStockMovement } from "@/context/StockMovementContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
-// Removed: import { showError } from "@/utils/toast";
 import { useVendors } from "@/context/VendorContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useCustomers } from "@/context/CustomerContext";
-import { useStockMovement } from "@/context/StockMovementContext";
+import { StockMovement } from "@/context/StockMovementContext"; // Explicitly import StockMovement
 
 interface UseDashboardHookResult {
   data: any | null; // Changed to any as specific types are no longer imported
@@ -27,7 +27,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { isLoadingVendors, refreshVendors } = useVendors(); // Kept vendors as it's used in profitability calculation
+  const { isLoadingVendors, refreshVendors } = useVendors(); // Kept vendors for consistency
   const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
@@ -56,7 +56,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
     if (!filterFrom || !filterTo) return items;
 
-    return items.filter(item => {
+    return items.filter((item: any) => {
       const itemDate = parseAndValidateDate(item[dateKey]);
       return itemDate && isValid(itemDate) && isWithinInterval(itemDate, { start: filterFrom, end: filterTo });
     });
@@ -210,7 +210,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         case "inventory-movement": {
           const movementTypeFilter = 'all';
 
-          const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: any) => {
+          const filteredMovements = filterDataByDateRange(stockMovements, 'timestamp').filter((movement: StockMovement) => {
             return movementTypeFilter === "all" || movement.type === movementTypeFilter;
           });
 
@@ -360,8 +360,8 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             originalQuantity: log.original_quantity,
             countedQuantity: log.counted_quantity,
             difference: log.difference,
-            status: log.status,
             reason: log.reason,
+            status: log.status,
           }));
 
           currentProcessedData = {

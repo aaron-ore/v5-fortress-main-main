@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { ScrollArea } from "@/components/ui/scroll-area";
 // Removed: import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent"; // Updated import path
 
@@ -400,6 +400,7 @@ const CreateInvoicePageContent: React.FC<CreateInvoicePageContentProps> = ({ onC
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  placeholder="e.g., 555-123-4567"
                   disabled={!canManageOrders} // NEW: Disable input if no permission
                 />
               </div>

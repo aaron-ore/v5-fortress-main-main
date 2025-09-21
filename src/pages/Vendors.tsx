@@ -14,7 +14,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import AddEditVendorDialog from "@/components/AddEditVendorDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { showError } from "@/utils/toast"; // Import showError
 
 const Vendors: React.FC = () => {
@@ -173,7 +173,7 @@ const Vendors: React.FC = () => {
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteVendor}
-          title="Confirm Vendor Deletion"
+          title="Confirm Vendor Dletion"
           description={`Are you sure you want to delete vendor "${vendorToDelete.name}"? This action cannot be undone.`}
           confirmText="Delete"
           cancelText="Cancel"

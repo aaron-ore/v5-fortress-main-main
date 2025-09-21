@@ -13,7 +13,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon, Loader2 } from "lucide-react";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
@@ -164,7 +164,7 @@ const Users: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {allProfiles.map((user) => (
+                  {allProfiles.map((user: UserProfile) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.fullName || "N/A"}</TableCell>
                       <TableCell>{user.email}</TableCell>
@@ -215,7 +215,7 @@ const Users: React.FC = () => {
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteUser}
-          title="Confirm User Deletion"
+          title="Confirm User Dletion"
           description={`Are you sure you want to delete the profile for "${userToDelete.fullName || userToDelete.email}"? This will NOT delete the user from Supabase Authentication, only their profile data. Full user deletion requires Supabase dashboard or a server-side function.`}
           confirmText="Delete Profile"
           cancelText="Cancel"

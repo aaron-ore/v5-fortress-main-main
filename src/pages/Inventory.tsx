@@ -27,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showError } from "@/utils/toast";
 import { useNavigate, Link } from "react-router-dom"; // Removed useLocation
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
 import ManageFoldersDialog from "@/components/ManageFoldersDialog";
@@ -58,7 +58,7 @@ export const createInventoryColumns = (
     header: "Item Name",
     cell: ({ row }) => (
       <Button variant="link" className="p-0 h-auto text-left font-medium hover:underline" onClick={() => handleQuickView(row.original)}>
-        {row.getValue("name")}
+        {row.getValue("name") as string}
       </Button>
     ),
   },
@@ -75,7 +75,7 @@ export const createInventoryColumns = (
     header: "Quantity",
     cell: ({ row }) => (
       <span className={row.original.quantity <= row.original.reorderLevel ? "text-red-500 font-semibold" : ""}>
-        {row.getValue("quantity")}
+        {row.getValue("quantity") as number}
       </span>
     ),
   },
@@ -472,7 +472,7 @@ const Inventory: React.FC = () => {
               {/* Top-level Folders Display */}
               {topLevelFolders.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {topLevelFolders.map(folder => {
+                  {topLevelFolders.map((folder: InventoryFolder) => {
                     const { itemCount, subfolderCount } = getFolderItemCounts(folder.id);
                     return (
                       <FolderCard

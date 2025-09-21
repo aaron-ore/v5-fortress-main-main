@@ -11,11 +11,11 @@ import { showSuccess, showError } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding } from "@/context/OnboardingContext"; // Updated to inventoryFolders and addInventoryFolder
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;
@@ -334,7 +334,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         <Button
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
           onClick={handleScanClick}
-          disabled={isScanning || !canReceiveInventory} // NEW: Disable button if no permission
+          disabled={isScanning || !canReceiveInventory} // NEW: Disable input if no permission
         >
           <Barcode className="h-6 w-6" />
           {isScanning ? "Scanning..." : "Scan Item"}

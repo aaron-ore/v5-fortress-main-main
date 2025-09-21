@@ -7,7 +7,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext"; // Corrected import
 import { supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 

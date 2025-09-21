@@ -162,7 +162,7 @@ const Orders: React.FC = () => {
                   <PackagePlus className="h-4 w-4 mr-2" /> Receive Shipment
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsOrderFulfillmentDialogOpen(true)}>
-                  <PackageCheck className="h-4 w-4 mr-2" /> FDropdownMenuContent
+                  <PackageCheck className="h-4 w-4 mr-2" /> Fulfill Order
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
