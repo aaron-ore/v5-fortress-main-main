@@ -193,7 +193,7 @@ const ReplenishmentManagementTool: React.FC = () => {
             <Label htmlFor="taskStatusFilter" className="font-semibold">Filter by Status</Label>
             <Select value={selectedTaskStatus} onValueChange={(value: ReplenishmentTask['status'] | "all") => setSelectedTaskStatus(value)} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
               <SelectTrigger id="taskStatusFilter">
-                <SelectValue placeholder="All Statuses" />
+                <SelectValue placeholder="Select operator" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -272,6 +272,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                       <SelectValue placeholder="Select operator" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
                       {allProfiles.filter((p: UserProfile) => p.role !== 'admin').map((user: UserProfile) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.fullName}

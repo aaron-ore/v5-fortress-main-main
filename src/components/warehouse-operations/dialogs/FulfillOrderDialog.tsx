@@ -64,7 +64,7 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({
           <FulfillOrderTool
             onScanRequest={onScanRequest}
             scannedDataFromGlobal={scannedDataFromGlobal}
-            onScannedDataProcessed={onOnScannedDataProcessed}
+            onScannedDataProcessed={onScannedDataProcessed}
           />
         </div>
       </DialogContent>
