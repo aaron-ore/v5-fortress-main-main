@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } => "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";

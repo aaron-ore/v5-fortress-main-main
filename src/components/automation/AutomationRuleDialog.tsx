@@ -18,7 +18,7 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AutomationRuleDialogProps {
