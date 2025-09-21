@@ -295,7 +295,7 @@ const Settings: React.FC = () => {
             <CardDescription>
               Set or update the unique code for your organization. New users can use this code to join.
             </CardDescription>
-          </CardHeader>
+          </CardDescription>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="organizationCode">Unique Organization Code</Label>
