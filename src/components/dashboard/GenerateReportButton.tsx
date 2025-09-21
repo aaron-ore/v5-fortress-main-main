@@ -5,14 +5,13 @@ import { usePrint } from "@/context/PrintContext";
 import { showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { InventoryItem } from "@/context/InventoryContext";
 import { OrderItem } from "@/context/OrdersContext";
 
 interface GenerateReportButtonProps {
   dateRange: DateRange | undefined;
   totalStockValue: number;
-  totalUnitsOnHand: number;
   lowStockItems: InventoryItem[];
   outOfStockItems: InventoryItem[];
   recentSalesOrders: OrderItem[];
@@ -22,7 +21,6 @@ interface GenerateReportButtonProps {
 const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
   dateRange,
   totalStockValue,
-  totalUnitsOnHand,
   lowStockItems,
   outOfStockItems,
   recentSalesOrders,
@@ -44,7 +42,6 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       totalStockValue,
-      totalUnitsOnHand,
       lowStockItems,
       outOfStockItems,
       recentSalesOrders,

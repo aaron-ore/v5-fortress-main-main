@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -364,7 +364,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                 <img src={currentItem.imageUrl} alt={currentItem.name} className="max-h-48 max-w-full object-contain rounded-md border border-border" />
               ) : (
                 <div className="h-48 w-48 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
-                  <span className="text-sm text-center">No Image</span>
+                  <Image className="h-10 w-10" />
                 </div>
               )}
             </div>

@@ -26,8 +26,8 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { showError } from "@/utils/toast";
-import { useNavigate, Link } from "react-router-dom"; // Removed useLocation
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useNavigate, Link } from "react-router-dom";
+import { useProfile } from "@/context/ProfileContext";
 
 import InventoryCardGrid from "@/components/inventory/InventoryCardGrid";
 import ManageFoldersDialog from "@/components/ManageFoldersDialog";

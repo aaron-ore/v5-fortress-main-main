@@ -7,7 +7,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
@@ -102,7 +102,7 @@ const Reports: React.FC = () => {
 
   const handleSummarizeReport = async () => {
     if (!hasAiSummaryAccess) {
-      showError("AI Summary is a Premium feature. Please upgrade your plan to use this functionality.");
+      showError("AI Summary is a Premium feature. Please upgrade your plan to unlock!");
       return;
     }
     if (!reportData) {

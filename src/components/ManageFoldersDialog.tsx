@@ -11,36 +11,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Updated import to InventoryFolder
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { showSuccess, showError } from "@/utils/toast";
-import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
-import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { PlusCircle, Trash2, Folder, Edit } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useProfile } from "@/context/ProfileContext";
 
-interface ManageFoldersDialogProps { // Renamed interface
+interface ManageFoldersDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed component
+const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { inventoryFolders, addInventoryFolder, removeInventoryFolder, updateInventoryFolder } = useOnboarding(); // Updated context functions
+  const { inventoryFolders, addInventoryFolder, removeInventoryFolder, updateInventoryFolder } = useOnboarding();
   const { profile } = useProfile(); // NEW: Get profile for role checks
 
   // NEW: Role-based permissions
   const canManageFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  const [newFolderName, setNewFolderName] = useState(""); // Renamed from newLocationName
-  const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null); // State for editing
+  const [newFolderName, setNewFolderName] = useState("");
+  const [folderToEdit, setFolderToEdit] = useState<InventoryFolder | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
 
   // State for delete confirmation dialog
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null);
 
-  const handleAddFolder = async () => { // Renamed from handleAddLocation
+  useEffect(() => {
+    if (!isOpen) {
+      setFolderToEdit(null);
+      setEditingFolderName("");
+      setNewFolderName("");
+    }
+  }, [isOpen]);
+
+  const handleAddFolder = async () => {
     if (!canManageFolders) { // NEW: Check permission before adding
       showError("You do not have permission to add folders.");
       return;

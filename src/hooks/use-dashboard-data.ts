@@ -4,8 +4,8 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, sub
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Added InventoryFolder import
+import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
@@ -239,7 +239,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
       return Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
-        const dateB = parseAndValidateDate(b);
+        const dateB = parseAndAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
       }).map((monthKey: string) => ({ // Explicitly type monthKey

@@ -3,7 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";
-import { useProfile, type UserProfile } from "./ProfileContext"; // Corrected import
+import { useProfile } from "./ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface StockMovement {

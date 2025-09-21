@@ -14,7 +14,7 @@ import { showSuccess, showError } from "@/utils/toast";
 import { Download, Upload } from "lucide-react";
 import * as XLSX from 'xlsx';
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 
 interface BulkUpdateDialogProps {
   isOpen: boolean;

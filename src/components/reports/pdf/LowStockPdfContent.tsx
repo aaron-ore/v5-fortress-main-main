@@ -4,7 +4,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 
 interface LowStockPdfContentProps {
   reportDate: string;

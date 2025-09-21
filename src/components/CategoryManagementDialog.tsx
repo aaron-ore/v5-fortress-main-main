@@ -14,7 +14,7 @@ import ConfirmDialog from "@/components/ConfirmDialog"; // Import ConfirmDialog
 import { useCategories } from "@/context/CategoryContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 
 interface CategoryManagementDialogProps {
   isOpen: boolean;
