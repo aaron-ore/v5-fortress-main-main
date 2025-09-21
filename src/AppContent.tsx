@@ -176,6 +176,22 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
+  // NEW: Routing logic for onboarding wizard
+  useEffect(() => {
+    if (!isLoadingProfile && profile) {
+      // If user is authenticated, has an organization, but hasn't completed the onboarding wizard
+      if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname !== '/onboarding') {
+        console.log("[AppContent] Redirecting to onboarding wizard.");
+        navigate('/onboarding', { replace: true });
+      } else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
+        // If wizard is completed and user is on onboarding page, redirect to dashboard
+        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard.");
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isLoadingProfile, profile, navigate, location.pathname]);
+
+
   if (isLoadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">

@@ -43,7 +43,8 @@ export interface UserProfile {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
-  hasOnboardingTutorialShown: boolean; // NEW: Add tutorial flag
+  hasOnboardingWizardCompleted: boolean; // RENAMED: From hasOnboardingTutorialShown
+  hasUiTutorialShown: boolean; // NEW: Separate flag for UI tutorial
 }
 
 interface ProfileContextType {
@@ -53,11 +54,12 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingTutorialShown'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
-  markTutorialAsShown: () => Promise<void>; // NEW: Function to mark tutorial as shown
+  markOnboardingWizardCompleted: () => Promise<void>; // NEW: Function to mark onboarding wizard as completed
+  markTutorialAsShown: () => Promise<void>; // MODIFIED: Now marks UI tutorial as shown
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -105,7 +107,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
-      hasOnboardingTutorialShown: data.has_onboarding_tutorial_shown ?? false, // NEW: Map tutorial flag
+      hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false, // Mapped from new column
+      hasUiTutorialShown: data.has_ui_tutorial_shown ?? false, // Mapped from new column
     };
   };
 
@@ -202,7 +205,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingTutorialShown'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -352,29 +355,55 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const markTutorialAsShown = async () => {
+  const markOnboardingWizardCompleted = async () => {
     if (!profile) {
-      console.warn("Cannot mark tutorial as shown: User profile not loaded.");
+      console.warn("Cannot mark onboarding wizard as completed: User profile not loaded.");
       return;
     }
-    if (profile.hasOnboardingTutorialShown) {
-      console.log("Tutorial already marked as shown for this user.");
+    if (profile.hasOnboardingWizardCompleted) {
+      console.log("Onboarding wizard already marked as completed for this user.");
       return;
     }
 
     const { error } = await supabase
       .from('profiles')
-      .update({ has_onboarding_tutorial_shown: true })
+      .update({ has_onboarding_wizard_completed: true })
       .eq('id', profile.id);
 
     if (error) {
-      console.error("Error marking tutorial as shown:", error);
-      await logActivity("Mark Tutorial Shown Failed", `Failed to mark tutorial as shown for user ${profile.id}.`, profile, { error_message: error.message }, true);
+      console.error("Error marking onboarding wizard as completed:", error);
+      await logActivity("Mark Onboarding Wizard Completed Failed", `Failed to mark onboarding wizard as completed for user ${profile.id}.`, profile, { error_message: error.message }, true);
     } else {
-      console.log("Tutorial marked as shown for user:", profile.id);
-      await logActivity("Mark Tutorial Shown Success", `Onboarding tutorial marked as shown for user ${profile.id}.`, profile);
+      console.log("Onboarding wizard marked as completed for user:", profile.id);
+      await logActivity("Mark Onboarding Wizard Completed Success", `Onboarding wizard marked as completed for user ${profile.id}.`, profile);
       // Optimistically update local state
-      setProfile(prev => prev ? { ...prev, hasOnboardingTutorialShown: true } : null);
+      setProfile(prev => prev ? { ...prev, hasOnboardingWizardCompleted: true } : null);
+    }
+  };
+
+  const markTutorialAsShown = async () => {
+    if (!profile) {
+      console.warn("Cannot mark UI tutorial as shown: User profile not loaded.");
+      return;
+    }
+    if (profile.hasUiTutorialShown) {
+      console.log("UI tutorial already marked as shown for this user.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ has_ui_tutorial_shown: true })
+      .eq('id', profile.id);
+
+    if (error) {
+      console.error("Error marking UI tutorial as shown:", error);
+      await logActivity("Mark UI Tutorial Shown Failed", `Failed to mark UI tutorial as shown for user ${profile.id}.`, profile, { error_message: error.message }, true);
+    } else {
+      console.log("UI tutorial marked as shown for user:", profile.id);
+      await logActivity("Mark UI Tutorial Shown Success", `UI tutorial marked as shown for user ${profile.id}.`, profile);
+      // Optimistically update local state
+      setProfile(prev => prev ? { ...prev, hasUiTutorialShown: true } : null);
     }
   };
 
@@ -391,7 +420,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateUserRole,
         updateCompanyProfile,
         updateOrganizationTheme,
-        markTutorialAsShown, // NEW: Provide the function
+        markOnboardingWizardCompleted,
+        markTutorialAsShown,
       }}
     >
       {children}

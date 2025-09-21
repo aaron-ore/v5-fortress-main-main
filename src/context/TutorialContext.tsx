@@ -80,7 +80,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const currentStep = isTutorialActive ? tutorialSteps[currentStepIndex] : null;
 
   const startTutorial = useCallback(() => {
-    if (profile && !profile.hasOnboardingTutorialShown) {
+    if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
       setIsTutorialActive(true);
       setCurrentStepIndex(0);
       if (tutorialSteps[0].path && location.pathname !== tutorialSteps[0].path) { // Use location.pathname
@@ -104,13 +104,13 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const dismissTutorial = useCallback(async () => {
     setIsTutorialActive(false);
     setCurrentStepIndex(0);
-    if (profile && !profile.hasOnboardingTutorialShown) {
+    if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
       await markTutorialAsShown();
     }
   }, [profile, markTutorialAsShown]);
 
   useEffect(() => {
-    if (!isLoadingProfile && profile && profile.organizationId && !profile.hasOnboardingTutorialShown) {
+    if (!isLoadingProfile && profile && profile.organizationId && profile.hasOnboardingWizardCompleted && !profile.hasUiTutorialShown) { // Only start tutorial if wizard is completed and UI tutorial not shown
       // Delay slightly to ensure UI is rendered before trying to find targets
       const timer = setTimeout(() => {
         startTutorial();

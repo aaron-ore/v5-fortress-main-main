@@ -6,16 +6,20 @@ import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { isOnboardingComplete } = useOnboarding();
+  const { profile } = useProfile(); // NEW: Get profile
 
   const handleOnboardingComplete = () => {
     navigate("/"); // Redirect to dashboard after onboarding
   };
 
-  if (isOnboardingComplete) {
+  // The OnboardingPage should only render if the wizard is NOT completed.
+  // The routing in AppContent.tsx now handles redirecting to this page if needed.
+  if (profile?.hasOnboardingWizardCompleted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
         <Card className="w-full max-w-md text-center">

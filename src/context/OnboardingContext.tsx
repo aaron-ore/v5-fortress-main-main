@@ -60,13 +60,8 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, markTutorialAsShown } = useProfile(); // NEW: Get markTutorialAsShown
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("onboarding_skipped") === "true";
-    }
-    return false;
-  });
+  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted } = useProfile(); // NEW: Get markOnboardingWizardCompleted
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(false); // Default to false
 
   const companyProfile = profile?.companyProfile || null;
 
@@ -76,12 +71,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const [isLoadingCustomRoles, setIsLoadingCustomRoles] = useState(true);
 
   useEffect(() => {
-    if (!isLoadingProfile) {
-      if (profile?.organizationId) {
-        setIsOnboardingComplete(true);
-      } else {
-        setIsOnboardingComplete(localStorage.getItem("onboarding_skipped") === "true");
-      }
+    if (!isLoadingProfile && profile) {
+      // Onboarding is considered complete if the wizard has been explicitly marked as completed
+      setIsOnboardingComplete(profile.hasOnboardingWizardCompleted);
     } else if (!isLoadingProfile && !profile) {
       setIsOnboardingComplete(false);
     }
@@ -177,11 +169,10 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const markOnboardingComplete = async () => {
     setIsOnboardingComplete(true);
-    localStorage.setItem("onboarding_skipped", "true");
     showSuccess("Onboarding complete! Welcome to Fortress.");
     await logActivity("Onboarding Complete", "User completed the onboarding wizard.", profile);
-    if (profile && !profile.hasOnboardingTutorialShown) { // NEW: Mark tutorial as shown
-      await markTutorialAsShown();
+    if (profile && !profile.hasOnboardingWizardCompleted) {
+      await markOnboardingWizardCompleted(); // Mark the wizard as completed in the DB
     }
   };
 
