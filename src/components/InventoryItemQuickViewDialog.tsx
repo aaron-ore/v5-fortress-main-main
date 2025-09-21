@@ -70,8 +70,8 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const [adjustmentType, setAdjustmentType] = useState<"add" | "subtract">("add");
   const [adjustmentTarget, setAdjustmentTarget] = useState<"pickingBin" | "overstock">("pickingBin");
   const [adjustmentReason, setAdjustmentReason] = useState("");
-  const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
-  const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
+  const [autoReorderEnabled, setAutoReorderEnabled] = useState(currentItem?.autoReorderEnabled || false);
+  const [autoReorderQuantity, setAutoReorderQuantity] = useState(currentItem?.autoReorderQuantity?.toString() || "");
   const [qrCodeSvg, setQrCodeSvg] = useState<string | null>(null);
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
@@ -104,7 +104,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
               const svg = await generateQrCodeSvg(currentItem.barcodeUrl, 60); // Adjusted size to 60
               setQrCodeSvg(svg);
             } catch (error) {
-              console.error("Error generating QR code for quick view display:", error);
+              console.error("Error generating QR code for item lookup display:", error);
               setQrCodeSvg(null);
             }
           } else {

@@ -71,6 +71,8 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false); // NEW: Loading state for adding item
+  const [autoReorderEnabled, setAutoReorderEnabled] = useState(false); // State for auto-reorder switch
+  const [autoReorderQuantity, setAutoReorderQuantity] = useState(""); // State for auto-reorder quantity
 
   useEffect(() => {
     if (isOpen) {
@@ -272,7 +274,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
       imageUrl: finalImageUrl,
-      vendor: { id: selectedVendorId === "none" ? undefined : selectedVendorId }, // Corrected to item.vendor.id
+      vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
       autoReorderQuantity: parseInt(autoReorderQuantity || '0'),

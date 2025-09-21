@@ -116,7 +116,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
       };
       setCustomers((prevCustomers) => [...prevCustomers, newCustomer]);
       showSuccess(`Customer "${customer.name}" added successfully!`);
-      await logActivity("Add Customer Success", `Added new customer: ${customer.name}.`, profile, { customer_id: data[0].id, customer_name: customer.name });
+      await logActivity("Add Customer Success", `Added new customer: ${customer.name}.`, profile, { customer_id: data[0].id, customer_name: data[0].name });
     }
   };
 
