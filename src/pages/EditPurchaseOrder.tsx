@@ -473,7 +473,40 @@ const EditPurchaseOrder: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-card border-border rounded-lg shadow-sm p-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl font-semibold">Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col relative min-h-[120px]">
+              <ScrollArea className="h-24 max-h-24 overflow-y-auto">
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any special instructions or notes..."
+                  rows={3}
+                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                />
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </div>
+      </ScrollArea>
+
+      {/* Footer Buttons - Fixed Height */}
+      <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0 p-6 pt-0">
+        <Button variant="outline" onClick={() => navigate("/orders")}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={!canManageOrders}>Save Changes</Button>
+        <Button variant="secondary" onClick={handlePrintPdf} disabled={!canViewOrders}>
+          <Printer className="h-4 w-4 mr-2" /> Print/PDF
+        </Button>
+        {order.status !== "Archived" && (
+          <Button variant="secondary" onClick={handleArchiveClick} disabled={!canArchiveOrders}>
+            <Archive className="h-4 w-4 mr-2" /> Archive Order
+          </Button>
+        )}
       </div>
 
       {order && (
