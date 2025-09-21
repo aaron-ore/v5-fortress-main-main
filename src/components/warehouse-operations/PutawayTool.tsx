@@ -47,6 +47,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [currentScanMode, setCurrentScanMode] = useState<"po" | "folder" | "item">("po"); // Changed from location to folder
+  const [scannedFolderId, setScannedFolderId] = useState<string | null>(null); // State to hold the scanned folder ID
 
   const receivedPOs = useMemo(() => {
     return orders.filter(order => order.type === "Purchase" && order.putawayStatus === "Pending");

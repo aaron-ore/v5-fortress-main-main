@@ -524,7 +524,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> {ruleToEdit ? "Edit Automation Rule" : "Create New Automation Rule"}
-          </DialogTitle>
+          </CardTitle>
           <DialogDescription>
             Define a trigger, condition, and action for your automation rule.
           </DialogDescription>

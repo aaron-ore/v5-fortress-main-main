@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import PutawayTool from "@/components/warehouse-operations/PutawayTool";
 import { MapPin } from "lucide-react";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface PutawayDialogProps {
   isOpen: boolean;
@@ -26,6 +28,26 @@ const PutawayDialog: React.FC<PutawayDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permission
+  const canPutaway = profile?.role === 'admin' || profile?.role === 'inventory_manager';
+
+  if (!canPutaway) { // NEW: Check permission for viewing dialog
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
+          <Card className="p-6 text-center bg-card border-border">
+            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+            <CardContent>
+              <p className="text-muted-foreground">You do not have permission to use Putaway.</p>
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
