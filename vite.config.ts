@@ -17,10 +17,10 @@ export default defineConfig(() => ({
   },
   build: {
     rollupOptions: {
-      external: ['react-resizable-panels'],
+      // external: ['react-resizable-panels'], // Removed from external
     },
   },
   optimizeDeps: {
-    exclude: ['react-resizable-panels'], // Explicitly exclude from optimization
+    // exclude: ['react-resizable-panels'], // Removed from exclude
   },
 }));
