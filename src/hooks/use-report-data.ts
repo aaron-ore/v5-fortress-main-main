@@ -4,8 +4,8 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fn
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
