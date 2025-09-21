@@ -22,6 +22,8 @@ import { AutomationProvider } from "./context/AutomationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
+import { TutorialProvider, useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
+import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -126,6 +128,7 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
+  const { isTutorialActive, currentStep } = useTutorial(); // NEW: Use tutorial context
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
@@ -222,6 +225,10 @@ const AppContent = () => {
         <PrintWrapper contentData={printContentData} onPrintComplete={resetPrintState}>
           {renderPdfComponent()}
         </PrintWrapper>
+      )}
+
+      {isTutorialActive && currentStep && ( // NEW: Render tutorial tooltip
+        <TutorialTooltip step={currentStep} />
       )}
     </>
   );

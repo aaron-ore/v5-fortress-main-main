@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileContext";
@@ -58,7 +60,7 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile } = useProfile();
+  const { profile, isLoadingProfile, fetchProfile, markTutorialAsShown } = useProfile(); // NEW: Get markTutorialAsShown
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem("onboarding_skipped") === "true";
@@ -178,6 +180,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     localStorage.setItem("onboarding_skipped", "true");
     showSuccess("Onboarding complete! Welcome to Fortress.");
     await logActivity("Onboarding Complete", "User completed the onboarding wizard.", profile);
+    if (profile && !profile.hasOnboardingTutorialShown) { // NEW: Mark tutorial as shown
+      await markTutorialAsShown();
+    }
   };
 
   const setCompanyProfile = async (profileData: CompanyProfile, newUniqueCode?: string) => {
@@ -202,7 +207,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
-          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist, company_logo_url: profileData.companyLogoUrl })
+          .insert({ name: profileData.name, address: profileData.address, currency: profileData.currency, unique_code: uniqueCodeToPersist })
           .select()
           .single();
 

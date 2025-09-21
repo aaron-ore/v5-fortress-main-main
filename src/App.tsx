@@ -6,6 +6,7 @@ import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
 import ThemedAppContent from "./components/ThemedAppContent";
 import { AuthProvider } from "./context/AuthContext";
+import { TutorialProvider } from "./context/TutorialContext"; // NEW: Import TutorialProvider
 
 const App = () => {
   return (
@@ -22,7 +23,9 @@ const App = () => {
               <OnboardingProvider>
                 <PrintProvider>
                   <TooltipProvider>
-                    <ThemedAppContent />
+                    <TutorialProvider> {/* NEW: Wrap with TutorialProvider */}
+                      <ThemedAppContent />
+                    </TutorialProvider>
                   </TooltipProvider>
                 </PrintProvider>
               </OnboardingProvider>

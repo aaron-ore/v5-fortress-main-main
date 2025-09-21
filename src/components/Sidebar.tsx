@@ -84,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
           fillOpacity="0.2"
         />
       </svg>
-      {!isCollapsedState && <span className="text-xl font-semibold text-sidebar-foreground">Fortress</span>}
+      {!isCollapsed && <span className="text-xl font-semibold text-sidebar-foreground">Fortress</span>}
     </div>
   );
 
@@ -195,6 +195,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         isCollapsed ? "w-[80px]" : "w-[280px]",
         "shadow-theme-glow"
       )}
+      data-tutorial-target="sidebar-navigation" // NEW: Add tutorial target
     >
       <div className={cn("flex items-center h-[60px] px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
         {renderFortressLogo(isCollapsed)}

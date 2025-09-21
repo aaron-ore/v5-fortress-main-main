@@ -43,6 +43,7 @@ export interface UserProfile {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
+  hasOnboardingTutorialShown: boolean; // NEW: Add tutorial flag
 }
 
 interface ProfileContextType {
@@ -52,10 +53,11 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingTutorialShown'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
+  markTutorialAsShown: () => Promise<void>; // NEW: Function to mark tutorial as shown
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -103,6 +105,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
+      hasOnboardingTutorialShown: data.has_onboarding_tutorial_shown ?? false, // NEW: Map tutorial flag
     };
   };
 
@@ -199,7 +202,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingTutorialShown'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -289,10 +292,19 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && profile.companyProfile?.companyLogoUrl) {
       const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
       if (oldFilePath) {
-        const { error: deleteError } = await supabase.storage.from('company-logos').remove([oldFilePath]);
-        if (deleteError) console.warn("Failed to delete old company logo from storage:", deleteError);
-        else console.log(`[ProfileContext] Old logo file ${oldFilePath} deleted successfully.`);
-      }
+        console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
+        const { error: deleteError } = await supabase.storage
+            .from('company-logos')
+            .remove([oldFilePath]);
+
+        if (deleteError) {
+            console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
+            showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
+            await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
+        } else {
+            console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
+            await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
+        }
     }
 
     const { error } = await supabase
@@ -337,6 +349,32 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const markTutorialAsShown = async () => {
+    if (!profile) {
+      console.warn("Cannot mark tutorial as shown: User profile not loaded.");
+      return;
+    }
+    if (profile.hasOnboardingTutorialShown) {
+      console.log("Tutorial already marked as shown for this user.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ has_onboarding_tutorial_shown: true })
+      .eq('id', profile.id);
+
+    if (error) {
+      console.error("Error marking tutorial as shown:", error);
+      await logActivity("Mark Tutorial Shown Failed", `Failed to mark tutorial as shown for user ${profile.id}.`, profile, { error_message: error.message }, true);
+    } else {
+      console.log("Tutorial marked as shown for user:", profile.id);
+      await logActivity("Mark Tutorial Shown Success", `Onboarding tutorial marked as shown for user ${profile.id}.`, profile);
+      // Optimistically update local state
+      setProfile(prev => prev ? { ...prev, hasOnboardingTutorialShown: true } : null);
+    }
+  };
+
   return (
     <ProfileContext.Provider
       value={{
@@ -350,6 +388,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateUserRole,
         updateCompanyProfile,
         updateOrganizationTheme,
+        markTutorialAsShown, // NEW: Provide the function
       }}
     >
       {children}
