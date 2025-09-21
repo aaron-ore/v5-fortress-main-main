@@ -206,7 +206,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
           </div>
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-            onClick={handleScanItem}
+            onClick={handleScanClick}
             disabled={isScanning || !truckId || ordersForRoute.length === 0 || !canVerifyShipping} // NEW: Disable if no permission
           >
             <Scan className="h-6 w-6" />

@@ -157,7 +157,7 @@ const EditInventoryItem = () => {
       setImageUrlPreview(item.imageUrl || null);
       setIsImageCleared(false);
 
-      const generateAndSetQr = async () => {
+      const updateQrCode = async () => {
         if (item.barcodeUrl) {
           try {
             const svg = await generateQrCodeSvg(item.barcodeUrl, 60);
@@ -170,13 +170,13 @@ const EditInventoryItem = () => {
           setQrCodeSvg(undefined);
         }
       };
-      generateAndSetQr();
+      updateQrCode();
     }
   }, [item, id, form]);
 
   const watchSku = form.watch("sku");
   useEffect(() => {
-    const generateAndSetQr = async () => {
+    const updateQrCode = async () => {
       if (watchSku) {
         try {
           const svg = await generateQrCodeSvg(watchSku, 60);
@@ -490,239 +490,239 @@ const EditInventoryItem = () => {
                       <FormLabel>Picking Bin Quantity</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="overstockQuantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Overstock Quantity</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="reorderLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reorder Level (Total)</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="pickingReorderLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Picking Reorder Level</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="committedStock"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Committed Stock</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="incomingStock"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Incoming Stock</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="unitCost"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Unit Cost</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="retailPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Retail Price</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              {/* Folder Selection */}
-              <FormField
-                control={form.control}
-                name="folderId"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory || inventoryFolders.length === 0}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a folder" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {inventoryFolders.length > 0 ? (
-                          inventoryFolders.map((folder) => (
-                            <SelectItem key={folder.id} value={folder.id}>
-                              {folder.name}
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <SelectItem value="no-folders" disabled>
-                            No folders set up.
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    {inventoryFolders.length === 0 && (
-                      <FormDescription>
-                        You need to set up inventory folders first.
-                        <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
-                          <Link to="/folders">Manage Folders</Link>
-                        </Button>
-                      </FormDescription>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Tags Field */}
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Tags (comma-separated)</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., fragile, electronics, high-value" disabled={!canManageInventory} />
                     </FormControl>
-                    <FormDescription>
-                      Add keywords to help categorize and search for items.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {/* Notes Field */}
               <FormField
                 control={form.control}
-                name="notes"
+                name="overstockQuantity"
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Notes</FormLabel>
+                  <FormItem>
+                    <FormLabel>Overstock Quantity</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} disabled={!canManageInventory} />
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-          </div>
-
-          <div className="space-y-2 md:col-span-2 border-t border-border pt-4 mt-4">
-            <h3 className="text-lg font-semibold">Auto-Reorder Settings</h3>
-            <FormField
-              control={form.control}
-              name="autoReorderEnabled"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Enable Auto-Reorder
-                    </FormLabel>
-                    <FormDescription>
-                      Automatically generate purchase orders when stock is low.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      disabled={!canManageInventory}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            {form.watch("autoReorderEnabled") && (
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="autoReorderQuantity"
+                name="reorderLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                    <FormLabel>Reorder Level (Total)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
                     </FormControl>
-                    <FormDescription>
-                      This quantity will be ordered when stock drops to or below the overall reorder level.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
+              <FormField
+                control={form.control}
+                name="pickingReorderLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Picking Reorder Level</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="committedStock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Committed Stock</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="incomingStock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Incoming Stock</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="unitCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="retailPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Retail Price</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            {/* Folder Selection */}
+            <FormField
+              control={form.control}
+              name="folderId"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory || inventoryFolders.length === 0}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a folder" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {inventoryFolders.length > 0 ? (
+                        inventoryFolders.map((folder) => (
+                          <SelectItem key={folder.id} value={folder.id}>
+                            {folder.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-folders" disabled>
+                          No folders set up.
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {inventoryFolders.length === 0 && (
+                    <FormDescription>
+                      You need to set up inventory folders first.
+                      <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
+                        <Link to="/folders">Manage Folders</Link>
+                      </Button>
+                    </FormDescription>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Tags Field */}
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>Tags (comma-separated)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g., fragile, electronics, high-value" disabled={!canManageInventory} />
+                  </FormControl>
+                  <FormDescription>
+                    Add keywords to help categorize and search for items.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Notes Field */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem className="col-span-2">
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} disabled={!canManageInventory} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
+        </div>
 
-          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
-            {isSaving || isUploadingImage ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-              </>
-            ) : (
-              "Save Changes"
+        <div className="space-y-2 md:col-span-2 border-t border-border pt-4 mt-4">
+          <h3 className="text-lg font-semibold">Auto-Reorder Settings</h3>
+          <FormField
+            control={form.control}
+            name="autoReorderEnabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Enable Auto-Reorder
+                  </FormLabel>
+                  <FormDescription>
+                    Automatically generate purchase orders when stock is low.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={!canManageInventory}
+                  />
+                </FormControl>
+              </FormItem>
             )}
-          </Button>
-        </form>
-      </Form>
-    </div>
+          />
+          {form.watch("autoReorderEnabled") && (
+            <FormField
+              control={form.control}
+              name="autoReorderQuantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                  </FormControl>
+                  <FormDescription>
+                    This quantity will be ordered when stock drops to or below the overall reorder level.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
+          {isSaving || isUploadingImage ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
+      </form>
+    </Form>
+  </div>
   );
 };
 

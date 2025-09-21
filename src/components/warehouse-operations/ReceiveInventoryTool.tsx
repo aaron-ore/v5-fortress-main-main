@@ -179,7 +179,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
     const lowerCaseScannedData = scannedData.toLowerCase();
     const itemToReceive = receivedItems.find(item =>
       item.inventoryItemDetails?.sku.toLowerCase() === lowerCaseScannedData ||
-      item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase() === lowerCaseScannedData
+      item.inventoryItemDetails?.barcodeUrl && item.inventoryItemDetails.barcodeUrl.toLowerCase().includes(lowerCaseScannedData)
     );
 
     if (itemToReceive) {

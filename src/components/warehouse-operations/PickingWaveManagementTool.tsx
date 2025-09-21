@@ -33,7 +33,7 @@ const PickingWaveManagementTool: React.FC = () => {
   const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
-  const [selectedOrderIds, setSelectedOrderIds] = new useState<Set<string>>();
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [generatedPickList, setGeneratedPickList] = useState<PickListItem[]>([]);
   const [currentWaveId, setCurrentWaveId] = useState<string | null>(null);
 
@@ -143,9 +143,9 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.name,
-      companyAddress: companyProfile.address,
-      companyContact: companyProfile.currency,
+      companyName: companyProfile.companyName,
+      companyAddress: companyProfile.companyAddress,
+      companyContact: companyProfile.companyCurrency,
       companyLogoUrl: companyProfile.companyLogoUrl || undefined,
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),

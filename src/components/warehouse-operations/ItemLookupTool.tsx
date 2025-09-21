@@ -6,8 +6,6 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Barcode, Package, Tag, Folder, Info, Image } from "lucide-react"; // Changed MapPin to Folder
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { showError, showSuccess } from "@/utils/toast";
-import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 

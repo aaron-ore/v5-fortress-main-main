@@ -63,7 +63,7 @@ const ShippingVerificationDialog: React.FC<ShippingVerificationDialogProps> = ({
           <ShippingVerificationTool
             onScanRequest={onScanRequest}
             scannedDataFromGlobal={scannedDataFromGlobal}
-            onScannedDataProcessed={handleScannedDataProcessed}
+            onScannedDataProcessed={onScannedDataProcessed}
           />
         </div>
       </DialogContent>

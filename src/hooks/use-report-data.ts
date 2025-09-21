@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
@@ -196,8 +196,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
           break;
         }
         case "low-stock-out-of-stock": {
-          const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
-          const itemsToDisplay = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel || item.quantity === 0);
+          const itemsToDisplay = inventoryItems.filter((item: InventoryItem) => item.quantity <= item.reorderLevel || item.quantity === 0);
           
           currentProcessedData = {
             items: itemsToDisplay,

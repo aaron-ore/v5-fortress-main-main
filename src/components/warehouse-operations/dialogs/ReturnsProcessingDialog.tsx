@@ -63,7 +63,7 @@ const ReturnsProcessingDialog: React.FC<ReturnsProcessingDialogProps> = ({
           <ReturnsProcessingTool
             onScanRequest={onScanRequest}
             scannedDataFromGlobal={scannedDataFromGlobal}
-            onScannedDataProcessed={handleScannedDataProcessed}
+            onScannedDataProcessed={onScannedDataProcessed}
           />
         </div>
       </DialogContent>
