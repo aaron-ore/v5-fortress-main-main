@@ -8,34 +8,31 @@ import { Truck, Package, ArrowRight, CheckCircle, User } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useReplenishment, ReplenishmentTask } from "@/context/ReplenishmentContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import UserProfile as type
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
+import { useOnboarding } from "@/context/OnboardingContext";
 
 const ReplenishmentManagementTool: React.FC = () => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { replenishmentTasks, addReplenishmentTask, updateReplenishmentTask } = useReplenishment();
   const { allProfiles } = useProfile();
-  const { inventoryFolders } = useOnboarding(); // Get inventory folders
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { inventoryFolders } = useOnboarding();
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canManageReplenishment = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedTaskStatus, setSelectedTaskStatus] = useState<ReplenishmentTask['status'] | "all">("Pending");
   const [selectedTask, setSelectedTask] = useState<ReplenishmentTask | null>(null);
   const [assignedTo, setAssignedTo] = useState<string | "unassigned">("unassigned");
 
-  // Items needing replenishment (pickingBinQuantity <= pickingReorderLevel)
   const itemsNeedingReplenishment = useMemo(() => {
     return inventoryItems.filter(item =>
       item.pickingBinQuantity <= item.pickingReorderLevel &&
-      item.overstockQuantity > 0 // Only if there's overstock to pull from
-    ).sort((a, b) => a.folderId.localeCompare(b.folderId)); // Sort by folderId
+      item.overstockQuantity > 0
+    ).sort((a, b) => a.folderId.localeCompare(b.folderId));
   }, [inventoryItems]);
 
-  // Filtered replenishment tasks
   const filteredTasks = useMemo(() => {
     return replenishmentTasks.filter(task =>
       selectedTaskStatus === "all" || task.status === selectedTaskStatus
@@ -50,14 +47,13 @@ const ReplenishmentManagementTool: React.FC = () => {
     }
   }, [selectedTask]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string) => {
     const folder = inventoryFolders.find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
   const handleCreateTask = async (item: InventoryItem) => {
-    if (!canManageReplenishment) { // NEW: Check permission before creating task
+    if (!canManageReplenishment) {
       showError("You do not have permission to create replenishment tasks.");
       return;
     }
@@ -68,7 +64,7 @@ const ReplenishmentManagementTool: React.FC = () => {
 
     const quantityToMove = Math.min(
       item.overstockQuantity,
-      item.pickingReorderLevel + 10 - item.pickingBinQuantity // Replenish to reorder level + 10 (example buffer)
+      item.pickingReorderLevel + 10 - item.pickingBinQuantity
     );
 
     if (quantityToMove <= 0) {
@@ -79,14 +75,14 @@ const ReplenishmentManagementTool: React.FC = () => {
     await addReplenishmentTask({
       itemId: item.id,
       itemName: item.name,
-      fromFolderId: item.folderId, // Use item's main folder as source
-      toFolderId: item.folderId, // For simplicity, assume picking bin is in the same main folder
+      fromFolderId: item.folderId,
+      toFolderId: item.folderId,
       quantity: quantityToMove,
     });
   };
 
   const handleAssignTask = async () => {
-    if (!canManageReplenishment) { // NEW: Check permission before assigning task
+    if (!canManageReplenishment) {
       showError("You do not have permission to assign replenishment tasks.");
       return;
     }
@@ -95,7 +91,7 @@ const ReplenishmentManagementTool: React.FC = () => {
       return;
     }
 
-    const operator = allProfiles.find((p: UserProfile) => p.id === assignedTo); // Explicitly type p
+    const operator = allProfiles.find((p: UserProfile) => p.id === assignedTo);
     if (!operator) {
       showError("Assigned operator not found.");
       return;
@@ -112,7 +108,7 @@ const ReplenishmentManagementTool: React.FC = () => {
   };
 
   const handleCompleteTask = async () => {
-    if (!canManageReplenishment) { // NEW: Check permission before completing task
+    if (!canManageReplenishment) {
       showError("You do not have permission to complete replenishment tasks.");
       return;
     }
@@ -127,7 +123,6 @@ const ReplenishmentManagementTool: React.FC = () => {
       return;
     }
 
-    // Update inventory: move from overstock to picking bin
     const updatedItem = {
       ...item,
       pickingBinQuantity: item.pickingBinQuantity + selectedTask.quantity,
@@ -136,7 +131,6 @@ const ReplenishmentManagementTool: React.FC = () => {
     };
     await updateInventoryItem(updatedItem);
 
-    // Update task status
     const updatedTask: ReplenishmentTask = {
       ...selectedTask,
       status: "Completed",
@@ -144,7 +138,7 @@ const ReplenishmentManagementTool: React.FC = () => {
     };
     await updateReplenishmentTask(updatedTask);
 
-    await refreshInventory(); // Refresh inventory to reflect changes
+    await refreshInventory();
     setSelectedTask(null);
     showSuccess(`Replenishment task ${selectedTask.id} completed. ${selectedTask.quantity} units moved to picking bin.`);
   };
@@ -170,7 +164,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                     <span>{item.name} (SKU: {item.sku})</span>
                     <div className="flex items-center gap-2">
                       <span className="text-red-400">Picking: {item.pickingBinQuantity}/{item.pickingReorderLevel}</span>
-                      <Button variant="outline" size="sm" onClick={() => handleCreateTask(item)} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
+                      <Button variant="outline" size="sm" onClick={() => handleCreateTask(item)} disabled={!canManageReplenishment}>
                         Create Task
                       </Button>
                     </div>
@@ -191,7 +185,7 @@ const ReplenishmentManagementTool: React.FC = () => {
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="taskStatusFilter" className="font-semibold">Filter by Status</Label>
-            <Select value={selectedTaskStatus} onValueChange={(value: ReplenishmentTask['status'] | "all") => setSelectedTaskStatus(value)} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
+            <Select value={selectedTaskStatus} onValueChange={(value: ReplenishmentTask['status'] | "all") => setSelectedTaskStatus(value)} disabled={!canManageReplenishment}>
               <SelectTrigger id="taskStatusFilter">
                 <SelectValue placeholder="Select operator" />
               </SelectTrigger>
@@ -240,7 +234,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        <ArrowRight className="h-3 w-3 inline-block mr-1" /> {getFolderName(task.fromFolderId)} to {getFolderName(task.toFolderId)} {/* Updated to folder names */}
+                        <ArrowRight className="h-3 w-3 inline-block mr-1" /> {getFolderName(task.fromFolderId)} to {getFolderName(task.toFolderId)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Created: {formatDistanceToNowStrict(new Date(task.createdAt), { addSuffix: true })}
@@ -257,7 +251,7 @@ const ReplenishmentManagementTool: React.FC = () => {
             <div className="mt-4 pt-4 border-t border-border space-y-3">
               <h3 className="text-lg font-semibold">Task Details: {selectedTask.id}</h3>
               <p className="text-sm text-muted-foreground">Item: {selectedTask.itemName} ({selectedTask.quantity} units)</p>
-              <p className="text-sm text-muted-foreground">Move from: {getFolderName(selectedTask.fromFolderId)} to {getFolderName(selectedTask.toFolderId)}</p> {/* Updated to folder names */}
+              <p className="text-sm text-muted-foreground">Move from: {getFolderName(selectedTask.fromFolderId)} to {getFolderName(selectedTask.toFolderId)}</p>
               <p className="text-sm text-muted-foreground">Status: <Badge variant={
                 selectedTask.status === "Pending" ? "warning" :
                 selectedTask.status === "Assigned" ? "secondary" :
@@ -267,7 +261,7 @@ const ReplenishmentManagementTool: React.FC = () => {
               {selectedTask.status === "Pending" && (
                 <div className="space-y-2">
                   <Label htmlFor="assignTo">Assign To</Label>
-                  <Select value={assignedTo} onValueChange={setAssignedTo} disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
+                  <Select value={assignedTo} onValueChange={setAssignedTo} disabled={!canManageReplenishment}>
                     <SelectTrigger id="assignTo">
                       <SelectValue placeholder="Select operator" />
                     </SelectTrigger>
@@ -280,14 +274,14 @@ const ReplenishmentManagementTool: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleAssignTask} className="w-full" disabled={assignedTo === "unassigned" || !canManageReplenishment}> {/* NEW: Disable if no permission */}
+                  <Button onClick={handleAssignTask} className="w-full" disabled={assignedTo === "unassigned" || !canManageReplenishment}>
                     <User className="h-4 w-4 mr-2" /> Assign Task
                   </Button>
                 </div>
               )}
 
               {selectedTask.status === "Assigned" && (
-                <Button onClick={handleCompleteTask} className="w-full bg-green-600 hover:bg-green-700" disabled={!canManageReplenishment}> {/* NEW: Disable if no permission */}
+                <Button onClick={handleCompleteTask} className="w-full bg-green-600 hover:bg-green-700" disabled={!canManageReplenishment}>
                   <CheckCircle className="h-4 w-4 mr-2" /> Mark as Completed
                 </Button>
               )}

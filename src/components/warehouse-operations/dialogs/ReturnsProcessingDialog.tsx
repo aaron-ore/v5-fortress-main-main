@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import ReturnsProcessingTool from "@/components/warehouse-operations/ReturnsProcessingTool";
 import { Undo2 } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
-import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface ReturnsProcessingDialogProps {
   isOpen: boolean;
@@ -28,12 +28,11 @@ const ReturnsProcessingDialog: React.FC<ReturnsProcessingDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
-  // NEW: Role-based permission
   const canProcessReturns = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  if (!canProcessReturns) { // NEW: Check permission for viewing dialog
+  if (!canProcessReturns) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">

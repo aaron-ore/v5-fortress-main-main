@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Truck, Package, ArrowRight, Barcode } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "@/context/ProfileContext";
@@ -21,17 +21,16 @@ interface StockTransferToolProps {
 
 const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { inventoryFolders } = useOnboarding();
   const { addStockMovement } = useStockMovement();
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canTransferStock = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedItemId, setSelectedItemId] = useState("");
-  const [fromFolderId, setFromFolderId] = useState(""); // Changed from fromLocation to fromFolderId
-  const [toFolderId, setToFolderId] = useState(""); // Changed from toLocation to toFolderId
+  const [fromFolderId, setFromFolderId] = useState("");
+  const [toFolderId, setToFolderId] = useState("");
   const [transferQuantity, setTransferQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -50,19 +49,17 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     );
   }, [inventoryItems, searchTerm]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string) => {
     const folder = inventoryFolders.find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
-  // Reset form when item changes or component mounts
   useEffect(() => {
     if (selectedItem) {
-      setFromFolderId(selectedItem.folderId); // Use item's current folderId
+      setFromFolderId(selectedItem.folderId);
       setTransferQuantity("");
       setNotes("");
-      setToFolderId(""); // Reset toFolderId when item changes
+      setToFolderId("");
     } else {
       setFromFolderId("");
       setTransferQuantity("");
@@ -79,7 +76,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
   const handleItemSelect = (itemId: string) => {
-    if (!canTransferStock) { // NEW: Check permission before selecting item
+    if (!canTransferStock) {
       showError("You do not have permission to transfer stock.");
       return;
     }
@@ -89,7 +86,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    if (!canTransferStock) { // NEW: Check permission before scanning
+    if (!canTransferStock) {
       showError("You do not have permission to transfer stock.");
       return;
     }
@@ -109,7 +106,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
   };
 
   const handleScanClick = () => {
-    if (!canTransferStock) { // NEW: Check permission before scanning
+    if (!canTransferStock) {
       showError("You do not have permission to transfer stock.");
       return;
     }
@@ -118,7 +115,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
   };
 
   const handleSubmitTransfer = async () => {
-    if (!canTransferStock) { // NEW: Check permission before submitting transfer
+    if (!canTransferStock) {
       showError("You do not have permission to transfer stock.");
       return;
     }
@@ -146,32 +143,30 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     }
 
     const oldQuantity = selectedItem.quantity;
-    const newQuantity = selectedItem.quantity - quantity; // Deduct from source
+    const newQuantity = selectedItem.quantity - quantity;
     const updatedItem = {
       ...selectedItem,
-      quantity: newQuantity, // Update quantity at the source (conceptually, the item is moving)
-      folderId: toFolderId, // Update the item's primary folder to the destination
+      quantity: newQuantity,
+      folderId: toFolderId,
       lastUpdated: new Date().toISOString().split('T')[0],
     };
 
     try {
       await updateInventoryItem(updatedItem);
 
-      // Log stock movement for the transfer
       await addStockMovement({
         itemId: selectedItem.id,
         itemName: selectedItem.name,
-        type: "subtract", // Log as subtract from old folder
+        type: "subtract",
         amount: quantity,
         oldQuantity: oldQuantity,
         newQuantity: newQuantity,
         reason: `Transferred from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}`,
-        folderId: fromFolderId, // Log the folder from which it was transferred
+        folderId: fromFolderId,
       });
 
       showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}.`);
-      refreshInventory(); // Ensure inventory context is refreshed
-      // Reset form
+      refreshInventory();
       setSearchTerm("");
       setSelectedItemId("");
       setFromFolderId("");
@@ -187,7 +182,6 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     <div className="flex flex-col h-full space-y-4">
       <h2 className="text-xl font-bold text-center">Stock Transfer</h2>
 
-      {/* Item Selection */}
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -201,12 +195,12 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
             placeholder="Name or SKU"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={!canTransferStock} // NEW: Disable input if no permission
+            disabled={!canTransferStock}
           />
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning || !canTransferStock} // NEW: Disable button if no permission
+            disabled={isScanning || !canTransferStock}
           >
             <Barcode className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item"}
@@ -220,7 +214,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
                     variant={selectedItemId === item.id ? "secondary" : "ghost"}
                     className="w-full justify-start text-sm"
                     onClick={() => handleItemSelect(item.id)}
-                    disabled={!canTransferStock} // NEW: Disable button if no permission
+                    disabled={!canTransferStock}
                   >
                     {item.name} (SKU: {item.sku}) - Qty: {item.quantity}
                   </Button>
@@ -233,7 +227,6 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
         </CardContent>
       </Card>
 
-      {/* Transfer Details */}
       {selectedItem && (
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
@@ -243,19 +236,19 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fromFolderId" className="font-semibold">From Folder</Label> {/* Updated label */}
-              <Input id="fromFolderId" value={getFolderName(fromFolderId)} disabled /> {/* Display folder name */}
+              <Label htmlFor="fromFolderId" className="font-semibold">From Folder</Label>
+              <Input id="fromFolderId" value={getFolderName(fromFolderId)} disabled />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="toFolderId">To Folder</Label> {/* Updated label */}
-              <Select value={toFolderId} onValueChange={setToFolderId} disabled={!canTransferStock}> {/* NEW: Disable if no permission */}
+              <Label htmlFor="toFolderId">To Folder</Label>
+              <Select value={toFolderId} onValueChange={setToFolderId} disabled={!canTransferStock}>
                 <SelectTrigger id="toFolderId">
-                  <SelectValue placeholder="Select destination folder" /> {/* Updated placeholder */}
+                  <SelectValue placeholder="Select destination folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  {inventoryFolders.filter(folder => folder.id !== fromFolderId).map(folder => ( // Filter by folderId
+                  {inventoryFolders.filter(folder => folder.id !== fromFolderId).map(folder => (
                     <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name} {/* Display folder name */}
+                      {folder.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -271,7 +264,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
                 placeholder="e.g., 50"
                 min="1"
                 max={selectedItem.quantity}
-                disabled={!canTransferStock} // NEW: Disable input if no permission
+                disabled={!canTransferStock}
               />
             </div>
             <div className="space-y-2">
@@ -282,10 +275,10 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add any notes about this transfer..."
                 rows={2}
-                disabled={!canTransferStock} // NEW: Disable input if no permission
+                disabled={!canTransferStock}
               />
             </div>
-            <Button onClick={handleSubmitTransfer} className="w-full" disabled={!selectedItem || !toFolderId || !transferQuantity || fromFolderId === toFolderId || !canTransferStock}> {/* NEW: Disable if no permission */}
+            <Button onClick={handleSubmitTransfer} className="w-full" disabled={!selectedItem || !toFolderId || !transferQuantity || fromFolderId === toFolderId || !canTransferStock}>
               <ArrowRight className="h-4 w-4 mr-2" /> Confirm Transfer
             </Button>
           </CardContent>

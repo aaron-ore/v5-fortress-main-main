@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Undo2, Scan, Package, Folder, CheckCircle } from "lucide-react"; // Changed MapPin to Folder
+import { Undo2, Scan, Package, Folder, CheckCircle } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
 
@@ -22,30 +22,28 @@ interface ReturnsProcessingToolProps {
 
 const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
-  const { inventoryFolders, addInventoryFolder } = useOnboarding(); // Updated to inventoryFolders and addInventoryFolder
+  const { inventoryFolders, addInventoryFolder } = useOnboarding();
   const { addStockMovement } = useStockMovement();
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canProcessReturns = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [scannedItem, setScannedItem] = useState<InventoryItem | null>(null);
   const [returnQuantity, setReturnQuantity] = useState("");
   const [returnReason, setReturnReason] = useState("");
-  const [returnDestinationFolderId, setReturnDestinationFolderId] = useState(""); // Changed from returnDestination to returnDestinationFolderId
+  const [returnDestinationFolderId, setReturnDestinationFolderId] = useState("");
   const [notes, setNotes] = useState("");
   const [isScanning, setIsScanning] = useState(false);
 
   const returnReasons = ["Damaged", "Customer Return (Resalable)", "Customer Return (Defective)", "Wrong Item Shipped", "Other"];
 
   useEffect(() => {
-    // Ensure 'Returns Area' exists as a folder
     const returnsAreaName = "Returns Area";
     const existingReturnsArea = inventoryFolders.find(folder => folder.name === returnsAreaName);
     if (!existingReturnsArea) {
       addInventoryFolder({
         name: returnsAreaName,
-        color: "#F44336", // Red for returns
+        color: "#F44336",
       });
     }
   }, [inventoryFolders, addInventoryFolder]);
@@ -57,7 +55,6 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string | undefined) => {
     if (!folderId) return "N/A";
     const folder = inventoryFolders.find(f => f.id === folderId);
@@ -66,7 +63,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    if (!canProcessReturns) { // NEW: Check permission before scanning
+    if (!canProcessReturns) {
       showError("You do not have permission to process returns.");
       return;
     }
@@ -79,9 +76,8 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
 
     if (foundItem) {
       setScannedItem(foundItem);
-      setReturnQuantity("1"); // Default to 1 for scanned item
-      // Suggest original folder or returns area based on initial reason
-      setReturnDestinationFolderId(foundItem.folderId); // Updated to folderId
+      setReturnQuantity("1");
+      setReturnDestinationFolderId(foundItem.folderId);
       showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
@@ -89,7 +85,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   };
 
   const handleScanClick = () => {
-    if (!canProcessReturns) { // NEW: Check permission before scanning
+    if (!canProcessReturns) {
       showError("You do not have permission to process returns.");
       return;
     }
@@ -98,7 +94,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   };
 
   const handleProcessReturn = async () => {
-    if (!canProcessReturns) { // NEW: Check permission before processing return
+    if (!canProcessReturns) {
       showError("You do not have permission to process returns.");
       return;
     }
@@ -120,12 +116,11 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     const returnsAreaFolder = inventoryFolders.find(folder => folder.name === "Returns Area");
     const returnsAreaFolderId = returnsAreaFolder?.id;
 
-    if (returnDestinationFolderId === scannedItem.folderId) { // If returning to original folder
+    if (returnDestinationFolderId === scannedItem.folderId) {
       newPickingBinQuantity += quantity;
-    } else if (returnsAreaFolderId && returnDestinationFolderId === returnsAreaFolderId) { // If returning to Returns Area
-      newOverstockQuantity += quantity; // For simplicity, returns area items go to overstock
+    } else if (returnsAreaFolderId && returnDestinationFolderId === returnsAreaFolderId) {
+      newOverstockQuantity += quantity;
     } else {
-      // If a different folder is selected, for simplicity, add to overstock
       newOverstockQuantity += quantity;
     }
 
@@ -145,14 +140,13 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       amount: quantity,
       oldQuantity: oldQuantity,
       newQuantity: newPickingBinQuantity + newOverstockQuantity,
-      reason: `Return: ${returnReason} to ${getFolderName(returnDestinationFolderId)}`, // Use folder name
-      folderId: returnDestinationFolderId, // Log the destination folder
+      reason: `Return: ${returnReason} to ${getFolderName(returnDestinationFolderId)}`,
+      folderId: returnDestinationFolderId,
     });
 
     await refreshInventory();
-    showSuccess(`Processed return for ${quantity} units of ${scannedItem.name}. Stock updated and directed to ${getFolderName(returnDestinationFolderId)}.`); // Use folder name
+    showSuccess(`Processed return for ${quantity} units of ${scannedItem.name}. Stock updated and directed to ${getFolderName(returnDestinationFolderId)}.`);
 
-    // Reset form
     setScannedItem(null);
     setReturnQuantity("");
     setReturnReason("");
@@ -160,7 +154,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     setNotes("");
   };
 
-  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId || parseInt(returnQuantity) <= 0 || !canProcessReturns; // NEW: Disable if no permission
+  const isProcessButtonDisabled = !scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId || parseInt(returnQuantity) <= 0 || !canProcessReturns;
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -176,7 +170,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning || !canProcessReturns} // NEW: Disable button if no permission
+            disabled={isScanning || !canProcessReturns}
           >
             <Scan className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item Barcode"}
@@ -208,7 +202,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 onChange={(e) => setReturnQuantity(e.target.value)}
                 placeholder="e.g., 1"
                 min="1"
-                disabled={!canProcessReturns} // NEW: Disable input if no permission
+                disabled={!canProcessReturns}
               />
             </div>
             <div className="space-y-2">
@@ -217,13 +211,12 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 setReturnReason(value);
                 const returnsAreaFolder = inventoryFolders.find(folder => folder.name === "Returns Area");
                 const returnsAreaFolderId = returnsAreaFolder?.id;
-                // Suggest 'Returns Area' if damaged/defective, otherwise original folder
                 if (value.includes("Damaged") || value.includes("Defective")) {
                   setReturnDestinationFolderId(returnsAreaFolderId || "");
                 } else {
                   setReturnDestinationFolderId(scannedItem.folderId);
                 }
-              }} disabled={!canProcessReturns}> {/* NEW: Disable select if no permission */}
+              }} disabled={!canProcessReturns}>
                 <SelectTrigger id="returnReason">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
@@ -237,21 +230,21 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="returnDestinationFolderId">Direct to Folder</Label> {/* Updated label */}
-              <Select value={returnDestinationFolderId} onValueChange={setReturnDestinationFolderId} disabled={!canProcessReturns}> {/* NEW: Disable select if no permission */}
+              <Label htmlFor="returnDestinationFolderId">Direct to Folder</Label>
+              <Select value={returnDestinationFolderId} onValueChange={setReturnDestinationFolderId} disabled={!canProcessReturns}>
                 <SelectTrigger id="returnDestinationFolderId">
-                  <SelectValue placeholder="Select destination folder" /> {/* Updated placeholder */}
+                  <SelectValue placeholder="Select destination folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  {inventoryFolders.map((folder) => ( // Iterate over inventoryFolders
+                  {inventoryFolders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name} {/* Display folder name */}
+                      {folder.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Folder className="h-3 w-3" /> Suggested: {returnReason.includes("Damaged") || returnReason.includes("Defective") ? "Returns Area" : getFolderName(scannedItem.folderId)} {/* Updated to folder name */}
+                <Folder className="h-3 w-3" /> Suggested: {returnReason.includes("Damaged") || returnReason.includes("Defective") ? "Returns Area" : getFolderName(scannedItem.folderId)}
               </p>
             </div>
             <div className="space-y-2 flex-grow">
@@ -263,7 +256,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
                 placeholder="Add any additional notes about this return..."
                 rows={3}
                 className="flex-grow"
-                disabled={!canProcessReturns} // NEW: Disable input if no permission
+                disabled={!canProcessReturns}
               />
             </div>
           </CardContent>

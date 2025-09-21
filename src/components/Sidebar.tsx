@@ -88,7 +88,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   const renderNavItems = (items: NavItem[], isSubItem = false) => (
     <div className={cn("space-y-1", isSubItem && "ml-4 border-l border-sidebar-border pl-2")}>
-      {items.map((item: NavItem) => { // Explicitly type item
+      {items.map((item: NavItem) => {
         const currentIsActive = item.href === "/" 
           ? location.pathname === "/" 
           : location.pathname.startsWith(item.href);
@@ -193,7 +193,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         isCollapsed ? "w-[80px]" : "w-[280px]",
         "shadow-theme-glow"
       )}
-      data-tutorial-target="sidebar-navigation" // NEW: Add tutorial target
+      data-tutorial-target="sidebar-navigation"
     >
       <div className={cn("flex items-center h-[60px] px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
         {renderFortressLogo(isCollapsed)}

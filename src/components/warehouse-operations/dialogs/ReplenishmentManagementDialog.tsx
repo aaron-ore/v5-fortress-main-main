@@ -7,12 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-
 } from "@/components/ui/dialog";
 import ReplenishmentManagementTool from "@/components/warehouse-operations/ReplenishmentManagementTool";
 import { Repeat } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
-import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface ReplenishmentManagementDialogProps {
   isOpen: boolean;
@@ -23,12 +22,11 @@ const ReplenishmentManagementDialog: React.FC<ReplenishmentManagementDialogProps
   isOpen,
   onClose,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
-  // NEW: Role-based permission
   const canManageReplenishment = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  if (!canManageReplenishment) { // NEW: Check permission for viewing dialog
+  if (!canManageReplenishment) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[600px] flex flex-col h-[90vh] max-h-[800px] p-0">

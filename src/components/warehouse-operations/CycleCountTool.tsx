@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Folder, Barcode } from "lucide-react"; // Changed MapPin to Folder
+import { Folder, Barcode } from "lucide-react";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
-// Removed useStockMovement as updates will go through Edge Function
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
@@ -17,11 +16,11 @@ interface CountedItem {
   id: string;
   name: string;
   sku: string;
-  systemPickingBinQuantity: number; // Track system quantity for picking bin
-  systemOverstockQuantity: number; // Track system quantity for overstock
-  countedPickingBinQuantity: number; // User input for picking bin
-  countedOverstockQuantity: number; // User input for overstock
-  folderId: string; // Changed from location to folderId
+  systemPickingBinQuantity: number;
+  systemOverstockQuantity: number;
+  countedPickingBinQuantity: number;
+  countedOverstockQuantity: number;
+  folderId: string;
   isScanned: boolean;
   barcodeUrl?: string;
 }
@@ -34,21 +33,19 @@ interface CycleCountToolProps {
 
 const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { inventoryItems, refreshInventory } = useInventory();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
-  // Removed useStockMovement as updates will go through Edge Function
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { inventoryFolders } = useOnboarding();
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canCycleCount = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  const [selectedFolder, setSelectedFolder] = useState("all"); // Changed from selectedLocation to selectedFolder
+  const [selectedFolder, setSelectedFolder] = useState("all");
   const [itemsToCount, setItemsToCount] = useState<CountedItem[]>([]);
   const [isCounting, setIsCounting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
 
   const filteredInventory = useMemo(() => {
     if (selectedFolder === "all") return inventoryItems;
-    return inventoryItems.filter(item => item.folderId === selectedFolder); // Filter by folderId
+    return inventoryItems.filter(item => item.folderId === selectedFolder);
   }, [inventoryItems, selectedFolder]);
 
   useEffect(() => {
@@ -64,14 +61,13 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     }
   }, [scannedDataFromGlobal, isScanning, isCounting, onScannedDataProcessed]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string) => {
     const folder = inventoryFolders.find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
   const startCycleCount = () => {
-    if (!canCycleCount) { // NEW: Check permission before starting count
+    if (!canCycleCount) {
       showError("You do not have permission to start a cycle count.");
       return;
     }
@@ -87,17 +83,17 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
       systemOverstockQuantity: item.overstockQuantity,
       countedPickingBinQuantity: 0,
       countedOverstockQuantity: 0,
-      folderId: item.folderId, // Updated to folderId
+      folderId: item.folderId,
       isScanned: false,
       barcodeUrl: item.barcodeUrl,
     }));
     setItemsToCount(initialItems);
     setIsCounting(true);
-    showSuccess(`Cycle count started for ${selectedFolder === "all" ? "all folders" : inventoryFolders.find(folder => folder.id === selectedFolder)?.name || selectedFolder}.`); // Updated to folder name
+    showSuccess(`Cycle count started for ${selectedFolder === "all" ? "all folders" : inventoryFolders.find(folder => folder.id === selectedFolder)?.name || selectedFolder}.`);
   };
 
   const handleCountedQuantityChange = (itemId: string, locationType: 'pickingBin' | 'overstock', quantity: string) => {
-    if (!canCycleCount) { // NEW: Check permission before changing quantity
+    if (!canCycleCount) {
       showError("You do not have permission to perform cycle counts.");
       return;
     }
@@ -118,7 +114,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    if (!canCycleCount) { // NEW: Check permission before scanning
+    if (!canCycleCount) {
       showError("You do not have permission to perform cycle counts.");
       return;
     }
@@ -134,7 +130,6 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     );
 
     if (scannedItem) {
-      // For simplicity, increment picking bin quantity on scan
       setItemsToCount(prev =>
         prev.map(item =>
           item.id === scannedItem.id ? { ...item, isScanned: true, countedPickingBinQuantity: item.countedPickingBinQuantity + 1 } : item
@@ -147,7 +142,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   };
 
   const handleScanClick = () => {
-    if (!canCycleCount) { // NEW: Check permission before scanning
+    if (!canCycleCount) {
       showError("You do not have permission to perform cycle counts.");
       return;
     }
@@ -156,7 +151,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   };
 
   const completeCycleCount = async () => {
-    if (!canCycleCount) { // NEW: Check permission before completing count
+    if (!canCycleCount) {
       showError("You do not have permission to complete cycle counts.");
       return;
     }
@@ -170,14 +165,13 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
         continue;
       }
 
-      // Check picking bin discrepancy
       if (item.systemPickingBinQuantity !== item.countedPickingBinQuantity) {
         discrepanciesFound++;
         try {
           const { data, error } = await supabase.functions.invoke('handle-stock-discrepancy', {
             body: JSON.stringify({
               item_id: item.id,
-              folder_id: item.folderId, // Updated to folder_id
+              folder_id: item.folderId,
               location_type: 'picking_bin',
               physical_count: item.countedPickingBinQuantity,
               reason: 'Cycle Count Adjustment',
@@ -195,14 +189,13 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
         }
       }
 
-      // Check overstock discrepancy
       if (item.systemOverstockQuantity !== item.countedOverstockQuantity) {
         discrepanciesFound++;
         try {
           const { data, error } = await supabase.functions.invoke('handle-stock-discrepancy', {
             body: JSON.stringify({
               item_id: item.id,
-              folder_id: item.folderId, // Updated to folder_id
+              folder_id: item.folderId,
               location_type: 'overstock',
               physical_count: item.countedOverstockQuantity,
               reason: 'Cycle Count Adjustment',
@@ -227,10 +220,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
       showSuccess("Cycle count completed. No discrepancies found.");
     }
     
-    refreshInventory(); // Refresh inventory to reflect changes
+    refreshInventory();
     setIsCounting(false);
     setItemsToCount([]);
-    setSelectedFolder("all"); // Reset to all folders
+    setSelectedFolder("all");
   };
 
   return (
@@ -241,27 +234,27 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Folder className="h-5 w-5 text-primary" /> Select Folder {/* Updated icon and title */}
+              <Folder className="h-5 w-5 text-primary" /> Select Folder
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="folderSelect" className="font-semibold">Folder to Count</Label> {/* Updated label */}
-              <Select value={selectedFolder} onValueChange={setSelectedFolder} disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
+              <Label htmlFor="folderSelect" className="font-semibold">Folder to Count</Label>
+              <Select value={selectedFolder} onValueChange={setSelectedFolder} disabled={!canCycleCount}>
                 <SelectTrigger id="folderSelect">
-                  <SelectValue placeholder="Select a folder" /> {/* Updated placeholder */}
+                  <SelectValue placeholder="Select a folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Folders</SelectItem> {/* Updated text */}
-                  {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
+                  <SelectItem value="all">All Folders</SelectItem>
+                  {inventoryFolders.map(folder => (
                     <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name} {/* Display folder name */}
+                      {folder.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={startCycleCount} className="w-full" disabled={filteredInventory.length === 0 || !canCycleCount}> {/* NEW: Disable if no permission */}
+            <Button onClick={startCycleCount} className="w-full" disabled={filteredInventory.length === 0 || !canCycleCount}>
               Start Cycle Count
             </Button>
           </CardContent>
@@ -271,7 +264,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
             onClick={handleScanClick}
-            disabled={isScanning || !canCycleCount} // NEW: Disable if no permission
+            disabled={isScanning || !canCycleCount}
           >
             <Barcode className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item"}
@@ -288,7 +281,6 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                     </div>
                     <p className="text-muted-foreground text-sm mb-2">Folder: {getFolderName(item.folderId)}</p>
                     
-                    {/* Picking Bin Quantity */}
                     <div className="flex items-center justify-between mb-2">
                       <Label htmlFor={`counted-picking-qty-${item.id}`} className="font-semibold">
                         Picking Bin ({getFolderName(item.folderId)}):
@@ -302,7 +294,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                           onChange={(e) => handleCountedQuantityChange(item.id, 'pickingBin', e.target.value)}
                           className="w-24 text-right"
                           min="0"
-                          disabled={!canCycleCount} // NEW: Disable input if no permission
+                          disabled={!canCycleCount}
                         />
                       </div>
                     </div>
@@ -312,7 +304,6 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                       </p>
                     )}
 
-                    {/* Overstock Quantity */}
                     <div className="flex items-center justify-between mt-3">
                       <Label htmlFor={`counted-overstock-qty-${item.id}`} className="font-semibold">
                         Overstock:
@@ -326,7 +317,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
                           onChange={(e) => handleCountedQuantityChange(item.id, 'overstock', e.target.value)}
                           className="w-24 text-right"
                           min="0"
-                          disabled={!canCycleCount} // NEW: Disable input if no permission
+                          disabled={!canCycleCount}
                         />
                       </div>
                     </div>
@@ -342,10 +333,10 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           </ScrollArea>
 
           <div className="mt-6 flex gap-2">
-            <Button variant="outline" onClick={() => setIsCounting(false)} className="flex-grow" disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
+            <Button variant="outline" onClick={() => setIsCounting(false)} className="flex-grow" disabled={!canCycleCount}>
               Cancel Count
             </Button>
-            <Button onClick={completeCycleCount} className="flex-grow" disabled={!canCycleCount}> {/* NEW: Disable if no permission */}
+            <Button onClick={completeCycleCount} className="flex-grow" disabled={!canCycleCount}>
               Complete Count
             </Button>
           </div>

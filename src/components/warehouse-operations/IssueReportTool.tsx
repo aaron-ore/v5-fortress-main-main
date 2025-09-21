@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertTriangle, MessageSquare, Barcode } from "lucide-react"; // Changed MapPin to Folder
+import { AlertTriangle, MessageSquare, Barcode } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
 
 interface IssueReportToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -26,14 +26,13 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const { inventoryItems } = useInventory();
   const { addNotification } = useNotifications();
   const { profile } = useProfile();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
+  const { inventoryFolders } = useOnboarding();
 
-  // NEW: Role-based permissions
   const canReportIssues = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
   const [issueType, setIssueType] = useState("");
   const [itemId, setItemId] = useState("");
-  const [folderId, setFolderId] = useState(""); // Changed from location to folderId
+  const [folderId, setFolderId] = useState("");
   const [description, setDescription] = useState("");
   const [contactInfo, setContactInfo] = useState(profile?.email || "");
   const [isScanning, setIsScanning] = useState(false);
@@ -47,7 +46,6 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     }
   }, [scannedDataFromGlobal, isScanning, onScannedDataProcessed]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string | undefined) => {
     if (!folderId) return "N/A";
     const folder = inventoryFolders.find(f => f.id === folderId);
@@ -56,7 +54,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    if (!canReportIssues) { // NEW: Check permission before scanning
+    if (!canReportIssues) {
       showError("You do not have permission to report issues.");
       return;
     }
@@ -69,7 +67,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
     if (foundItem) {
       setItemId(foundItem.id);
-      setFolderId(foundItem.folderId); // Updated to folderId
+      setFolderId(foundItem.folderId);
       showSuccess(`Scanned item: ${foundItem.name}. Item and folder pre-filled.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
@@ -77,7 +75,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   };
 
   const handleScanClick = () => {
-    if (!canReportIssues) { // NEW: Check permission before scanning
+    if (!canReportIssues) {
       showError("You do not have permission to report issues.");
       return;
     }
@@ -86,7 +84,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   };
 
   const handleSubmitReport = async () => {
-    if (!canReportIssues) { // NEW: Check permission before submitting report
+    if (!canReportIssues) {
       showError("You do not have permission to report issues.");
       return;
     }
@@ -99,7 +97,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       issueType,
       itemId: selectedItem?.id || "N/A",
       itemName: selectedItem?.name || "N/A",
-      folderId: folderId || "N/A", // Updated to folderId
+      folderId: folderId || "N/A",
       description: description.trim(),
       contactInfo: contactInfo.trim(),
       timestamp: new Date().toISOString(),
@@ -109,7 +107,6 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     addNotification(`New Issue Reported: ${issueType} for ${selectedItem?.name || 'N/A'}`, "warning");
     showSuccess("Issue report submitted successfully! A manager has been notified.");
 
-    // NEW: Log to activity_logs table
     if (profile?.organizationId && profile?.id) {
       const { error: logError } = await supabase
         .from('activity_logs')
@@ -129,15 +126,14 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       console.warn("Cannot log issue: User profile or organization ID missing.");
     }
 
-    // Reset form
     setIssueType("");
     setItemId("");
-    setFolderId(""); // Reset folderId
+    setFolderId("");
     setDescription("");
     setContactInfo("");
   };
 
-  const isSubmitButtonDisabled = !issueType || !description.trim() || !contactInfo.trim() || !canReportIssues; // NEW: Disable if no permission
+  const isSubmitButtonDisabled = !issueType || !description.trim() || !contactInfo.trim() || !canReportIssues;
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -154,7 +150,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
             <CardContent className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="issueType" className="font-semibold">Issue Type <span className="text-red-500">*</span></Label>
-                <Select value={issueType} onValueChange={setIssueType} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
+                <Select value={issueType} onValueChange={setIssueType} disabled={!canReportIssues}>
                   <SelectTrigger id="issueType">
                     <SelectValue placeholder="Select issue type" />
                   </SelectTrigger>
@@ -172,7 +168,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
                 onClick={handleScanClick}
-                disabled={isScanning || !canReportIssues} // NEW: Disable button if no permission
+                disabled={isScanning || !canReportIssues}
               >
                 <Barcode className="h-6 w-6" />
                 {isScanning ? "Scanning..." : "Scan Affected Item"}
@@ -180,7 +176,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
               <div className="space-y-2">
                 <Label htmlFor="itemId" className="font-semibold">Affected Item (Optional)</Label>
-                <Select value={itemId} onValueChange={setItemId} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
+                <Select value={itemId} onValueChange={setItemId} disabled={!canReportIssues}>
                   <SelectTrigger id="itemId">
                     <SelectValue placeholder="Select an item (if applicable)" />
                   </SelectTrigger>
@@ -196,16 +192,16 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="folderId" className="font-semibold">Folder (Optional)</Label> {/* Updated label */}
-                <Select value={folderId} onValueChange={setFolderId} disabled={!canReportIssues}> {/* NEW: Disable select if no permission */}
+                <Label htmlFor="folderId" className="font-semibold">Folder (Optional)</Label>
+                <Select value={folderId} onValueChange={setFolderId} disabled={!canReportIssues}>
                   <SelectTrigger id="folderId">
-                    <SelectValue placeholder="Select folder" /> {/* Updated placeholder */}
+                    <SelectValue placeholder="Select folder" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="N/A">N/A (General Folder)</SelectItem> {/* Updated text */}
-                    {inventoryFolders.map(folder => ( // Iterate over inventoryFolders
+                    <SelectItem value="N/A">N/A (General Folder)</SelectItem>
+                    {inventoryFolders.map(folder => (
                       <SelectItem key={folder.id} value={folder.id}>
-                        {folder.name} {/* Display folder name */}
+                        {folder.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -223,7 +219,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Provide a detailed description of the issue..."
                   rows={4}
-                  disabled={!canReportIssues} // NEW: Disable input if no permission
+                  disabled={!canReportIssues}
                 />
               </div>
 
@@ -234,7 +230,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                   value={contactInfo}
                   onChange={(e) => setContactInfo(e.target.value)}
                   placeholder="Email or Phone Number"
-                  disabled={!canReportIssues} // NEW: Disable input if no permission
+                  disabled={!canReportIssues}
                 />
               </div>
             </CardContent>

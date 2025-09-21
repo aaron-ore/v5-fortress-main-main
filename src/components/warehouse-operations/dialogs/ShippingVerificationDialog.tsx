@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import ShippingVerificationTool from "@/components/warehouse-operations/ShippingVerificationTool";
 import { CheckCircle } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
-import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface ShippingVerificationDialogProps {
   isOpen: boolean;
@@ -28,12 +28,11 @@ const ShippingVerificationDialog: React.FC<ShippingVerificationDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
-  // NEW: Role-based permission
   const canVerifyShipping = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  if (!canVerifyShipping) { // NEW: Check permission for viewing dialog
+  if (!canVerifyShipping) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">

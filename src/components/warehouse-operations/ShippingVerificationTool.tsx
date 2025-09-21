@@ -9,7 +9,7 @@ import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
 
 interface ShippingVerificationToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -20,14 +20,12 @@ interface ShippingVerificationToolProps {
 const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onScanRequest, scannedDataFromGlobal, onScannedDataProcessed }) => {
   const { orders, fetchOrders, updateOrder } = useOrders();
   const { inventoryItems } = useInventory();
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canVerifyShipping = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
   const [truckId, setTruckId] = useState("");
-  // Removed unused scannedItems state
   const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "success" | "error">("idle");
   const [isScanning, setIsScanning] = useState(false);
 
@@ -55,7 +53,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
       order.items.forEach(orderItem => {
         const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
         if (inventoryItem) {
-          const key = inventoryItem.sku; // Use SKU as key for simplicity
+          const key = inventoryItem.sku;
           const existing = map.get(key);
           if (existing) {
             existing.quantity += orderItem.quantity;
@@ -75,7 +73,6 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
   }, [ordersForRoute, inventoryItems]);
 
   useEffect(() => {
-    // Reset scanned quantities in the map
     expectedItemsMap.forEach(item => item.scannedQuantity = 0);
     setVerificationStatus("idle");
   }, [selectedDeliveryRoute, truckId, expectedItemsMap]);
@@ -89,7 +86,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
-    if (!canVerifyShipping) { // NEW: Check permission before scanning
+    if (!canVerifyShipping) {
       showError("You do not have permission to perform shipping verification.");
       setVerificationStatus("error");
       return;
@@ -117,26 +114,25 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     }
 
     if (expectedItem.scannedQuantity < expectedItem.quantity) {
-      expectedItem.scannedQuantity++; // Increment scanned quantity for this item
-      expectedItemsMap.set(foundItem.sku, expectedItem); // Update map
+      expectedItem.scannedQuantity++;
+      expectedItemsMap.set(foundItem.sku, expectedItem);
       showSuccess(`Verified: ${foundItem.name}. Scanned ${expectedItem.scannedQuantity}/${expectedItem.quantity}.`);
     } else {
       showError(`All units of ${foundItem.name} (SKU: ${foundItem.sku}) already scanned.`);
       setVerificationStatus("error");
     }
 
-    // Check if all items are scanned
     const allItemsScanned = Array.from(expectedItemsMap.values()).every(item => item.scannedQuantity >= item.quantity);
     if (allItemsScanned) {
       setVerificationStatus("success");
       showSuccess("All items for this route/truck have been verified!");
     } else {
-      setVerificationStatus("idle"); // Reset to idle to allow more scans
+      setVerificationStatus("idle");
     }
   };
 
-  const handleScanButtonClick = () => { // Renamed function
-    if (!canVerifyShipping) { // NEW: Check permission before scanning
+  const handleScanButtonClick = () => {
+    if (!canVerifyShipping) {
       showError("You do not have permission to perform shipping verification.");
       return;
     }
@@ -145,7 +141,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
   };
 
   const handleCompleteShipment = async () => {
-    if (!canVerifyShipping) { // NEW: Check permission before completing shipment
+    if (!canVerifyShipping) {
       showError("You do not have permission to complete shipments.");
       return;
     }
@@ -154,19 +150,17 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
       return;
     }
 
-    // Update status of all orders in this route to "Shipped"
     for (const order of ordersForRoute) {
       await updateOrder({ ...order, status: "Shipped" });
     }
     showSuccess(`Shipment for route ${selectedDeliveryRoute} (Truck: ${truckId}) completed! Orders updated to "Shipped".`);
     setSelectedDeliveryRoute("all");
     setTruckId("");
-    // No need to reset scannedItems, as it's not used directly anymore
     setVerificationStatus("idle");
-    await fetchOrders(); // Refresh orders
+    await fetchOrders();
   };
 
-  const isCompleteButtonDisabled = verificationStatus !== "success" || !canVerifyShipping; // NEW: Disable if no permission
+  const isCompleteButtonDisabled = verificationStatus !== "success" || !canVerifyShipping;
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -181,7 +175,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryRoute">Select Delivery Route</Label>
-            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canVerifyShipping}> {/* NEW: Disable if no permission */}
+            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canVerifyShipping}>
               <SelectTrigger id="deliveryRoute">
                 <SelectValue placeholder="All Routes" />
               </SelectTrigger>
@@ -201,13 +195,13 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
               value={truckId}
               onChange={(e) => setTruckId(e.target.value)}
               placeholder="e.g., TRK-001, ABC-123"
-              disabled={!canVerifyShipping} // NEW: Disable input if no permission
+              disabled={!canVerifyShipping}
             />
           </div>
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-            onClick={handleScanButtonClick} // Corrected function reference
-            disabled={isScanning || !truckId || ordersForRoute.length === 0 || !canVerifyShipping} // NEW: Disable if no permission
+            onClick={handleScanButtonClick}
+            disabled={isScanning || !truckId || ordersForRoute.length === 0 || !canVerifyShipping}
           >
             <Scan className="h-6 w-6" />
             {isScanning ? "Scanning..." : "Scan Item / Pallet"}

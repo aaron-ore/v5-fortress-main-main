@@ -9,27 +9,26 @@ import { Truck, Printer, Package, CheckCircle, ListOrdered } from "lucide-react"
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Added inventoryFolders
+import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { format } from "date-fns";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
 
 interface PickListItem {
   itemName: string;
   itemSku: string;
-  pickingBinFolderId: string; // Changed from pickingBinLocation to pickingBinFolderId
+  pickingBinFolderId: string;
   quantityToPick: number;
 }
 
 const PickingWaveManagementTool: React.FC = () => {
   const { orders, updateOrder } = useOrders();
   const { inventoryItems } = useInventory();
-  const { companyProfile, inventoryFolders } = useOnboarding(); // Added inventoryFolders
+  const { companyProfile, inventoryFolders } = useOnboarding();
   const { initiatePrint } = usePrint();
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
@@ -57,20 +56,18 @@ const PickingWaveManagementTool: React.FC = () => {
   }, [orders, selectedDeliveryRoute]);
 
   useEffect(() => {
-    // Clear selected orders when route filter changes
     setSelectedOrderIds(new Set<string>());
     setGeneratedPickList([]);
     setCurrentWaveId(null);
   }, [selectedDeliveryRoute]);
 
-  // Helper to get folder name from ID
   const getFolderName = (folderId: string) => {
     const folder = inventoryFolders.find(f => f.id === folderId);
     return folder?.name || "Unknown Folder";
   };
 
   const handleCreatePickingWave = () => {
-    if (!canManagePickingWaves) { // NEW: Check permission before creating wave
+    if (!canManagePickingWaves) {
       showError("You do not have permission to create picking waves.");
       return;
     }
@@ -81,7 +78,7 @@ const PickingWaveManagementTool: React.FC = () => {
 
     const ordersToBatch = Array.from(selectedOrderIds).map(id => orders.find(o => o.id === id)).filter(Boolean) as OrderItem[];
 
-    const pickListItemsMap = new Map<string, PickListItem>(); // Key: itemSku
+    const pickListItemsMap = new Map<string, PickListItem>();
 
     ordersToBatch.forEach(order => {
       order.items.forEach(orderItem => {
@@ -96,7 +93,7 @@ const PickingWaveManagementTool: React.FC = () => {
             pickListItemsMap.set(key, {
               itemName: inventoryItem.name,
               itemSku: inventoryItem.sku,
-              pickingBinFolderId: inventoryItem.pickingBinFolderId, // Updated to pickingBinFolderId
+              pickingBinFolderId: inventoryItem.pickingBinFolderId,
               quantityToPick: orderItem.quantity,
             });
           }
@@ -106,16 +103,14 @@ const PickingWaveManagementTool: React.FC = () => {
       });
     });
 
-    // Sort pick list items by picking bin folder for efficient path
     const sortedPickList = Array.from(pickListItemsMap.values()).sort((a, b) =>
-      getFolderName(a.pickingBinFolderId).localeCompare(getFolderName(b.pickingBinFolderId)) // Sort by folder name
+      getFolderName(a.pickingBinFolderId).localeCompare(getFolderName(b.pickingBinFolderId))
     );
 
     setGeneratedPickList(sortedPickList);
     const newWaveId = generateSequentialNumber("WAVE");
     setCurrentWaveId(newWaveId);
 
-    // Update status of batched orders to "Processing"
     ordersToBatch.forEach(order => {
       updateOrder({ ...order, status: "Processing" });
     });
@@ -124,7 +119,7 @@ const PickingWaveManagementTool: React.FC = () => {
   };
 
   const handlePrintPickList = () => {
-    if (!canManagePickingWaves) { // NEW: Check permission before printing
+    if (!canManagePickingWaves) {
       showError("You do not have permission to print picking lists.");
       return;
     }
@@ -143,16 +138,16 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.companyName, // Corrected property access
-      companyAddress: companyProfile.companyAddress, // Corrected property access
-      companyContact: companyProfile.companyCurrency, // Corrected property access
+      companyName: companyProfile.companyName,
+      companyAddress: companyProfile.companyAddress,
+      companyContact: companyProfile.companyCurrency,
       companyLogoUrl: companyProfile.companyLogoUrl || undefined,
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),
       ordersInWave: ordersInWaveDetails,
       pickListItems: generatedPickList,
-      pickerName: profile?.fullName || "N/A", // Use current user's full name
-      inventoryFolders: inventoryFolders, // Pass inventoryFolders
+      pickerName: profile?.fullName || "N/A",
+      inventoryFolders: inventoryFolders,
     };
 
     initiatePrint({ type: "picking-wave", props: pdfProps });
@@ -160,7 +155,7 @@ const PickingWaveManagementTool: React.FC = () => {
   };
 
   const handleOrderSelection = (orderId: string, checked: boolean) => {
-    if (!canManagePickingWaves) { // NEW: Check permission before selecting order
+    if (!canManagePickingWaves) {
       showError("You do not have permission to select orders for picking waves.");
       return;
     }
@@ -188,7 +183,7 @@ const PickingWaveManagementTool: React.FC = () => {
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryRouteFilter" className="font-semibold">Filter by Delivery Route</Label>
-            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
+            <Select value={selectedDeliveryRoute} onValueChange={setSelectedDeliveryRoute} disabled={!canManagePickingWaves}>
               <SelectTrigger id="deliveryRouteFilter">
                 <SelectValue placeholder="All Routes" />
               </SelectTrigger>
@@ -216,7 +211,7 @@ const PickingWaveManagementTool: React.FC = () => {
                           id={`order-${order.id}`}
                           checked={selectedOrderIds.has(order.id)}
                           onCheckedChange={(checked: boolean) => handleOrderSelection(order.id, checked)}
-                          disabled={!canManagePickingWaves} // NEW: Disable checkbox if no permission
+                          disabled={!canManagePickingWaves}
                         />
                         <span>{order.id} - {order.customerSupplier} (Route: {order.deliveryRoute || 'N/A'})</span>
                       </Label>
@@ -227,7 +222,7 @@ const PickingWaveManagementTool: React.FC = () => {
               )}
             </ScrollArea>
           </div>
-          <Button onClick={handleCreatePickingWave} className="w-full" disabled={selectedOrderIds.size === 0 || !canManagePickingWaves}> {/* NEW: Disable if no permission */}
+          <Button onClick={handleCreatePickingWave} className="w-full" disabled={selectedOrderIds.size === 0 || !canManagePickingWaves}>
             <ListOrdered className="h-4 w-4 mr-2" /> Create Picking Wave ({selectedOrderIds.size} Orders)
           </Button>
         </CardContent>
@@ -257,10 +252,10 @@ const PickingWaveManagementTool: React.FC = () => {
                 ))}
               </div>
             </ScrollArea>
-            <Button onClick={handlePrintPickList} className="w-full" disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
+            <Button onClick={handlePrintPickList} className="w-full" disabled={!canManagePickingWaves}>
               <Printer className="h-4 w-4 mr-2" /> Print Pick List
             </Button>
-            <Button variant="secondary" className="w-full" onClick={() => { setSelectedOrderIds(new Set<string>()); setGeneratedPickList([]); setCurrentWaveId(null); showSuccess("Picking wave cleared."); }} disabled={!canManagePickingWaves}> {/* NEW: Disable if no permission */}
+            <Button variant="secondary" className="w-full" onClick={() => { setSelectedOrderIds(new Set<string>()); setGeneratedPickList([]); setCurrentWaveId(null); showSuccess("Picking wave cleared."); }} disabled={!canManagePickingWaves}>
               <CheckCircle className="h-4 w-4 mr-2" /> Complete Wave (Clear)
             </Button>
           </CardContent>

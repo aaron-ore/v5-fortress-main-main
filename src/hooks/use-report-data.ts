@@ -14,7 +14,7 @@ import { useCustomers } from "@/context/CustomerContext";
 import { StockMovement } from "@/context/StockMovementContext";
 
 interface UseDashboardHookResult {
-  data: any | null; // Changed to any as specific types are no longer imported
+  data: any | null;
   pdfProps: any;
   isLoading: boolean;
   error: string | null;
@@ -27,7 +27,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const { categories, isLoadingCategories, refreshCategories } = useCategories();
   const { customers, isLoadingCustomers, refreshCustomers } = useCustomers();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
-  const { isLoadingVendors, refreshVendors } = useVendors(); // Kept vendors for consistency
+  const { isLoadingVendors, refreshVendors } = useVendors();
   const { profile, isLoadingProfile, allProfiles, isLoadingAllProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders: structuredLocations, isLoadingFolders, fetchInventoryFolders } = useOnboarding();
 
@@ -45,7 +45,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     refreshCategories();
     refreshCustomers();
     fetchStockMovements();
-    refreshVendors(); // Re-enabled
+    refreshVendors();
     fetchAllProfiles();
     fetchInventoryFolders();
   }, [refreshInventory, fetchOrders, refreshCategories, refreshCustomers, fetchStockMovements, refreshVendors, fetchAllProfiles, fetchInventoryFolders]);

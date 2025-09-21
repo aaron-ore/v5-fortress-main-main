@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import IssueReportTool from "@/components/warehouse-operations/IssueReportTool";
 import { AlertTriangle } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
-import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface IssueReportDialogProps {
   isOpen: boolean;
@@ -28,12 +28,11 @@ const IssueReportDialog: React.FC<IssueReportDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
-  // NEW: Role-based permission
   const canReportIssues = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
 
-  if (!canReportIssues) { // NEW: Check permission for viewing dialog
+  if (!canReportIssues) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">

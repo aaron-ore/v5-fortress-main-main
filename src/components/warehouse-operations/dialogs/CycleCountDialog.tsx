@@ -7,12 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-
 } from "@/components/ui/dialog";
 import CycleCountTool from "@/components/warehouse-operations/CycleCountTool";
 import { CheckCircle } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
-import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface CycleCountDialogProps {
   isOpen: boolean;
@@ -29,17 +28,16 @@ const CycleCountDialog: React.FC<CycleCountDialogProps> = ({
   scannedDataFromGlobal,
   onScannedDataProcessed,
 }) => {
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
-  // NEW: Role-based permission
   const canCycleCount = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  if (!canCycleCount) { // NEW: Check permission for viewing dialog
+  if (!canCycleCount) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
           <Card className="p-6 text-center bg-card border-border">
-            <CardTitle className="text-2xl font-bold mb-4">Access Denice</CardTitle>
+            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
             <CardContent>
               <p className="text-muted-foreground">You do not have permission to perform cycle counts.</p>
             </CardContent>

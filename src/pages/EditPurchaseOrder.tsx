@@ -20,14 +20,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Archive, Printer } from "lucide-react"; // Removed Trash2
+import { PlusCircle, Archive, Printer } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useProfile } from "@/context/ProfileContext";
-import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
   DndContext,
@@ -43,14 +43,14 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import SortableItemRow from "@/components/orders/SortableItemRow"; // Corrected import path
+import SortableItemRow from "@/components/orders/SortableItemRow";
 
 const EditPurchaseOrder: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { orders, updateOrder, archiveOrder } = useOrders();
   const { initiatePrint } = usePrint();
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { profile } = useProfile();
 
   const [order, setOrder] = useState<OrderItem | null>(null);
 
@@ -73,7 +73,6 @@ const EditPurchaseOrder: React.FC = () => {
 
   const taxRate = 0.05;
 
-  // NEW: Role-based permissions
   const canViewOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
   const canManageOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
   const canArchiveOrders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
@@ -87,7 +86,7 @@ const EditPurchaseOrder: React.FC = () => {
         setSupplier(foundOrder.customerSupplier);
         setPoDate(foundOrder.date);
         setStatus(foundOrder.status);
-        setDueDate(foundOrder.dueDate); // Fixed typo here
+        setDueDate(foundOrder.dueDate);
         setOrderType(foundOrder.orderType);
         setShippingMethod(foundOrder.shippingMethod);
         setNotes(foundOrder.notes);
@@ -121,7 +120,7 @@ const EditPurchaseOrder: React.FC = () => {
   }, [poNumber]);
 
   const handleAddItem = () => {
-    if (!canManageOrders) { // NEW: Check permission before adding item
+    if (!canManageOrders) {
       showError("You do not have permission to add items to orders.");
       return;
     }
@@ -132,7 +131,7 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleRemoveItem = (id: number) => {
-    if (!canManageOrders) { // NEW: Check permission before removing item
+    if (!canManageOrders) {
       showError("You do not have permission to remove items from orders.");
       return;
     }
@@ -144,7 +143,7 @@ const EditPurchaseOrder: React.FC = () => {
     field: keyof POItem,
     value: string | number,
   ) => {
-    if (!canManageOrders) { // NEW: Check permission before changing item
+    if (!canManageOrders) {
       showError("You do not have permission to edit order items.");
       return;
     }
@@ -161,7 +160,7 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    if (!canManageOrders) { // NEW: Check permission before submitting
+    if (!canManageOrders) {
       showError("You do not have permission to save order changes.");
       return;
     }
@@ -191,7 +190,7 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handleArchiveClick = () => {
-    if (!canArchiveOrders) { // NEW: Check permission before archiving
+    if (!canArchiveOrders) {
       showError("You do not have permission to archive orders.");
       return;
     }
@@ -208,7 +207,7 @@ const EditPurchaseOrder: React.FC = () => {
   };
 
   const handlePrintPdf = () => {
-    if (!canViewOrders) { // NEW: Check permission before printing
+    if (!canViewOrders) {
       showError("You do not have permission to print orders.");
       return;
     }
@@ -249,7 +248,7 @@ const EditPurchaseOrder: React.FC = () => {
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (!canManageOrders) { // NEW: Check permission before dragging
+    if (!canManageOrders) {
       showError("You do not have permission to reorder items in orders.");
       return;
     }
@@ -264,7 +263,7 @@ const EditPurchaseOrder: React.FC = () => {
     }
   };
 
-  if (!canViewOrders) { // NEW: Check permission for viewing page
+  if (!canViewOrders) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -326,7 +325,7 @@ const EditPurchaseOrder: React.FC = () => {
                   id="supplier"
                   value={supplier}
                   onChange={(e) => setSupplier(e.target.value)}
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </div>
               <div className="space-y-2">
@@ -336,7 +335,7 @@ const EditPurchaseOrder: React.FC = () => {
                   type="date"
                   value={poDate}
                   onChange={(e) => setPoDate(e.target.value)}
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </div>
               <div className="space-y-2">
@@ -346,7 +345,7 @@ const EditPurchaseOrder: React.FC = () => {
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </div>
               <div className="space-y-2">
@@ -396,7 +395,7 @@ const EditPurchaseOrder: React.FC = () => {
                   value={terms}
                   onChange={(e) => setTerms(e.target.value)}
                   placeholder="e.g., Net 30"
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </div>
               <div className="space-y-2">
@@ -416,12 +415,11 @@ const EditPurchaseOrder: React.FC = () => {
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
-                  id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add any special instructions or notes..."
                   rows={3}
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </div>
             </CardContent>
@@ -460,7 +458,7 @@ const EditPurchaseOrder: React.FC = () => {
                             item={item}
                             handleItemChange={handleItemChange}
                             handleRemoveItem={handleRemoveItem}
-                            disabled={!canManageOrders} // NEW: Disable row actions if no permission
+                            disabled={!canManageOrders}
                           />
                         ))}
                       </SortableContext>
@@ -485,7 +483,7 @@ const EditPurchaseOrder: React.FC = () => {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add any special instructions or notes..."
                   rows={3}
-                  disabled={!canManageOrders} // NEW: Disable input if no permission
+                  disabled={!canManageOrders}
                 />
               </ScrollArea>
             </CardContent>
