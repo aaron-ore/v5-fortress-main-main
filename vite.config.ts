@@ -21,6 +21,6 @@ export default defineConfig(() => ({
     },
   },
   optimizeDeps: {
-    // exclude: ['react-resizable-panels'], // Exclude from optimization - REMOVED
+    exclude: ['react-resizable-panels'], // Explicitly exclude from optimization
   },
 }));
