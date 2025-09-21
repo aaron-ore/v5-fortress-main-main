@@ -143,9 +143,9 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.companyName,
-      companyAddress: companyProfile.companyAddress,
-      companyContact: companyProfile.companyCurrency,
+      companyName: companyProfile.name,
+      companyAddress: companyProfile.address,
+      companyContact: companyProfile.currency,
       companyLogoUrl: companyProfile.companyLogoUrl || undefined,
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),

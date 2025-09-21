@@ -244,7 +244,7 @@ const EditInventoryItem = () => {
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[EditInventoryItem] Uploaded image URL:", finalCompanyLogoUrl);
+        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         if (item.imageUrl) {
