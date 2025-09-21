@@ -178,15 +178,20 @@ const AppContent = () => {
 
   // NEW: Routing logic for onboarding wizard
   useEffect(() => {
+    console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
       // If user is authenticated, has an organization, but hasn't completed the onboarding wizard
       if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname !== '/onboarding') {
-        console.log("[AppContent] Redirecting to onboarding wizard.");
+        console.log("[AppContent] Redirecting to onboarding wizard. Conditions: orgId present, wizard NOT completed, not already on /onboarding.");
         navigate('/onboarding', { replace: true });
       } else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
         // If wizard is completed and user is on onboarding page, redirect to dashboard
-        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard.");
+        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
         navigate('/', { replace: true });
+      } else if (!profile.organizationId && location.pathname !== '/onboarding') {
+        // If user is authenticated but has no organization yet (e.g., just signed up without company code)
+        console.log("[AppContent] User authenticated but no organization. Redirecting to onboarding to create/join org.");
+        navigate('/onboarding', { replace: true });
       }
     }
   }, [isLoadingProfile, profile, navigate, location.pathname]);

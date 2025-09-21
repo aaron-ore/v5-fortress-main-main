@@ -71,11 +71,14 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const [isLoadingCustomRoles, setIsLoadingCustomRoles] = useState(true);
 
   useEffect(() => {
+    console.log("[OnboardingContext] Profile or isLoadingProfile changed. isLoadingProfile:", isLoadingProfile, "profile:", profile);
     if (!isLoadingProfile && profile) {
       // Onboarding is considered complete if the wizard has been explicitly marked as completed
       setIsOnboardingComplete(profile.hasOnboardingWizardCompleted);
+      console.log("[OnboardingContext] isOnboardingComplete set to:", profile.hasOnboardingWizardCompleted);
     } else if (!isLoadingProfile && !profile) {
       setIsOnboardingComplete(false);
+      console.log("[OnboardingContext] No profile, isOnboardingComplete set to false.");
     }
   }, [profile, isLoadingProfile]);
 
@@ -106,6 +109,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     setIsLoadingFolders(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
+      console.log("[OnboardingContext] No session or organizationId for fetching folders. Clearing folders.");
       setInventoryFolders([]);
       setIsLoadingFolders(false);
       return;
@@ -123,6 +127,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       await logActivity("Inventory Folder Fetch Failed", `Failed to load inventory folders for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setInventoryFolders([]);
     } else {
+      console.log("[OnboardingContext] Fetched inventory folders:", data);
       setInventoryFolders(data.map(mapSupabaseFolderToInventoryFolder));
     }
     setIsLoadingFolders(false);
@@ -132,6 +137,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     setIsLoadingCustomRoles(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
+      console.log("[OnboardingContext] No session or organizationId for fetching custom roles. Clearing roles.");
       setCustomRoles([]);
       setIsLoadingCustomRoles(false);
       return;
@@ -149,6 +155,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       await logActivity("Custom Role Fetch Failed", `Failed to load custom roles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setCustomRoles([]);
     } else {
+      console.log("[OnboardingContext] Fetched custom roles:", data);
       setCustomRoles(data.map(mapSupabaseRoleToCustomRole));
     }
     setIsLoadingCustomRoles(false);
@@ -156,9 +163,11 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
+      console.log("[OnboardingContext] Profile loaded with organizationId. Fetching folders and roles.");
       fetchInventoryFolders();
       fetchCustomRoles();
     } else if (!isLoadingProfile && !profile?.organizationId) {
+      console.log("[OnboardingContext] Profile loaded without organizationId. Clearing folders and roles.");
       setInventoryFolders([]);
       setIsLoadingFolders(false);
       setCustomRoles([]);
@@ -168,10 +177,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
 
   const markOnboardingComplete = async () => {
+    console.log("[OnboardingContext] markOnboardingComplete called.");
     setIsOnboardingComplete(true);
     showSuccess("Onboarding complete! Welcome to Fortress.");
     await logActivity("Onboarding Complete", "User completed the onboarding wizard.", profile);
     if (profile && !profile.hasOnboardingWizardCompleted) {
+      console.log("[OnboardingContext] Calling markOnboardingWizardCompleted in ProfileContext.");
       await markOnboardingWizardCompleted(); // Mark the wizard as completed in the DB
     }
   };

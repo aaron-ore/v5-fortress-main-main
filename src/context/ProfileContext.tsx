@@ -113,7 +113,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const fetchProfile = useCallback(async () => {
+    console.log("[ProfileContext] fetchProfile called. User:", user?.id, "isLoadingAuth:", isLoadingAuth);
     if (!user) {
+      console.log("[ProfileContext] No user, setting profile to null.");
       setProfile(null);
       setIsLoadingProfile(false);
       return;
@@ -153,19 +155,24 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
+      console.log("[ProfileContext] Fetched profile data:", newProfileData);
       setProfile(prevProfile => {
-        // Only update if the new profile data is actually different from the previous one
         if (deepEqual(prevProfile, newProfileData)) {
-          return prevProfile; // No change, return previous object to prevent re-render
+          console.log("[ProfileContext] Profile data is identical, skipping state update.");
+          return prevProfile;
         }
-        return newProfileData; // Data changed, update state
+        console.log("[ProfileContext] Profile data changed, updating state.");
+        return newProfileData;
       });
     }
     setIsLoadingProfile(false);
-  }, [user]); // Removed 'profile' from dependency array here.
+    console.log("[ProfileContext] fetchProfile completed. isLoadingProfile set to false.");
+  }, [user, isLoadingAuth]); // Removed 'profile' from dependency array here.
 
   const fetchAllProfiles = useCallback(async () => {
+    console.log("[ProfileContext] fetchAllProfiles called. profile?.organizationId:", profile?.organizationId);
     if (!profile?.organizationId) {
+      console.log("[ProfileContext] No organizationId, setting allProfiles to empty.");
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
       return;
@@ -185,21 +192,26 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAllProfiles([]);
     } else {
       const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null));
+      console.log("[ProfileContext] Fetched all profiles:", mappedProfiles);
       setAllProfiles(mappedProfiles);
     }
     setIsLoadingAllProfiles(false);
+    console.log("[ProfileContext] fetchAllProfiles completed. isLoadingAllProfiles set to false.");
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
+    console.log("[ProfileContext] Auth state changed. isLoadingAuth:", isLoadingAuth);
     if (!isLoadingAuth) {
       fetchProfile();
     }
   }, [isLoadingAuth, fetchProfile]);
 
   useEffect(() => {
+    console.log("[ProfileContext] Profile or isLoadingProfile changed. isLoadingProfile:", isLoadingProfile, "profile?.organizationId:", profile?.organizationId);
     if (!isLoadingProfile && profile?.organizationId) {
       fetchAllProfiles();
     } else if (!isLoadingProfile && !profile?.organizationId) {
+      console.log("[ProfileContext] Not loading profile, and no organizationId. Clearing allProfiles.");
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
     }
@@ -267,7 +279,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
-    console.log("[OnboardingContext] setCompanyProfile called with profileData:", updates, "newUniqueCode:", uniqueCode);
+    console.log("[ProfileContext] updateCompanyProfile called with updates:", updates, "uniqueCode:", uniqueCode);
 
     if (!profile || !profile.organizationId) {
       const errorMessage = 'Organization not found. Cannot update company profile.';
@@ -298,16 +310,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && oldCompanyLogoUrl) {
         const oldFilePath = getFilePathFromPublicUrl(oldCompanyLogoUrl, 'company-logos');
         if (oldFilePath) {
+            console.log(`[ProfileContext] Deleting old logo file: ${oldFilePath}`);
             const { error: deleteError } = await supabase.storage
                 .from('company-logos')
                 .remove([oldFilePath]);
 
             if (deleteError) {
-                console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
+                console.error("[ProfileContext] Error deleting old company logo from storage:", deleteError);
                 showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
                 await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
             } else {
-                console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
+                console.log(`[ProfileContext] Old logo file ${oldFilePath} deleted successfully.`);
                 await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
             }
         }
@@ -357,11 +370,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const markOnboardingWizardCompleted = async () => {
     if (!profile) {
-      console.warn("Cannot mark onboarding wizard as completed: User profile not loaded.");
+      console.warn("[ProfileContext] Cannot mark onboarding wizard as completed: User profile not loaded.");
       return;
     }
     if (profile.hasOnboardingWizardCompleted) {
-      console.log("Onboarding wizard already marked as completed for this user.");
+      console.log("[ProfileContext] Onboarding wizard already marked as completed for this user.");
       return;
     }
 
@@ -371,10 +384,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .eq('id', profile.id);
 
     if (error) {
-      console.error("Error marking onboarding wizard as completed:", error);
+      console.error("[ProfileContext] Error marking onboarding wizard as completed:", error);
       await logActivity("Mark Onboarding Wizard Completed Failed", `Failed to mark onboarding wizard as completed for user ${profile.id}.`, profile, { error_message: error.message }, true);
     } else {
-      console.log("Onboarding wizard marked as completed for user:", profile.id);
+      console.log("[ProfileContext] Onboarding wizard marked as completed for user:", profile.id);
       await logActivity("Mark Onboarding Wizard Completed Success", `Onboarding wizard marked as completed for user ${profile.id}.`, profile);
       // Optimistically update local state
       setProfile(prev => prev ? { ...prev, hasOnboardingWizardCompleted: true } : null);
@@ -383,11 +396,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const markTutorialAsShown = async () => {
     if (!profile) {
-      console.warn("Cannot mark UI tutorial as shown: User profile not loaded.");
+      console.warn("[ProfileContext] Cannot mark UI tutorial as shown: User profile not loaded.");
       return;
     }
     if (profile.hasUiTutorialShown) {
-      console.log("UI tutorial already marked as shown for this user.");
+      console.log("[ProfileContext] UI tutorial already marked as shown for this user.");
       return;
     }
 
@@ -397,10 +410,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .eq('id', profile.id);
 
     if (error) {
-      console.error("Error marking UI tutorial as shown:", error);
+      console.error("[ProfileContext] Error marking UI tutorial as shown:", error);
       await logActivity("Mark UI Tutorial Shown Failed", `Failed to mark UI tutorial as shown for user ${profile.id}.`, profile, { error_message: error.message }, true);
     } else {
-      console.log("UI tutorial marked as shown for user:", profile.id);
+      console.log("[ProfileContext] UI tutorial marked as shown for user:", profile.id);
       await logActivity("Mark UI Tutorial Shown Success", `UI tutorial marked as shown for user ${profile.id}.`, profile);
       // Optimistically update local state
       setProfile(prev => prev ? { ...prev, hasUiTutorialShown: true } : null);

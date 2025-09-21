@@ -80,39 +80,48 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   const currentStep = isTutorialActive ? tutorialSteps[currentStepIndex] : null;
 
   const startTutorial = useCallback(() => {
+    console.log("[TutorialContext] startTutorial called. profile?.hasUiTutorialShown:", profile?.hasUiTutorialShown);
     if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
       setIsTutorialActive(true);
       setCurrentStepIndex(0);
       if (tutorialSteps[0].path && location.pathname !== tutorialSteps[0].path) { // Use location.pathname
+        console.log("[TutorialContext] Navigating to initial tutorial path:", tutorialSteps[0].path);
         navigate(tutorialSteps[0].path);
       }
     }
   }, [profile, navigate, location.pathname]); // Add location.pathname to dependencies
 
   const nextStep = useCallback(() => {
+    console.log("[TutorialContext] nextStep called. currentStepIndex:", currentStepIndex);
     if (currentStepIndex < tutorialSteps.length - 1) {
       setCurrentStepIndex(prev => prev + 1);
       const nextTutorialStep = tutorialSteps[currentStepIndex + 1];
       if (nextTutorialStep.path && location.pathname !== nextTutorialStep.path) { // Use location.pathname
+        console.log("[TutorialContext] Navigating to next tutorial path:", nextTutorialStep.path);
         navigate(nextTutorialStep.path);
       }
     } else {
+      console.log("[TutorialContext] Last step reached, dismissing tutorial.");
       dismissTutorial();
     }
-  }, [currentStepIndex, navigate, location.pathname]); // Add location.pathname to dependencies
+  }, [currentStepIndex, navigate, location.pathname, dismissTutorial]); // Add location.pathname to dependencies
 
   const dismissTutorial = useCallback(async () => {
+    console.log("[TutorialContext] dismissTutorial called.");
     setIsTutorialActive(false);
     setCurrentStepIndex(0);
     if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
+      console.log("[TutorialContext] Marking UI tutorial as shown in DB.");
       await markTutorialAsShown();
     }
   }, [profile, markTutorialAsShown]);
 
   useEffect(() => {
+    console.log("[TutorialContext] Effect for starting tutorial. isLoadingProfile:", isLoadingProfile, "profile:", profile?.id, "orgId:", profile?.organizationId, "wizardCompleted:", profile?.hasOnboardingWizardCompleted, "uiTutorialShown:", profile?.hasUiTutorialShown);
     if (!isLoadingProfile && profile && profile.organizationId && profile.hasOnboardingWizardCompleted && !profile.hasUiTutorialShown) { // Only start tutorial if wizard is completed and UI tutorial not shown
       // Delay slightly to ensure UI is rendered before trying to find targets
       const timer = setTimeout(() => {
+        console.log("[TutorialContext] Delay finished, attempting to start tutorial.");
         startTutorial();
       }, 1000); // 1 second delay
       return () => clearTimeout(timer);
