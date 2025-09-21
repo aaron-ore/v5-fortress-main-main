@@ -11,10 +11,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { mainNavItems, userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } from "@/lib/navigation";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface MobileDrawerContentProps {
   onLinkClick: () => void;
@@ -25,6 +26,7 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
   const navigate = useNavigate();
   const { unreadCount } = useNotifications();
   const { profile } = useProfile();
+  const {  } = useOnboarding();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut({ scope: 'local' });

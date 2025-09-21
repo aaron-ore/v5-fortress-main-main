@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError } from "@/utils/toast";
-import { formatPhoneNumber } from "@/utils/formatters";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { formatPhoneNumber } from "@/utils/formatters"; // Import the new formatter
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AddEditCustomerDialogProps {
   isOpen: boolean;

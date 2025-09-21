@@ -4,7 +4,7 @@ import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface DashboardSummaryPdfContentProps {
   reportDate: string;
@@ -94,7 +94,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
             <p className="font-semibold">Recent Sales Orders:</p>
             {(recentSalesOrders?.length ?? 0) > 0 ? (
               <ul className="list-disc list-inside ml-4">
-                {recentSalesOrders?.map(order => (
+                {recentSalesOrders?.map((order: OrderItem) => (
                   <li key={order.id}>{order.id ?? "N/A"} - {order.customerSupplier ?? "N/A"} (${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
                 ))}
               </ul>
@@ -104,7 +104,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
             <p className="font-semibold mt-4">Recent Purchase Orders:</p>
             {(recentPurchaseOrders?.length ?? 0) > 0 ? (
               <ul className="list-disc list-inside ml-4">
-                {recentPurchaseOrders?.map(order => (
+                {recentPurchaseOrders?.map((order: OrderItem) => (
                   <li key={order.id}>{order.id ?? "N/A"} - {order.customerSupplier ?? "N/A"} (${(order.totalAmount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</li>
                 ))}
               </ul>
@@ -128,7 +128,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           </thead>
           <tbody>
             {(lowStockItems?.length ?? 0) > 0 ? (
-              lowStockItems?.map((item) => (
+              lowStockItems?.map((item: InventoryItem) => (
                 <tr key={item.id}>
                   <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>
@@ -156,7 +156,7 @@ const DashboardSummaryPdfContent: React.FC<DashboardSummaryPdfContentProps> = ({
           </thead>
           <tbody>
             {(outOfStockItems?.length ?? 0) > 0 ? (
-              outOfStockItems?.map((item) => (
+              outOfStockItems?.map((item: InventoryItem) => (
                 <tr key={item.id}>
                   <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
                   <td className="py-2 px-4">{item.sku ?? "N/A"}</td>

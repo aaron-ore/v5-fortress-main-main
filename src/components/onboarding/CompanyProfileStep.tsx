@@ -8,7 +8,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext"; // <-- TypeScript compiler error here
 
 export interface CompanyProfileStepProps {
   onNext: () => void;

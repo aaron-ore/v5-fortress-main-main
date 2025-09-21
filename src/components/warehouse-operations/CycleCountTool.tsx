@@ -11,7 +11,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 // Removed useStockMovement as updates will go through Edge Function
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface CountedItem {
   id: string;

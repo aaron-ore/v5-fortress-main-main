@@ -17,7 +17,7 @@ import { useStockMovement } from "@/context/StockMovementContext";
 import { useInventory } from "@/context/InventoryContext";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
 
 const ItemHistoryPage: React.FC = () => {
@@ -48,7 +48,7 @@ const ItemHistoryPage: React.FC = () => {
   }, [stockMovements, id]);
 
   const getUserName = (userId: string) => {
-    const user = allProfiles.find(p => p.id === userId);
+    const user = allProfiles.find((p: UserProfile) => p.id === userId); // Explicitly type p
     return user?.fullName || user?.email || "Unknown User";
   };
 

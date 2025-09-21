@@ -18,7 +18,7 @@ import FolderCard from "@/components/inventory/FolderCard"; // Import FolderCard
 import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // Import FolderLabelGenerator
 import AddInventoryDialog from "@/components/AddInventoryDialog"; // Import AddInventoryDialog
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useProfile } from "@/context/ProfileContext"; // FIXED: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 const FolderContentPage: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();

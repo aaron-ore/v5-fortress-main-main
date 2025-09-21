@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
@@ -45,7 +45,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const [poNumberInput, setPoNumberInput] = useState("");
   const [selectedPO, setSelectedPO] = useState<OrderItem | null>(null);
   const [itemsToPutAway, setItemsToPutAway] = useState<PutawayItemDisplay[]>([]);
-  const [scannedFolderId, setScannedFolderId] = useState<string | null>(null); // Changed from scannedLocation to scannedFolderId
   const [isScanning, setIsScanning] = useState(false);
   const [currentScanMode, setCurrentScanMode] = useState<"po" | "folder" | "item">("po"); // Changed from location to folder
 

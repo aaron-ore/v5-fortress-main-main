@@ -20,7 +20,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed unused imports: useOrders, useVendors, useCustomers
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -33,7 +33,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
-  const { profile } = useProfile(); // NEW: Import useProfile
+  const { profile } = useProfile(); // NEW: Get profile for role checks
 
   // NEW: Role-based permissions
   const isAdmin = profile?.role === 'admin';
