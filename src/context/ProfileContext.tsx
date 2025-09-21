@@ -295,7 +295,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && oldCompanyLogoUrl) {
         const oldFilePath = getFilePathFromPublicUrl(oldCompanyLogoUrl, 'company-logos');
         if (oldFilePath) {
-            console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
             const { error: deleteError } = await supabase.storage
                 .from('company-logos')
                 .remove([oldFilePath]);

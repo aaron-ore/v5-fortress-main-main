@@ -177,7 +177,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
               locationMap[folderIdKey].totalValue += item.quantity * item.unitCost;
               locationMap[folderIdKey].totalQuantity += item.quantity;
               totalOverallValue += item.quantity * item.unitCost;
-              totalOverallQuantity += item.quantity;
+              locationMap[folderIdKey].totalQuantity += item.quantity;
             });
             groupedData = Object.entries(locationMap).map(([_key, data]) => ({
               name: data.displayName,
