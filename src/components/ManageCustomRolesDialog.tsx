@@ -54,7 +54,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDescription, setNewRoleDescription] = useState("");
-  const [selectedFeatures, setSelectedFeatures] = new Set<string>();
+  const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set());
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<CustomRole | null>(null);
