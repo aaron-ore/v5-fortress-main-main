@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } => "react";
+import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
