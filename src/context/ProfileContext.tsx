@@ -6,6 +6,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
 import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
 import { deepEqual } from '@/lib/utils'; // Import deepEqual
+import { useAuth } from './AuthContext'; // NEW: Import useAuth
 
 export interface CompanyProfile {
   companyName: string;

@@ -203,7 +203,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
             <DialogDescription>
               {roleToEdit ? "Update the details and permissions for this role." : "Define a new role and assign its permissions."}
             </DialogDescription>
-          </DialogDescription>
+          </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="roleName">Role Name <span className="text-red-500">*</span></Label>
