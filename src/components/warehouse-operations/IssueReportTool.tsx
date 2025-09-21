@@ -13,7 +13,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile, UserProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface IssueReportToolProps {
@@ -35,7 +35,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const [itemId, setItemId] = useState("");
   const [folderId, setFolderId] = useState(""); // Changed from location to folderId
   const [description, setDescription] = useState("");
-  const [contactInfo, setContactInfo] = useState("");
+  const [contactInfo, setContactInfo] = useState(profile?.email || "");
   const [isScanning, setIsScanning] = useState(false);
 
   const selectedItem = inventoryItems.find(item => item.id === itemId);
@@ -90,7 +90,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       showError("You do not have permission to report issues.");
       return;
     }
-    if (!issueType || !description || !contactInfo) {
+    if (!issueType || !description.trim() || !contactInfo.trim()) {
       showError("Please fill in all required fields (Issue Type, Description, Contact Info).");
       return;
     }
@@ -100,8 +100,8 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       itemId: selectedItem?.id || "N/A",
       itemName: selectedItem?.name || "N/A",
       folderId: folderId || "N/A", // Updated to folderId
-      description,
-      contactInfo,
+      description: description.trim(),
+      contactInfo: contactInfo.trim(),
       timestamp: new Date().toISOString(),
     };
 
@@ -137,7 +137,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     setContactInfo("");
   };
 
-  const isSubmitButtonDisabled = !issueType || !description || !contactInfo || !canReportIssues; // NEW: Disable if no permission
+  const isSubmitButtonDisabled = !issueType || !description.trim() || !contactInfo.trim() || !canReportIssues; // NEW: Disable if no permission
 
   return (
     <div className="flex flex-col h-full space-y-4">
@@ -211,7 +211,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
                   </SelectContent>
                 </Select>
                 {folderId && folderId !== "N/A" && (
-                  <p className="text-xs text-muted-foreground">Selected Folder: <span className="font-semibold">{getFolderName(folderId)}</span></p>
+                  <p className="text-xs text-muted-foreground mt-2">Selected Folder: <span className="font-semibold">{getFolderName(folderId)}</span></p>
                 )}
               </div>
 

@@ -22,7 +22,7 @@ import { AutomationProvider } from "./context/AutomationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
-import { TutorialProvider, useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
+import { useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
 import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
 
 // Dynamically import all page components for code splitting
@@ -102,6 +102,7 @@ const AuthenticatedApp = () => { // Removed profile prop
                               <Route path="users" element={<Users />} />
                               <Route path="setup-instructions" element={<SetupInstructions />} />
                               <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
+                              <Route path="reset-password" element={<ResetPassword />} />
                               <Route path="folders" element={<Folders />} />
                               <Route path="folders/:folderId" element={<FolderContentPage />} />
                               <Route path="integrations" element={<Integrations />} />
@@ -187,8 +188,8 @@ const AppContent = () => {
   const mainAppRoutes = profile ? (
     <ErrorBoundary> {/* Removed profile prop */}
       <Routes>
-        <Route path="/*" element={<AuthenticatedApp />} /> {/* Removed profile prop */}
         <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/*" element={<AuthenticatedApp />} /> {/* Removed profile prop */}
       </Routes>
     </ErrorBoundary>
   ) : (

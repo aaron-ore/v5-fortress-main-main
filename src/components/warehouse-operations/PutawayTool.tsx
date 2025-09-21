@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import CycleCountTool from "@/components/warehouse-operations/CycleCountTool";
 import { CheckCircle } from "lucide-react";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface CycleCountDialogProps {
@@ -38,7 +38,7 @@ const CycleCountDialog: React.FC<CycleCountDialogProps> = ({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
           <Card className="p-6 text-center bg-card border-border">
-            <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+            <CardTitle className="text-2xl font-bold mb-4">Access Denice</CardTitle>
             <CardContent>
               <p className="text-muted-foreground">You do not have permission to perform cycle counts.</p>
             </CardContent>
