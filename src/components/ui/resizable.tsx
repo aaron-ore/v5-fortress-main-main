@@ -1,13 +1,12 @@
 "use client"
 
-import * as React from "react"
 import {
   Panel,
   PanelGroup,
   PanelProps,
   PanelGroupProps,
-  ResizeHandle,
-  ResizeHandleProps,
+  PanelResizeHandle as ResizeHandle, // Renamed import
+  PanelResizeHandleProps as ResizeHandleProps, // Renamed import
 } from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"

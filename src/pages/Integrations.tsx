@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plug, CheckCircle, RefreshCw, AlertTriangle, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
+import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -502,7 +502,7 @@ const Integrations: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-2" /> Sync Sales Orders to QuickBooks
+                    <Plug className="h-4 w-4 mr-2" /> Sync Sales Orders to QuickBooks
                   </>
                 )}
               </Button>
