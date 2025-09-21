@@ -3,7 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile } from "./ProfileContext";
+import { useProfile, UserProfile } from "./ProfileContext"; // Corrected import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface ReplenishmentTask {
@@ -31,6 +31,7 @@ const ReplenishmentContext = createContext<ReplenishmentContextType | undefined>
 
 export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [replenishmentTasks, setReplenishmentTasks] = useState<ReplenishmentTask[]>([]);
+  const [isLoadingReplenishmentTasks, setIsLoadingReplenishmentTasks] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
   const mapSupabaseTaskToReplenishmentTask = (task: any): ReplenishmentTask => {
@@ -58,9 +59,11 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   const fetchReplenishmentTasks = useCallback(async () => {
+    setIsLoadingReplenishmentTasks(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       setReplenishmentTasks([]);
+      setIsLoadingReplenishmentTasks(false);
       return;
     }
 
@@ -78,7 +81,8 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
       const fetchedTasks: ReplenishmentTask[] = data.map(mapSupabaseTaskToReplenishmentTask);
       setReplenishmentTasks(fetchedTasks);
     }
-  }, [profile?.organizationId]);
+    setIsLoadingReplenishmentTasks(false);
+  }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingProfile) {
@@ -155,7 +159,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   return (
-    <ReplenishmentContext.Provider value={{ replenishmentTasks, addReplenishmentTask, updateReplenishmentTask, fetchReplenishmentTasks }}>
+    <ReplenishmentContext.Provider value={{ replenishmentTasks, isLoadingReplenishmentTasks, addReplenishmentTask, updateReplenishmentTask, fetchReplenishmentTasks }}>
       {children}
     </ReplenishmentContext.Provider>
   );

@@ -2,7 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ProductSalesData {
   productName: string;
@@ -99,7 +99,7 @@ const SalesByProductPdfContent: React.FC<SalesByProductPdfContentProps> = ({
           </thead>
           <tbody>
             {(productSales?.length ?? 0) > 0 ? (
-              productSales?.map((data, index) => (
+              productSales?.map((data: ProductSalesData, index: number) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{data.productName ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{data.sku ?? "N/A"}</td>

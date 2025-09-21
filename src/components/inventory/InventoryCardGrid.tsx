@@ -1,7 +1,7 @@
 import React from "react";
 import InventoryCard from "@/components/InventoryCard"; // Assuming this component exists and is suitable
 import { InventoryItem } from "@/context/InventoryContext";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface InventoryCardGridProps {
   items: InventoryItem[];
@@ -32,7 +32,7 @@ const InventoryCardGrid: React.FC<InventoryCardGridProps> = ({
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-      {items.map((item) => (
+      {items.map((item: InventoryItem) => ( // Explicitly type item
         <InventoryCard
           key={item.id}
           item={item}

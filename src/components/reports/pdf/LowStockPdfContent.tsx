@@ -4,7 +4,7 @@ import { InventoryItem } from "@/context/InventoryContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface LowStockPdfContentProps {
   reportDate: string;
@@ -95,7 +95,7 @@ const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
           </thead>
           <tbody>
             {(items?.length ?? 0) > 0 ? (
-              items?.map((item) => (
+              items?.map((item: InventoryItem) => (
                 <tr key={item.id}>
                   <td className="py-2 px-4 border-r border-gray-200">{item.name ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.sku ?? "N/A"}</td>

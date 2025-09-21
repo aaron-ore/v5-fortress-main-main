@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { useProfile } from "./ProfileContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 
 export interface TutorialStep {
   id: string;
@@ -73,6 +73,7 @@ const TutorialContext = createContext<TutorialContextType | undefined>(undefined
 export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { profile, isLoadingProfile, markTutorialAsShown } = useProfile();
   const navigate = useNavigate();
+  const location = useLocation(); // Use useLocation
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
@@ -82,23 +83,23 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (profile && !profile.hasOnboardingTutorialShown) {
       setIsTutorialActive(true);
       setCurrentStepIndex(0);
-      if (tutorialSteps[0].path && navigate.pathname !== tutorialSteps[0].path) {
+      if (tutorialSteps[0].path && location.pathname !== tutorialSteps[0].path) { // Use location.pathname
         navigate(tutorialSteps[0].path);
       }
     }
-  }, [profile, navigate]);
+  }, [profile, navigate, location.pathname]); // Add location.pathname to dependencies
 
   const nextStep = useCallback(() => {
     if (currentStepIndex < tutorialSteps.length - 1) {
       setCurrentStepIndex(prev => prev + 1);
       const nextTutorialStep = tutorialSteps[currentStepIndex + 1];
-      if (nextTutorialStep.path && navigate.pathname !== nextTutorialStep.path) {
+      if (nextTutorialStep.path && location.pathname !== nextTutorialStep.path) { // Use location.pathname
         navigate(nextTutorialStep.path);
       }
     } else {
       dismissTutorial();
     }
-  }, [currentStepIndex, navigate]);
+  }, [currentStepIndex, navigate, location.pathname]); // Add location.pathname to dependencies
 
   const dismissTutorial = useCallback(async () => {
     setIsTutorialActive(false);

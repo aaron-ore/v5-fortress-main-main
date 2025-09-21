@@ -2,7 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ProfitabilityMetricsData {
   name: string;
@@ -82,7 +82,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
               <span className="font-semibold">Gross Profit:</span>
               <span>${(grossProfit ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
-            {(metricsData ?? []).map((metric, index) => (
+            {(metricsData ?? []).map((metric: ProfitabilityMetricsData, index: number) => (
               <div key={index} className="flex justify-between">
                 <span className="font-semibold">{metric.name ?? "N/A"}:</span>
                 <span>{(metric.value ?? 0).toFixed(1)}%</span>
@@ -103,7 +103,7 @@ const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
           </thead>
           <tbody>
             {(metricsData?.length ?? 0) > 0 ? (
-              metricsData?.map((metric, index) => (
+              metricsData?.map((metric: ProfitabilityMetricsData, index: number) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{metric.name ?? "N/A"}</td>
                   <td className="py-2 px-4 text-right">{(metric.value ?? 0).toFixed(1)}%</td>

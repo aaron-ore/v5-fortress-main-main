@@ -5,7 +5,7 @@ import { usePrint } from "@/context/PrintContext";
 import { showError } from "@/utils/toast";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { InventoryItem } from "@/context/InventoryContext";
 import { OrderItem } from "@/context/OrdersContext";
 

@@ -1,6 +1,6 @@
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface InvoiceItem {
   id: number;
@@ -120,7 +120,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
           </tr>
         </thead>
         <tbody>
-          {(items ?? []).map((item, _index) => (
+          {(items ?? []).map((item: InvoiceItem, _index: number) => (
             <tr key={item.id}>
               <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity ?? 0}</td>
@@ -128,7 +128,7 @@ const InvoicePdfContent: React.FC<InvoicePdfContentProps> = ({
               <td className="py-2 px-4 text-right">${((item.quantity ?? 0) * (item.unitPrice ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           ))}
-          {Array.from({ length: Math.max(0, 10 - (items?.length ?? 0)) }).map((_, i) => (
+          {Array.from({ length: Math.max(0, 10 - (items?.length ?? 0)) }).map((_, i: number) => (
             <tr key={`empty-${i}`} className="border-b border-gray-200">
               <td className="py-2 px-4 border-r border-gray-200">&nbsp;</td>
               <td className="py-2 px-4 border-r border-gray-200">&nbsp;</td>

@@ -2,7 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface GroupedDataItem {
   name: string;
@@ -95,7 +95,7 @@ const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> 
           </thead>
           <tbody>
             {(groupedData?.length ?? 0) > 0 ? (
-              groupedData?.map((data, index) => (
+              groupedData?.map((data: GroupedDataItem, index: number) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{data.name ?? "N/A"}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200">{(data.totalQuantity ?? 0).toLocaleString()}</td>

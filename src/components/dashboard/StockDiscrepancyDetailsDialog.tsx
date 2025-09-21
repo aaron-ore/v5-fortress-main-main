@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, User, Clock, MapPin, Package, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { showError, showSuccess } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -105,7 +105,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
   }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]);
 
   const getUserName = (userId: string) => {
-    const user = allProfiles.find(p => p.id === userId);
+    const user = allProfiles.find((p: UserProfile) => p.id === userId); // Explicitly type p
     return user?.fullName || user?.email || "Unknown User";
   };
 
@@ -173,7 +173,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
             ) : (
               <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
                 <div className="space-y-4">
-                  {discrepancies.map((discrepancy) => {
+                  {discrepancies.map((discrepancy: DiscrepancyLog) => { // Explicitly type discrepancy
                     const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                     return (
                       <div key={discrepancy.id} className="bg-muted/20 p-3 rounded-md border border-border">

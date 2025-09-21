@@ -3,7 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile } from "./ProfileContext";
+import { useProfile, UserProfile } from "./ProfileContext"; // Corrected import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface AutomationRule {
@@ -157,8 +157,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
         condition_json: rule.conditionJson,
         action_json: rule.actionJson,
       })
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error("Error adding automation rule:", error);

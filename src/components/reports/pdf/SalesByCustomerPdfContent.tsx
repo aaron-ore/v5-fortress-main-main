@@ -2,7 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface CustomerSalesData {
   customerName: string;
@@ -97,7 +97,7 @@ const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
           </thead>
           <tbody>
             {(customerSales?.length ?? 0) > 0 ? (
-              customerSales?.map((data, index) => (
+              customerSales?.map((data: CustomerSalesData, index: number) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{data.customerName ?? "N/A"}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

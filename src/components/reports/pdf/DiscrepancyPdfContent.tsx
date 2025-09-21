@@ -4,7 +4,7 @@ import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface DiscrepancyLog {
   id: string;
@@ -56,7 +56,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
       : "STOCK DISCREPANCY REPORT";
 
   const getUserName = (userId: string) => {
-    const user = (allProfiles ?? []).find(p => p.id === userId);
+    const user = (allProfiles ?? []).find((p: UserProfile) => p.id === userId); // Explicitly type p
     return user?.fullName || user?.email || "Unknown User";
   };
 
@@ -122,7 +122,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
           </thead>
           <tbody>
             {(discrepancies?.length ?? 0) > 0 ? (
-              discrepancies?.map((discrepancy) => {
+              discrepancies?.map((discrepancy: DiscrepancyLog) => {
                 const discrepancyTimestamp = parseAndValidateDate(discrepancy.timestamp);
                 return (
                   <tr key={discrepancy.id}>

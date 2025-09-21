@@ -268,7 +268,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         status: status,
         last_updated: lastUpdated,
         image_url: item.imageUrl,
-        vendor_id: item.vendorId,
+        vendor_id: item.vendor.id, // Corrected to item.vendor.id
         barcode_url: item.barcodeUrl,
         user_id: session.user.id,
         organization_id: profile.organizationId,

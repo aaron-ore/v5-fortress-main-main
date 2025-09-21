@@ -6,7 +6,7 @@ import { Search, Bell, User, LogOut, Flag } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CurrentDateTime from "./CurrentDateTime";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { supabase } from "@/lib/supabaseClient";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileNav from "./mobile/MobileNav";
@@ -34,21 +34,25 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
   const isMobile = useIsMobile();
 
   const handleLogout = async () => {
+    const { data: { session } = { session: null } } = await supabase.auth.getSession();
+    if (!session) {
+      showSuccess("You are already logged out.");
+      navigate("/auth");
+      return;
+    }
+
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
-      if (error.message.includes("Auth session missing")) {
-        showSuccess("Logged out successfully!");
-      } else {
-        showError("Failed to log out: " + error.message);
-      }
+      showError("Failed to log out: " + error.message);
     } else {
       showSuccess("Logged out successfully!");
+      navigate("/auth");
     }
   };
 
   const renderDropdownItems = (items: NavItem[]) => (
     <>
-      {items.map((item) => {
+      {items.map((item: NavItem) => { // Explicitly type item
         if (item.adminOnly && profile?.role !== 'admin') {
           return null;
         }

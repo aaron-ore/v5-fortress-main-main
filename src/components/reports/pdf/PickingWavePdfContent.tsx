@@ -1,7 +1,7 @@
 import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext";
 
 interface PickListItem {
@@ -81,7 +81,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
           </thead>
           <tbody>
             {(ordersInWave?.length ?? 0) > 0 ? (
-              ordersInWave?.map((order, _index) => (
+              ordersInWave?.map((order: { id: string; customerSupplier: string; deliveryRoute?: string }, _index: number) => (
                 <tr key={order.id}>
                   <td className="py-2 px-4 border-r border-gray-200">{order.id ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{order.customerSupplier ?? "N/A"}</td>
@@ -110,7 +110,7 @@ const PickingWavePdfContent: React.FC<PickingWavePdfContentProps> = ({
           </thead>
           <tbody>
             {(pickListItems?.length ?? 0) > 0 ? (
-              pickListItems?.map((item, _index) => (
+              pickListItems?.map((item: PickListItem, _index: number) => (
                 <tr key={_index}>
                   <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
                   <td className="py-2 px-4 border-r border-gray-200">{item.itemSku ?? "N/A"}</td>

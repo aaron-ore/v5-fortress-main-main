@@ -4,7 +4,7 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, sub
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
@@ -75,6 +75,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const refresh = useCallback(() => {
+    setError(null);
     setRefreshTrigger(prev => prev + 1);
     refreshInventory();
     fetchOrders();
@@ -90,7 +91,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
     if (!filterFrom || !filterTo) return items;
 
-    return items.filter(item => {
+    return items.filter((item: any) => { // Explicitly type item
       const itemDate = parseAndValidateDate(item[dateKey]);
       return itemDate && isValid(itemDate) && isWithinInterval(itemDate, { start: filterFrom, end: filterTo });
     });
@@ -178,31 +179,31 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     const filteredOrders = filterDataByDateRange(orders, 'date');
     const filteredStockMovements = filterDataByDateRange(stockMovements, 'timestamp');
 
-    const totalStockValue = filteredInventory.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-    const totalUnitsOnHand = filteredInventory.reduce((sum, item) => sum + item.quantity, 0);
-    const lowStockItemsCount = filteredInventory.filter(item => item.quantity <= item.reorderLevel).length;
-    const outOfStockItemsCount = filteredInventory.filter(item => item.quantity === 0).length;
+    const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+    const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
+    const lowStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel).length;
+    const outOfStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity === 0).length;
     const ordersDueTodayCount = filteredOrders.filter(
-      order => format(parseAndValidateDate(order.dueDate) || new Date(), "yyyy-MM-dd") === todayString && order.status !== "Shipped" && order.status !== "Packed"
+      (order: OrderItem) => format(parseAndValidateDate(order.dueDate) || new Date(), "yyyy-MM-dd") === todayString && order.status !== "Shipped" && order.status !== "Packed"
     ).length;
-    const incomingShipmentsCount = filteredOrders.filter(order => order.type === "Purchase" && order.status !== "Shipped").length;
+    const incomingShipmentsCount = filteredOrders.filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped").length;
     const recentAdjustmentsCount = filteredStockMovements.filter(
-      movement => format(parseAndValidateDate(movement.timestamp) || new Date(), "yyyy-MM-dd") === todayString
+      (movement: any) => format(parseAndValidateDate(movement.timestamp) || new Date(), "yyyy-MM-dd") === todayString
     ).length;
 
-    const totalSalesRevenue = filteredOrders.filter(order => order.type === "Sales").reduce((sum, order) => sum + order.totalAmount, 0);
-    const totalPurchaseCost = filteredOrders.filter(order => order.type === "Purchase").reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalSalesRevenue = filteredOrders.filter((order: OrderItem) => order.type === "Sales").reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
+    const totalPurchaseCost = filteredOrders.filter((order: OrderItem) => order.type === "Purchase").reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
     const totalIncome = totalSalesRevenue;
     const totalLosses = totalPurchaseCost;
 
     const totalOrders = filteredOrders.length;
     const fulfilledOrders = filteredOrders.filter(
-      (order) => order.status === "Shipped" || order.status === "Packed"
+      (order: OrderItem) => order.status === "Shipped" || order.status === "Packed"
     ).length;
     const fulfillmentPercentage = totalOrders > 0 ? Math.round((fulfilledOrders / totalOrders) * 100) : 0;
     const pendingPercentage = 100 - fulfillmentPercentage;
 
-    const totalInventoryCost = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+    const totalInventoryCost = inventoryItems.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
     const inventoryTurnoverRate = totalInventoryCost > 0 ? `${(totalSalesRevenue / totalInventoryCost).toFixed(1)}x` : "N/A";
 
     const supplierPerformanceScore: "good" | "average" | "bad" = "good";
@@ -217,7 +218,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         currentDate = subMonths(currentDate, -1);
       }
 
-      orders.filter(order => order.type === "Sales").forEach(order => {
+      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         const orderDate = parseAndValidateDate(order.date);
         if (!orderDate || !isValid(orderDate)) return;
         const monthKey = format(orderDate, "MMM yyyy");
@@ -227,7 +228,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      inventoryItems.forEach(item => {
+      inventoryItems.forEach((item: InventoryItem) => {
         const itemDate = parseAndValidateDate(item.createdAt); // Accessing createdAt
         if (!itemDate || !isValid(itemDate)) return;
         const monthKey = format(itemDate, "MMM yyyy");
@@ -236,12 +237,12 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      return Object.keys(monthlyData).sort((a, b) => {
+      return Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
         const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
-      }).map(monthKey => ({
+      }).map((monthKey: string) => ({ // Explicitly type monthKey
         name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
         "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
         "New Inventory Added": parseFloat(monthlyData[monthKey].newInventory.toFixed(0)),
@@ -259,7 +260,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         currentDate = subMonths(currentDate, -1);
       }
 
-      orders.forEach(order => {
+      orders.forEach((order: OrderItem) => {
         const orderDate = parseAndValidateDate(order.date);
         if (!orderDate || !isValid(orderDate)) return;
         const monthKey = format(orderDate, "MMM yyyy");
@@ -272,13 +273,13 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-      Object.keys(monthlyData).sort((a, b) => {
+      const totalCurrentInventoryValue = inventoryItems.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+      Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
         const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
-      }).forEach((monthKey, index, array) => {
+      }).forEach((monthKey: string, index: number, array: string[]) => { // Explicitly type monthKey, index, array
         if (monthKey === format(today, "MMM yyyy")) {
           monthlyData[monthKey].inventoryValue = totalCurrentInventoryValue;
         } else {
@@ -287,12 +288,12 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      return Object.keys(monthlyData).sort((a, b) => {
+      return Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
         const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
-      }).map(monthKey => ({
+      }).map((monthKey: string) => ({ // Explicitly type monthKey
         name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
         "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
         "Inventory Value": parseFloat(monthlyData[monthKey].inventoryValue.toFixed(2)),
@@ -312,7 +313,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         currentDate = subDays(currentDate, -1);
       }
 
-      orders.forEach(order => {
+      orders.forEach((order: OrderItem) => {
         const orderDate = parseAndValidateDate(order.date);
         if (!orderDate || !isValid(orderDate)) return;
         const dateKey = format(orderDate, "MMM dd");
@@ -325,7 +326,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      stockMovements.forEach(movement => {
+      stockMovements.forEach((movement: any) => { // Explicitly type movement
         const moveDate = parseAndValidateDate(movement.timestamp);
         if (!moveDate || !isValid(moveDate)) return;
         const dateKey = format(moveDate, "MMM dd");
@@ -334,12 +335,12 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      return Object.keys(dailyMetrics).sort((a, b) => {
+      return Object.keys(dailyMetrics).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
         const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
         return dateA.getTime() - dateB.getTime();
-      }).map(dateKey => {
+      }).map((dateKey: string) => { // Explicitly type dateKey
         const totalDailyActivity = dailyMetrics[dateKey].salesVolume + dailyMetrics[dateKey].purchaseVolume + dailyMetrics[dateKey].adjustments;
         return {
           name: dateKey,
@@ -350,7 +351,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
     const totalStockValueTrendData = (() => {
       const dataPoints = [];
-      const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
+      const totalCurrentInventoryValue = inventoryItems.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
       for (let i = 0; i < 6; i++) {
         const month = subMonths(today, 5 - i);
         const monthName = format(month, "MMM");
@@ -372,8 +373,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       const currentMonthIndex = new Date().getMonth();
 
-      const totalCurrentInventoryValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0);
-      const totalCurrentSalesRevenue = orders.filter(o => o.type === "Sales").reduce((sum, o) => sum + o.totalAmount, 0);
+      const totalCurrentInventoryValue = inventoryItems.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+      const totalCurrentSalesRevenue = orders.filter((o: OrderItem) => o.type === "Sales").reduce((sum: number, o: OrderItem) => sum + o.totalAmount, 0);
 
       for (let i = 0; i < 6; i++) {
         const monthIndex = (currentMonthIndex - 5 + i + 12) % 12;
@@ -410,7 +411,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         historicalSales[monthKey] = 0;
       }
 
-      orders.filter(order => order.type === "Sales").forEach(order => {
+      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         const orderDate = parseAndValidateDate(order.date);
         if (!orderDate || !isValid(orderDate)) return;
         const monthKey = format(orderDate, "MMM yyyy");
@@ -420,14 +421,14 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       });
 
       const chartData = [];
-      const historicalKeys = Object.keys(historicalSales).sort((a, b) => {
+      const historicalKeys = Object.keys(historicalSales).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
         const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
       });
 
-      historicalKeys.forEach(monthKey => {
+      historicalKeys.forEach((monthKey: string) => { // Explicitly type monthKey
         chartData.push({
           name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
           "Actual Sales": parseFloat(historicalSales[monthKey].toFixed(2)),
@@ -435,9 +436,9 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         });
       });
 
-      const lastThreeMonthsSales = historicalKeys.slice(-3).map(key => historicalSales[key]);
+      const lastThreeMonthsSales = historicalKeys.slice(-3).map((key: string) => historicalSales[key]); // Explicitly type key
       const averageSales = lastThreeMonthsSales.length > 0
-        ? lastThreeMonthsSales.reduce((sum, val) => sum + val, 0) / lastThreeMonthsSales.length
+        ? lastThreeMonthsSales.reduce((sum: number, val: number) => sum + val, 0) / lastThreeMonthsSales.length
         : 0;
 
       for (let i = 1; i <= 3; i++) {
@@ -460,7 +461,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const currentDayIndex = today.getDay();
 
-      orders.filter(order => order.type === "Sales").forEach(order => {
+      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         const orderDate = parseAndValidateDate(order.date);
         if (!orderDate || !isValid(orderDate)) return;
         const diffDays = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -492,10 +493,10 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       let totalSalesRevenueCalc = 0;
       let totalCostOfGoodsSold = 0;
 
-      orders.filter(order => order.type === "Sales").forEach(order => {
+      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
-        order.items.forEach(orderItem => {
-          const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+        order.items.forEach((orderItem: any) => { // Explicitly type orderItem
+          const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId);
           if (inventoryItem) {
             totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
           } else {
@@ -520,9 +521,9 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
     const topStockBulletGraphData = (() => {
       return inventoryItems
-        .sort((a, b) => b.quantity - a.quantity)
+        .sort((a: InventoryItem, b: InventoryItem) => b.quantity - a.quantity) // Explicitly type a, b
         .slice(0, 4)
-        .map(item => ({
+        .map((item: InventoryItem) => ({ // Explicitly type item
           name: item.name,
           quantity: item.quantity,
           reorderLevel: item.reorderLevel,
@@ -539,7 +540,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         };
       } = {};
 
-      structuredLocations.forEach(loc => {
+      structuredLocations.forEach((loc: InventoryFolder) => { // Explicitly type loc
         locationMetrics[loc.id] = {
           totalMovements: 0,
           currentStock: 0,
@@ -548,8 +549,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         };
       });
 
-      stockMovements.forEach(movement => {
-        const item = inventoryItems.find(inv => inv.id === movement.itemId);
+      stockMovements.forEach((movement: any) => { // Explicitly type movement
+        const item = inventoryItems.find((inv: InventoryItem) => inv.id === movement.itemId); // Explicitly type inv
         if (item) {
           const movementFolderId = item.folderId;
           if (locationMetrics[movementFolderId]) {
@@ -563,7 +564,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      inventoryItems.forEach(item => {
+      inventoryItems.forEach((item: InventoryItem) => { // Explicitly type item
         if (locationMetrics[item.folderId]) {
           locationMetrics[item.folderId].currentStock += item.quantity;
         }
@@ -591,16 +592,16 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         };
       });
 
-      return healthData.sort((a, b) => b.movementScore - a.movementScore).slice(0, 4);
+      return healthData.sort((a: any, b: any) => b.movementScore - a.movementScore).slice(0, 4); // Explicitly type a, b
     })();
 
 
-    const lowStockItems = filteredInventory.filter(item => item.quantity <= item.reorderLevel);
-    const outOfStockItems = filteredInventory.filter(item => item.quantity === 0);
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
+    const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
 
     const recentSalesOrders = filteredOrders
-      .filter(order => order.type === "Sales")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Sales")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
@@ -609,18 +610,18 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       .slice(0, 5);
 
     const recentPurchaseOrders = filteredOrders
-      .filter(order => order.type === "Purchase")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Purchase")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
-        return dateB.getTime() - dateA.getTime();
+        return dateB.getTime() - dateB.getTime();
       })
       .slice(0, 5);
 
     const openPurchaseOrders = orders
-      .filter(order => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.dueDate);
         const dateB = parseAndValidateDate(b.dueDate);
         if (!dateA || !dateB) return 0;
@@ -629,7 +630,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       .slice(0, 5);
 
     const pendingInvoices = orders
-      .filter(order => {
+      .filter((order: OrderItem) => { // Explicitly type order
         const orderDueDate = parseAndValidateDate(order.dueDate);
         const thirtyDaysAgo = subDays(new Date(), 30);
         return (
@@ -640,7 +641,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
           orderDueDate && isValid(orderDueDate) && isWithinInterval(orderDueDate, { start: new Date(0), end: thirtyDaysAgo })
         );
       })
-      .sort((a, b) => {
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.dueDate);
         const dateB = parseAndValidateDate(b.dueDate);
         if (!dateA || !dateB) return 0;
@@ -649,8 +650,8 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       .slice(0, 5);
 
     const recentShipments = orders
-      .filter(order => order.type === "Sales" && order.status === "Shipped")
-      .sort((a, b) => {
+      .filter((order: OrderItem) => order.type === "Sales" && order.status === "Shipped")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.date);
         const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB) return 0;
@@ -659,12 +660,12 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
       .slice(0, 5);
 
     const topSellingProducts = inventoryItems
-      .map(item => ({
+      .map((item: InventoryItem) => ({ // Explicitly type item
         name: item.name,
         unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
       }))
-      .filter(product => product.unitsSold > 0)
-      .sort((a, b) => b.unitsSold - a.unitsSold)
+      .filter((product: { name: string; unitsSold: number }) => product.unitsSold > 0) // Explicitly type product
+      .sort((a: { name: string; unitsSold: number }, b: { name: string; unitsSold: number }) => b.unitsSold - a.unitsSold) // Explicitly type a, b
       .slice(0, 5);
 
     return {

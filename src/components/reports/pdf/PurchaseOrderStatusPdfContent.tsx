@@ -3,7 +3,7 @@ import { format, isValid } from "date-fns";
 import { OrderItem } from "@/context/OrdersContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface PurchaseOrderStatusPdfContentProps {
   reportDate: string;
@@ -95,7 +95,7 @@ const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps
           </thead>
           <tbody>
             {(orders?.length ?? 0) > 0 ? (
-              orders?.map((order) => {
+              orders?.map((order: OrderItem) => {
                 const orderDate = parseAndValidateDate(order.date);
                 const dueDate = parseAndValidateDate(order.dueDate);
                 return (

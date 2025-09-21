@@ -181,7 +181,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("All Profiles Fetch Failed", `Failed to load all profiles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setAllProfiles([]);
     } else {
-      const mappedProfiles: UserProfile[] = data.map(p => mapSupabaseProfileToUserProfile(p, null));
+      const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null));
       setAllProfiles(mappedProfiles);
     }
     setIsLoadingAllProfiles(false);
@@ -289,21 +289,23 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       payload.unique_code = uniqueCode;
     }
 
-    if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && profile.companyProfile?.companyLogoUrl) {
-      const oldFilePath = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
-      if (oldFilePath) {
-        console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
-        const { error: deleteError } = await supabase.storage
-            .from('company-logos')
-            .remove([oldFilePath]);
+    const oldCompanyLogoUrl = profile.companyProfile?.companyLogoUrl; // Declare here
+    if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && oldCompanyLogoUrl) {
+        const oldFilePath = getFilePathFromPublicUrl(oldCompanyLogoUrl, 'company-logos');
+        if (oldFilePath) {
+            console.log(`[OnboardingContext] Deleting old logo file: ${oldFilePath}`);
+            const { error: deleteError } = await supabase.storage
+                .from('company-logos')
+                .remove([oldFilePath]);
 
-        if (deleteError) {
-            console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
-            showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
-            await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
-        } else {
-            console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
-            await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
+            if (deleteError) {
+                console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
+                showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
+                await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
+            } else {
+                console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
+                await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
+            }
         }
     }
 

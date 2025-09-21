@@ -14,7 +14,7 @@ import ConfirmDialog from "@/components/ConfirmDialog"; // Import ConfirmDialog
 import { useCategories } from "@/context/CategoryContext";
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2 } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface CategoryManagementDialogProps {
   isOpen: boolean;
@@ -67,7 +67,6 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
   const confirmRemoveCategory = () => {
     if (categoryToDelete) {
       removeCategory(categoryToDelete.id);
-      showSuccess(`Category "${categoryToDelete.name}" removed.`);
     }
     setIsConfirmDeleteDialogOpen(false);
     setCategoryToDelete(null);

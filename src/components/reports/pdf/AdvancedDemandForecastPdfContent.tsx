@@ -1,7 +1,7 @@
 import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ForecastDataPoint {
   name: string;
@@ -75,7 +75,7 @@ const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfConten
           </thead>
           <tbody>
             {(forecastData?.length ?? 0) > 0 ? (
-              forecastData?.map((dataPoint, index) => (
+              forecastData?.map((dataPoint: ForecastDataPoint, index: number) => (
                 <tr key={index}>
                   <td className="py-2 px-4 border-r border-gray-200">{dataPoint.name ?? "N/A"}</td>
                   <td className="py-2 px-4 text-right border-r border-gray-200">{(dataPoint["Historical Demand"] ?? 0) > 0 ? (dataPoint["Historical Demand"] ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"}</td>

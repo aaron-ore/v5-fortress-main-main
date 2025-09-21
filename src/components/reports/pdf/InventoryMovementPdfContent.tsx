@@ -4,7 +4,7 @@ import { UserProfile } from "@/context/ProfileContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface InventoryMovementPdfContentProps {
   reportDate: string;
@@ -32,7 +32,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
     : "All Time";
 
   const getUserName = (userId: string) => {
-    const user = (allProfiles ?? []).find(p => p.id === userId);
+    const user = (allProfiles ?? []).find((p: UserProfile) => p.id === userId); // Explicitly type p
     return user?.fullName || user?.email || "Unknown User";
   };
 
@@ -89,7 +89,7 @@ const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = 
           </thead>
           <tbody>
             {(movements?.length ?? 0) > 0 ? (
-              movements?.map((movement) => {
+              movements?.map((movement: StockMovement) => {
                 const movementTimestamp = parseAndValidateDate(movement.timestamp);
                 return (
                   <tr key={movement.id}>

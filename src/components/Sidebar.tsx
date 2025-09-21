@@ -13,7 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { mainNavItems, userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } from "@/lib/navigation";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
@@ -90,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   const renderNavItems = (items: NavItem[], isSubItem = false) => (
     <div className={cn("space-y-1", isSubItem && "ml-4 border-l border-sidebar-border pl-2")}>
-      {items.map((item) => {
+      {items.map((item: NavItem) => { // Explicitly type item
         const currentIsActive = item.href === "/" 
           ? location.pathname === "/" 
           : location.pathname.startsWith(item.href);
@@ -235,11 +235,11 @@ const Sidebar: React.FC<SidebarProps> = () => {
         <div className="flex items-center p-4 border-b border-sidebar-border flex-shrink-0">
           <Avatar className="h-9 w-9">
             <AvatarImage src={profile.avatarUrl} alt={profile.fullName} />
-            <AvatarFallback>{profile.fullName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+            <AvatarFallback>{profile.fullName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div className="ml-3 overflow-hidden">
             <p className="text-sm font-medium text-sidebar-foreground truncate">{profile.fullName}</p>
-            <p className="text-xs text-muted-foreground truncate">{profile.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+            <p className="text-xs text-muted-foreground truncate">{profile.role.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</p>
           </div>
         </div>
       )}
@@ -250,12 +250,12 @@ const Sidebar: React.FC<SidebarProps> = () => {
               <div className="flex items-center justify-center p-3 border-b border-sidebar-border flex-shrink-0">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={profile.avatarUrl} alt={profile.fullName} />
-                  <AvatarFallback>{profile.fullName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  <AvatarFallback>{profile.fullName.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
                 </Avatar>
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" className="ml-2">
-              {profile.fullName} ({profile.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())})
+              {profile.fullName} ({profile.role.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())})
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

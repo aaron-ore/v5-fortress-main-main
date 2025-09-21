@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertTriangle, User, Clock, MapPin, Package } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { showError } from "@/utils/toast";
 import { format, startOfDay, endOfDay, isValid } from "date-fns";
 import { DateRange } from "react-day-picker";
@@ -98,7 +98,7 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
   }, [isOpen, profile?.organizationId, fetchAllProfiles, dateRange]);
 
   const getUserName = (userId: string) => {
-    const user = allProfiles.find(p => p.id === userId);
+    const user = allProfiles.find((p: UserProfile) => p.id === userId); // Explicitly type p
     return user?.fullName || user?.email || "Unknown User";
   };
 
@@ -140,7 +140,7 @@ const DailyIssuesDialog: React.FC<DailyIssuesDialogProps> = ({ isOpen, onClose, 
             ) : (
               <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
                 <div className="space-y-4">
-                  {issues.map((issue) => {
+                  {issues.map((issue: IssueLog) => { // Explicitly type issue
                     const issueTimestamp = parseAndValidateDate(issue.timestamp);
                     return (
                       <div key={issue.id} className="bg-muted/20 p-3 rounded-md border border-border">

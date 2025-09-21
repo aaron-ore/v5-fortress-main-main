@@ -29,7 +29,7 @@ import {
 import { useInventory } from "@/context/InventoryContext";
 import { useOrders } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { ScrollArea } from "@/components/ui/scroll-area";
 // Removed unused imports: showSuccess, showError
 

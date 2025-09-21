@@ -15,7 +15,7 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; //
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ManageFoldersDialogProps { // Renamed interface
   isOpen: boolean;
@@ -50,7 +50,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
       return;
     }
     // Check if folder name already exists at the root level (for simplicity, no parent_id check here)
-    const existingFolder = inventoryFolders.find(folder =>
+    const existingFolder = inventoryFolders.find((folder: InventoryFolder) => // Explicitly type folder
       folder.name.toLowerCase() === newFolderName.trim().toLowerCase()
     );
     if (existingFolder) {
@@ -92,7 +92,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
     }
 
     // Check for duplicate name, excluding the folder being edited
-    const duplicateExists = inventoryFolders.some(f =>
+    const duplicateExists = inventoryFolders.some((f: InventoryFolder) => // Explicitly type f
       f.name.toLowerCase() === editingFolderName.trim().toLowerCase() && f.id !== folderToEdit.id
     );
     if (duplicateExists) {
@@ -162,7 +162,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
               <Label>Existing Folders</Label> {/* Updated label */}
               <ScrollArea className="border border-border rounded-md p-3 bg-muted/20 max-h-40 overflow-y-auto">
                 <ul className="space-y-1">
-                  {inventoryFolders.map((folder) => (
+                  {inventoryFolders.map((folder: InventoryFolder) => ( // Explicitly type folder
                     <li key={folder.id} className="flex items-center justify-between py-1 text-foreground">
                       {folderToEdit?.id === folder.id ? (
                         <Input
