@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
@@ -135,7 +135,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       return;
     }
     setIsScanning(true);
-    setCurrentScanMode(mode);
     onScanRequest(handleScannedData);
   };
 
@@ -310,9 +309,6 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                         <h4 className="font-semibold text-lg">{item.itemName}</h4>
                         <span className="text-sm text-muted-foreground">SKU: {item.inventoryItemDetails?.sku}</span>
                       </div>
-                      <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
-                        <Package className="h-4 w-4" /> Quantity: {item.quantity}
-                      </p>
                       <p className="text-muted-foreground text-sm mb-2 flex items-center gap-1">
                         <Folder className="h-4 w-4" /> Suggested: <span className="font-semibold text-primary">{getFolderName(item.suggestedPutawayFolderId)}</span> {/* Updated to folder name */}
                       </p>

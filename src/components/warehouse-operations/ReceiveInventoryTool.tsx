@@ -15,7 +15,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Updated to inven
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { format } from "date-fns";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface ReceivedItemDisplay extends POItem {
   receivedQuantity: number;

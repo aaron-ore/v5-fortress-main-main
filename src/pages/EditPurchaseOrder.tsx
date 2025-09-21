@@ -27,7 +27,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useProfile } from "@/context/ProfileContext";
-// Removed: import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
+import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
 
 import {
   DndContext,
@@ -491,7 +491,7 @@ const EditPurchaseOrder: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Footer Buttons - Fixed Height */}
       <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 mt-4 flex-shrink-0 p-6 pt-0">

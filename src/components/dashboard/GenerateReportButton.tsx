@@ -12,6 +12,7 @@ import { OrderItem } from "@/context/OrdersContext";
 interface GenerateReportButtonProps {
   dateRange: DateRange | undefined;
   totalStockValue: number;
+  totalUnitsOnHand: number; // NEW: Added totalUnitsOnHand
   lowStockItems: InventoryItem[];
   outOfStockItems: InventoryItem[];
   recentSalesOrders: OrderItem[];
@@ -21,6 +22,7 @@ interface GenerateReportButtonProps {
 const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
   dateRange,
   totalStockValue,
+  totalUnitsOnHand, // NEW: Destructure totalUnitsOnHand
   lowStockItems,
   outOfStockItems,
   recentSalesOrders,
@@ -42,6 +44,7 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
       companyLogoUrl: profile.companyProfile.companyLogoUrl || undefined,
       reportDate: format(new Date(), "MMM dd, yyyy HH:mm"),
       totalStockValue,
+      totalUnitsOnHand, // NEW: Pass totalUnitsOnHand
       lowStockItems,
       outOfStockItems,
       recentSalesOrders,

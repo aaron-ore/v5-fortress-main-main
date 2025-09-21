@@ -7,10 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+
 } from "@/components/ui/dialog";
 import ItemLookupTool from "@/components/warehouse-operations/ItemLookupTool";
 import { Search } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ItemLookupDialogProps {

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import PickingWaveManagementTool from "@/components/warehouse-operations/PickingWaveManagementTool";
 import { ListOrdered } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface PickingWaveManagementDialogProps {

@@ -9,7 +9,7 @@ import CameraScannerDialog from "@/components/CameraScannerDialog";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast"; // Import showError
 import { useNavigate, useLocation } from "react-router-dom";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 import { useSidebar } from "@/context/SidebarContext";
 
 

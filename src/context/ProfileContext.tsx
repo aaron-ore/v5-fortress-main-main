@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/context/AuthContext';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
 import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
@@ -264,6 +263,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
+    console.log("[OnboardingContext] setCompanyProfile called with profileData:", updates, "newUniqueCode:", uniqueCode);
+
     if (!profile || !profile.organizationId) {
       const errorMessage = 'Organization not found. Cannot update company profile.';
       await logActivity("Update Company Profile Failed", errorMessage, profile, { updated_fields: updates, unique_code: uniqueCode }, true);

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import ReceiveInventoryTool from "@/components/warehouse-operations/ReceiveInventoryTool";
 import { PackagePlus } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ReceiveInventoryDialogProps {

@@ -18,9 +18,9 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 // Removed unused imports: useOrders, useVendors, useCustomers
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;

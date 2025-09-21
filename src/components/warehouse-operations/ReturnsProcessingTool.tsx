@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Undo2, Scan, Package, Folder, CheckCircle } from "lucide-react"; // Changed MapPin to Folder
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
 

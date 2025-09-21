@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCustomers, Customer } from "@/context/CustomerContext";
 import { showError } from "@/utils/toast";
 import { formatPhoneNumber } from "@/utils/formatters"; // Import the new formatter
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface AddEditCustomerDialogProps {
   isOpen: boolean;

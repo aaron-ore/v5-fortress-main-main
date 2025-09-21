@@ -9,7 +9,7 @@ import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface ShippingVerificationToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;

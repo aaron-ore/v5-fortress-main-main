@@ -9,11 +9,11 @@ import { Truck, Printer, Package, CheckCircle, ListOrdered } from "lucide-react"
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // Added inventoryFolders
 import { usePrint } from "@/context/PrintContext";
 import { format } from "date-fns";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
 
 interface PickListItem {
   itemName: string;
@@ -143,9 +143,9 @@ const PickingWaveManagementTool: React.FC = () => {
     }).filter(Boolean) as { id: string; customerSupplier: string; deliveryRoute?: string }[];
 
     const pdfProps = {
-      companyName: companyProfile.name,
-      companyAddress: companyProfile.address,
-      companyContact: companyProfile.currency,
+      companyName: companyProfile.companyName, // Corrected property access
+      companyAddress: companyProfile.companyAddress, // Corrected property access
+      companyContact: companyProfile.companyCurrency, // Corrected property access
       companyLogoUrl: companyProfile.companyLogoUrl || undefined,
       waveId: currentWaveId,
       pickDate: format(new Date(), "MMM dd, yyyy"),
