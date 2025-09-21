@@ -79,17 +79,15 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const currentStep = isTutorialActive ? tutorialSteps[currentStepIndex] : null;
 
-  const startTutorial = useCallback(() => {
-    console.log("[TutorialContext] startTutorial called. profile?.hasUiTutorialShown:", profile?.hasUiTutorialShown);
+  const dismissTutorial = useCallback(async () => {
+    console.log("[TutorialContext] dismissTutorial called.");
+    setIsTutorialActive(false);
+    setCurrentStepIndex(0);
     if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
-      setIsTutorialActive(true);
-      setCurrentStepIndex(0);
-      if (tutorialSteps[0].path && location.pathname !== tutorialSteps[0].path) { // Use location.pathname
-        console.log("[TutorialContext] Navigating to initial tutorial path:", tutorialSteps[0].path);
-        navigate(tutorialSteps[0].path);
-      }
+      console.log("[TutorialContext] Marking UI tutorial as shown in DB.");
+      await markTutorialAsShown();
     }
-  }, [profile, navigate, location.pathname]); // Add location.pathname to dependencies
+  }, [profile, markTutorialAsShown]);
 
   const nextStep = useCallback(() => {
     console.log("[TutorialContext] nextStep called. currentStepIndex:", currentStepIndex);
@@ -106,15 +104,17 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [currentStepIndex, navigate, location.pathname, dismissTutorial]); // Add location.pathname to dependencies
 
-  const dismissTutorial = useCallback(async () => {
-    console.log("[TutorialContext] dismissTutorial called.");
-    setIsTutorialActive(false);
-    setCurrentStepIndex(0);
+  const startTutorial = useCallback(() => {
+    console.log("[TutorialContext] startTutorial called. profile?.hasUiTutorialShown:", profile?.hasUiTutorialShown);
     if (profile && !profile.hasUiTutorialShown) { // Use hasUiTutorialShown
-      console.log("[TutorialContext] Marking UI tutorial as shown in DB.");
-      await markTutorialAsShown();
+      setIsTutorialActive(true);
+      setCurrentStepIndex(0);
+      if (tutorialSteps[0].path && location.pathname !== tutorialSteps[0].path) { // Use location.pathname
+        console.log("[TutorialContext] Navigating to initial tutorial path:", tutorialSteps[0].path);
+        navigate(tutorialSteps[0].path);
+      }
     }
-  }, [profile, markTutorialAsShown]);
+  }, [profile, navigate, location.pathname]); // Add location.pathname to dependencies
 
   useEffect(() => {
     console.log("[TutorialContext] Effect for starting tutorial. isLoadingProfile:", isLoadingProfile, "profile:", profile?.id, "orgId:", profile?.organizationId, "wizardCompleted:", profile?.hasOnboardingWizardCompleted, "uiTutorialShown:", profile?.hasUiTutorialShown);
