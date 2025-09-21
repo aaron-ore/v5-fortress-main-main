@@ -17,10 +17,10 @@ export default defineConfig(() => ({
   },
   build: {
     rollupOptions: {
-      // external: ['react-resizable-panels'], // Removed from external
+      external: ['react-resizable-panels'], // Mark as external for Rollup
     },
   },
   optimizeDeps: {
-    // exclude: ['react-resizable-panels'], // Removed from exclude
+    include: ['react-resizable-panels'], // Explicitly include for Vite's optimization
   },
 }));
