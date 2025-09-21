@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Barcode, Package, Tag, Folder, Info, Image } from "lucide-react"; // Changed MapPin to Folder
-import { useInventory } from "@/context/InventoryContext";
+import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ItemLookupToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -113,10 +113,10 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
     showSuccess(`Selected item: ${item.name}`);
   };
 
-  // Function to get folder display name
+  // Function to get folder name from ID
   const getFolderName = (folderId: string) => {
-    const foundFolder = inventoryFolders.find(folder => folder.id === folderId);
-    return foundFolder?.name || "Unassigned";
+    const folder = inventoryFolders.find(f => f.id === folderId);
+    return folder?.name || "Unassigned";
   };
 
   return (

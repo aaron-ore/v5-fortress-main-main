@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import ReplenishmentManagementTool from "@/components/warehouse-operations/ReplenishmentManagementTool";
 import { Repeat } from "lucide-react";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ReplenishmentManagementDialogProps {

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Settings as SettingsIcon, Lock, Globe, Palette } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 const AccountSettings: React.FC = () => {
   const { profile } = useProfile();

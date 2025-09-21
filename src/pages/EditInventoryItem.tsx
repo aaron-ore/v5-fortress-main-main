@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "@tanstack/react-form"; // Corrected import
+import { useForm } from "react-hook-form"; // Corrected import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +36,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 // Removed: import { Label } from "@/components/ui/label"; // NEW: Import Label
 
 const formSchema = z.object({
@@ -189,7 +189,7 @@ const EditInventoryItem = () => {
         setQrCodeSvg(undefined);
       }
     };
-    generateAndSetQr();
+    updateQrCode();
   }, [watchSku]);
 
   const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

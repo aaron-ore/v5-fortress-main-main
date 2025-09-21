@@ -26,7 +26,7 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { usePrint } from "@/context/PrintContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 // Removed: import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent"; // Updated import path
 
 import {

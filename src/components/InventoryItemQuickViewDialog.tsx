@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface InventoryItemQuickViewDialogProps {
   isOpen: boolean;
@@ -101,7 +101,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         const generateAndSetQr = async () => {
           if (currentItem.barcodeUrl) {
             try {
-              const svg = await generateQrCodeSvg(currentItem.barcodeUrl, 60);
+              const svg = await generateQrCodeSvg(currentItem.barcodeUrl, 60); // Adjusted size to 60
               setQrCodeSvg(svg);
             } catch (error) {
               console.error("Error generating QR code for quick view display:", error);

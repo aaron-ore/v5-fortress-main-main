@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import ShippingVerificationTool from "@/components/warehouse-operations/ShippingVerificationTool";
 import { CheckCircle } from "lucide-react";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ShippingVerificationDialogProps {
@@ -63,7 +63,7 @@ const ShippingVerificationDialog: React.FC<ShippingVerificationDialogProps> = ({
           <ShippingVerificationTool
             onScanRequest={onScanRequest}
             scannedDataFromGlobal={scannedDataFromGlobal}
-            onScannedDataProcessed={onScannedDataProcessed}
+            onScannedDataProcessed={handleScannedDataProcessed}
           />
         </div>
       </DialogContent>

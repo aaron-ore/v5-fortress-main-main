@@ -12,7 +12,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface ReturnsProcessingToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -85,9 +85,6 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
       showError(`No item found with SKU/Barcode: "${scannedData}".`);
-      setScannedItem(null);
-      setReturnQuantity("");
-      setReturnDestinationFolderId("");
     }
   };
 
