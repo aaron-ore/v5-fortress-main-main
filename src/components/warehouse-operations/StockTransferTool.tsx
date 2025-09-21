@@ -11,7 +11,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 import { useStockMovement } from "@/context/StockMovementContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 interface StockTransferToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -134,6 +134,10 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
     const quantity = parseInt(transferQuantity);
     if (isNaN(quantity) || quantity <= 0) {
       showError("Please enter a valid positive quantity to transfer.");
+      return;
+    }
+    if (!selectedItem) {
+      showError("Selected item not found.");
       return;
     }
     if (selectedItem.quantity < quantity) {

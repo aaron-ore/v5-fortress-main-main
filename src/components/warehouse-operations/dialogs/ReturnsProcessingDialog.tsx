@@ -7,10 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+
 } from "@/components/ui/dialog";
 import ReturnsProcessingTool from "@/components/warehouse-operations/ReturnsProcessingTool";
 import { Undo2 } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ReturnsProcessingDialogProps {

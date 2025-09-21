@@ -13,7 +13,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 
 interface IssueReportToolProps {

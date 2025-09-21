@@ -54,7 +54,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDescription, setNewRoleDescription] = useState("");
-  const [selectedFeatures, setSelectedFeatures] = useState<Set<string>>(new Set());
+  const [selectedFeatures, setSelectedFeatures] = new Set<string>();
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<CustomRole | null>(null);
@@ -192,6 +192,66 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddEditRoleDialogOpen} onOpenChange={setIsAddEditRoleDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{roleToEdit ? "Edit Custom Role" : "Create New Custom Role"}</DialogTitle>
+            <DialogDescription>
+              {roleToEdit ? "Update the details and permissions for this role." : "Define a new role and assign its permissions."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="roleName">Role Name <span className="text-red-500">*</span></Label>
+              <Input
+                id="roleName"
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+                placeholder="e.g., Inventory Clerk"
+                disabled={!isAdmin}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="roleDescription">Description</Label>
+              <Textarea
+                id="roleDescription"
+                value={newRoleDescription}
+                onChange={(e) => setNewRoleDescription(e.target.value)}
+                placeholder="Briefly describe this role's responsibilities."
+                rows={2}
+                disabled={!isAdmin}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Features / Permissions</Label>
+              <ScrollArea className="h-60 border border-border rounded-md p-3 bg-muted/20">
+                <div className="space-y-2">
+                  {availableFeatures.map(feature => (
+                    <div key={feature} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`feature-${feature}`}
+                        checked={selectedFeatures.has(feature)}
+                        onCheckedChange={(checked: boolean) => handleFeatureToggle(feature, checked)}
+                        disabled={!isAdmin}
+                      />
+                      <Label htmlFor={`feature-${feature}`}>{feature}</Label>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddEditRoleDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveRole} disabled={!isAdmin}>
+              {roleToEdit ? "Save Changes" : "Create Role"}
             </Button>
           </DialogFooter>
         </DialogContent>
