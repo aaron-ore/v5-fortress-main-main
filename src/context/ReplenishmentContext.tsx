@@ -3,7 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile, UserProfile } from "./ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "./ProfileContext"; // Corrected import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 export interface ReplenishmentTask {
@@ -22,6 +22,7 @@ export interface ReplenishmentTask {
 
 interface ReplenishmentContextType {
   replenishmentTasks: ReplenishmentTask[];
+  isLoadingReplenishmentTasks: boolean; // Added missing property
   addReplenishmentTask: (task: Omit<ReplenishmentTask, "id" | "createdAt" | "organizationId" | "status" | "completedAt">) => Promise<void>;
   updateReplenishmentTask: (updatedTask: ReplenishmentTask) => Promise<void>;
   fetchReplenishmentTasks: () => Promise<void>;

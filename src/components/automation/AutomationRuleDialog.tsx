@@ -18,9 +18,9 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed unused imports: useOrders, useVendors, useCustomers
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -524,7 +524,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> {ruleToEdit ? "Edit Automation Rule" : "Create New Automation Rule"}
-          </CardTitle>
+          </DialogTitle>
           <DialogDescription>
             Define a trigger, condition, and action for your automation rule.
           </DialogDescription>

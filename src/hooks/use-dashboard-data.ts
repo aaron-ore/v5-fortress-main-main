@@ -4,8 +4,8 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, sub
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Added InventoryFolder import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";

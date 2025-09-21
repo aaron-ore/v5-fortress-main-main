@@ -15,7 +15,7 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; //
 import { showSuccess, showError } from "@/utils/toast";
 import { PlusCircle, Trash2, Folder, Edit } from "lucide-react"; // Changed MapPin to Folder
 import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea import
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ManageFoldersDialogProps { // Renamed interface
   isOpen: boolean;
@@ -107,7 +107,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({ // Renamed co
   };
 
   const handleRemoveFolderClick = (folder: InventoryFolder) => { // Renamed from handleRemoveLocationClick
-    if (!canManageFolders) { // NEW: Check permission before deleting
+    if (!canManageFolders) { // NEW: Check permission before removing
       showError("You do not have permission to delete folders.");
       return;
     }

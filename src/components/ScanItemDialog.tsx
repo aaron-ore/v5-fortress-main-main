@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface ScanItemDialogProps {
   isOpen: boolean;

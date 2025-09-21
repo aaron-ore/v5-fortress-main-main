@@ -1,7 +1,7 @@
 import React from "react";
 import InventoryCard from "@/components/InventoryCard"; // Assuming this component exists and is suitable
 import { InventoryItem } from "@/context/InventoryContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface InventoryCardGridProps {
   items: InventoryItem[];

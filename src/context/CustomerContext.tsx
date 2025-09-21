@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
-import { useProfile, UserProfile } from "./ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "./ProfileContext"; // Corrected import
 import { logActivity } from "@/utils/logActivity";
 
 export interface Customer {

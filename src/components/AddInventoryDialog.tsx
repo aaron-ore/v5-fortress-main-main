@@ -20,7 +20,7 @@ import { useCategories } from "@/context/CategoryContext";
 import { useVendors } from "@/context/VendorContext";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { supabase } from "@/lib/supabaseClient";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { Link } from "react-router-dom";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
@@ -70,8 +70,6 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [autoReorderEnabled, setAutoReorderEnabled] = useState(false);
-  const [autoReorderQuantity, setAutoReorderQuantity] = useState("");
   const [isAddingItem, setIsAddingItem] = useState(false); // NEW: Loading state for adding item
 
   useEffect(() => {
@@ -274,7 +272,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
       imageUrl: finalImageUrl,
-      vendorId: selectedVendorId === "none" ? undefined : selectedVendorId,
+      vendor: { id: selectedVendorId === "none" ? undefined : selectedVendorId }, // Corrected to item.vendor.id
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
       autoReorderQuantity: parseInt(autoReorderQuantity || '0'),

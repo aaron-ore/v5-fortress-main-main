@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Flag, Mail, MessageSquare } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface FeedbackDialogProps {
   isOpen: boolean;

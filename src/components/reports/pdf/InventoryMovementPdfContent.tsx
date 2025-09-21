@@ -1,10 +1,10 @@
 import { format, isValid } from "date-fns";
 import { StockMovement } from "@/context/StockMovementContext";
-import { UserProfile } from "@/context/ProfileContext";
+import { type UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface InventoryMovementPdfContentProps {
   reportDate: string;
