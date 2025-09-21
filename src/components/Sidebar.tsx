@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; // NEW: Import Button
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,

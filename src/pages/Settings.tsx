@@ -6,8 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch"; // NEW: Import Switch
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // NEW: Import RadioGroup and RadioGroupItem
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { Loader2, Palette, Settings as SettingsIcon, ImageIcon, X } from "lucide-react";
