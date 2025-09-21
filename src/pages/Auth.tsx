@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext"; // Import useAuth
 import { Loader2 } from "lucide-react"; // Import Loader2
 import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile to get current profile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile to get current profile
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

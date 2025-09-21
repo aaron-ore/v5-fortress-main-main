@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Barcode, Package, Tag, Folder, Info, Image } from "lucide-react"; // Changed MapPin to Folder
+import { Search, Barcode, Package, Tag, Folder, Info, Image as ImageIcon } from "lucide-react"; // Changed MapPin to Folder
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Import generateQrCodeSvg
+import { showError, showSuccess } from "@/utils/toast"; // Import showError and showSuccess
 
 interface ItemLookupToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -185,7 +187,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
                   />
                 ) : (
                   <div className="h-32 w-32 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
-                    <Image className="h-10 w-10" />
+                    <ImageIcon className="h-10 w-10" />
                   </div>
                 )}
               </div>

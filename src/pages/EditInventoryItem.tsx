@@ -36,7 +36,7 @@ import { useOnboarding } from "@/context/OnboardingContext"; // Now imports Inve
 import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 // Removed: import { Label } from "@/components/ui/label"; // NEW: Import Label
 
 const formSchema = z.object({
@@ -244,7 +244,7 @@ const EditInventoryItem = () => {
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl);
+        console.log("[EditInventoryItem] Uploaded image URL:", finalCompanyLogoUrl);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         if (item.imageUrl) {

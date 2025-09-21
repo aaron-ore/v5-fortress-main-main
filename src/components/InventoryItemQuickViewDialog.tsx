@@ -20,7 +20,7 @@ import { useStockMovement } from "@/context/StockMovementContext";
 import { useOrders, POItem } from "@/context/OrdersContext";
 import { useVendors } from "@/context/VendorContext";
 import { useNavigate } from "react-router-dom";
-import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, MapPin } from "lucide-react";
+import { Package, Tag, Scale, DollarSign, ArrowUp, ArrowDown, Trash2, History, Repeat, MapPin, Image as ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
@@ -364,7 +364,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                 <img src={currentItem.imageUrl} alt={currentItem.name} className="max-h-48 max-w-full object-contain rounded-md border border-border" />
               ) : (
                 <div className="h-48 w-48 bg-muted/30 rounded-md flex items-center justify-center text-muted-foreground">
-                  <Image className="h-10 w-10" />
+                  <ImageIcon className="h-10 w-10" />
                 </div>
               )}
             </div>

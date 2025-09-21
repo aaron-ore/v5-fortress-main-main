@@ -1,9 +1,6 @@
-"use client";
-
 import React from "react";
-import { useLocation, useNavigate } => "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
@@ -11,15 +8,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { mainNavItems, userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } => "@/lib/navigation";
+import { mainNavItems, userAndSettingsNavItems, supportAndResourcesNavItems, NavItem } from "@/lib/navigation";
 import { useNotifications } from "@/context/NotificationContext";
-import { useProfile } => "@/context/ProfileContext";
-import { LogOut, ChevronLeft, ChevronRight } => "lucide-react";
-import { supabase } => "@/lib/supabaseClient";
-import { showError, showSuccess } => "@/utils/toast";
-import { Avatar, AvatarFallback, AvatarImage } => "@/components/ui/avatar";
-import { useSidebar } => "@/context/SidebarContext";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } => "@/components/ui/tooltip";
+import { useProfile } from "@/context/ProfileContext";
+import { LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
+import { showError, showSuccess } from "@/utils/toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSidebar } from "@/context/SidebarContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarProps {
   // isCollapsed: boolean; // REMOVED: No longer passed as prop

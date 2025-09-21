@@ -239,7 +239,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
       return Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
-        const dateB = parseAndAndValidateDate(b);
+        const dateB = parseAndValidateDate(b); // Corrected typo here
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
       }).map((monthKey: string) => ({ // Explicitly type monthKey

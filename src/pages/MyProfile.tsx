@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, Mail, Phone, MapPin } from "lucide-react";
 import { showError } from "@/utils/toast";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { formatPhoneNumber } from "@/utils/formatters";
 
 const MyProfile: React.FC = () => {

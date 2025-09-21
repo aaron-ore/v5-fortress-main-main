@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import ShipOrderTool from "@/components/warehouse-operations/ShipOrderTool";
 import { Truck } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface ShipOrderDialogProps {

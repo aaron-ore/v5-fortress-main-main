@@ -3,7 +3,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import CreateInvoicePageContent from "@/components/orders/CreateInvoicePageContent"; // Import the new component
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 const CreateInvoice: React.FC = () => {

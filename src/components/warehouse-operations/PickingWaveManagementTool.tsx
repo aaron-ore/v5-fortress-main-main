@@ -13,7 +13,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { usePrint } from "@/context/PrintContext";
 import { format } from "date-fns";
 import { generateSequentialNumber } from "@/utils/numberGenerator";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 interface PickListItem {
   itemName: string;

@@ -14,7 +14,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { useVendors, Vendor } from "@/context/VendorContext";
 import AddEditVendorDialog from "@/components/AddEditVendorDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { showError } from "@/utils/toast"; // Import showError
 
 const Vendors: React.FC = () => {

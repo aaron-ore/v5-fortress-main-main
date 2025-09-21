@@ -9,7 +9,7 @@ import { Truck, Scan, CheckCircle, XCircle, ListOrdered } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOrders } from "@/context/OrdersContext";
 import { useInventory } from "@/context/InventoryContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 interface ShippingVerificationToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;
@@ -135,7 +135,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     }
   };
 
-  const handleScanItem = () => {
+  const handleScanButtonClick = () => { // Renamed function
     if (!canVerifyShipping) { // NEW: Check permission before scanning
       showError("You do not have permission to perform shipping verification.");
       return;
@@ -206,7 +206,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
           </div>
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-3 flex items-center justify-center gap-2"
-            onClick={handleScanClick}
+            onClick={handleScanButtonClick} // Corrected function reference
             disabled={isScanning || !truckId || ordersForRoute.length === 0 || !canVerifyShipping} // NEW: Disable if no permission
           >
             <Scan className="h-6 w-6" />

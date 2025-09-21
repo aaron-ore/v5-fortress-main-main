@@ -8,7 +8,7 @@ import { Truck, Package, ArrowRight, CheckCircle, User } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useReplenishment, ReplenishmentTask } from "@/context/ReplenishmentContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names

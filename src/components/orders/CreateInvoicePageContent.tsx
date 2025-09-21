@@ -36,7 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 // Removed: import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent"; // Updated import path
 
