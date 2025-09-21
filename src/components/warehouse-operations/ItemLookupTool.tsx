@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Barcode, Package, Tag, Folder, Info, Image as ImageIcon } from "lucide-react"; // Changed MapPin to Folder
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator"; // Import generateQrCodeSvg
 import { showError, showSuccess } from "@/utils/toast"; // Import showError and showSuccess
@@ -144,7 +144,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
                 {filteredItems.map((item: InventoryItem) => ( // Explicitly type item
                   <Button
                     key={item.id}
-                    variant="ghost"
+                    variant={selectedItem?.id === item.id ? "secondary" : "ghost"}
                     className="w-full justify-start text-sm"
                     onClick={() => handleItemSelect(item)}
                     disabled={!canLookupItems} // NEW: Disable button if no permission

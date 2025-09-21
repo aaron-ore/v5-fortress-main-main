@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import ShippingVerificationTool from "@/components/warehouse-operations/ShippingVerificationTool";
 import { CheckCircle } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 
 interface ShippingVerificationDialogProps {

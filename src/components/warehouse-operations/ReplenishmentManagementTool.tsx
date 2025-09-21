@@ -8,7 +8,7 @@ import { Truck, Package, ArrowRight, CheckCircle, User } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useReplenishment, ReplenishmentTask } from "@/context/ReplenishmentContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/ProfileContext";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { useOnboarding } from "@/context/OnboardingContext";
@@ -91,7 +91,7 @@ const ReplenishmentManagementTool: React.FC = () => {
       return;
     }
 
-    const operator = allProfiles.find((p: UserProfile) => p.id === assignedTo);
+    const operator = allProfiles.find((p) => p.id === assignedTo);
     if (!operator) {
       showError("Assigned operator not found.");
       return;
@@ -238,7 +238,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Created: {formatDistanceToNowStrict(new Date(task.createdAt), { addSuffix: true })}
-                        {task.assignedTo && ` | Assigned to: ${allProfiles.find((p: UserProfile) => p.id === task.assignedTo)?.fullName || 'Unknown'}`}
+                        {task.assignedTo && ` | Assigned to: ${allProfiles.find((p) => p.id === task.assignedTo)?.fullName || 'Unknown'}`}
                       </p>
                     </div>
                   );
@@ -267,7 +267,7 @@ const ReplenishmentManagementTool: React.FC = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {allProfiles.filter((p: UserProfile) => p.role !== 'admin').map((user: UserProfile) => (
+                      {allProfiles.filter((p) => p.role !== 'admin').map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           {user.fullName}
                         </SelectItem>

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import PutawayTool from "@/components/warehouse-operations/PutawayTool";
 import { MapPin } from "lucide-react";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { Card, CardContent, CardTitle } from "@/components/ui/card"; // NEW: Import Card components
 
 interface PutawayDialogProps {

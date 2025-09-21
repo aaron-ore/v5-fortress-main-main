@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface PutawayItemDisplay extends POItem {
   inventoryItemDetails?: InventoryItem;
@@ -129,7 +129,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     }
   };
 
-  const handleScanClick = (mode: "po" | "folder" | "item") => { // Changed from location to folder
+  const handleScanClick = (_mode: "po" | "folder" | "item") => { // Changed from location to folder
     if (!canPutaway) { // NEW: Check permission before scanning
       showError("You do not have permission to use Putaway.");
       return;

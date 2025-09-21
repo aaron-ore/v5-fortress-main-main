@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -253,7 +253,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
               {roleToEdit ? "Save Changes" : "Create Role"}
             </Button>
           </DialogFooter>
-        </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       {roleToDelete && (

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "react-day-picker";
-import { format, isWithinInterval, startOfDay, endOfDay, isValid } from "date-fns";
+import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile, type UserProfile } from "@/context/ProfileContext";
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
@@ -351,8 +351,6 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
             id: log.id,
             timestamp: parseAndValidateDate(log.timestamp)?.toISOString() || new Date().toISOString(),
             userId: log.user_id,
-            organizationId: log.organization_id,
-            itemId: log.item_id,
             itemName: log.item_name,
             folderId: log.folder_id,
             locationType: log.location_type,

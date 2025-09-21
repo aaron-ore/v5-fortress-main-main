@@ -12,7 +12,7 @@ import { useOrders, OrderItem, POItem } from "@/context/OrdersContext";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useOnboarding } from "@/context/OnboardingContext"; // Import useOnboarding for folder names
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // NEW: Import useProfile as type
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface FulfilledItemDisplay extends POItem {
   fulfilledQuantity: number;

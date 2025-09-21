@@ -14,7 +14,7 @@ import { useInventory } from "@/context/InventoryContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { supabase } from "@/lib/supabaseClient";
 import { useProfile } from "@/context/ProfileContext";
-import { useOnboarding, type InventoryFolder } from "@/context/OnboardingContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 
 interface IssueReportToolProps {
   onScanRequest: (callback: (scannedData: string) => void) => void;

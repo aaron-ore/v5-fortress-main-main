@@ -4,7 +4,7 @@ import { OrderItem } from "@/context/OrdersContext";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { useProfile, type UserProfile } from "@/context/ProfileContext"; // Corrected import to use type
+import { useProfile } from "@/context/ProfileContext"; // Corrected import
 
 interface DashboardSummaryPdfContentProps {
   reportDate: string;
