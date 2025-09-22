@@ -15,6 +15,8 @@ interface QrScannerProps {
 }
 
 const QR_SCANNER_DIV_ID = "qr-code-full-region";
+const MAX_START_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 1500; // 1.5 seconds
 
 const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
   ({ onScan, onError, onReady, onLoading, isOpen }, ref) => {
@@ -23,8 +25,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
     const isCameraStartedRef = useRef(false);
     const isStartingRef = useRef(false);
     const qrScannerDivRef = useRef<HTMLDivElement>(null);
-    // Removed unused scannerError state
-    // const [scannerError, setScannerError] = useState<string | null>(null); // Local state for scanner error
+    const currentAttemptsRef = useRef(0);
 
     const html5QrcodeConstructorConfig: Html5QrcodeFullConfig = {
       formatsToSupport: [
@@ -83,8 +84,8 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       clearScanner();
       isCameraStartedRef.current = false;
       isStartingRef.current = false;
+      currentAttemptsRef.current = 0;
       onLoading(false);
-      // Removed setScannerError(null);
     }, [stopScanner, clearScanner, onLoading]);
 
     const startScanner = useCallback(async () => {
@@ -107,10 +108,9 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         return;
       }
 
-
       isStartingRef.current = true;
       onLoading(true);
-      // Removed setScannerError(null);
+      currentAttemptsRef.current = 0; // Reset attempts for a new start cycle
 
       await stopScanner();
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -158,57 +158,77 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
       }
 
-      console.log(`[QrScanner] Attempting to start scanner with selection:`, cameraSelection);
-      try {
-        await html5QrCodeRef.current.start(
-          cameraSelection,
-          html5QrcodeCameraScanConfig,
-          async (decodedText) => {
-            if (isMounted.current) {
-              console.log("[QrScanner] Scan successful:", decodedText);
-              await stopScanner();
-              await new Promise(resolve => setTimeout(resolve, 100));
-              onScan(decodedText);
+      const attemptStart = async () => {
+        if (!isMounted.current || !isOpen) {
+          console.log("[QrScanner] Aborting retry: component unmounted or dialog closed.");
+          isStartingRef.current = false;
+          onLoading(false);
+          return;
+        }
+
+        currentAttemptsRef.current++;
+        console.log(`[QrScanner] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS}) with selection:`, cameraSelection);
+
+        try {
+          await html5QrCodeRef.current.start(
+            cameraSelection,
+            html5QrcodeCameraScanConfig,
+            async (decodedText) => {
+              if (isMounted.current) {
+                console.log("[QrScanner] Scan successful:", decodedText);
+                await stopScanner();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                onScan(decodedText);
+              }
+            },
+            (errorMessage) => {
+              if (isMounted.current && !errorMessage.includes("No QR code found")) {
+                console.warn("[QrScanner] Scan error (not 'No QR code found'):", errorMessage);
+              }
             }
-          },
-          (errorMessage) => {
-            if (isMounted.current && !errorMessage.includes("No QR code found")) {
-              console.warn("[QrScanner] Scan error (not 'No QR code found'):", errorMessage);
+          );
+          if (isMounted.current) {
+            console.log("[QrScanner] Scanner started and ready.");
+            isCameraStartedRef.current = true;
+            onReady();
+            onLoading(false);
+            isStartingRef.current = false; // Successfully started, reset starting flag
+          }
+        } catch (err: any) {
+          if (isMounted.current) {
+            console.error(`[QrScanner] Error starting scanner on attempt ${currentAttemptsRef.current}:`, err);
+            isCameraStartedRef.current = false;
+            let errorMessage = "Failed to start camera. ";
+            if (err.name === "NotReadableError") {
+              errorMessage += "The camera might be in use by another application, or there's a temporary hardware issue. Please try closing other camera apps. ";
+            } else if (err.name === "NotAllowedError") {
+              errorMessage += "Camera access was denied. Please check your browser's site permissions for this page and grant camera access. ";
+            } else if (err.name === "OverconstrainedError") {
+              errorMessage += "The camera could not be activated with the requested settings (e.g., back camera not found or available). Try restarting your device or closing other camera apps. ";
+            } else if (err.name === "NotFoundError") {
+              errorMessage += "No camera devices were found. ";
+            } else {
+              errorMessage += "An unknown error occurred. Please ensure your device has a working camera and try again. ";
+            }
+            
+            if (currentAttemptsRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError")) {
+              console.log(`[QrScanner] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
+              setTimeout(attemptStart, RETRY_DELAY_MS);
+            } else {
+              onError(errorMessage);
+              onLoading(false);
+              isStartingRef.current = false; // All attempts failed, reset starting flag
             }
           }
-        );
-        if (isMounted.current) {
-          console.log("[QrScanner] Scanner started and ready.");
-          isCameraStartedRef.current = true;
-          onReady();
-          onLoading(false);
         }
-      } catch (err: any) {
-        if (isMounted.current) {
-          console.error(`[QrScanner] Error starting scanner:`, err);
-          isCameraStartedRef.current = false;
-          let errorMessage = "Failed to start camera. ";
-          if (err.name === "NotReadableError") {
-            errorMessage += "The camera might be in use by another application, or there's a temporary hardware issue. Please try closing other camera apps. ";
-          } else if (err.name === "NotAllowedError") {
-            errorMessage += "Camera access was denied. Please check your browser's site permissions for this page and grant camera access. ";
-          } else if (err.name === "OverconstrainedError") {
-            errorMessage += "The camera could not be activated with the requested settings (e.g., back camera not found or available). Try restarting your device or closing other camera apps. ";
-          } else if (err.name === "NotFoundError") {
-            errorMessage += "No camera devices were found. ";
-          } else {
-            errorMessage += "An unknown error occurred. Please ensure your device has a working camera and try again. ";
-          }
-          onError(errorMessage);
-          onLoading(false);
-        }
-      } finally {
-        isStartingRef.current = false;
-      }
+      };
+
+      await attemptStart(); // Start the first attempt
     }, [isOpen, onScan, onReady, onError, onLoading, stopScanner, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, qrScannerDivRef]);
 
     const retryStart = useCallback(async () => {
       console.log("[QrScanner] retryStart called.");
+      currentAttemptsRef.current = 0; // Reset attempts for a manual retry
       await startScanner();
     }, [startScanner]);
 
