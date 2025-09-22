@@ -154,6 +154,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         return;
       }
 
+      // Ensure html5QrCodeRef.current is initialized before attempting to start
       if (!html5QrCodeRef.current) {
         html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
       }
@@ -168,6 +169,11 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
 
         currentAttemptsRef.current++;
         console.log(`[QrScanner] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS}) with selection:`, cameraSelection);
+
+        // Re-check if html5QrCodeRef.current is null before starting, in case it was cleared
+        if (!html5QrCodeRef.current) {
+          html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
+        }
 
         try {
           await html5QrCodeRef.current.start(
