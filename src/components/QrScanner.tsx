@@ -61,11 +61,11 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       }
     }, []);
 
-    const clearScanner = useCallback(() => {
+    const clearScanner = useCallback(async () => { // Made async
       if (html5QrCodeRef.current) {
         console.log("[QrScanner] Attempting to clear scanner instance...");
         try {
-          html5QrCodeRef.current.clear();
+          await html5QrCodeRef.current.clear(); // Await clear()
           console.log("[QrScanner] Scanner instance cleared.");
         } catch (e) {
           console.warn("[QrScanner] Error during scanner clear:", e);
@@ -80,8 +80,9 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
     const stopAndClear = useCallback(async () => {
       console.log("[QrScanner] stopAndClear called.");
       await stopScanner();
-      await new Promise(resolve => setTimeout(resolve, 500));
-      clearScanner();
+      // Add a slightly longer delay here to ensure camera resource is released
+      await new Promise(resolve => setTimeout(resolve, 750)); // Increased from 500ms
+      await clearScanner(); // Await clearScanner
       isCameraStartedRef.current = false;
       isStartingRef.current = false;
       currentAttemptsRef.current = 0;
@@ -110,10 +111,11 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
 
       isStartingRef.current = true;
       onLoading(true);
-      currentAttemptsRef.current = 0; // Reset attempts for a new start cycle
+      currentAttemptsRef.current = 0;
 
-      await stopScanner();
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Ensure previous scanner is fully stopped and cleared before attempting a new start
+      await stopAndClear(); // Call stopAndClear here to ensure a clean slate
+      await new Promise(resolve => setTimeout(resolve, 500)); // Additional delay before starting camera enumeration
 
       let cameraSelection: string | undefined = undefined;
       try {
@@ -154,10 +156,11 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         return;
       }
 
-      // Ensure html5QrCodeRef.current is initialized before attempting to start
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
-      }
+      // Initialize Html5Qrcode instance here, outside the attempt loop, if it's null
+      // This check is now redundant because stopAndClear ensures html5QrCodeRef.current is null
+      // if (!html5QrCodeRef.current) {
+      html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
+      // }
 
       const attemptStart = async () => {
         if (!isMounted.current || !isOpen) {
@@ -171,11 +174,16 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         console.log(`[QrScanner] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS}) with selection:`, cameraSelection);
 
         // Re-check if html5QrCodeRef.current is null before starting, in case it was cleared
-        if (!html5QrCodeRef.current) {
-          html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
-        }
+        // This check is now redundant because stopAndClear ensures html5QrCodeRef.current is null
+        // if (!html5QrCodeRef.current) {
+        //   html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
+        // }
 
         try {
+          // Ensure html5QrCodeRef.current is not null before calling start
+          if (!html5QrCodeRef.current) {
+            throw new Error("Html5Qrcode instance is null before start attempt.");
+          }
           await html5QrCodeRef.current.start(
             cameraSelection,
             html5QrcodeCameraScanConfig,
@@ -230,7 +238,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       };
 
       await attemptStart(); // Start the first attempt
-    }, [isOpen, onScan, onReady, onError, onLoading, stopScanner, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, qrScannerDivRef]);
+    }, [isOpen, onScan, onReady, onError, onLoading, stopScanner, clearScanner, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, qrScannerDivRef, stopAndClear]);
 
     const retryStart = useCallback(async () => {
       console.log("[QrScanner] retryStart called.");
@@ -258,7 +266,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         console.log("[QrScanner] Component unmounting or effect cleanup. Stopping and clearing scanner.");
         stopAndClear();
       };
-    }, [isOpen, startScanner, stopAndClear, qrScannerDivRef.current]);
+    }, [isOpen, startScanner, stopAndClear]); // Removed qrScannerDivRef.current from dependencies
 
     return (
       <div id={QR_SCANNER_DIV_ID} ref={qrScannerDivRef} className="w-full h-full" />
