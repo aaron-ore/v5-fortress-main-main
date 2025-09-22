@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, AlertTriangle, FileText, Printer, Brain, Loader2, FilterX } from "lucide-react"; // Re-added BarChart, AlertTriangle, FileText, Printer
+import { BarChart, AlertTriangle, FileText, Printer, Loader2, FilterX } from "lucide-react"; // Re-added BarChart, AlertTriangle, FileText, Printer
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { hasPlanAccess } from "@/utils/planUtils";
+
 
 // Import the ReportSidebar component
 import ReportSidebar from "@/components/reports/ReportSidebar";
@@ -31,8 +31,8 @@ const Reports: React.FC = () => {
 
   const [activeReportId, setActiveReportId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [aiSummary, setAiSummary] = useState("");
-  const [isSummarizing, setIsSummarizing] = useState(false);
+  // Removed aiSummary state
+  // Removed isSummarizing state
 
   const reportContentRef = useRef<HTMLDivElement>(null);
 
@@ -64,17 +64,7 @@ const Reports: React.FC = () => {
 
   const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
 
-  const generateReportTextContent = useCallback(() => {
-    if (reportContentRef.current) {
-      const rawInnerText = reportContentRef.current.innerText;
-      const text = rawInnerText
-        .replace(/(\r\n|\n|\r){2,}/g, '\n\n')
-        .replace(/[ \t]+/g, ' ')
-        .trim();
-      return text;
-    }
-    return "";
-  }, [reportContentRef]);
+  // Removed generateReportTextContent
 
   const handlePrintReport = useCallback(() => {
     if (!reportData || !pdfProps || !CurrentPdfComponent) {
@@ -95,75 +85,8 @@ const Reports: React.FC = () => {
     showSuccess("Report sent to printer!");
   }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
 
-  const hasAiSummaryAccess = useMemo(() => {
-    // AI Summary is available from 'premium' plan onwards
-    return hasPlanAccess(profile?.companyProfile?.plan, "premium");
-  }, [profile?.companyProfile?.plan]);
-
-  const handleSummarizeReport = async () => {
-    if (!hasAiSummaryAccess) {
-      showError("AI Summary is a Premium feature. Please upgrade your plan to unlock!");
-      return;
-    }
-    if (!reportData) {
-      showError("No report data to summarize. Please generate the report first.");
-      setIsSummarizing(false);
-      return;
-    }
-    setIsSummarizing(true);
-    setAiSummary("");
-
-    if (!reportContentRef.current) {
-      showError("Report content not rendered. Please ensure the report is visible and fully loaded.");
-      setIsSummarizing(false);
-      return;
-    }
-
-    try {
-      const textToSummarize = generateReportTextContent();
-
-      if (!textToSummarize) {
-        showError("No report content found to summarize. Please ensure the report is fully loaded and visible.");
-        setIsSummarizing(false);
-        return;
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        showError("You must be logged in to use the AI Summary tool.");
-        setIsSummarizing(false);
-        return;
-      }
-
-      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/summarize-report`;
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data && data.summary) {
-        setAiSummary(data.summary);
-        showSuccess("Report summarized successfully!");
-      } else {
-        showError("Failed to get a summary from the AI. Please try again.");
-      }
-    } catch (error: any) {
-      console.error("Error generating summary:", error);
-      showError(`Error generating summary: ${error.message}`);
-    } finally {
-      setIsSummarizing(false);
-    }
-  };
+  // Removed hasAiSummaryAccess
+  // Removed handleSummarizeReport
 
   return (
     <div className="flex flex-col lg:flex-row flex-grow space-y-6 lg:space-y-0 lg:space-x-6">
@@ -237,45 +160,13 @@ const Reports: React.FC = () => {
         </Card>
 
         <div className="mt-4 flex flex-wrap gap-2 justify-end">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button onClick={handleSummarizeReport} disabled={isSummarizing || !reportData || !hasAiSummaryAccess}>
-                {isSummarizing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Summarizing...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="h-4 w-4 mr-2" /> AI Summary
-                  </>
-                )}
-              </Button>
-            </TooltipTrigger>
-            {!hasAiSummaryAccess && (
-              <TooltipContent>
-                <p>AI Summary is a Premium feature. Upgrade your plan to unlock!</p>
-              </TooltipContent>
-            )}
-          </Tooltip>
+          {/* Removed AI Summary Button */}
           <Button onClick={handlePrintReport} disabled={!reportData}>
             <Printer className="h-4 w-4 mr-2" /> Print/PDF
           </Button>
         </div>
 
-        {aiSummary && (
-          <Card className="mt-4 bg-card border-border rounded-lg shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                <Brain className="h-6 w-6 text-accent" /> AI Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted/20 p-4 rounded-md border border-border">
-                <p className="text-foreground whitespace-pre-wrap">{aiSummary}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Removed AI Summary Card */}
       </div>
     </div>
   );
