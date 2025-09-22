@@ -10,7 +10,7 @@ import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isOnboardingComplete } = useOnboarding();
+  const {  } = useOnboarding(); // Removed isOnboardingComplete
   const { profile } = useProfile(); // NEW: Get profile
 
   const handleOnboardingComplete = () => {
