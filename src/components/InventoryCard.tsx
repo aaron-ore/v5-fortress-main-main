@@ -89,13 +89,13 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
         </div>
         <div className="flex items-baseline justify-between mt-3 flex-shrink-0">
           <span className="text-4xl font-bold text-foreground">{item.quantity}</span>
-          <Badge variant={statusVariant}>
+          <Badge variant={statusVariant} className="text-xs"> {/* Adjusted font size here */}
             {item.status}
           </Badge>
         </div>
       </CardContent>
 
-      <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-4 space-y-2">
+      <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-6 space-y-3"> {/* Increased padding and space-y */}
         <Button className="w-full" onClick={() => onAdjustStock(item)} disabled={!canManageInventory}>
           <PlusCircle className="h-4 w-4 mr-2" /> Adjust Stock
         </Button>
