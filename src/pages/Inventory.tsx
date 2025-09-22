@@ -176,7 +176,7 @@ const Inventory: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const [isConfirmDeleteFolderDialogOpen, setIsConfirmDeleteFolderDialogOpen] = useState(false); // Corrected state variable name
-  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // For folder deletion confirmation
+  const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null);
 
   const [isQuickViewDialogOpen, setIsQuickViewDialogOpen] = useState(false);
   const [selectedItemForQuickView, setSelectedItemForQuickView] = useState<InventoryItem | null>(null);
@@ -384,36 +384,38 @@ const Inventory: React.FC = () => {
           </SelectContent>
         </Select>
 
-        <div className="flex items-center ml-auto space-x-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={viewMode === "table" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Table View</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={viewMode === "card" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("card")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Card View</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        {searchTerm && ( // Only show if there's an active search
+          <div className="flex items-center ml-auto space-x-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={viewMode === "table" ? "secondary" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("table")}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Table View</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={viewMode === "card" ? "secondary" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("card")}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Card View</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
       </div>
 
       <Card className="flex-grow rounded-md border flex flex-col">

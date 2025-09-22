@@ -246,44 +246,38 @@ const FolderContentPage: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <div className="flex items-center ml-auto space-x-2">
-          {canManageFolders && ( // NEW: Only show if user can manage folders
-            <Button onClick={handleAddSubfolderClick} size="sm">
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
-            </Button>
+          {(filteredItems.length > 0 || searchTerm) && ( // Only show if there are items in the folder or search results
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={viewMode === "table" ? "secondary" : "outline"}
+                    size="icon"
+                    onClick={() => setViewMode("table")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Table View</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={viewMode === "card" ? "secondary" : "outline"}
+                    size="icon"
+                    onClick={() => setViewMode("card")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Card View</p>
+                </TooltipContent>
+              </Tooltip>
+            </>
           )}
-          {canManageInventory && ( // NEW: Only show if user can manage inventory
-            <Button onClick={handleAddInventoryItemToFolderClick} size="sm">
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Item
-            </Button>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={viewMode === "table" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Table View</p>
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={viewMode === "card" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("card")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Card View</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
       </div>
 
