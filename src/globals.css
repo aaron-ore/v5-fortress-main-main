@@ -217,51 +217,6 @@
 
     --shadow-color: hsl(240 10% 10% / 0.08); /* Subtle dark shadow */
   }
-
-  /* NEW: Light Grey Indigo Theme Palette (Duplicated from Tropical Indigo, with light grey background) */
-  html.light-grey-indigo {
-    --background: 110 100% 97%; /* Light green/off-white (#EDFFEC) */
-    --foreground: 240 10% 10%; /* Very dark grey/almost black */
-
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 240 10% 10%;
-    box-shadow: 0 4px 12px hsl(240 10% 10% / 0.08);
-
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 240 10% 10%;
-    box-shadow: 0 4px 12px hsl(240 10% 10% / 0.08);
-
-    --primary: 244 69% 74%; /* Tropical Indigo */
-    --primary-foreground: 240 10% 10%; /* Dark text on primary accent */
-
-    --secondary: 240 10% 94%; /* Light grey for secondary elements */
-    --secondary-foreground: 240 10% 10%;
-
-    --muted: 240 10% 90%; /* Even lighter grey for muted backgrounds */
-    --muted-foreground: 240 10% 40%; /* Medium grey for muted text */
-
-    --accent: 138 75% 64%; /* Light green */
-    --accent-foreground: 240 10% 10%; /* Dark text on accent */
-
-    --destructive: 0 80% 60%; /* Standard red */
-    --destructive-foreground: 0 0% 100%; /* White text on red */
-
-    --border: 240 10% 80%; /* Light grey border */
-    --input: 0 0% 100%; /* White for input fields */
-    --ring: var(--primary); /* Primary color for ring */
-
-    /* Sidebar specific colors for Light Grey Indigo theme */
-    --sidebar-background: 250 15% 28%; /* Darker indigo (#48435C) */
-    --sidebar-foreground: 0 0% 100%; /* White text on indigo sidebar */
-    --sidebar-active-background: var(--secondary);
-    --sidebar-active-foreground: var(--foreground);
-    --sidebar-border: var(--border);
-    --sidebar-toggle-background: var(--secondary);
-
-    --scrollbar-background: 240 10% 85%; /* Light grey for scrollbar */
-
-    --shadow-color: hsl(240 10% 10% / 0.08); /* Subtle dark shadow */
-  }
 }
 
 @layer base {
