@@ -17,6 +17,7 @@ interface QrScannerProps {
 const QR_SCANNER_DIV_ID = "qr-code-full-region";
 const MAX_START_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1500; // 1.5 seconds
+const MIN_LOADING_DISPLAY_TIME = 500; // Minimum 500ms for the loading overlay
 
 const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
   ({ onScan, onError, onReady, onLoading, isOpen }, ref) => {
@@ -26,6 +27,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
     const isStartingRef = useRef(false);
     const qrScannerDivRef = useRef<HTMLDivElement>(null);
     const currentAttemptsRef = useRef(0);
+    const loadingStartTimeRef = useRef<number | null>(null); // To track when loading started
 
     const html5QrcodeConstructorConfig: Html5QrcodeFullConfig = {
       formatsToSupport: [
@@ -86,7 +88,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       isCameraStartedRef.current = false;
       isStartingRef.current = false;
       currentAttemptsRef.current = 0;
-      onLoading(false);
+      onLoading(false); // Ensure loading state is reset when scanner is stopped/cleared
     }, [stopScanner, clearScanner, onLoading]);
 
     const startScanner = useCallback(async () => {
@@ -110,7 +112,8 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
       }
 
       isStartingRef.current = true;
-      onLoading(true);
+      onLoading(true); // Tell parent we are loading
+      loadingStartTimeRef.current = Date.now(); // Record start time
       currentAttemptsRef.current = 0;
 
       // Ensure previous scanner is fully stopped and cleared before attempting a new start
@@ -204,8 +207,16 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
           if (isMounted.current) {
             console.log("[QrScanner] Scanner started and ready.");
             isCameraStartedRef.current = true;
-            onReady();
-            onLoading(false);
+            
+            const elapsedTime = Date.now() - (loadingStartTimeRef.current || 0);
+            if (elapsedTime < MIN_LOADING_DISPLAY_TIME) {
+                const remainingTime = MIN_LOADING_DISPLAY_TIME - elapsedTime;
+                console.log(`[QrScanner] Delaying onReady/onLoading(false) by ${remainingTime}ms to meet minimum loading display time.`);
+                await new Promise(resolve => setTimeout(resolve, remainingTime));
+            }
+
+            onReady(); // Tell parent camera is ready
+            onLoading(false); // Tell parent loading is complete
             isStartingRef.current = false; // Successfully started, reset starting flag
           }
         } catch (err: any) {
@@ -230,7 +241,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
               setTimeout(attemptStart, RETRY_DELAY_MS);
             } else {
               onError(errorMessage);
-              onLoading(false);
+              onLoading(false); // All attempts failed, reset loading state
               isStartingRef.current = false; // All attempts failed, reset starting flag
             }
           }
@@ -266,7 +277,7 @@ const QrScanner = forwardRef<QrScannerRef, QrScannerProps>(
         console.log("[QrScanner] Component unmounting or effect cleanup. Stopping and clearing scanner.");
         stopAndClear();
       };
-    }, [isOpen, startScanner, stopAndClear]); // Removed qrScannerDivRef.current from dependencies
+    }, [isOpen, startScanner, stopAndClear, qrScannerDivRef.current]);
 
     return (
       <div id={QR_SCANNER_DIV_ID} ref={qrScannerDivRef} className="w-full h-full" />
