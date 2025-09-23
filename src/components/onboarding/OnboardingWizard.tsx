@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
@@ -9,9 +11,10 @@ import { useOnboarding } from "@/context/OnboardingContext";
 
 interface OnboardingWizardProps {
   onComplete: () => void; // NEW: Callback for when onboarding is complete
+  onClose: () => void; // NEW: Callback to close the dialog
 }
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => { // NEW: Accept onComplete prop
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose }) => { // NEW: Accept onClose prop
   const { markOnboardingComplete } = useOnboarding(); // Keep markOnboardingComplete for internal state update
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -45,7 +48,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => { 
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
-    <Dialog open={true} onOpenChange={() => { /* Prevent closing */ }}> {/* Always open when rendered */}
+    <Dialog open={true} onOpenChange={onClose}> {/* Changed onOpenChange to onClose */}
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">

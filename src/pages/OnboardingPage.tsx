@@ -17,6 +17,12 @@ const OnboardingPage: React.FC = () => {
     navigate("/"); // Redirect to dashboard after onboarding
   };
 
+  const handleOnboardingClose = () => {
+    // If the user closes the onboarding wizard, redirect them to the dashboard
+    // They can always access it again via the announcement bar.
+    navigate("/");
+  };
+
   // The OnboardingPage should only render if the wizard is NOT completed.
   // The routing in AppContent.tsx now handles redirecting to this page if needed.
   if (profile?.hasOnboardingWizardCompleted) {
@@ -41,7 +47,7 @@ const OnboardingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
-      <OnboardingWizard onComplete={handleOnboardingComplete} />
+      <OnboardingWizard onComplete={handleOnboardingComplete} onClose={handleOnboardingClose} />
     </div>
   );
 };

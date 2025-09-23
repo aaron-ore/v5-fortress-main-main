@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useOnboarding } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AnnouncementBarProps {
   message: string;
@@ -28,7 +29,7 @@ const useTypingEffect = (text: string, speed: number = 50) => {
 };
 
 const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) => {
-  const { companyProfile } = useOnboarding();
+  const { profile } = useProfile(); // NEW: Use profile from ProfileContext
 
   const [isDismissed, setIsDismissed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -37,7 +38,8 @@ const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ message, linkText }) 
     return false;
   });
 
-  const isVisible = !isDismissed && !companyProfile;
+  // NEW: Announcement bar is visible if not dismissed AND onboarding wizard is NOT completed
+  const isVisible = !isDismissed && !profile?.hasOnboardingWizardCompleted;
 
   const typedMessage = useTypingEffect(message);
 

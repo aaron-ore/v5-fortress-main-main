@@ -180,18 +180,25 @@ const AppContent = () => {
   useEffect(() => {
     console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
-      // If user is authenticated, has an organization, but hasn't completed the onboarding wizard
-      if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname !== '/onboarding') {
-        console.log("[AppContent] Redirecting to onboarding wizard. Conditions: orgId present, wizard NOT completed, not already on /onboarding.");
-        navigate('/onboarding', { replace: true });
-      } else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
-        // If wizard is completed and user is on onboarding page, redirect to dashboard
-        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
-        navigate('/', { replace: true });
-      } else if (!profile.organizationId && location.pathname !== '/onboarding') {
-        // If user is authenticated but has no organization yet (e.g., just signed up without company code)
+      // If user is authenticated but has no organization yet (e.g., just signed up without company code)
+      if (!profile.organizationId && location.pathname !== '/onboarding') {
         console.log("[AppContent] User authenticated but no organization. Redirecting to onboarding to create/join org.");
         navigate('/onboarding', { replace: true });
+      } 
+      // If user has an organization but hasn't completed the onboarding wizard AND is on the onboarding page
+      else if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
+        console.log("[AppContent] User has organization but wizard not completed, and is on /onboarding. Allowing to stay.");
+        // Do nothing, let them complete onboarding
+      }
+      // If user has an organization and has completed the onboarding wizard AND is on the onboarding page
+      else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
+        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
+        navigate('/', { replace: true });
+      }
+      // If user has an organization and has completed the onboarding wizard AND is NOT on the onboarding page
+      else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/auth') {
+        console.log("[AppContent] User authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
+        navigate('/', { replace: true });
       }
     }
   }, [isLoadingProfile, profile, navigate, location.pathname]);
