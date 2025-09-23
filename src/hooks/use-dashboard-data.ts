@@ -4,11 +4,12 @@ import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, sub
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
 import { useOrders, OrderItem } from "@/context/OrdersContext";
 import { useStockMovement } from "@/context/StockMovementContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } => "@/context/ProfileContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
+import { StockMovement } from "@/context/StockMovementContext";
 
 interface DashboardContentData {
   metrics: {
@@ -61,6 +62,350 @@ interface UseDashboardHookResult {
   error: string | null;
   refresh: () => void;
 }
+
+const generateMockData = (dateRange: DateRange | undefined): DashboardContentData => {
+  const today = new Date();
+  const todayString = format(today, "yyyy-MM-dd");
+
+  // Mock Inventory Items
+  const mockInventoryItems: InventoryItem[] = [
+    { id: "item1", name: "Laptop Pro X", description: "High-performance laptop", sku: "LPX-001", category: "Electronics", pickingBinQuantity: 15, overstockQuantity: 35, quantity: 50, reorderLevel: 20, pickingReorderLevel: 10, committedStock: 5, incomingStock: 10, unitCost: 900, retailPrice: 1200, folderId: "folder1", pickingBinFolderId: "folder1", status: "In Stock", lastUpdated: subDays(today, 5).toISOString(), imageUrl: "/placeholder.svg", vendorId: "vendor1", barcodeUrl: "LPX-001", organizationId: "org1", autoReorderEnabled: true, autoReorderQuantity: 50, createdAt: subMonths(today, 3).toISOString() },
+    { id: "item2", name: "Wireless Mouse", description: "Ergonomic wireless mouse", sku: "WM-002", category: "Accessories", pickingBinQuantity: 5, overstockQuantity: 5, quantity: 10, reorderLevel: 15, pickingReorderLevel: 5, committedStock: 2, incomingStock: 0, unitCost: 20, retailPrice: 35, folderId: "folder2", pickingBinFolderId: "folder2", status: "Low Stock", lastUpdated: subDays(today, 2).toISOString(), imageUrl: "/placeholder.svg", vendorId: "vendor2", barcodeUrl: "WM-002", organizationId: "org1", autoReorderEnabled: true, autoReorderQuantity: 20, createdAt: subMonths(today, 2).toISOString() },
+    { id: "item3", name: "USB-C Hub", description: "Multi-port USB-C hub", sku: "UCH-003", category: "Accessories", pickingBinQuantity: 0, overstockQuantity: 0, quantity: 0, reorderLevel: 10, pickingReorderLevel: 5, committedStock: 0, incomingStock: 0, unitCost: 40, retailPrice: 60, folderId: "folder2", pickingBinFolderId: "folder2", status: "Out of Stock", lastUpdated: subDays(today, 10).toISOString(), imageUrl: "/placeholder.svg", vendorId: "vendor1", barcodeUrl: "UCH-003", organizationId: "org1", autoReorderEnabled: true, autoReorderQuantity: 30, createdAt: subMonths(today, 4).toISOString() },
+    { id: "item4", name: "Monitor 27-inch", description: "4K UHD Monitor", sku: "MON-004", category: "Electronics", pickingBinQuantity: 8, overstockQuantity: 12, quantity: 20, reorderLevel: 10, pickingReorderLevel: 5, committedStock: 3, incomingStock: 5, unitCost: 300, retailPrice: 450, folderId: "folder1", pickingBinFolderId: "folder1", status: "In Stock", lastUpdated: subDays(today, 1).toISOString(), imageUrl: "/placeholder.svg", vendorId: "vendor3", barcodeUrl: "MON-004", organizationId: "org1", autoReorderEnabled: false, autoReorderQuantity: 0, createdAt: subMonths(today, 1).toISOString() },
+    { id: "item5", name: "Ergonomic Chair", description: "Adjustable office chair", sku: "EC-005", category: "Furniture", pickingBinQuantity: 2, overstockQuantity: 3, quantity: 5, reorderLevel: 5, pickingReorderLevel: 2, committedStock: 1, incomingStock: 0, unitCost: 250, retailPrice: 400, folderId: "folder3", pickingBinFolderId: "folder3", status: "Low Stock", lastUpdated: subDays(today, 7).toISOString(), imageUrl: "/placeholder.svg", vendorId: "vendor2", barcodeUrl: "EC-005", organizationId: "org1", autoReorderEnabled: true, autoReorderQuantity: 10, createdAt: subMonths(today, 5).toISOString() },
+  ];
+
+  // Mock Orders
+  const mockOrders: OrderItem[] = [
+    { id: "SO-001", type: "Sales", customerSupplier: "Acme Corp", date: subDays(today, 10).toISOString(), status: "Shipped", totalAmount: 2400, dueDate: subDays(today, 10).toISOString(), itemCount: 2, notes: "Urgent order", orderType: "Retail", shippingMethod: "Express", items: [], organizationId: "org1" },
+    { id: "PO-001", type: "Purchase", customerSupplier: "Global Tech", date: subDays(today, 15).toISOString(), status: "New Order", totalAmount: 4500, dueDate: subDays(today, 5).toISOString(), itemCount: 10, notes: "Bulk order for laptops", orderType: "Wholesale", shippingMethod: "Standard", items: [], organizationId: "org1" },
+    { id: "SO-002", type: "Sales", customerSupplier: "Beta Solutions", date: subDays(today, 3).toISOString(), status: "Processing", totalAmount: 70, dueDate: subDays(today, 1).toISOString(), itemCount: 2, notes: "", orderType: "Retail", shippingMethod: "Standard", items: [], organizationId: "org1" },
+    { id: "SO-003", type: "Sales", customerSupplier: "Gamma Inc", date: subDays(today, 1).toISOString(), status: "New Order", totalAmount: 1200, dueDate: today.toISOString(), itemCount: 1, notes: "Due today", orderType: "Retail", shippingMethod: "Express", items: [], organizationId: "org1" },
+    { id: "PO-002", type: "Purchase", customerSupplier: "Office Supply Co", date: subDays(today, 7).toISOString(), status: "Processing", totalAmount: 200, dueDate: subDays(today, -3).toISOString(), itemCount: 5, notes: "", orderType: "Wholesale", shippingMethod: "Standard", items: [], organizationId: "org1" },
+    { id: "SO-004", type: "Sales", customerSupplier: "Delta Corp", date: subDays(today, 2).toISOString(), status: "Packed", totalAmount: 450, dueDate: subDays(today, -2).toISOString(), itemCount: 1, notes: "", orderType: "Retail", shippingMethod: "Standard", items: [], organizationId: "org1" },
+    { id: "SO-005", type: "Sales", customerSupplier: "Epsilon Ltd", date: subDays(today, 20).toISOString(), status: "On Hold / Problem", totalAmount: 800, dueDate: subDays(today, 25).toISOString(), itemCount: 1, notes: "Payment issue", orderType: "Retail", shippingMethod: "Standard", items: [], organizationId: "org1" },
+    { id: "SO-006", type: "Sales", customerSupplier: "Zeta LLC", date: subDays(today, 40).toISOString(), status: "Archived", totalAmount: 150, dueDate: subDays(today, 40).toISOString(), itemCount: 1, notes: "", orderType: "Retail", shippingMethod: "Standard", items: [], organizationId: "org1" },
+  ];
+
+  // Mock Stock Movements
+  const mockStockMovements: StockMovement[] = [
+    { id: "sm1", itemId: "item1", itemName: "Laptop Pro X", type: "add", amount: 20, oldQuantity: 30, newQuantity: 50, reason: "Received from PO-001", timestamp: subDays(today, 5).toISOString(), organizationId: "org1", userId: "user1", folderId: "folder1" },
+    { id: "sm2", itemId: "item2", itemName: "Wireless Mouse", type: "subtract", amount: 5, oldQuantity: 15, newQuantity: 10, reason: "Fulfilled for SO-002", timestamp: subDays(today, 2).toISOString(), organizationId: "org1", userId: "user1", folderId: "folder2" },
+    { id: "sm3", itemId: "item1", itemName: "Laptop Pro X", type: "subtract", amount: 1, oldQuantity: 50, newQuantity: 49, reason: "Damaged during handling", timestamp: subDays(today, 0).toISOString(), organizationId: "org1", userId: "user2", folderId: "folder1" },
+    { id: "sm4", itemId: "item4", itemName: "Monitor 27-inch", type: "add", amount: 5, oldQuantity: 15, newQuantity: 20, reason: "Initial stock", timestamp: subDays(today, 1).toISOString(), organizationId: "org1", userId: "user1", folderId: "folder1" },
+  ];
+
+  // Mock Inventory Folders
+  const mockInventoryFolders: InventoryFolder[] = [
+    { id: "folder1", organizationId: "org1", name: "Main Warehouse", color: "#4CAF50", createdAt: new Date().toISOString(), userId: "user1" },
+    { id: "folder2", organizationId: "org1", name: "Store Front", color: "#2196F3", createdAt: new Date().toISOString(), userId: "user1" },
+    { id: "folder3", organizationId: "org1", name: "Cold Storage", color: "#9C27B0", createdAt: new Date().toISOString(), userId: "user1" },
+  ];
+
+  // Mock Profiles (for discrepancy/issue reports)
+  const mockAllProfiles: any[] = [
+    { id: "user1", full_name: "Admin User", email: "admin@example.com", role: "admin", organization_id: "org1" },
+    { id: "user2", full_name: "Manager User", email: "manager@example.com", role: "inventory_manager", organization_id: "org1" },
+  ];
+
+  // Mock Discrepancies
+  const mockDiscrepancies: any[] = [
+    { id: "disc1", item_id: "item1", item_name: "Laptop Pro X", folder_id: "folder1", location_type: "picking_bin", original_quantity: 15, counted_quantity: 14, difference: -1, reason: "Cycle Count", status: "pending", timestamp: subDays(today, 0).toISOString(), user_id: "user2", organization_id: "org1" },
+    { id: "disc2", item_id: "item2", item_name: "Wireless Mouse", folder_id: "folder2", location_type: "overstock", original_quantity: 5, counted_quantity: 6, difference: 1, reason: "Cycle Count", status: "pending", timestamp: subDays(today, 0).toISOString(), user_id: "user2", organization_id: "org1" },
+  ];
+
+  // Mock Issues
+  const mockIssues: any[] = [
+    { id: "issue1", user_id: "user2", organization_id: "org1", activity_type: "Issue Reported", description: "Damaged packaging on item LPX-001", details: { issueType: "damaged-item", itemId: "item1", itemName: "Laptop Pro X", folderId: "folder1", contactInfo: "manager@example.com", description: "Box crushed during transit." }, timestamp: subDays(today, 0).toISOString() },
+  ];
+
+
+  const filterDataByDateRangeMock = (items: any[], dateKey: string) => {
+    const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
+    const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
+
+    if (!filterFrom || !filterTo) return items;
+
+    return items.filter((item: any) => {
+      const itemDate = parseAndValidateDate(item[dateKey]);
+      return itemDate && isValid(itemDate) && isWithinInterval(itemDate, { start: filterFrom, end: filterTo });
+    });
+  };
+
+  const filteredInventory = filterDataByDateRangeMock(mockInventoryItems, 'lastUpdated');
+  const filteredOrders = filterDataByDateRangeMock(mockOrders, 'date');
+  const filteredStockMovements = filterDataByDateRangeMock(mockStockMovements, 'timestamp');
+  const filteredDiscrepancies = filterDataByDateRangeMock(mockDiscrepancies, 'timestamp');
+  const filteredIssues = filterDataByDateRangeMock(mockIssues, 'timestamp');
+
+
+  const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+  const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
+  const lowStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel).length;
+  const outOfStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity === 0).length;
+  const ordersDueTodayCount = filteredOrders.filter(
+    (order: OrderItem) => format(parseAndValidateDate(order.dueDate) || new Date(), "yyyy-MM-dd") === todayString && order.status !== "Shipped" && order.status !== "Packed"
+  ).length;
+  const incomingShipmentsCount = filteredOrders.filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped").length;
+  const recentAdjustmentsCount = filteredStockMovements.filter(
+    (movement: any) => format(parseAndValidateDate(movement.timestamp) || new Date(), "yyyy-MM-dd") === todayString
+  ).length;
+
+  const totalSalesRevenue = filteredOrders.filter((order: OrderItem) => order.type === "Sales").reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
+  const totalPurchaseCost = filteredOrders.filter((order: OrderItem) => order.type === "Purchase").reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
+  const totalIncome = totalSalesRevenue;
+  const totalLosses = totalPurchaseCost;
+
+  const totalOrders = filteredOrders.length;
+  const fulfilledOrders = filteredOrders.filter(
+    (order: OrderItem) => order.status === "Shipped" || order.status === "Packed"
+  ).length;
+  const fulfillmentPercentage = totalOrders > 0 ? Math.round((fulfilledOrders / totalOrders) * 100) : 0;
+  const pendingPercentage = 100 - fulfillmentPercentage;
+
+  const totalInventoryCost = mockInventoryItems.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
+  const inventoryTurnoverRate = totalInventoryCost > 0 ? `${(totalSalesRevenue / totalInventoryCost).toFixed(1)}x` : "N/A";
+
+  const supplierPerformanceScore: "good" | "average" | "bad" = "good";
+
+  const last3MonthSalesData = (() => {
+    const monthlyData: { [key: string]: { salesRevenue: number; newInventory: number; itemsShipped: number } } = {};
+    const effectiveFrom = subMonths(today, 2);
+    let currentDate = startOfMonth(effectiveFrom);
+    while (currentDate.getTime() <= today.getTime()) {
+      const monthKey = format(currentDate, "MMM yyyy");
+      monthlyData[monthKey] = { salesRevenue: Math.floor(Math.random() * 5000) + 1000, newInventory: Math.floor(Math.random() * 200) + 50, itemsShipped: Math.floor(Math.random() * 150) + 30 };
+      currentDate = subMonths(currentDate, -1);
+    }
+    return Object.keys(monthlyData).sort((a: string, b: string) => {
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    }).map((monthKey: string) => ({
+      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
+      "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
+      "New Inventory Added": parseFloat(monthlyData[monthKey].newInventory.toFixed(0)),
+      "Items Shipped": parseFloat(monthlyData[monthKey].itemsShipped.toFixed(0)),
+    }));
+  })();
+
+  const monthlyOverviewData = (() => {
+    const monthlyData: { [key: string]: { salesRevenue: number; inventoryValue: number; purchaseVolume: number } } = {};
+    const effectiveFrom = subMonths(today, 11);
+    let currentDate = startOfMonth(effectiveFrom);
+    while (currentDate.getTime() <= today.getTime()) {
+      const monthKey = format(currentDate, "MMM yyyy");
+      monthlyData[monthKey] = { salesRevenue: Math.floor(Math.random() * 10000) + 2000, inventoryValue: Math.floor(Math.random() * 50000) + 10000, purchaseVolume: Math.floor(Math.random() * 500) + 100 };
+      currentDate = subMonths(currentDate, -1);
+    }
+    return Object.keys(monthlyData).sort((a: string, b: string) => {
+      const dateA = parseAndValidateDate(a);
+      const dateB = parseAndValidateDate(b);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    }).map((monthKey: string) => ({
+      name: format(parseAndValidateDate(monthKey) || new Date(), "MMM"),
+      "Sales Revenue": parseFloat(monthlyData[monthKey].salesRevenue.toFixed(2)),
+      "Inventory Value": parseFloat(monthlyData[monthKey].inventoryValue.toFixed(2)),
+      "Purchase Volume": parseFloat(monthlyData[monthKey].purchaseVolume.toFixed(0)),
+    }));
+  })();
+
+  const liveActivityData = (() => {
+    const dataPoints = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = subDays(today, i);
+      const dateKey = format(date, "MMM dd");
+      dataPoints.push({
+        name: dateKey,
+        "Total Daily Activity": Math.floor(Math.random() * 100) + 20,
+      });
+    }
+    return dataPoints;
+  })();
+
+  const totalStockValueTrendData = (() => {
+    const dataPoints = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = subMonths(today, i);
+      const monthName = format(month, "MMM");
+      dataPoints.push({ name: monthName, value: parseFloat((Math.random() * 100000 + 50000).toFixed(2)) });
+    }
+    return dataPoints;
+  })();
+
+  const salesInventoryTrendData = (() => {
+    const dataPoints = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = subMonths(today, i);
+      const monthName = format(month, "MMM");
+      dataPoints.push({
+        name: monthName,
+        "Sales Revenue": parseFloat((Math.random() * 50000 + 10000).toFixed(2)),
+        "Inventory Value": parseFloat((Math.random() * 150000 + 50000).toFixed(2)),
+      });
+    }
+    return dataPoints;
+  })();
+
+  const demandForecastData = (() => {
+    const dataPoints = [];
+    for (let i = 5; i >= 0; i--) {
+      const month = subMonths(today, i);
+      const monthName = format(month, "MMM");
+      dataPoints.push({
+        name: monthName,
+        "Actual Sales": parseFloat((Math.random() * 10000 + 2000).toFixed(2)),
+        "Projected Demand": null,
+      });
+    }
+    for (let i = 1; i <= 3; i++) {
+      const month = subMonths(today, -i);
+      const monthName = format(month, "MMM");
+      dataPoints.push({
+        name: monthName,
+        "Actual Sales": null,
+        "Projected Demand": parseFloat((Math.random() * 12000 + 3000).toFixed(2)),
+      });
+    }
+    return dataPoints;
+  })();
+
+  const weeklyRevenueData = (() => {
+    const dataPoints = [];
+    const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    for (let i = 0; i < 7; i++) {
+      dataPoints.push({
+        name: daysOfWeek[i],
+        "This Week": parseFloat((Math.random() * 2000 + 500).toFixed(2)),
+        "Last Week": parseFloat((Math.random() * 1800 + 400).toFixed(2)),
+      });
+    }
+    return dataPoints;
+  })();
+
+  const profitabilityMetricsData = [
+    { name: "Gross Margin", value: 45, color: "#00BFD8" },
+    { name: "Net Margin", value: 20, color: "#00C49F" },
+    { name: "Simulated Losses", value: 5, color: "#0088FE" },
+  ];
+
+  const topStockBulletGraphData = mockInventoryItems
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 4)
+    .map(item => ({
+      name: item.name,
+      quantity: item.quantity,
+      reorderLevel: item.reorderLevel,
+    }));
+
+  const locationStockHealthData = [
+    { label: "Main Warehouse", percentage: 75, isPositive: true, movementScore: 150 },
+    { label: "Store Front", percentage: 60, isPositive: false, movementScore: 80 },
+    { label: "Cold Storage", percentage: 90, isPositive: true, movementScore: 200 },
+    { label: "Returns Area", percentage: 30, isPositive: false, movementScore: 40 },
+  ];
+
+  const lowStockItems = filteredInventory.filter(item => item.quantity > 0 && item.quantity <= item.reorderLevel);
+  const outOfStockItems = filteredInventory.filter(item => item.quantity === 0);
+
+  const recentSalesOrders = filteredOrders
+    .filter(order => order.type === "Sales")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const recentPurchaseOrders = filteredOrders
+    .filter(order => order.type === "Purchase")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const openPurchaseOrders = mockOrders
+    .filter(order => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5);
+
+  const pendingInvoices = mockOrders
+    .filter(order => {
+      const orderDueDate = parseAndValidateDate(order.dueDate);
+      const thirtyDaysAgo = subDays(new Date(), 30);
+      return (
+        order.type === "Sales" &&
+        order.status !== "Shipped" &&
+        order.status !== "Archived" &&
+        order.status !== "Packed" &&
+        orderDueDate && isValid(orderDueDate) && isWithinInterval(orderDueDate, { start: new Date(0), end: thirtyDaysAgo })
+      );
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5);
+
+  const recentShipments = mockOrders
+    .filter(order => order.type === "Sales" && order.status === "Shipped")
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  const topSellingProducts = mockInventoryItems
+    .map(item => ({
+      name: item.name,
+      unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
+    }))
+    .filter(product => product.unitsSold > 0)
+    .sort((a, b) => b.unitsSold - a.unitsSold)
+    .slice(0, 5);
+
+  const pendingDiscrepanciesCount = filteredDiscrepancies.length;
+  const previousPeriodDiscrepanciesCount = Math.floor(Math.random() * 5); // Mock previous period
+  const dailyIssuesCount = filteredIssues.length;
+  const previousPeriodIssuesCount = Math.floor(Math.random() * 3); // Mock previous period
+
+
+  return {
+    metrics: {
+      totalStockValue,
+      totalUnitsOnHand,
+      lowStockItemsCount,
+      outOfStockItemsCount,
+      ordersDueTodayCount,
+      incomingShipmentsCount,
+      recentAdjustmentsCount,
+      totalIncome,
+      totalLosses,
+      fulfillmentPercentage,
+      pendingPercentage,
+      inventoryTurnoverRate,
+      supplierPerformanceScore,
+    },
+    charts: {
+      last3MonthSalesData,
+      monthlyOverviewData,
+      liveActivityData,
+      totalStockValueTrendData,
+      salesInventoryTrendData,
+      demandForecastData,
+      weeklyRevenueData,
+      profitabilityMetricsData,
+      topStockBulletGraphData,
+      locationStockHealthData,
+    },
+    lists: {
+      lowStockItems,
+      outOfStockItems,
+      recentSalesOrders,
+      recentPurchaseOrders,
+      openPurchaseOrders,
+      pendingInvoices,
+      recentShipments,
+      topSellingProducts,
+      pendingDiscrepanciesCount,
+      previousPeriodDiscrepanciesCount,
+      dailyIssuesCount,
+      previousPeriodIssuesCount,
+    },
+  };
+};
+
 
 export const useDashboardData = (dateRange: DateRange | undefined): UseDashboardHookResult => {
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
@@ -168,8 +513,14 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
 
   const dashboardData = useMemo<DashboardContentData | null>(() => {
+    // If any real data is still loading, return null to show loading state
     if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingProfile) {
       return null;
+    }
+
+    // If no profile or organization, return mock data for landing page screenshots
+    if (!profile?.organizationId) {
+      return generateMockData(dateRange);
     }
 
     const today = new Date();
@@ -239,7 +590,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
 
       return Object.keys(monthlyData).sort((a: string, b: string) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a);
-        const dateB = parseAndValidateDate(b); // Corrected typo here
+        const dateB = parseAndValidateDate(b);
         if (!dateA || !dateB) return 0;
         return dateA.getTime() - dateB.getTime();
       }).map((monthKey: string) => ({ // Explicitly type monthKey
@@ -596,7 +947,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     })();
 
 
-    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel);
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
     const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
 
     const recentSalesOrders = filteredOrders
