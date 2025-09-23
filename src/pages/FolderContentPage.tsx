@@ -282,8 +282,20 @@ const FolderContentPage: React.FC = () => {
       </div>
 
       <Card className="flex-grow rounded-md border flex flex-col">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Contents ({subfolders.length + filteredItems.length})</CardTitle>
+        <CardHeader className="pb-4 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle className="text-xl font-semibold">Items & Subfolders ({subfolders.length + filteredItems.length})</CardTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            {canManageFolders && (
+              <Button onClick={handleAddSubfolderClick}>
+                <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
+              </Button>
+            )}
+            {canManageInventory && (
+              <Button onClick={handleAddInventoryItemToFolderClick}>
+                <PlusCircle className="h-4 w-4 mr-2" /> Add Item to Folder
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto">
           {subfolders.length === 0 && filteredItems.length === 0 ? (
@@ -335,18 +347,6 @@ const FolderContentPage: React.FC = () => {
             </div>
           )}
         </CardContent>
-        <div className="flex flex-wrap items-center gap-2 p-4 border-t border-border">
-          {canManageFolders && (
-            <Button onClick={handleAddSubfolderClick}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
-            </Button>
-          )}
-          {canManageInventory && (
-            <Button onClick={handleAddInventoryItemToFolderClick}>
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Item to Folder
-            </Button>
-          )}
-        </div>
       </Card>
 
       {itemToDelete && (
