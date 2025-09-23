@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useOnboarding } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 
 interface AnnouncementBarProps {
