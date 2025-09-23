@@ -5,11 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
-import { Loader2 } from "lucide-react"; // Import Loader2
-import { logActivity } from "@/utils/logActivity"; // NEW: Import logActivity
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile to get current profile
+import { useNavigate, useLocation } from "react-router-dom"; // NEW: Import useLocation
+import { useAuth } from "@/context/AuthContext";
+import { Loader2 } from "lucide-react";
+import { logActivity } from "@/utils/logActivity";
+import { useProfile } from "@/context/ProfileContext";
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -19,8 +19,23 @@ const Auth: React.FC = () => {
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth(); // Use useAuth to get user and loading state
-  const { profile } = useProfile(); // NEW: Get current profile for logging
+  const location = useLocation(); // NEW: Initialize useLocation
+  const { user, isLoading } = useAuth();
+  const { profile } = useProfile();
+
+  // NEW: State to store the plan from URL parameter
+  const [selectedPlanFromUrl, setSelectedPlanFromUrl] = useState<string | null>(null);
+
+  // Effect to read URL parameters on component mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const plan = params.get('plan');
+    if (plan) {
+      setSelectedPlanFromUrl(plan);
+      setIsLogin(false); // Automatically switch to signup if a plan is selected
+      showSuccess(`You've selected the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Please sign up to continue.`);
+    }
+  }, [location.search]);
 
   // Effect to redirect if user is already authenticated
   useEffect(() => {
@@ -42,32 +57,31 @@ const Auth: React.FC = () => {
       } else {
         showSuccess("Logged in successfully!");
         await logActivity("Login Success", `User ${email} logged in successfully.`, profile);
-        // The useEffect above will handle the navigation to "/"
       }
     } else {
       const options = {
         data: {
           full_name: fullName.trim() || null,
           company_code: companyCode.trim() || null,
+          plan: selectedPlanFromUrl, // NEW: Include selected plan in metadata
         },
-        redirectTo: window.location.origin + '/auth', // This is correct for sending back to the app's auth route
+        redirectTo: window.location.origin + '/auth',
       };
       const { error } = await supabase.auth.signUp({ email, password, options });
       if (error) {
         showError(error.message);
-        await logActivity("Signup Failed", `User ${email} failed to sign up.`, profile, { error_message: error.message, full_name: fullName, company_code: companyCode }, true);
+        await logActivity("Signup Failed", `User ${email} failed to sign up.`, profile, { error_message: error.message, full_name: fullName, company_code: companyCode, plan: selectedPlanFromUrl }, true);
       } else {
         showSuccess("Account created! Please check your email to confirm.");
-        await logActivity("Signup Success", `User ${email} signed up successfully.`, profile, { full_name: fullName, company_code: companyCode });
-        setIsLogin(true); // Switch to login form after signup
+        await logActivity("Signup Success", `User ${email} signed up successfully.`, profile, { full_name: fullName, company_code: companyCode, plan: selectedPlanFromUrl });
+        setIsLogin(true);
         setFullName("");
         setCompanyCode("");
+        setSelectedPlanFromUrl(null); // Clear selected plan after signup
       }
     }
     setLoading(false);
   };
-
-  // Removed handleGoogleSignIn function
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
@@ -88,7 +102,6 @@ const Auth: React.FC = () => {
     setLoading(false);
   };
 
-  // If still loading auth state, show a loading indicator
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
@@ -105,13 +118,10 @@ const Auth: React.FC = () => {
     );
   }
 
-  // If user is already authenticated, the useEffect will handle redirection, so this part won't be reached.
-  // If not authenticated, render the auth form.
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          {/* Fortress Logo */}
           <div className="flex items-center justify-center space-x-2 mb-4">
             <svg
               width="32"
@@ -141,6 +151,11 @@ const Auth: React.FC = () => {
           <CardDescription>
             {isLogin ? "Sign in to your account" : "Create a new account to get started"}
           </CardDescription>
+          {selectedPlanFromUrl && !isLogin && ( // NEW: Display selected plan
+            <p className="text-sm text-primary font-semibold mt-2">
+              Signing up for: {selectedPlanFromUrl.charAt(0).toUpperCase() + selectedPlanFromUrl.slice(1)} Plan
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-6">
@@ -208,7 +223,6 @@ const Auth: React.FC = () => {
               </span>
             </div>
           </div>
-          {/* Removed Google Sign-In Button */}
           <div className="mt-6 text-center text-sm">
             {isLogin ? (
               <>
