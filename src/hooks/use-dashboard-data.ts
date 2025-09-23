@@ -9,6 +9,8 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
+import { useCategories } from "@/context/CategoryContext";
+import { useCustomers } from "@/context/CustomerContext";
 import { StockMovement } from "@/context/StockMovementContext";
 
 interface DashboardContentData {
@@ -190,7 +192,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
     ).length;
     const incomingShipmentsCount = filteredOrders.filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped").length;
     const recentAdjustmentsCount = filteredStockMovements.filter(
-      (movement: any) => format(parseAndValidateDate(movement.timestamp) || new Date(), "yyyy-MM-dd") === todayString
+      (movement: StockMovement) => format(parseAndValidateDate(movement.timestamp) || new Date(), "yyyy-MM-dd") === todayString
     ).length;
 
     const totalSalesRevenue = filteredOrders.filter((order: OrderItem) => order.type === "Sales").reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
@@ -328,7 +330,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         }
       });
 
-      stockMovements.forEach((movement: any) => { // Explicitly type movement
+      stockMovements.forEach((movement: StockMovement) => { // Explicitly type movement
         const moveDate = parseAndValidateDate(movement.timestamp);
         if (!moveDate || !isValid(moveDate)) return;
         const dateKey = format(moveDate, "MMM dd");
@@ -551,7 +553,7 @@ export const useDashboardData = (dateRange: DateRange | undefined): UseDashboard
         };
       });
 
-      stockMovements.forEach((movement: any) => { // Explicitly type movement
+      stockMovements.forEach((movement: StockMovement) => { // Explicitly type movement
         const item = inventoryItems.find((inv: InventoryItem) => inv.id === movement.itemId); // Explicitly type inv
         if (item) {
           const movementFolderId = item.folderId;

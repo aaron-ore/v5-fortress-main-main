@@ -9,10 +9,8 @@ import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 // Import the ReportSidebar component
