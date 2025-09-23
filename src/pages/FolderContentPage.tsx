@@ -335,6 +335,18 @@ const FolderContentPage: React.FC = () => {
             </div>
           )}
         </CardContent>
+        <div className="flex flex-wrap items-center gap-2 p-4 border-t border-border">
+          {canManageFolders && (
+            <Button onClick={handleAddSubfolderClick}>
+              <PlusCircle className="h-4 w-4 mr-2" /> Add Subfolder
+            </Button>
+          )}
+          {canManageInventory && (
+            <Button onClick={handleAddInventoryItemToFolderClick}>
+              <PlusCircle className="h-4 w-4 mr-2" /> Add Item to Folder
+            </Button>
+          )}
+        </div>
       </Card>
 
       {itemToDelete && (
