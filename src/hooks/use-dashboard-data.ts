@@ -9,8 +9,7 @@ import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { supabase } from "@/lib/supabaseClient";
 import { useVendors } from "@/context/VendorContext";
-import { useCategories } from "@/context/CategoryContext";
-import { useCustomers } from "@/context/CustomerContext";
+
 import { StockMovement } from "@/context/StockMovementContext";
 
 interface DashboardContentData {
