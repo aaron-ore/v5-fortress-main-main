@@ -172,6 +172,7 @@ const BillingSubscriptions: React.FC = () => {
         body: JSON.stringify({
           priceId: selectedPrice.id,
           organizationId: profile.organizationId,
+          trial_period_days: selectedPrice.trial_period_days || undefined, // Pass trial_period_days
         }),
         headers: {
           'Content-Type': 'application/json',
