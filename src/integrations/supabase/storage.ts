@@ -2,11 +2,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Uploads a file to a specified Supabase Storage bucket and returns its public URL.
+ * Uploads a file to a specified Supabase Storage bucket and returns its internal path.
  * @param file The File object to upload.
  * @param bucketName The name of the Supabase Storage bucket.
  * @param folderPath The path within the bucket (e.g., 'avatars/', 'company-logos/').
- * @returns A promise that resolves with the public URL of the uploaded file.
+ * @returns A promise that resolves with the internal path of the uploaded file within the bucket.
  * @throws An error if the upload fails.
  */
 export const uploadFileToSupabase = async (file: File, bucketName: string, folderPath: string = ''): Promise<string> => {
@@ -16,7 +16,7 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
 
   const fileExtension = file.name.split('.').pop();
   const fileName = `${uuidv4()}.${fileExtension}`;
-  const filePath = `${folderPath}${fileName}`;
+  const filePath = `${folderPath}${fileName}`; // This is the internal path
 
   const { error } = await supabase.storage
     .from(bucketName)
@@ -30,16 +30,8 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
     throw new Error(`Failed to upload file: ${error.message}`);
   }
 
-  // Get the public URL of the uploaded file
-  const { data: publicUrlData } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(filePath);
-
-  if (!publicUrlData || !publicUrlData.publicUrl) {
-    throw new Error("Failed to get public URL for the uploaded file.");
-  }
-
-  return publicUrlData.publicUrl;
+  // Return the internal file path, as this is what the Edge Function expects for download.
+  return filePath;
 };
 
 /**
