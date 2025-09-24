@@ -13,9 +13,38 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId, organizationId, trial_period_days } = await req.json(); // NEW: Accept trial_period_days
+    console.log('Edge Function: Incoming request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+    const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Content-Type header:', contentType);
+
+    let requestBody;
+    let rawBody = '';
+    try {
+      if (contentType && contentType.includes('application/json')) {
+        rawBody = await req.text(); // Read as text first
+        console.log('Edge Function: Raw request body length:', rawBody.length);
+        console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+        requestBody = JSON.parse(rawBody); // Then parse manually
+        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+      } else {
+        throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+      }
+    } catch (parseError: any) {
+      console.error('Edge Function: ERROR during JSON parsing:', parseError.message);
+      console.error('Edge Function: Raw body that failed to parse:', rawBody);
+      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const { priceId, organizationId, trial_period_days } = requestBody;
+    console.log('Edge Function: Extracted priceId:', priceId);
+    console.log('Edge Function: Extracted organizationId:', organizationId);
+    console.log('Edge Function: Extracted trial_period_days:', trial_period_days);
 
     if (!priceId || !organizationId) {
+      console.error('Edge Function: Missing required parameters after extraction. priceId:', priceId, 'organizationId:', organizationId);
       return new Response(JSON.stringify({ error: 'Missing required parameters: priceId, organizationId.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -117,7 +146,7 @@ serve(async (req) => {
         price: priceId,
         quantity: 1,
       }],
-      subscription_data: { // NEW: Add subscription_data for trial
+      subscription_data: {
         trial_period_days: trial_period_days || undefined,
       },
       success_url: `${req.headers.get('referer')}integrations?stripe_success=true`,
