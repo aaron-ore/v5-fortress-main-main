@@ -112,9 +112,7 @@ const Integrations: React.FC = () => {
   }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
 
   const handleConnectQuickBooks = () => {
-    showSuccess("QuickBooks integration coming soon!");
-    // Original logic commented out:
-    /*
+    // Removed: showSuccess("QuickBooks integration coming soon!");
     if (!profile?.id) {
       showError("You must be logged in to connect to QuickBooks.");
       return;
@@ -141,7 +139,6 @@ const Integrations: React.FC = () => {
     const authUrl = `https://appcenter.intuit.com/app/connect/oauth2?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&state=${encodedState}`;
     
     window.location.href = authUrl;
-    */
   };
 
   const handleDisconnectQuickBooks = async () => {
@@ -207,9 +204,7 @@ const Integrations: React.FC = () => {
   };
 
   const handleConnectShopify = () => {
-    showSuccess("Shopify integration coming soon!");
-    // Original logic commented out:
-    /*
+    // Removed: showSuccess("Shopify integration coming soon!");
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
       return;
@@ -253,7 +248,6 @@ const Integrations: React.FC = () => {
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
     window.location.href = authUrl;
-    */
   };
 
   const handleDisconnectShopify = async () => {
@@ -696,7 +690,7 @@ const Integrations: React.FC = () => {
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <Hourglass className="h-6 w-6 text-muted-foreground" />
-          <CardTitle className="text-xl font-semibold">More Integrations Coming Soon!</CardTitle>
+          <CardTitle className="text-xl font-semibold">More Integrations</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
