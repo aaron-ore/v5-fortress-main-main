@@ -107,11 +107,17 @@ const Reports: React.FC = () => {
         throw new Error("User session not found. Please log in again.");
       }
 
+      const payload = {
+        reportId: activeReportId,
+        reportData: reportData,
+      };
+      console.log("[Reports.tsx] Sending AI summary request with payload:", payload);
+      const stringifiedPayload = JSON.stringify(payload);
+      console.log("[Reports.tsx] Stringified payload (first 500 chars):", stringifiedPayload.substring(0, 500) + (stringifiedPayload.length > 500 ? '...' : ''));
+
+
       const { data, error } = await supabase.functions.invoke('generate-ai-summary', {
-        body: JSON.stringify({
-          reportId: activeReportId,
-          reportData: reportData,
-        }),
+        body: stringifiedPayload,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
