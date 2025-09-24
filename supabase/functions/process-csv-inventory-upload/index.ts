@@ -64,6 +64,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY'); // Get anon key for client-side auth
 
     if (!supabaseUrl) {
       console.error('Edge Function: SUPABASE_URL environment variable not set.');
@@ -75,6 +76,13 @@ serve(async (req) => {
     if (!supabaseServiceRoleKey) {
       console.error('Edge Function: SUPABASE_SERVICE_ROLE_KEY environment variable not set.');
       return new Response(JSON.stringify({ error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    if (!supabaseAnonKey) {
+      console.error('Edge Function: SUPABASE_ANON_KEY environment variable not set.');
+      return new Response(JSON.stringify({ error: 'Server configuration error: SUPABASE_ANON_KEY is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
@@ -91,14 +99,16 @@ serve(async (req) => {
     }
     const token = authHeader.split(' ')[1];
 
-    // NEW DIAGNOSTIC LOGGING
-    console.log('Edge Function: Inspecting supabaseAdmin.auth:', Object.keys(supabaseAdmin.auth));
-    console.log('Edge Function: Inspecting supabaseAdmin.auth.admin:', Object.keys(supabaseAdmin.auth.admin));
-    console.log('Edge Function: Type of supabaseAdmin.auth.admin.getUser:', typeof supabaseAdmin.auth.admin.getUser);
-    // END NEW DIAGNOSTIC LOGGING
+    // Create a client with the user's JWT for verification using standard auth methods
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
 
-    // Use supabaseAdmin.auth.admin.getUser(token) for user verification
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user || user.id !== userId) {
       console.error('Edge Function: JWT verification failed or user mismatch:', userError?.message || 'User not found or ID mismatch');
