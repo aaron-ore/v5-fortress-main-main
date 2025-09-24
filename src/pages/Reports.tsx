@@ -7,7 +7,7 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/context/Profile/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
@@ -201,7 +201,8 @@ const Reports: React.FC = () => {
             </CardTitle>
             <Button
               onClick={handleSummarizeReport}
-              disabled={!reportData || isSummarizing || !canAccessAiSummary} {/* NEW: Disable based on plan */}
+              // NEW: Disable based on plan
+              disabled={!reportData || isSummarizing || !canAccessAiSummary}
               variant="secondary"
               size="sm"
             >
