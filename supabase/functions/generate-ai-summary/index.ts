@@ -1,13 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.15.0";
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-// Removed: import { corsHeaders } from '../_shared/cors.ts';
-
-// Inlined corsHeaders definition to resolve module import error
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts'; // Re-import corsHeaders
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,8 +16,15 @@ serve(async (req) => {
     let requestBody;
     if (contentType && contentType.includes('application/json')) {
       const rawBody = await req.text(); // Read as text first
+      console.log('Edge Function: Raw request body length:', rawBody.length); // NEW: Log body length
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
-      requestBody = JSON.parse(rawBody); // Then parse manually
+      try {
+        requestBody = JSON.parse(rawBody); // Then parse manually
+      } catch (parseError: any) { // NEW: Catch parsing errors
+        console.error('Edge Function: JSON parse error:', parseError.message);
+        console.error('Edge Function: Raw body that failed to parse:', rawBody);
+        throw new Error(`Failed to parse request body as JSON: ${parseError.message}`);
+      }
     } else {
       throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
     }
