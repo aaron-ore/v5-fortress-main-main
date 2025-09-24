@@ -111,15 +111,12 @@ const Reports: React.FC = () => {
         reportId: activeReportId,
         reportData: reportData,
       };
-      console.log("[Reports.tsx] Sending AI summary request with payload:", payload);
-      const stringifiedPayload = JSON.stringify(payload);
-      console.log("[Reports.tsx] Stringified payload (first 500 chars):", stringifiedPayload.substring(0, 500) + (stringifiedPayload.length > 500 ? '...' : ''));
-
+      // Removed console.log statements for payload and stringifiedPayload
 
       const { data, error } = await supabase.functions.invoke('generate-ai-summary', {
-        body: stringifiedPayload,
+        body: payload, // Pass the object directly
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json', // Explicitly set Content-Type
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });
