@@ -15,8 +15,11 @@ serve(async (req) => {
 
   try {
     const { reportId, reportData } = await req.json();
+    console.log('Edge Function: Received reportId:', reportId);
+    console.log('Edge Function: Received reportData (type:', typeof reportData, 'value:', JSON.stringify(reportData, null, 2).substring(0, 500) + (JSON.stringify(reportData, null, 2).length > 500 ? '...' : ''));
 
     if (!reportId || !reportData) {
+      console.error('Edge Function: Missing required parameters for AI summary. reportId:', reportId, 'reportData:', reportData);
       return new Response(JSON.stringify({ error: 'Missing required parameters: reportId, reportData.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -25,12 +28,13 @@ serve(async (req) => {
 
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY environment variable not set.');
+      console.error('GEMINI_API_KEY environment variable not set in Edge Function.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Gemini API key is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 500, // Changed to 500 as this is a server config error
       });
     }
+    console.log('Edge Function: GEMINI_API_KEY is present.');
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
