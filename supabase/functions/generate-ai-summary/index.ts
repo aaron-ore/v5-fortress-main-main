@@ -1,12 +1,7 @@
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.15.0";
-// Removed: import { corsHeaders } from '../_shared/cors.ts';
-
-// Inlined corsHeaders definition to resolve module import error
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { corsHeaders } from '../_shared/cors.ts'; // Re-import corsHeaders
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,7 +9,20 @@ serve(async (req) => {
   }
 
   try {
-    const { reportId, reportData } = await req.json();
+    console.log('Edge Function: Incoming request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+    const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Content-Type header:', contentType);
+
+    let requestBody;
+    if (contentType && contentType.includes('application/json')) {
+      const rawBody = await req.text(); // Read as text first
+      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+      requestBody = JSON.parse(rawBody); // Then parse manually
+    } else {
+      throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+    }
+
+    const { reportId, reportData } = requestBody;
     console.log('Edge Function: Received reportId:', reportId);
     console.log('Edge Function: Received reportData (type:', typeof reportData, 'value:', JSON.stringify(reportData, null, 2).substring(0, 500) + (JSON.stringify(reportData, null, 2).length > 500 ? '...' : ''));
 
@@ -31,7 +39,7 @@ serve(async (req) => {
       console.error('GEMINI_API_KEY environment variable not set in Edge Function.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Gemini API key is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500, // Changed to 500 as this is a server config error
+        status: 500,
       });
     }
     console.log('Edge Function: GEMINI_API_KEY is present.');
