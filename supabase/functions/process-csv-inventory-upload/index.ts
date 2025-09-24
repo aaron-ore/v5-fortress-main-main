@@ -307,7 +307,7 @@ serve(async (req) => {
         unit_cost: unitCost,
         retail_price: retailPrice,
         folder_id: folderId,
-        picking_bin_location: pickingBinFolderId,
+        picking_bin_folder_id: pickingBinFolderId, // Corrected column name
         status: status,
         last_updated: new Date().toISOString(),
         image_url: imageUrl,
