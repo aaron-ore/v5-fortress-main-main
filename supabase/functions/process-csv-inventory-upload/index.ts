@@ -133,25 +133,41 @@ serve(async (req) => {
       });
     }
 
+    console.log('Edge Function: Attempting to download file from storage:', filePath);
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('csv-uploads')
       .download(filePath);
 
     if (downloadError) {
-      console.error('Error downloading file from storage:', downloadError);
+      console.error('Edge Function: Error downloading file from storage:', downloadError);
       return new Response(JSON.stringify({ error: `Failed to download CSV file: ${downloadError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
+    console.log('Edge Function: File downloaded successfully. FileData type:', typeof fileData);
 
+    if (!fileData) {
+        console.error('Edge Function: Downloaded fileData is null or undefined.');
+        throw new Error('Downloaded CSV file is empty or corrupted.');
+    }
+
+    console.log('Edge Function: Converting fileData to ArrayBuffer.');
     const buffer = await fileData.arrayBuffer();
+    console.log('Edge Function: ArrayBuffer created. Size:', buffer.byteLength);
+
+    console.log('Edge Function: Reading workbook from buffer.');
     const workbook = XLSX.read(buffer, { type: 'array' });
+    console.log('Edge Function: Workbook read successfully. Sheet names:', workbook.SheetNames);
+
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
+    console.log('Edge Function: Converting worksheet to JSON.');
     const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+    console.log('Edge Function: Worksheet converted to JSON. Number of rows:', jsonData.length);
 
     if (jsonData.length === 0) {
+      console.error('Edge Function: Parsed JSON data is empty.');
       return new Response(JSON.stringify({ error: 'The CSV file is empty or contains no data rows.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
