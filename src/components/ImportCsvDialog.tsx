@@ -158,10 +158,11 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         let errorDetail = `Edge Function failed with status: ${response.status}`;
         try {
           const errorData = await response.json();
-          errorDetail = errorData.error || errorDetail;
+          errorDetail = errorData.error || JSON.stringify(errorData); // Capture full error object if available
+          console.error("Edge Function detailed error response:", errorData); // Log full error response
         } catch (jsonError) {
           console.error("Failed to parse error response JSON:", jsonError);
-          errorDetail = `Edge Function failed with status: ${response.status}. Response was not valid JSON.`;
+          errorDetail = `Edge Function failed with status: ${response.status}. Response was not valid JSON. Raw response: ${await response.text()}`; // Log raw text if not JSON
         }
         throw new Error(errorDetail);
       }
