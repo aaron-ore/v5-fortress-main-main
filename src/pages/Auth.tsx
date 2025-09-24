@@ -120,7 +120,7 @@ const Auth: React.FC = () => {
       className="min-h-screen flex items-center justify-center bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/932271.jpg')` }}
     >
-      <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg text-foreground">
+      <Card className="w-full max-w-md bg-black/20 backdrop-blur-lg border border-white/30 shadow-lg text-white">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <svg
@@ -143,9 +143,9 @@ const Auth: React.FC = () => {
                 fillOpacity="0.2"
             />
           </svg>
-            <span className="text-3xl font-bold text-foreground">Fortress</span>
+            <span className="text-3xl font-bold text-white">Fortress</span>
           </div>
-          <CardTitle className="text-3xl font-bold">
+          <CardTitle className="text-3xl font-bold text-white">
             {isLogin ? "Welcome Back!" : "Join Fortress"}
           </CardTitle>
           <CardDescription className="text-white/80">
@@ -168,7 +168,7 @@ const Auth: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
+                className="bg-black/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
               />
             </div>
             <div className="space-y-2">
@@ -180,7 +180,7 @@ const Auth: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
+                className="bg-black/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
               />
             </div>
             {!isLogin && (
@@ -194,7 +194,7 @@ const Auth: React.FC = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
+                    className="bg-black/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
@@ -205,7 +205,7 @@ const Auth: React.FC = () => {
                     placeholder="Enter company code (e.g., FORTRESS123)"
                     value={companyCode}
                     onChange={(e) => setCompanyCode(e.target.value)}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
+                    className="bg-black/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
                   />
                   <p className="text-xs text-white/70">
                     If you have a company code, enter it to join your organization.
@@ -222,7 +222,7 @@ const Auth: React.FC = () => {
               <span className="w-full border-t border-white/30" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white/10 px-2 text-white/80">
+              <span className="bg-black/20 px-2 text-white/80">
                 Or
               </span>
             </div>
