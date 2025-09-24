@@ -22,26 +22,9 @@ serve(async (req) => {
     }
 
     const token = authHeader.split(' ')[1];
-    if (!token) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: JWT token missing.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
-      });
-    }
+    // Corrected: Use auth.admin.getUser for server-side JWT verification
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: `Unauthorized: ${userError?.message || 'User not authenticated.'}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

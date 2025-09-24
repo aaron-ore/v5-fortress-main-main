@@ -38,12 +38,20 @@ serve(async (req) => { // Changed Deno.serve to serve
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get the authenticated user's session (the user making the request)
-    const authHeader = req.headers.get('Authorization')!;
-    const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
+    // Corrected: Extract token from Authorization header and use auth.admin.getUser
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: User not authenticated.' }), {
+    if (userError || !user || user.id !== userId) { // Added user.id !== userId check
+      console.error('Edge Function: JWT verification failed or user mismatch:', userError?.message || 'User not found or ID mismatch');
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or mismatched user token.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });

@@ -60,6 +60,25 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Changed model to gemini-1.5-flash
 
+    // Corrected: Extract token from Authorization header and use auth.admin.getUser
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token); // Assuming supabaseAdmin is available or created here
+
+    if (userError || !user) {
+      console.error('Edge Function: JWT verification failed or user not found:', userError?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or mismatched user token.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      });
+    }
+
     let prompt = `Generate a concise, professional summary (max 150 words) for the following inventory management report. Focus on key insights, trends, and actionable takeaways. If there are numbers, highlight the most significant ones.
 
 Report Type: ${reportId}

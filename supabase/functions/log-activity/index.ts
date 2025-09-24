@@ -38,7 +38,7 @@ serve(async (req) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token); // Corrected to auth.admin.getUser
 
     if (userError || !user || user.id !== user_id) {
       console.error('JWT verification failed or user mismatch:', userError?.message || 'User not found');
