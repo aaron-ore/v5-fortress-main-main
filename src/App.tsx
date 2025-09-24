@@ -13,9 +13,14 @@ const App = () => {
     <>
       <SonnerToaster
         richColors
-        position="top-right"
+        position="top-center" // Changed position to top-center
         duration={3000}
         closeButton
+        toastOptions={{
+          classNames: {
+            toast: 'rounded-full', // Added for pill shape
+          },
+        }}
       />
       <BrowserRouter>
         <AuthProvider>
