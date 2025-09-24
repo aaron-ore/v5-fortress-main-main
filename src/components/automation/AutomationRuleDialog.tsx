@@ -18,8 +18,9 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -36,6 +37,8 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
 
   // NEW: Role-based permissions
   const isAdmin = profile?.role === 'admin';
+  // NEW: Check Automation access based on plan
+  const canAccessAutomation = hasRequiredPlan(profile?.companyProfile?.plan, 'enterprise');
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -133,7 +136,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   }, [isOpen, ruleToEdit]);
 
   const handleSubmit = async () => {
-    if (!isAdmin) { // NEW: Check permission before submitting
+    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
       showError("You do not have permission to create or edit automation rules.");
       return;
     }
@@ -228,190 +231,94 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   };
 
   const renderConditionFields = () => {
-    switch (triggerType) {
-      case "ON_STOCK_LEVEL_CHANGE":
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="conditionField">Field</Label>
-                <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
-                  <SelectContent>
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="conditionField">Field</Label>
+            <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+              <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
+              <SelectContent>
+                {triggerType === "ON_STOCK_LEVEL_CHANGE" && (
+                  <>
                     <SelectItem value="quantity">Total Quantity</SelectItem>
                     <SelectItem value="status">Status</SelectItem>
                     <SelectItem value="category">Category</SelectItem>
-                    <SelectItem value="folderId">Folder</SelectItem> {/* Updated to folderId */}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="conditionOperator">Operator</Label>
-                <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
-                  <SelectContent>
-                    {["quantity", "unitCost", "retailPrice"].includes(conditionField) && (
-                      <>
-                        <SelectItem value="lt">Less than (&lt;)</SelectItem>
-                        <SelectItem value="eq">Equals (=)</SelectItem>
-                        <SelectItem value="gt">Greater than (&gt;)</SelectItem>
-                      </>
-                    )}
-                    {["status", "category", "folderId"].includes(conditionField) && ( // Updated to folderId
-                      <SelectItem value="eq">Equals (=)</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {conditionField && conditionOperator && (
-              <div className="space-y-2">
-                <Label htmlFor="conditionValue">Value</Label>
-                {["quantity", "unitCost", "retailPrice"].includes(conditionField) ? (
-                  <Input
-                    id="conditionValue"
-                    type="number"
-                    value={conditionValue}
-                    onChange={(e) => setConditionValue(e.target.value)}
-                    placeholder="e.g., 10"
-                    min="0"
-                    step={["unitCost", "retailPrice"].includes(conditionField) ? "0.01" : "1"}
-                    disabled={!isAdmin}
-                  />
-                ) : conditionField === "status" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="In Stock">In Stock</SelectItem>
-                      <SelectItem value="Low Stock">Low Stock</SelectItem>
-                      <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : conditionField === "category" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : conditionField === "folderId" ? ( // Updated to folderId
-                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
-                    <SelectContent>
-                      {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
-                    </SelectContent>
-                  </Select>
-                ) : null}
-              </div>
-            )}
-          </>
-        );
-      case "ON_ORDER_STATUS_CHANGE":
-        return (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="conditionOrderType">Order Type</Label>
-              <Select value={conditionOrderType} onValueChange={setConditionOrderType} disabled={!isAdmin}>
-                <SelectTrigger id="conditionOrderType"><SelectValue placeholder="Select order type" /></SelectTrigger>
-                <SelectContent>
-                  {orderTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="conditionOldStatus">From Status (Optional)</Label>
-                <Select value={conditionOldStatus} onValueChange={setConditionOldStatus} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionOldStatus"><SelectValue placeholder="Any status" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any">Any Status</SelectItem>
-                    {orderStatuses.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="conditionNewStatus">To Status</Label>
-                <Select value={conditionNewStatus} onValueChange={setConditionNewStatus} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionNewStatus"><SelectValue placeholder="Select new status" /></SelectTrigger>
-                  <SelectContent>
-                    {orderStatuses.map(status => <SelectItem key={status} value={status}>{status}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </>
-        );
-      case "ON_NEW_INVENTORY_ITEM":
-        return (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="conditionField">Field</Label>
-                <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
-                  <SelectContent>
+                    <SelectItem value="folderId">Folder</SelectItem>
+                  </>
+                )}
+                {triggerType === "ON_NEW_INVENTORY_ITEM" && (
+                  <>
                     <SelectItem value="category">Category</SelectItem>
                     <SelectItem value="unitCost">Unit Cost</SelectItem>
                     <SelectItem value="retailPrice">Retail Price</SelectItem>
-                    <SelectItem value="folderId">Folder</SelectItem> {/* Added folderId */}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="conditionOperator">Operator</Label>
-                <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin}>
-                  <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
-                  <SelectContent>
-                    {["unitCost", "retailPrice"].includes(conditionField) && (
-                      <>
-                        <SelectItem value="lt">Less than (&lt;)</SelectItem>
-                        <SelectItem value="eq">Equals (=)</SelectItem>
-                        <SelectItem value="gt">Greater than (&gt;)</SelectItem>
-                      </>
-                    )}
-                    {["category", "folderId"].includes(conditionField) && ( // Updated to folderId
-                      <SelectItem value="eq">Equals (=)</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {conditionField && conditionOperator && (
-              <div className="space-y-2">
-                <Label htmlFor="conditionValue">Value</Label>
-                {["unitCost", "retailPrice"].includes(conditionField) ? (
-                  <Input
-                    id="conditionValue"
-                    type="number"
-                    value={conditionValue}
-                    onChange={(e) => setConditionValue(e.target.value)}
-                    placeholder="e.g., 50.00"
-                    min="0"
-                    step="0.01"
-                    disabled={!isAdmin}
-                  />
-                ) : conditionField === "category" ? (
-                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : conditionField === "folderId" ? ( // Updated to folderId
-                  <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin}>
-                    <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
-                    <SelectContent>
-                      {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)} {/* Updated to inventoryFolders */}
-                    </SelectContent>
-                  </Select>
-                ) : null}
-              </div>
-            )}
-          </>
-        );
-      default:
-        return <p className="text-muted-foreground text-sm">Select a trigger to define conditions.</p>;
-    }
+                    <SelectItem value="folderId">Folder</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="conditionOperator">Operator</Label>
+            <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+              <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
+              <SelectContent>
+                {["quantity", "unitCost", "retailPrice"].includes(conditionField) && (
+                  <>
+                    <SelectItem value="lt">Less than (&lt;)</SelectItem>
+                    <SelectItem value="eq">Equals (=)</SelectItem>
+                    <SelectItem value="gt">Greater than (&gt;)</SelectItem>
+                  </>
+                )}
+                {["status", "category", "folderId"].includes(conditionField) && (
+                  <SelectItem value="eq">Equals (=)</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {conditionField && conditionOperator && (
+          <div className="space-y-2">
+            <Label htmlFor="conditionValue">Value</Label>
+            {["quantity", "unitCost", "retailPrice"].includes(conditionField) ? (
+              <Input
+                id="conditionValue"
+                type="number"
+                value={conditionValue}
+                onChange={(e) => setConditionValue(e.target.value)}
+                placeholder="e.g., 10"
+                min="0"
+                step={["unitCost", "retailPrice"].includes(conditionField) ? "0.01" : "1"}
+                disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
+              />
+            ) : conditionField === "status" ? (
+              <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+                <SelectTrigger id="conditionValue"><SelectValue placeholder="Select status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="In Stock">In Stock</SelectItem>
+                  <SelectItem value="Low Stock">Low Stock</SelectItem>
+                  <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : conditionField === "category" ? (
+              <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+                <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : conditionField === "folderId" ? (
+              <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+                <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
+                <SelectContent>
+                  {inventoryFolders.map(folder => <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : null}
+          </div>
+        )}
+      </>
+    );
   };
 
   const renderActionFields = () => {
@@ -425,7 +332,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               value={actionNotificationMessage}
               onChange={(e) => setActionNotificationMessage(e.target.value)}
               placeholder="e.g., Item {itemName} is critically low in stock!"
-              disabled={!isAdmin}
+              disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
             />
             <p className="text-xs text-muted-foreground">
               Use <code>{`{itemName}`}</code>, <code>{`{sku}`}</code>, <code>{`{quantity}`}</code>, <code>{`{oldStatus}`}</code>, <code>{`{newStatus}`}</code> as placeholders.
@@ -437,7 +344,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionEmailTo">Recipient <span className="text-red-500">*</span></Label>
-              <Select value={actionEmailTo} onValueChange={setActionEmailTo} disabled={!isAdmin}>
+              <Select value={actionEmailTo} onValueChange={setActionEmailTo} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
                 <SelectTrigger id="actionEmailTo"><SelectValue placeholder="Select recipient" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Organization Admin</SelectItem>
@@ -452,7 +359,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                   onChange={(e) => setActionEmailTo(e.target.value)}
                   placeholder="e.g., alerts@yourcompany.com"
                   className="mt-2"
-                  disabled={!isAdmin}
+                  disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
                 />
               )}
             </div>
@@ -463,7 +370,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 value={actionEmailSubject}
                 onChange={(e) => setActionEmailSubject(e.target.value)}
                 placeholder="e.g., Low Stock Alert: {itemName}"
-                disabled={!isAdmin}
+                disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
               />
             </div>
             <div className="space-y-2">
@@ -474,7 +381,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionEmailBody(e.target.value)}
                 placeholder="e.g., Dear team, item {itemName} (SKU: {sku}) is now at {quantity} units."
                 rows={4}
-                disabled={!isAdmin}
+                disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
               />
               <p className="text-xs text-muted-foreground">
                 Use <code>{`{itemName}`}</code>, <code>{`{sku}`}</code>, <code>{`{quantity}`}</code>, <code>{`{oldStatus}`}</code>, <code>{`{newStatus}`}</code> as placeholders.
@@ -487,7 +394,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionCreatePoItemId">Item to Order <span className="text-red-500">*</span></Label>
-              <Select value={actionCreatePoItemId} onValueChange={setActionCreatePoItemId} disabled={!isAdmin}>
+              <Select value={actionCreatePoItemId} onValueChange={setActionCreatePoItemId} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
                 <SelectTrigger id="actionCreatePoItemId"><SelectValue placeholder="Select item" /></SelectTrigger>
                 <SelectContent>
                   {inventoryItems.map(item => (
@@ -507,7 +414,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionCreatePoQuantity(e.target.value)}
                 placeholder="e.g., 100"
                 min="1"
-                disabled={!isAdmin}
+                disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
               />
             </div>
           </>
@@ -536,7 +443,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Low Stock Alert for Electronics"
-              disabled={!isAdmin}
+              disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
             />
           </div>
           <div className="space-y-2">
@@ -547,7 +454,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Briefly describe what this rule does."
               rows={2}
-              disabled={!isAdmin}
+              disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
             />
           </div>
           <div className="flex items-center justify-between space-x-2 pt-2">
@@ -556,7 +463,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               id="isActive"
               checked={isActive}
               onCheckedChange={setIsActive}
-              disabled={!isAdmin}
+              disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
             />
           </div>
 
@@ -565,7 +472,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               <AlertTriangle className="h-5 w-5 text-yellow-500" /> Trigger (When...)
             </h3>
             <Label htmlFor="triggerType">Trigger Type <span className="text-red-500">*</span></Label>
-            <Select value={triggerType} onValueChange={(value: AutomationRule['triggerType']) => setTriggerType(value)} disabled={!isAdmin}>
+            <Select value={triggerType} onValueChange={(value: AutomationRule['triggerType']) => setTriggerType(value)} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
               <SelectTrigger id="triggerType"><SelectValue placeholder="Select a trigger event" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ON_STOCK_LEVEL_CHANGE">On Stock Level Change</SelectItem>
@@ -587,7 +494,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               <BellRing className="h-5 w-5 text-green-500" /> Action (Then...)
             </h3>
             <Label htmlFor="actionType">Action Type <span className="text-red-500">*</span></Label>
-            <Select value={actionType} onValueChange={setActionType} disabled={!isAdmin}>
+            <Select value={actionType} onValueChange={setActionType} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
               <SelectTrigger id="actionType"><SelectValue placeholder="Select an action" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="SEND_NOTIFICATION">Send In-App Notification</SelectItem>
@@ -602,7 +509,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isAdmin}>
+          <Button onClick={handleSubmit} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
             {ruleToEdit ? "Save Changes" : "Create Rule"}
           </Button>
         </DialogFooter>

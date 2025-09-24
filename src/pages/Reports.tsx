@@ -12,6 +12,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
 import { supabase } from "@/lib/supabaseClient";
+import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
 
 // Import the ReportSidebar component
 import ReportSidebar from "@/components/reports/ReportSidebar";
@@ -86,14 +87,15 @@ const Reports: React.FC = () => {
     showSuccess("Report sent to printer!");
   }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
 
-  const hasAiSummaryAccess = profile?.companyProfile?.plan === 'premium' || profile?.companyProfile?.plan === 'enterprise';
+  // NEW: Check AI Summary access based on plan
+  const canAccessAiSummary = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
   const handleSummarizeReport = async () => {
     if (!reportData) {
       showError("No report data available to summarize.");
       return;
     }
-    if (!hasAiSummaryAccess) {
+    if (!canAccessAiSummary) { // NEW: Use canAccessAiSummary
       showError("AI Summary is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
@@ -199,7 +201,7 @@ const Reports: React.FC = () => {
             </CardTitle>
             <Button
               onClick={handleSummarizeReport}
-              disabled={!reportData || isSummarizing || !hasAiSummaryAccess}
+              disabled={!reportData || isSummarizing || !canAccessAiSummary} {/* NEW: Disable based on plan */}
               variant="secondary"
               size="sm"
             >

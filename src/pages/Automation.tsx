@@ -18,6 +18,7 @@ import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { showError } from "@/utils/toast"; // Import showError
+import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();
@@ -30,9 +31,11 @@ const Automation: React.FC = () => {
   const [ruleToDelete, setRuleToDelete] = useState<AutomationRule | null>(null);
 
   const isAdmin = profile?.role === 'admin';
+  // NEW: Check Automation access based on plan
+  const canAccessAutomation = hasRequiredPlan(profile?.companyProfile?.plan, 'enterprise');
 
   const handleCreateRuleClick = () => {
-    if (!isAdmin) {
+    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
       showError("You do not have permission to create automation rules.");
       return;
     }
@@ -41,7 +44,7 @@ const Automation: React.FC = () => {
   };
 
   const handleEditRuleClick = (rule: AutomationRule) => {
-    if (!isAdmin) {
+    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
       showError("You do not have permission to edit automation rules.");
       return;
     }
@@ -50,7 +53,7 @@ const Automation: React.FC = () => {
   };
 
   const handleDeleteRuleClick = (rule: AutomationRule) => {
-    if (!isAdmin) {
+    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
       showError("You do not have permission to delete automation rules.");
       return;
     }
@@ -67,7 +70,7 @@ const Automation: React.FC = () => {
   };
 
   const handleToggleRuleActive = async (rule: AutomationRule, newActiveState: boolean) => {
-    if (!isAdmin) {
+    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
       showError("You do not have permission to toggle automation rules.");
       return;
     }
@@ -160,6 +163,21 @@ const Automation: React.FC = () => {
     );
   }
 
+  if (!canAccessAutomation) { // NEW: Restrict access based on plan
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Feature Not Available</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">The Automation Engine is an Enterprise-level feature.</p>
+            <p className="text-muted-foreground mt-2">Please upgrade your plan to access this functionality.</p>
+            <Button onClick={() => navigate('/billing')} className="mt-4">Upgrade Plan</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 flex flex-col flex-grow">
       <h1 className="text-3xl font-bold">Automation Engine</h1>
@@ -172,7 +190,7 @@ const Automation: React.FC = () => {
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> Automation Rules
           </CardTitle>
-          <Button onClick={handleCreateRuleClick} disabled={!isAdmin}>
+          <Button onClick={handleCreateRuleClick} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
             <PlusCircle className="h-4 w-4 mr-2" /> Create New Rule
           </Button>
         </CardHeader>
@@ -200,7 +218,7 @@ const Automation: React.FC = () => {
                           checked={rule.isActive}
                           onCheckedChange={(checked) => handleToggleRuleActive(rule, checked)}
                           aria-label={`Toggle rule ${rule.name}`}
-                          disabled={!isAdmin}
+                          disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
                         />
                       </TableCell>
                       <TableCell className="font-medium">{rule.name}</TableCell>
@@ -209,10 +227,10 @@ const Automation: React.FC = () => {
                       <TableCell>{getActionSummary(rule)}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)} disabled={!isAdmin}>
+                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
                             <Edit className="h-4 w-4 text-primary" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)} disabled={!isAdmin}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
