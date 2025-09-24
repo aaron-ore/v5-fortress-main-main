@@ -18,6 +18,8 @@ interface ExistingInventoryItem {
 }
 
 serve(async (req) => {
+  console.log('Edge Function: Request received at top level.'); // VERY EARLY LOG
+
   // Wrap the entire function logic in a try-catch to catch very early errors
   try {
     if (req.method === 'OPTIONS') {
@@ -30,20 +32,23 @@ serve(async (req) => {
 
     let requestBody;
     let rawBody = '';
-    if (contentType && contentType.includes('application/json')) {
-      rawBody = await req.text(); // Read as text first
-      console.log('Edge Function: Raw request body length:', rawBody.length);
-      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
-      try {
+    try { // NEW: Specific try-catch for JSON parsing
+      if (contentType && contentType.includes('application/json')) {
+        rawBody = await req.text(); // Read as text first
+        console.log('Edge Function: Raw request body length:', rawBody.length);
+        console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
         requestBody = JSON.parse(rawBody); // Then parse manually
         console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
-      } catch (parseError: any) {
-        console.error('Edge Function: JSON parse error:', parseError.message);
-        console.error('Edge Function: Raw body that failed to parse:', rawBody);
-        throw new Error(`Failed to parse request body as JSON: ${parseError.message}`);
+      } else {
+        throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
       }
-    } else {
-      throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+    } catch (parseError: any) {
+      console.error('Edge Function: ERROR during JSON parsing:', parseError.message);
+      console.error('Edge Function: Raw body that failed to parse:', rawBody);
+      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
 
     const { filePath, organizationId, userId, actionForDuplicates } = requestBody;
@@ -133,41 +138,25 @@ serve(async (req) => {
       });
     }
 
-    console.log('Edge Function: Attempting to download file from storage:', filePath);
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('csv-uploads')
       .download(filePath);
 
     if (downloadError) {
-      console.error('Edge Function: Error downloading file from storage:', downloadError);
+      console.error('Error downloading file from storage:', downloadError);
       return new Response(JSON.stringify({ error: `Failed to download CSV file: ${downloadError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
-    console.log('Edge Function: File downloaded successfully. FileData type:', typeof fileData);
 
-    if (!fileData) {
-        console.error('Edge Function: Downloaded fileData is null or undefined.');
-        throw new Error('Downloaded CSV file is empty or corrupted.');
-    }
-
-    console.log('Edge Function: Converting fileData to ArrayBuffer.');
     const buffer = await fileData.arrayBuffer();
-    console.log('Edge Function: ArrayBuffer created. Size:', buffer.byteLength);
-
-    console.log('Edge Function: Reading workbook from buffer.');
     const workbook = XLSX.read(buffer, { type: 'array' });
-    console.log('Edge Function: Workbook read successfully. Sheet names:', workbook.SheetNames);
-
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    console.log('Edge Function: Converting worksheet to JSON.');
     const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
-    console.log('Edge Function: Worksheet converted to JSON. Number of rows:', jsonData.length);
 
     if (jsonData.length === 0) {
-      console.error('Edge Function: Parsed JSON data is empty.');
       return new Response(JSON.stringify({ error: 'The CSV file is empty or contains no data rows.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
