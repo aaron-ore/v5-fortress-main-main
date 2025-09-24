@@ -1,8 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-// Removed: import { corsHeaders } from '../_shared/cors.ts';
-
-// Inlined corsHeaders to avoid module resolution issues
+// Inlined corsHeaders definition to resolve module import error
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',

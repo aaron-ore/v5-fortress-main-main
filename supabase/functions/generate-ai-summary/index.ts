@@ -1,8 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from 'npm:@supabase/supabase-js';
 import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.15.0";
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-// Removed: import { corsHeaders } from '../_shared/cors.ts';
-
 // Inlined corsHeaders definition to resolve module import error
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,6 +59,10 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Changed model to gemini-1.5-flash
 
     // Corrected: Extract token from Authorization header and use auth.admin.getUser
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
