@@ -26,7 +26,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify the user's JWT token to ensure the request is authenticated
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
@@ -34,9 +33,21 @@ serve(async (req) => {
         status: 401,
       });
     }
-
     const token = authHeader.split(' ')[1];
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token); // Corrected to auth.admin.getUser
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user || user.id !== user_id) {
       console.error('JWT verification failed or user mismatch:', userError?.message || 'User not found');

@@ -97,6 +97,26 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Verify the user's token using a client initialized with the anon key
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Use the newly acquired access token for verification
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userVerificationError } = await supabaseClient.auth.getUser();
+
+    if (userVerificationError || !user || user.id !== userId) {
+      console.error('QuickBooks OAuth Callback: JWT verification failed or user mismatch:', userVerificationError?.message || 'User not found or ID mismatch');
+      return Response.redirect(`${finalRedirectBase}/integrations?quickbooks_error=${encodeURIComponent('Authentication mismatch. Please try again.')}`, 302);
+    }
+
     const { data: updatedProfileData, error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({

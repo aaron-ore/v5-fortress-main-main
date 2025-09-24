@@ -58,7 +58,6 @@ serve(async (req) => {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Changed model to gemini-1.5-flash
 
-    // Corrected: Extract token from Authorization header and use auth.admin.getUser
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -71,7 +70,20 @@ serve(async (req) => {
       });
     }
     const token = authHeader.split(' ')[1];
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token); // Assuming supabaseAdmin is available or created here
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
       console.error('Edge Function: JWT verification failed or user not found:', userError?.message);

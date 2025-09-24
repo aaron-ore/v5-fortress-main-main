@@ -91,26 +91,23 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Corrected: Extract token from Authorization header and use auth.admin.getUser
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      // This case should ideally not happen for a callback, but good for robustness
-      console.warn('Shopify OAuth Callback: Authorization header missing during profile fetch. Proceeding without direct user token verification for profile fetch.');
-    }
-    let authenticatedUser = null;
-    if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
-      if (userError) {
-        console.warn('Shopify OAuth Callback: Error verifying user token for profile fetch:', userError.message);
-      } else {
-        authenticatedUser = user;
+    // Verify the user's token using a client initialized with the anon key
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Use the newly acquired access token for verification
+          },
+        },
       }
-    }
+    );
 
-    // Use userId from state payload, but ensure it matches authenticatedUser if available
-    if (authenticatedUser && authenticatedUser.id !== userId) {
-      console.error('Shopify OAuth Callback: Authenticated user ID does not match userId from state payload.');
+    const { data: { user }, error: userVerificationError } = await supabaseClient.auth.getUser();
+
+    if (userVerificationError || !user || user.id !== userId) {
+      console.error('Shopify OAuth Callback: JWT verification failed or user mismatch:', userVerificationError?.message || 'User not found or ID mismatch');
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication mismatch. Please try again.')}`, 302);
     }
 

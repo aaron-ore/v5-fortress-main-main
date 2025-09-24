@@ -36,7 +36,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Corrected: Extract token from Authorization header and use auth.admin.getUser
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
@@ -45,13 +44,42 @@ serve(async (req) => {
       });
     }
     const token = authHeader.split(' ')[1];
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
-    if (userError || !user || user.id !== userId) { // Added user.id !== userId check
+    // Create a client with the user's token and anon key to verify the token
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+
+    if (userError || !user || user.id !== userId) {
       console.error('Edge Function: JWT verification failed or user mismatch:', userError?.message || 'User not found or ID mismatch');
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or mismatched user token.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
+      });
+    }
+    
+    // User token is verified. Now ensure the user belongs to the correct organization.
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('organization_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !userProfile?.organization_id || userProfile.organization_id !== organizationId) {
+      console.error('Edge Function: User profile fetch error or organization ID mismatch:', profileError?.message || 'Organization ID mismatch');
+      return new Response(JSON.stringify({ error: 'Unauthorized: User does not belong to the specified organization or profile not found.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
       });
     }
 

@@ -19,7 +19,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Corrected: Extract token from Authorization header and use auth.admin.getUser
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
@@ -28,7 +27,20 @@ serve(async (req) => {
       });
     }
     const token = authHeader.split(' ')[1];
-    const { data: { user: adminUser }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      }
+    );
+
+    const { data: { user: adminUser }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !adminUser) {
       console.error('Edge Function: JWT verification failed or admin user not found:', userError?.message);
