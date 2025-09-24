@@ -174,18 +174,37 @@ const BillingSubscriptions: React.FC = () => {
         trial_period_days: selectedPrice.trial_period_days || undefined, // Pass trial_period_days
       };
 
-      console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2)); // NEW: Log payload
+      console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2));
 
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: JSON.stringify(payload), // Ensure payload is stringified
+      // --- START: Direct fetch call to Edge Function ---
+      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/create-checkout-session`;
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
+        body: JSON.stringify(payload),
       });
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (!response.ok) {
+        let errorDetail = `Edge Function failed with status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.error || JSON.stringify(errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse error response JSON from Edge Function:", jsonError);
+          errorDetail = `Edge Function failed with status: ${response.status}. Response was not valid JSON. Raw response: ${await response.text()}`;
+        }
+        throw new Error(errorDetail);
+      }
+
+      const data = await response.json();
+      // --- END: Direct fetch call ---
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       if (data.url) {
         window.location.href = data.url;
@@ -442,7 +461,7 @@ const BillingSubscriptions: React.FC = () => {
               <TableBody>
                 {invoices.map((invoice: any) => (
                   <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">{invoice.id}</TableCell>
+                    <TableCell className="font-medium">{invoice.type}</TableCell>
                     <TableCell>{invoice.date}</TableCell>
                     <TableCell>${invoice.amount.toFixed(2)}</TableCell>
                     <TableCell>{invoice.status}</TableCell>
