@@ -168,12 +168,16 @@ const BillingSubscriptions: React.FC = () => {
         throw new Error("User session not found. Please log in again.");
       }
 
+      const payload = {
+        priceId: selectedPrice.id,
+        organizationId: profile.organizationId,
+        trial_period_days: selectedPrice.trial_period_days || undefined, // Pass trial_period_days
+      };
+
+      console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2)); // NEW: Log payload
+
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: JSON.stringify({
-          priceId: selectedPrice.id,
-          organizationId: profile.organizationId,
-          trial_period_days: selectedPrice.trial_period_days || undefined, // Pass trial_period_days
-        }),
+        body: JSON.stringify(payload), // Ensure payload is stringified
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
