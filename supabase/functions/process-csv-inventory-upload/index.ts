@@ -91,6 +91,12 @@ serve(async (req) => {
     }
     const token = authHeader.split(' ')[1];
 
+    // NEW DIAGNOSTIC LOGGING
+    console.log('Edge Function: Inspecting supabaseAdmin.auth:', Object.keys(supabaseAdmin.auth));
+    console.log('Edge Function: Inspecting supabaseAdmin.auth.admin:', Object.keys(supabaseAdmin.auth.admin));
+    console.log('Edge Function: Type of supabaseAdmin.auth.admin.getUser:', typeof supabaseAdmin.auth.admin.getUser);
+    // END NEW DIAGNOSTIC LOGGING
+
     // Use supabaseAdmin.auth.admin.getUser(token) for user verification
     const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
