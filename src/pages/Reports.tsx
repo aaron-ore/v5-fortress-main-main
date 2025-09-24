@@ -111,14 +111,17 @@ const Reports: React.FC = () => {
         reportId: activeReportId,
         reportData: reportData,
       };
-      // Removed console.log statements for payload and stringifiedPayload
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionData.session.access_token}`,
+      };
+      console.log("[Reports.tsx] Sending AI summary request with headers:", headers);
+
 
       const { data, error } = await supabase.functions.invoke('generate-ai-summary', {
-        body: payload, // Pass the object directly
-        headers: {
-          'Content-Type': 'application/json', // Explicitly set Content-Type
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
+        body: JSON.stringify(payload), // Explicitly stringify the payload
+        headers: headers,
       });
 
       if (error) {
