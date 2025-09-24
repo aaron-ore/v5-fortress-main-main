@@ -14,6 +14,7 @@ interface ExistingInventoryItem {
   picking_bin_quantity: number;
   overstock_quantity: number;
   quantity: number; // Total quantity
+  reorder_level: number; // Added reorder_level
 }
 
 serve(async (req) => {
@@ -22,9 +23,37 @@ serve(async (req) => {
   }
 
   try {
-    const { filePath, organizationId, userId, actionForDuplicates } = await req.json();
+    console.log('Edge Function: Incoming request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+    const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Content-Type header:', contentType);
+
+    let requestBody;
+    if (contentType && contentType.includes('application/json')) {
+      const rawBody = await req.text(); // Read as text first
+      console.log('Edge Function: Raw request body length:', rawBody.length);
+      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+      try {
+        requestBody = JSON.parse(rawBody); // Then parse manually
+        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+      } catch (parseError: any) {
+        console.error('Edge Function: JSON parse error:', parseError.message);
+        console.error('Edge Function: Raw body that failed to parse:', rawBody);
+        throw new Error(`Failed to parse request body as JSON: ${parseError.message}`);
+      }
+    } else {
+      throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+    }
+
+    const { filePath, organizationId, userId, actionForDuplicates } = requestBody;
+
+    console.log('Edge Function: Extracted filePath:', filePath);
+    console.log('Edge Function: Extracted organizationId:', organizationId);
+    console.log('Edge Function: Extracted userId:', userId);
+    console.log('Edge Function: Extracted actionForDuplicates:', actionForDuplicates);
+
 
     if (!filePath || !organizationId || !userId || !actionForDuplicates) {
+      console.error('Edge Function: Missing required parameters after parsing. filePath:', filePath, 'organizationId:', organizationId, 'userId:', userId, 'actionForDuplicates:', actionForDuplicates);
       return new Response(JSON.stringify({ error: 'Missing required parameters: filePath, organizationId, userId, actionForDuplicates.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -129,7 +158,7 @@ serve(async (req) => {
 
     const { data: existingInventoryRaw, error: invError } = await supabaseAdmin
       .from('inventory_items')
-      .select('id, name, sku, picking_bin_quantity, overstock_quantity, quantity')
+      .select('id, name, sku, picking_bin_quantity, overstock_quantity, quantity, reorder_level')
       .eq('organization_id', organizationId);
     if (invError) throw invError;
     
@@ -273,7 +302,7 @@ serve(async (req) => {
             picking_bin_quantity: updatedPickingBinQty,
             overstock_quantity: updatedOverstockQty,
             quantity: updatedPickingBinQty + updatedOverstockQty,
-            status: (updatedPickingBinQty + updatedOverstockQty) > reorderLevel ? "In Stock" : ((updatedPickingBinQty + updatedOverstockQty) > 0 ? "Low Stock" : "Out of Stock"),
+            status: (updatedPickingBinQty + updatedOverstockQty) > existingItem.reorder_level ? "In Stock" : ((updatedPickingBinQty + updatedOverstockQty) > 0 ? "Low Stock" : "Out of Stock"),
             last_updated: new Date().toISOString(),
           });
           await supabaseAdmin.from('stock_movements').insert({
