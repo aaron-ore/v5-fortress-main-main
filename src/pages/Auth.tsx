@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate, useLocation } from "react-router-dom"; // NEW: Import useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
@@ -19,25 +19,22 @@ const Auth: React.FC = () => {
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation(); // NEW: Initialize useLocation
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const { profile } = useProfile();
 
-  // NEW: State to store the plan from URL parameter
   const [selectedPlanFromUrl, setSelectedPlanFromUrl] = useState<string | null>(null);
 
-  // Effect to read URL parameters on component mount
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const plan = params.get('plan');
     if (plan) {
       setSelectedPlanFromUrl(plan);
-      setIsLogin(false); // Automatically switch to signup if a plan is selected
+      setIsLogin(false);
       showSuccess(`You've selected the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Please sign up to continue.`);
     }
   }, [location.search]);
 
-  // Effect to redirect if user is already authenticated
   useEffect(() => {
     if (!isLoading && user) {
       console.log("[Auth.tsx] User already authenticated, redirecting to dashboard.");
@@ -63,7 +60,7 @@ const Auth: React.FC = () => {
         data: {
           full_name: fullName.trim() || null,
           company_code: companyCode.trim() || null,
-          plan: selectedPlanFromUrl, // NEW: Include selected plan in metadata
+          plan: selectedPlanFromUrl,
         },
         redirectTo: window.location.origin + '/auth',
       };
@@ -77,7 +74,7 @@ const Auth: React.FC = () => {
         setIsLogin(true);
         setFullName("");
         setCompanyCode("");
-        setSelectedPlanFromUrl(null); // Clear selected plan after signup
+        setSelectedPlanFromUrl(null);
       }
     }
     setLoading(false);
@@ -119,8 +116,11 @@ const Auth: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-      <Card className="w-full max-w-md">
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center p-4"
+      style={{ backgroundImage: `url('/932271.jpg')` }}
+    >
+      <Card className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg text-foreground">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <svg
@@ -148,10 +148,10 @@ const Auth: React.FC = () => {
           <CardTitle className="text-3xl font-bold">
             {isLogin ? "Welcome Back!" : "Join Fortress"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-white/80">
             {isLogin ? "Sign in to your account" : "Create a new account to get started"}
           </CardDescription>
-          {selectedPlanFromUrl && !isLogin && ( // NEW: Display selected plan
+          {selectedPlanFromUrl && !isLogin && (
             <p className="text-sm text-primary font-semibold mt-2">
               Signing up for: {selectedPlanFromUrl.charAt(0).toUpperCase() + selectedPlanFromUrl.slice(1)} Plan
             </p>
@@ -160,7 +160,7 @@ const Auth: React.FC = () => {
         <CardContent>
           <form onSubmit={handleAuth} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -168,10 +168,11 @@ const Auth: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -179,12 +180,13 @@ const Auth: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
               />
             </div>
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-white">Full Name</Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -192,18 +194,20 @@ const Auth: React.FC = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="companyCode">Company Code (Optional)</Label>
+                  <Label htmlFor="companyCode" className="text-white">Company Code (Optional)</Label>
                   <Input
                     id="companyCode"
                     type="text"
                     placeholder="Enter company code (e.g., FORTRESS123)"
                     value={companyCode}
                     onChange={(e) => setCompanyCode(e.target.value)}
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:ring-primary focus:border-primary"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/70">
                     If you have a company code, enter it to join your organization.
                   </p>
                 </div>
@@ -215,10 +219,10 @@ const Auth: React.FC = () => {
           </form>
           <div className="relative mt-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-white/30" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-white/10 px-2 text-white/80">
                 Or
               </span>
             </div>
@@ -226,20 +230,20 @@ const Auth: React.FC = () => {
           <div className="mt-6 text-center text-sm">
             {isLogin ? (
               <>
-                Don't have an account?{" "}
-                <Button variant="link" onClick={() => setIsLogin(false)} className="p-0 h-auto">
+                <span className="text-white/80">Don't have an account?{" "}</span>
+                <Button variant="link" onClick={() => setIsLogin(false)} className="p-0 h-auto text-primary hover:text-primary/80">
                   Sign Up
                 </Button>
                 <div className="mt-2">
-                  <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto text-muted-foreground hover:text-primary" disabled={loading}>
+                  <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto text-white/80 hover:text-primary" disabled={loading}>
                     Forgot Password?
                   </Button>
                 </div>
               </>
             ) : (
               <>
-                Already have an account?{" "}
-                <Button variant="link" onClick={() => setIsLogin(true)} className="p-0 h-auto">
+                <span className="text-white/80">Already have an account?{" "}</span>
+                <Button variant="link" onClick={() => setIsLogin(true)} className="p-0 h-auto text-primary hover:text-primary/80">
                   Sign In
                 </Button>
               </>
