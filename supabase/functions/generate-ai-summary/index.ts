@@ -58,7 +58,7 @@ serve(async (req) => {
     console.log('Edge Function: GEMINI_API_KEY is present.');
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Changed model to gemini-1.5-flash
 
     let prompt = `Generate a concise, professional summary (max 150 words) for the following inventory management report. Focus on key insights, trends, and actionable takeaways. If there are numbers, highlight the most significant ones.
 
