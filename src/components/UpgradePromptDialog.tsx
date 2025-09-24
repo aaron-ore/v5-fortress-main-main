@@ -10,12 +10,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Crown, ArrowRight, X } from "lucide-react";
+import { Sparkles, Crown, ArrowRight, X, Loader2 } from "lucide-react"; // Corrected import for Loader2
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
-import { Loader2 } from "@/components/ui/loader"; // Assuming you have a Loader2 component
 
 interface UpgradePromptDialogProps {
   isOpen: boolean;
