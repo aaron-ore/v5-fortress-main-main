@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId, organizationId } = await req.json();
+    const { priceId, organizationId, trial_period_days } = await req.json(); // NEW: Accept trial_period_days
 
     if (!priceId || !organizationId) {
       return new Response(JSON.stringify({ error: 'Missing required parameters: priceId, organizationId.' }), {
@@ -117,6 +117,9 @@ serve(async (req) => {
         price: priceId,
         quantity: 1,
       }],
+      subscription_data: { // NEW: Add subscription_data for trial
+        trial_period_days: trial_period_days || undefined,
+      },
       success_url: `${req.headers.get('referer')}integrations?stripe_success=true`,
       cancel_url: `${req.headers.get('referer')}integrations?stripe_cancel=true`,
       metadata: {

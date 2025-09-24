@@ -45,6 +45,7 @@ export interface UserProfile {
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean; // RENAMED: From hasOnboardingTutorialShown
   hasUiTutorialShown: boolean; // NEW: Separate flag for UI tutorial
+  hasSeenUpgradePrompt: boolean; // NEW: Flag to track if user has seen the upgrade prompt
 }
 
 interface ProfileContextType {
@@ -54,12 +55,13 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
   markOnboardingWizardCompleted: () => Promise<void>; // NEW: Function to mark onboarding wizard as completed
   markTutorialAsShown: () => Promise<void>; // MODIFIED: Now marks UI tutorial as shown
+  markUpgradePromptSeen: () => Promise<void>; // NEW: Function to mark upgrade prompt as seen
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -109,6 +111,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false, // Mapped from new column
       hasUiTutorialShown: data.has_ui_tutorial_shown ?? false, // Mapped from new column
+      hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false, // NEW: Mapped from new column
     };
   };
 
@@ -217,7 +220,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -420,6 +423,32 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const markUpgradePromptSeen = async () => {
+    if (!profile) {
+      console.warn("[ProfileContext] Cannot mark upgrade prompt as seen: User profile not loaded.");
+      return;
+    }
+    if (profile.hasSeenUpgradePrompt) {
+      console.log("[ProfileContext] Upgrade prompt already marked as seen for this user.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ has_seen_upgrade_prompt: true })
+      .eq('id', profile.id);
+
+    if (error) {
+      console.error("[ProfileContext] Error marking upgrade prompt as seen:", error);
+      await logActivity("Mark Upgrade Prompt Seen Failed", `Failed to mark upgrade prompt as seen for user ${profile.id}.`, profile, { error_message: error.message }, true);
+    } else {
+      console.log("[ProfileContext] Upgrade prompt marked as seen for user:", profile.id);
+      await logActivity("Mark Upgrade Prompt Seen Success", `Upgrade prompt marked as seen for user ${profile.id}.`, profile);
+      // Optimistically update local state
+      setProfile(prev => prev ? { ...prev, hasSeenUpgradePrompt: true } : null);
+    }
+  };
+
   return (
     <ProfileContext.Provider
       value={{
@@ -435,6 +464,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateOrganizationTheme,
         markOnboardingWizardCompleted,
         markTutorialAsShown,
+        markUpgradePromptSeen,
       }}
     >
       {children}

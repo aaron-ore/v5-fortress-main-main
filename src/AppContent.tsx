@@ -24,6 +24,7 @@ import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
 import { useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
 import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
+import UpgradePromptDialog from "./components/UpgradePromptDialog"; // NEW: Import UpgradePromptDialog
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -134,17 +135,24 @@ const AppContent = () => {
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
 
+  // NEW: State for UpgradePromptDialog
+  const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const quickbooksSuccess = params.get('quickbooks_success');
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
+    const stripeSuccess = params.get('stripe_success'); // NEW: Handle Stripe success
+    const stripeCancel = params.get('stripe_cancel'); // NEW: Handle Stripe cancel
 
     console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
     console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
     console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess);
     console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError);
+    console.log('AppContent.tsx: stripe_success from URL parameters:', stripeSuccess); // NEW: Log Stripe params
+    console.log('AppContent.tsx: stripe_cancel from URL parameters:', stripeCancel); // NEW: Log Stripe params
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
@@ -166,6 +174,20 @@ const AppContent = () => {
       shopifyCallbackProcessedRef.current = true;
       navigate(location.pathname, { replace: true });
     }
+
+    // NEW: Handle Stripe callback
+    if (stripeSuccess || stripeCancel) {
+      if (stripeSuccess) {
+        showSuccess("Subscription process completed successfully!");
+      } else if (stripeCancel) {
+        showError("Subscription process cancelled.");
+      }
+      // Clear Stripe parameters from URL
+      const newSearchParams = new URLSearchParams(params);
+      newSearchParams.delete('stripe_success');
+      newSearchParams.delete('stripe_cancel');
+      navigate({ search: newSearchParams.toString() }, { replace: true });
+    }
   }, [location.search, location.pathname, navigate]);
 
   useEffect(() => {
@@ -176,7 +198,7 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
-  // NEW: Routing logic for onboarding wizard
+  // NEW: Routing logic for onboarding wizard and upgrade prompt
   useEffect(() => {
     console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
@@ -200,8 +222,23 @@ const AppContent = () => {
         console.log("[AppContent] User authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
         navigate('/', { replace: true });
       }
+
+      // NEW: Logic for showing upgrade prompt
+      if (
+        profile.organizationId &&
+        profile.hasOnboardingWizardCompleted &&
+        !profile.hasSeenUpgradePrompt &&
+        profile.companyProfile?.plan === 'free' &&
+        location.pathname === '/' // Only show on dashboard
+      ) {
+        console.log("[AppContent] Showing upgrade prompt.");
+        setIsUpgradePromptDialogOpen(true);
+      } else if (isUpgradePromptDialogOpen) {
+        // Close the dialog if conditions are no longer met (e.g., user navigated away, upgraded, or dismissed)
+        setIsUpgradePromptDialogOpen(false);
+      }
     }
-  }, [isLoadingProfile, profile, navigate, location.pathname]);
+  }, [isLoadingProfile, profile, navigate, location.pathname, isUpgradePromptDialogOpen]);
 
 
   if (isLoadingProfile) {
@@ -259,6 +296,12 @@ const AppContent = () => {
       {isTutorialActive && currentStep && ( // NEW: Render tutorial tooltip
         <TutorialTooltip step={currentStep} />
       )}
+
+      {/* NEW: Render Upgrade Prompt Dialog */}
+      <UpgradePromptDialog
+        isOpen={isUpgradePromptDialogOpen}
+        onClose={() => setIsUpgradePromptDialogOpen(false)}
+      />
     </>
   );
 };
