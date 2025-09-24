@@ -18,18 +18,20 @@ interface ExistingInventoryItem {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
+  // Wrap the entire function logic in a try-catch to catch very early errors
   try {
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
+    }
+
     console.log('Edge Function: Incoming request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
     const contentType = req.headers.get('content-type');
     console.log('Edge Function: Content-Type header:', contentType);
 
     let requestBody;
+    let rawBody = '';
     if (contentType && contentType.includes('application/json')) {
-      const rawBody = await req.text(); // Read as text first
+      rawBody = await req.text(); // Read as text first
       console.log('Edge Function: Raw request body length:', rawBody.length);
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
       try {
@@ -60,10 +62,25 @@ serve(async (req) => {
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl) {
+      console.error('Edge Function: SUPABASE_URL environment variable not set.');
+      return new Response(JSON.stringify({ error: 'Server configuration error: SUPABASE_URL is missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    if (!supabaseServiceRoleKey) {
+      console.error('Edge Function: SUPABASE_SERVICE_ROLE_KEY environment variable not set.');
+      return new Response(JSON.stringify({ error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY is missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -74,20 +91,8 @@ serve(async (req) => {
     }
     const token = authHeader.split(' ')[1];
 
-    // Create a client with the user's token and anon key to verify the token
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      }
-    );
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Use supabaseAdmin.auth.admin.getUser(token) for user verification
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.admin.getUser(token);
 
     if (userError || !user || user.id !== userId) {
       console.error('Edge Function: JWT verification failed or user mismatch:', userError?.message || 'User not found or ID mismatch');
@@ -371,7 +376,7 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Edge Function error:', error);
+    console.error('Edge Function error (caught at top level):', error); // More specific log
     let errorMessage = 'An unknown error occurred.';
     if (error instanceof Error) {
       errorMessage = error.message;
