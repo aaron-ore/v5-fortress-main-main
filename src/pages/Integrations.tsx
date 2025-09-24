@@ -609,7 +609,7 @@ const Integrations: React.FC = () => {
                             setSelectedFortressFolderId(existing?.fortress_location_id || null);
                             setMappingToEdit(existing || null);
                           }}
-                          disabled={isSavingMapping || !canAccessShopify} {/* NEW: Disable based on plan */}
+                          disabled={isSavingMapping || !canAccessShopify} /* NEW: Disable based on plan */
                         >
                           <SelectTrigger id="shopify-location-select">
                             <SelectValue placeholder="Select Shopify Location" />
@@ -628,7 +628,7 @@ const Integrations: React.FC = () => {
                         <Select
                           value={selectedFortressFolderId || ""}
                           onValueChange={setSelectedFortressFolderId}
-                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify} {/* NEW: Disable based on plan */}
+                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify} /* NEW: Disable based on plan */
                         >
                           <SelectTrigger id="fortress-folder-select">
                             <SelectValue placeholder="Select Fortress Folder" />
@@ -644,7 +644,7 @@ const Integrations: React.FC = () => {
                       </div>
                       <Button
                         onClick={handleSaveLocationMapping}
-                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify} {/* NEW: Disable based on plan */}
+                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify} /* NEW: Disable based on plan */
                       >
                         {isSavingMapping ? (
                           <>
