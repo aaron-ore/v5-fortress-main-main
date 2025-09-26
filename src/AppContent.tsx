@@ -25,6 +25,7 @@ import { Loader2 } from "lucide-react";
 import { useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
 import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
 import UpgradePromptDialog from "./components/UpgradePromptDialog"; // NEW: Import UpgradePromptDialog
+import LiveChatWidget from "./components/LiveChatWidget"; // NEW: Import LiveChatWidget
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -302,6 +303,9 @@ const AppContent = () => {
         isOpen={isUpgradePromptDialogOpen}
         onClose={() => setIsUpgradePromptDialogOpen(false)}
       />
+
+      {/* NEW: Conditionally render LiveChatWidget */}
+      {!isLoadingProfile && profile && <LiveChatWidget />}
     </>
   );
 };
