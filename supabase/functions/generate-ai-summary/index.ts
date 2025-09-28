@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js';
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.15.0";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.16.0"; // Updated to 0.16.0
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 // Inlined corsHeaders definition to avoid module resolution issues
 const corsHeaders = {
@@ -56,7 +56,7 @@ serve(async (req) => {
     console.log('Edge Function: GEMINI_API_KEY is present.');
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" }); // Changed model to gemini-1.0-pro
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Changed model back to "gemini-pro"
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
