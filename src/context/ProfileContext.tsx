@@ -277,19 +277,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    let companyLogoUrlForDb: string | undefined = updates.companyLogoUrl;
-    if (updates.companyLogoUrl) {
-      const internalPath = getFilePathFromPublicUrl(updates.companyLogoUrl, 'company-logos');
-      companyLogoUrlForDb = internalPath || undefined;
-    } else if (updates.companyLogoUrl === null) {
-      companyLogoUrlForDb = undefined;
-    }
+    // The `updates.companyLogoUrl` should already be the internal path or undefined from the caller (e.g., Settings.tsx)
+    // So, we can use it directly.
+    const companyLogoUrlForDb = updates.companyLogoUrl === null ? undefined : updates.companyLogoUrl;
+    console.log("[ProfileContext] updateCompanyProfile: Final companyLogoUrlForDb before DB update:", companyLogoUrlForDb);
+
 
     const payload: any = {
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: companyLogoUrlForDb,
+      company_logo_url: companyLogoUrlForDb, // Use directly
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId,
       stripe_subscription_id: updates.stripeSubscriptionId,
