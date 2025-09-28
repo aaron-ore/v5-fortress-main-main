@@ -59,7 +59,7 @@ const Integrations: React.FC = () => {
   const [isDeletingMapping, setIsDeletingMapping] = useState(false);
 
   const [selectedShopifyLocationId, setSelectedShopifyLocationId] = useState<string | null>(null);
-  const [selectedFortressFolderId, setSelectedFortressFolderId] = useState<string | null>(null);
+  const [selectedFortressFolderId, setSelectedFortressFolderId] = useState<string | null>(selectedFortressFolderId);
   const [mappingToEdit, setMappingToEdit] = useState<ShopifyLocationMapping | null>(null);
   const [mappingToDelete, setMappingToDelete] = useState<ShopifyLocationMapping | null>(null);
   const [isConfirmDeleteMappingOpen, setIsConfirmDeleteMappingOpen] = useState(false);
