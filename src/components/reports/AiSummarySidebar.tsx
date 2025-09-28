@@ -9,9 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Brain, Printer, Copy, Loader2 } from "lucide-react";
-import { usePrint, PrintContentData } from "@/context/PrintContext";
+import { usePrint } from "@/context/PrintContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { format } from "date-fns";
 import { useProfile } from "@/context/ProfileContext";
 
 interface AiSummarySidebarProps {

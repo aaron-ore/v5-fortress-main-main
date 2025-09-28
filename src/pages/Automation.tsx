@@ -19,10 +19,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { showError } from "@/utils/toast"; // Import showError
 import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
+import { useNavigate } from "react-router-dom"; // NEW: Import useNavigate
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();
   const { profile, isLoadingProfile } = useProfile();
+  const navigate = useNavigate(); // NEW: Initialize useNavigate
 
   const [isAutomationRuleDialogOpen, setIsAutomationRuleDialogOpen] = useState(false);
   const [ruleToEdit, setRuleToEdit] = useState<AutomationRule | null>(null);
@@ -218,7 +220,6 @@ const Automation: React.FC = () => {
                           checked={rule.isActive}
                           onCheckedChange={(checked) => handleToggleRuleActive(rule, checked)}
                           aria-label={`Toggle rule ${rule.name}`}
-                          // NEW: Disable based on plan
                           disabled={!isAdmin || !canAccessAutomation}
                         />
                       </TableCell>

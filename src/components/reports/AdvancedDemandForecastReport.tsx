@@ -1,13 +1,17 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, Package } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useInventory } from "@/context/InventoryContext";
 import { useProfile } from "@/context/ProfileContext";
 import { hasRequiredPlan } from "@/utils/planUtils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label"; // NEW: Import Label
+import { Input } from "@/components/ui/input"; // NEW: Import Input
+import { ScrollArea } from "@/components/ui/scroll-area"; // NEW: Import ScrollArea
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // NEW: Import Table components
 
 interface ForecastDataPoint {
   name: string;
@@ -36,7 +40,7 @@ const AdvancedDemandForecastReport: React.FC<AdvancedDemandForecastReportProps> 
   const canAccessForecast = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
   const availableItems = useMemo(() => {
-    return [{ id: "all-items", name: "All Items" }, ...inventoryItems];
+    return [{ id: "all-items", name: "All Items", sku: "" }, ...inventoryItems]; // Added empty sku for "All Items"
   }, [inventoryItems]);
 
   if (!canAccessForecast) {
@@ -73,7 +77,7 @@ const AdvancedDemandForecastReport: React.FC<AdvancedDemandForecastReportProps> 
                   <SelectItem value="all-items">All Items (Overall Demand)</SelectItem>
                   {availableItems.filter(item => item.id !== "all-items").map(item => (
                     <SelectItem key={item.id} value={item.id}>
-                      {item.name} (SKU: {item.sku})
+                      {item.name} {item.sku ? `(SKU: ${item.sku})` : ''} {/* Conditionally render SKU */}
                     </SelectItem>
                   ))}
                 </SelectContent>

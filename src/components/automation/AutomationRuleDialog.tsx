@@ -18,7 +18,7 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
+import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
 import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
 import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
 
@@ -60,8 +60,9 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const [actionCreatePoItemId, setActionCreatePoItemId] = useState("");
   const [actionCreatePoQuantity, setActionCreatePoQuantity] = useState("");
 
-  const orderStatuses = useMemo(() => ["New Order", "Processing", "Packed", "Shipped", "On Hold / Problem", "Archived"], []);
-  const orderTypes = useMemo(() => ["Sales", "Purchase"], []);
+  // Removed unused useMemo for orderStatuses and orderTypes
+  // const orderStatuses = useMemo(() => ["New Order", "Processing", "Packed", "Shipped", "On Hold / Problem", "Archived"], []);
+  // const orderTypes = useMemo(() => ["Sales", "Purchase"], []);
 
   useEffect(() => {
     if (isOpen) {
