@@ -26,6 +26,29 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import uploadFileToSupabase
 import { Loader2 } from "lucide-react"; // Import Loader2 for the spinner
+import { z } from "zod"; // NEW: Import z for schema definition
+
+const formSchema = z.object({
+  name: z.string().min(1, "Item name is required"),
+  description: z.string().optional(),
+  sku: z.string().min(1, "SKU is required"),
+  category: z.string().min(1, "Category is required"),
+  pickingBinQuantity: z.number().min(0, "Must be non-negative"),
+  overstockQuantity: z.number().min(0, "Must be non-negative"),
+  reorderLevel: z.number().min(0, "Must be non-negative"),
+  pickingReorderLevel: z.number().min(0, "Must be non-negative"),
+  committedStock: z.number().min(0, "Must be non-negative"),
+  incomingStock: z.number().min(0, "Must be non-negative"),
+  unitCost: z.number().min(0, "Must be non-negative"),
+  retailPrice: z.number().min(0, "Must be non-negative"),
+  folderId: z.string().min(1, "Folder is required"),
+  tags: z.string().optional(),
+  notes: z.string().optional(),
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).or(z.literal(null)), // Allow null
+  vendorId: z.string().optional().or(z.literal("null-vendor")),
+  autoReorderEnabled: z.boolean().default(false),
+  autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
+});
 
 interface AddInventoryDialogProps {
   isOpen: boolean;

@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { Loader2, Palette, Settings as SettingsIcon, ImageIcon, X } from "lucide-react";
-import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import getFilePathFromPublicUrl
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // Removed getPublicUrlFromSupabase
 import { supabase } from "@/lib/supabaseClient";
 
 const Settings: React.FC = () => {

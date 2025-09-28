@@ -32,7 +32,7 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // Removed getPublicUrlFromSupabase
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
@@ -53,7 +53,7 @@ const formSchema = z.object({
   folderId: z.string().min(1, "Folder is required"),
   tags: z.string().optional(),
   notes: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")), // This is a PUBLIC URL
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).or(z.literal(null)), // Allow null
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
@@ -96,7 +96,7 @@ const EditInventoryItem = () => {
           vendorId: item.vendorId || "null-vendor",
           tags: item.tags?.join(', ') || "",
           notes: item.notes || "",
-          imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
+          imageUrl: item.imageUrl || null, // Ensure this is the public URL or null
         };
         console.log("[EditInventoryItem] useForm defaultValues memo: item.imageUrl (from context):", item.imageUrl, "defaultVals.imageUrl:", defaultVals.imageUrl);
         return defaultVals;
@@ -105,7 +105,7 @@ const EditInventoryItem = () => {
         name: "", description: "", sku: "", category: "",
         pickingBinQuantity: 0, overstockQuantity: 0, reorderLevel: 0, pickingReorderLevel: 0,
         committedStock: 0, incomingStock: 0, unitCost: 0, retailPrice: 0,
-        folderId: "", tags: "", notes: "", imageUrl: "", vendorId: "null-vendor",
+        folderId: "", tags: "", notes: "", imageUrl: null, vendorId: "null-vendor", // Set to null
         autoReorderEnabled: false, autoReorderQuantity: 0,
       };
     }, [item]),
@@ -123,7 +123,7 @@ const EditInventoryItem = () => {
         vendorId: item.vendorId || "null-vendor",
         tags: item.tags?.join(', ') || "",
         notes: item.notes || "",
-        imageUrl: item.imageUrl || "", // Ensure this is the public URL or empty string
+        imageUrl: item.imageUrl || null, // Ensure this is the public URL or null
       };
       console.log("[EditInventoryItem] useEffect: Resetting form with resetValues.imageUrl:", resetValues.imageUrl);
       form.reset(resetValues);
