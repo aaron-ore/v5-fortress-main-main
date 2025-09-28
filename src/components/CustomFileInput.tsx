@@ -34,14 +34,16 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
     }
   };
 
-  const hasFileOrPreview = !!file || !!previewUrl;
+  // NEW: Explicitly check for non-empty string for previewUrl
+  const hasActivePreview = !!previewUrl && previewUrl !== "";
+  const hasFileOrPreview = !!file || hasActivePreview;
 
   const buttonText = isUploading
     ? "Uploading..."
     : file
       ? file.name
-      : previewUrl
-        ? "Image Selected" // Show this if there's a preview URL but no new file
+      : hasActivePreview
+        ? "Image Selected"
         : "Choose File";
 
   return (
@@ -60,7 +62,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
           <Input
             id={id}
             type="file"
-            accept="image/*" // Fixed accept attribute
+            accept="image/*"
             onChange={onChange}
             ref={fileInputRef}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer hidden"
@@ -85,9 +87,9 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
         <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
           <Loader2 className="h-5 w-5 animate-spin mr-2" /> Uploading...
         </div>
-      ) : previewUrl ? (
+      ) : hasActivePreview ? (
         <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-center bg-muted/20">
-          <img src={previewUrl} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
+          <img src={previewUrl!} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
         </div>
       ) : (
         <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">
