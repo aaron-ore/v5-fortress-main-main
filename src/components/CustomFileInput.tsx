@@ -29,7 +29,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log(`[CustomFileInput - ${id}] Rendered with previewUrl:`, previewUrl, `(Type: ${typeof previewUrl})`);
+    console.log(`[CustomFileInput - ${id}] Rendered with previewUrl: "${previewUrl}" (Type: ${typeof previewUrl})`);
     console.log(`[CustomFileInput - ${id}] Has active preview:`, !!previewUrl && previewUrl !== "");
   }, [previewUrl, id]);
 

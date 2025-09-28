@@ -64,11 +64,12 @@ export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string):
  * @param bucketName The name of the Supabase Storage bucket.
  * @returns The full public URL of the file, or `undefined` if filePath is empty/invalid.
  */
-export const getPublicUrlFromSupabase = (filePath: string | undefined, bucketName: string): string | undefined => {
-  console.log(`[Storage] getPublicUrlFromSupabase called. FilePath: "${filePath}", Bucket: "${bucketName}"`);
+export const getPublicUrlFromSupabase = (filePath: string | undefined | null, bucketName: string): string | undefined => { // Added null to filePath type
+  console.log(`[Storage] getPublicUrlFromSupabase called. FilePath: "${filePath}" (Type: ${typeof filePath}), Bucket: "${bucketName}"`);
 
+  // Explicitly handle null, undefined, or empty string filePaths
   if (!filePath || filePath.trim() === '') {
-    console.warn(`[Storage] getPublicUrlFromSupabase: filePath is empty or invalid. Returning undefined.`);
+    console.warn(`[Storage] getPublicUrlFromSupabase: filePath is null, undefined, or empty. Returning undefined.`);
     return undefined;
   }
 

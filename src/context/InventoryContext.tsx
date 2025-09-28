@@ -94,14 +94,14 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const validatedCreatedAt = parseAndValidateDate(item.created_at);
     const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
-    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Processing item ID: ${item.id}, Raw image_url from DB: ${item.image_url}`);
+    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Processing item ID: ${item.id}, Raw image_url from DB: "${item.image_url}" (Type: ${typeof item.image_url})`);
 
     // NEW: Check if image_url is already a public URL before converting
     const finalImageUrl = item.image_url
       ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
       : undefined;
     
-    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: ${finalImageUrl}`);
+    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: "${finalImageUrl}" (Type: ${typeof finalImageUrl})`);
 
     return {
       id: item.id,

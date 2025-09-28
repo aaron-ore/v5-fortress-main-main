@@ -78,7 +78,7 @@ const Settings: React.FC = () => {
     setCompanyLogoUrlPreview(undefined); // Set to undefined to clear preview
     setIsLogoCleared(true); // Mark that the logo was intentionally cleared
     showSuccess("Logo cleared. Save changes to apply.");
-    console.log("[Settings] handleClearLogo: Logo explicitly cleared. imageUrlPreview set to undefined. isLogoCleared:", true);
+    console.log("[Settings] handleClearLogo: Logo explicitly cleared. isLogoCleared:", true);
   };
 
   const handleSaveCompanyProfile = async () => {

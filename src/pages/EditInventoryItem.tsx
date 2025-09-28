@@ -188,7 +188,7 @@ const EditInventoryItem = () => {
       }
     } else {
       setImageFile(null);
-      setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
+      imageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
       console.log("[EditInventoryItem] handleImageFileChange: File input cleared without selection. Reverting preview to:", item?.imageUrl || null);
     }
   };
