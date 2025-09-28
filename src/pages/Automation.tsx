@@ -190,7 +190,7 @@ const Automation: React.FC = () => {
           <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" /> Automation Rules
           </CardTitle>
-          <Button onClick={handleCreateRuleClick} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+          <Button onClick={handleCreateRuleClick} disabled={!isAdmin || !canAccessAutomation}>
             <PlusCircle className="h-4 w-4 mr-2" /> Create New Rule
           </Button>
         </CardHeader>
@@ -218,7 +218,8 @@ const Automation: React.FC = () => {
                           checked={rule.isActive}
                           onCheckedChange={(checked) => handleToggleRuleActive(rule, checked)}
                           aria-label={`Toggle rule ${rule.name}`}
-                          disabled={!isAdmin || !canAccessAutomation} {/* NEW: Disable based on plan */}
+                          // NEW: Disable based on plan
+                          disabled={!isAdmin || !canAccessAutomation}
                         />
                       </TableCell>
                       <TableCell className="font-medium">{rule.name}</TableCell>
@@ -227,10 +228,10 @@ const Automation: React.FC = () => {
                       <TableCell>{getActionSummary(rule)}</TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center space-x-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+                          <Button variant="ghost" size="icon" onClick={() => handleEditRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}>
                             <Edit className="h-4 w-4 text-primary" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}> {/* NEW: Disable based on plan */}
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteRuleClick(rule)} disabled={!isAdmin || !canAccessAutomation}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
