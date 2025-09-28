@@ -23,7 +23,6 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
   onChange,
   onClear,
   disabled,
-  accept,
   isUploading,
   previewUrl,
 }) => {
@@ -61,7 +60,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
           <Input
             id={id}
             type="file"
-            accept={accept}
+            accept="image/*" // Fixed accept attribute
             onChange={onChange}
             ref={fileInputRef}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer hidden"

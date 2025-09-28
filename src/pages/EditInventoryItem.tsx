@@ -32,7 +32,7 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { uploadFileToSupabase, getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import getFilePathFromPublicUrl
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
@@ -238,22 +238,24 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined = item.imageUrl; // This will store the INTERNAL path for DB
+    let finalImageUrlForDb: string | undefined = item.imageUrl; // This is the INTERNAL path for DB
 
     console.log("[EditInventoryItem] onSubmit: Initial finalImageUrlForDb (from item, internal path):", finalImageUrlForDb);
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
-        if (item.imageUrl) { // If there was an existing image (internal path)
+        if (item.imageUrl) { // If there was an existing image (public URL)
           console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one from storage.");
-          // item.imageUrl is already the internal path, use it directly
-          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([item.imageUrl]);
-          if (deleteError) {
-            console.warn("Failed to delete old image from storage:", deleteError);
-            showError(`Failed to delete old image from storage: ${deleteError.message}`);
-          } else {
-            showSuccess("Old image deleted from storage.");
+          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // NEW: Convert public URL to internal path
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
+            if (deleteError) {
+              console.warn("Failed to delete old image from storage:", deleteError);
+              showError(`Failed to delete old image from storage: ${deleteError.message}`);
+            } else {
+              showSuccess("Old image deleted from storage.");
+            }
           }
         }
         finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // This returns INTERNAL path
@@ -261,15 +263,17 @@ const EditInventoryItem = () => {
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
-        if (item.imageUrl) { // If there was an existing image to clear (internal path)
+        if (item.imageUrl) { // If there was an existing image to clear (public URL)
           console.log("[EditInventoryItem] onSubmit: Existing image URL found, attempting to delete from storage.");
-          // item.imageUrl is already the internal path, use it directly
-          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([item.imageUrl]);
-          if (deleteError) {
-            console.warn("Failed to delete old image from storage:", deleteError);
-            showError(`Failed to delete old image from storage: ${deleteError.message}`);
-          } else {
-            showSuccess("Old image deleted from storage.");
+          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // NEW: Convert public URL to internal path
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
+            if (deleteError) {
+              console.warn("Failed to delete old image from storage:", deleteError);
+              showError(`Failed to delete old image from storage: ${deleteError.message}`);
+            } else {
+              showSuccess("Old image deleted from storage.");
+            }
           }
         }
         finalImageUrlForDb = undefined; // Set to undefined to clear in DB
@@ -590,7 +594,7 @@ const EditInventoryItem = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unit Cost</FormLabel>
-                      <FormControl>
+                    <FormControl>
                         <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
                       </FormControl>
                       <FormMessage />

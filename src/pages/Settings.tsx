@@ -12,7 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { Loader2, Palette, Settings as SettingsIcon, ImageIcon, X } from "lucide-react";
-import { uploadFileToSupabase, getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import getFilePathFromPublicUrl
 import { supabase } from "@/lib/supabaseClient";
 
 const Settings: React.FC = () => {
@@ -88,21 +88,25 @@ const Settings: React.FC = () => {
     try {
       if (companyLogoFile) {
         setIsUploadingImage(true);
-        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo (internal path)
+        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo (public URL)
           console.log("[Settings] onSubmit: Existing logo found, attempting to delete old one from storage.");
-          // profile.companyProfile.companyLogoUrl is already the internal path, use it directly
-          const { error: deleteError } = await supabase.storage.from('company-logos').remove([profile.companyProfile.companyLogoUrl]);
-          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          const internalPathToDelete = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos'); // NEW: Convert public URL to internal path
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          }
         }
         finalCompanyLogoUrlForDb = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // This returns INTERNAL path
         showSuccess("Company logo uploaded successfully!");
       } else if (isLogoCleared) {
         console.log("[Settings] onSubmit: Logo was explicitly cleared.");
-        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo to clear (internal path)
+        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo to clear (public URL)
           console.log("[Settings] onSubmit: Existing logo URL found, attempting to delete from storage.");
-          // profile.companyProfile.companyLogoUrl is already the internal path, use it directly
-          const { error: deleteError } = await supabase.storage.from('company-logos').remove([profile.companyProfile.companyLogoUrl]);
-          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          const internalPathToDelete = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos'); // NEW: Convert public URL to internal path
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+          }
         }
         finalCompanyLogoUrlForDb = undefined; // Set to undefined to clear in DB
       }
