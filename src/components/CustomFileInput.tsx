@@ -37,6 +37,14 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
 
   const hasFileOrPreview = !!file || !!previewUrl;
 
+  const buttonText = isUploading
+    ? "Uploading..."
+    : file
+      ? file.name
+      : previewUrl
+        ? "Image Selected" // Show this if there's a preview URL but no new file
+        : "Choose File";
+
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -49,7 +57,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
           className="flex-grow justify-start relative"
         >
           <UploadCloud className="mr-2 h-4 w-4" />
-          {isUploading ? "Uploading..." : (file ? file.name : "Choose File")}
+          {buttonText}
           <Input
             id={id}
             type="file"

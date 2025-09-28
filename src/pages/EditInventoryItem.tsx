@@ -95,6 +95,7 @@ const EditInventoryItem = () => {
     resolver: zodResolver(formSchema),
     defaultValues: useMemo(() => {
       if (item) {
+        console.log("[EditInventoryItem] Setting default form values from item:", item);
         return {
           name: item.name,
           description: item.description || "",
@@ -145,6 +146,7 @@ const EditInventoryItem = () => {
     if (!item && id) {
       setItemNotFound(true);
     } else if (item) {
+      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl:", item.imageUrl);
       setItemNotFound(false);
       form.reset({
         ...item,
@@ -155,7 +157,7 @@ const EditInventoryItem = () => {
       // Removed setMainLocationParts and setPickingBinLocationParts
 
       setImageFile(null);
-      setImageUrlPreview(item.imageUrl || null);
+      setImageUrlPreview(item.imageUrl || null); // Ensure preview reflects current item.imageUrl
       setIsImageCleared(false);
 
       const updateQrCode = async () => {
@@ -202,6 +204,7 @@ const EditInventoryItem = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           setImageUrlPreview(reader.result as string);
+          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to:", reader.result);
         };
         reader.readAsDataURL(file);
       } else {
@@ -220,6 +223,7 @@ const EditInventoryItem = () => {
     setImageUrlPreview(null); // Set to null for consistency
     setIsImageCleared(true); // Mark that the image was intentionally cleared
     showSuccess("Image cleared. Save changes to apply.");
+    console.log("[EditInventoryItem] Image cleared. imageUrlPreview set to null.");
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -233,12 +237,15 @@ const EditInventoryItem = () => {
     }
     setIsSaving(true);
     let finalImageUrl: string | undefined = item.imageUrl;
+    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrl (from item):", finalImageUrl);
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
         if (item.imageUrl) {
+          console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one.");
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
+          console.log("[EditInventoryItem] onSubmit: Old image file path:", oldFilePath);
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) {
@@ -250,11 +257,14 @@ const EditInventoryItem = () => {
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[EditInventoryItem] Uploaded image URL:", finalImageUrl);
+        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrl set to:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
+        console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
         if (item.imageUrl) {
+          console.log("[EditInventoryItem] onSubmit: Existing image URL found, attempting to delete from storage.");
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
+          console.log("[EditInventoryItem] onSubmit: Old image file path for cleared image:", oldFilePath);
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) {
@@ -266,7 +276,7 @@ const EditInventoryItem = () => {
           }
         }
         finalImageUrl = undefined; // Set to undefined to clear in DB
-        console.log("[EditInventoryItem] Image cleared. Final URL will be undefined.");
+        console.log("[EditInventoryItem] onSubmit: Image cleared. finalImageUrl will be undefined.");
       }
     } catch (error: any) {
       console.error("Error processing product image:", error);
@@ -289,7 +299,7 @@ const EditInventoryItem = () => {
         return;
       }
 
-      console.log("[EditInventoryItem] Updating item with imageUrl:", finalImageUrl);
+      console.log("[EditInventoryItem] onSubmit: Updating item in DB with imageUrl:", finalImageUrl);
       await updateInventoryItem({
         ...item,
         ...values,
@@ -302,6 +312,7 @@ const EditInventoryItem = () => {
       });
       showSuccess("Inventory item updated successfully!");
       await refreshInventory(); // NEW: Explicitly refresh inventory
+      console.log("[EditInventoryItem] onSubmit: refreshInventory() called.");
       // Removed: navigate("/inventory"); // Keep on current page
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
@@ -666,75 +677,75 @@ const EditInventoryItem = () => {
               control={form.control}
               name="notes"
               render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} disabled={!canManageInventory} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormItem className="col-span-2">
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Any specific notes about this item..." rows={3} disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-2 md:col-span-2 border-t border-border pt-4 mt-4">
-          <h3 className="text-lg font-semibold">Auto-Reorder Settings</h3>
-          <FormField
-            control={form.control}
-            name="autoReorderEnabled"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">
-                    Enable Auto-Reorder
-                  </FormLabel>
-                  <FormDescription>
-                    Automatically generate purchase orders when stock is low.
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={!canManageInventory}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          {form.watch("autoReorderEnabled") && (
+          <div className="space-y-2 md:col-span-2 border-t border-border pt-4 mt-4">
+            <h3 className="text-lg font-semibold">Auto-Reorder Settings</h3>
             <FormField
               control={form.control}
-              name="autoReorderQuantity"
+              name="autoReorderEnabled"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Enable Auto-Reorder
+                    </FormLabel>
+                    <FormDescription>
+                      Automatically generate purchase orders when stock is low.
+                    </FormDescription>
+                  </div>
                   <FormControl>
-                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={!canManageInventory}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    This quantity will be ordered when stock drops to or below the overall reorder level.
-                  </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
-          )}
-        </div>
+            {form.watch("autoReorderEnabled") && (
+              <FormField
+                control={form.control}
+                name="autoReorderQuantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormDescription>
+                      This quantity will be ordered when stock drops to or below the overall reorder level.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
 
-        <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
-          {isSaving || isUploadingImage ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
-      </form>
-    </Form>
-  </div>
+          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
+            {isSaving || isUploadingImage ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 
