@@ -55,10 +55,7 @@ serve(async (req) => {
     }
     console.log('Edge Function: GEMINI_API_KEY is present.');
 
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY, {
-      baseUrl: "https://generativelanguage.googleapis.com/v1", // Keep this for redundancy
-      apiVersion: 'v1', // Explicitly set API version
-    });
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY); // Simplified constructor
     const model = genAI.getGenerativeModel({ model: "text-bison-001" });
 
     const supabaseAdmin = createClient(
