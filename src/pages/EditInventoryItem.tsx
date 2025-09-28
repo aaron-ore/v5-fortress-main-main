@@ -65,7 +65,7 @@ const formSchema = z.object({
 const EditInventoryItem = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { inventoryItems, updateInventoryItem } = useInventory();
+  const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { categories, addCategory } = useCategories();
   const { vendors } = useVendors();
   const { inventoryFolders } = useOnboarding(); // Now imports InventoryFolder
@@ -241,7 +241,12 @@ const EditInventoryItem = () => {
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
-            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            if (deleteError) {
+              console.warn("Failed to delete old image from storage:", deleteError);
+              showError(`Failed to delete old image from storage: ${deleteError.message}`); // NEW: Show error for storage deletion
+            } else {
+              showSuccess("Old image deleted from storage."); // NEW: Success for storage deletion
+            }
           }
         }
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
@@ -252,10 +257,15 @@ const EditInventoryItem = () => {
           const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
-            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            if (deleteError) {
+              console.warn("Failed to delete old image from storage:", deleteError);
+              showError(`Failed to delete old image from storage: ${deleteError.message}`); // NEW: Show error for storage deletion
+            } else {
+              showSuccess("Old image deleted from storage."); // NEW: Success for storage deletion
+            }
           }
         }
-        finalImageUrl = undefined;
+        finalImageUrl = undefined; // Set to undefined to clear in DB
         console.log("[EditInventoryItem] Image cleared. Final URL will be undefined.");
       }
     } catch (error: any) {
@@ -291,6 +301,7 @@ const EditInventoryItem = () => {
         barcodeUrl: finalBarcodeValue,
       });
       showSuccess("Inventory item updated successfully!");
+      await refreshInventory(); // NEW: Explicitly refresh inventory
       navigate("/inventory");
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
