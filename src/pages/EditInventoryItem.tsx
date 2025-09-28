@@ -203,7 +203,7 @@ const EditInventoryItem = () => {
       }
     } else {
       setImageFile(null);
-      setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
+      imageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
     }
   };
 
