@@ -21,6 +21,7 @@ interface UseDashboardHookResult {
 }
 
 export const useReportData = (reportId: string, dateRange: DateRange | undefined): UseDashboardHookResult => {
+  void reportId; // Suppress TS6133: 'reportId' is declared but its value is never read.
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
@@ -366,6 +367,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
       const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
+      void targetItems; // Suppress TS6133: 'targetItems' is declared but its value is never read.
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);

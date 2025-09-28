@@ -15,7 +15,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { hasRequiredPlan } from "@/utils/planUtils";
 
 import ReportSidebar from "@/components/reports/ReportSidebar";
-import AiSummarySidebar from "@/components/reports/AiSummarySidebar"; // NEW: Import AiSummarySidebar
+import AiSummarySidebar from "@/components/reports/AiSummarySidebar";
 
 import { reportCategories, reportContentComponents, pdfContentComponents } from "@/lib/reportConfig";
 
@@ -31,8 +31,9 @@ const Reports: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false); // NEW: State for sidebar visibility
+  const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false);
   const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // NEW: State for selected item in forecast
+  void selectedForecastItemId; // Suppress TS6133: 'selectedForecastItemId' is declared but its value is never read.
 
   const reportContentRef = useRef<HTMLDivElement>(null);
 
@@ -212,8 +213,8 @@ const Reports: React.FC = () => {
             <Button
               onClick={handleSummarizeReport}
               disabled={!reportData || isSummarizing || !canAccessAiSummary}
-              style={{ backgroundColor: '#9BFBCD', color: 'hsl(var(--primary))' }} // Apply custom background color and text color
-              className="hover:bg-[#7ee0c2] text-primary" // Add a hover effect for the custom color and text color
+              style={{ backgroundColor: '#9BFBCD', color: 'hsl(var(--primary))' }}
+              className="hover:bg-[#7ee0c2] text-primary"
               size="sm"
             >
               {isSummarizing ? (

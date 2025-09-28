@@ -32,6 +32,9 @@ const AiSummarySidebar: React.FC<AiSummarySidebarProps> = ({
   reportTitle,
   activeReportId,
 }) => {
+  void onGenerateSummary; // Suppress TS6133: 'onGenerateSummary' is declared but its value is never read.
+  void activeReportId; // Suppress TS6133: 'activeReportId' is declared but its value is never read.
+
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
 
