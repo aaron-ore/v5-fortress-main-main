@@ -62,10 +62,16 @@ export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string):
  * Generates the public URL for a file given its internal path and bucket name.
  * @param filePath The internal path of the file within the bucket (e.g., 'items/uuid.png').
  * @param bucketName The name of the Supabase Storage bucket.
- * @returns The full public URL of the file.
+ * @returns The full public URL of the file, or `undefined` if filePath is empty/invalid.
  */
-export const getPublicUrlFromSupabase = (filePath: string, bucketName: string): string => {
+export const getPublicUrlFromSupabase = (filePath: string | undefined, bucketName: string): string | undefined => { // Changed filePath type and return type
   console.log(`[Storage] getPublicUrlFromSupabase called. FilePath: "${filePath}", Bucket: "${bucketName}"`);
+
+  if (!filePath || filePath.trim() === '') { // Handle empty or null/undefined filePath
+    console.warn(`[Storage] getPublicUrlFromSupabase: filePath is empty or invalid. Returning undefined.`);
+    return undefined;
+  }
+
   // Ensure filePath is not already a public URL
   if (filePath.startsWith('http')) {
     console.warn(`[Storage] getPublicUrlFromSupabase: filePath already looks like a public URL. Returning as is. FilePath: ${filePath}`);

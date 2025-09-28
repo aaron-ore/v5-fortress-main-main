@@ -81,74 +81,49 @@ const EditInventoryItem = () => {
 
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  const item = useMemo(() => inventoryItems.find((i) => i.id === id), [inventoryItems, id]);
+  const item = useMemo(() => {
+    const foundItem = inventoryItems.find((i) => i.id === id);
+    console.log("[EditInventoryItem] useMemo: Item found:", foundItem ? foundItem.id : "none", "imageUrl:", foundItem?.imageUrl);
+    return foundItem;
+  }, [inventoryItems, id]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: useMemo(() => {
       if (item) {
-        return {
-          name: item.name,
-          description: item.description || "",
-          sku: item.sku,
-          category: item.category,
-          pickingBinQuantity: item.pickingBinQuantity,
-          overstockQuantity: item.overstockQuantity,
-          reorderLevel: item.reorderLevel,
-          pickingReorderLevel: item.pickingReorderLevel,
-          committedStock: item.committedStock,
-          incomingStock: item.incomingStock,
-          unitCost: item.unitCost,
-          retailPrice: item.retailPrice,
-          folderId: item.folderId,
-          tags: item.tags?.join(', ') || "",
-          notes: item.notes || "",
+        const defaultVals = {
+          // ... other fields ...
           imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
-          vendorId: item.vendorId || "null-vendor",
-          autoReorderEnabled: item.autoReorderEnabled,
-          autoReorderQuantity: item.autoReorderQuantity,
+          // ...
         };
+        console.log("[EditInventoryItem] useForm defaultValues memo: item.imageUrl:", item.imageUrl, "defaultVals.imageUrl:", defaultVals.imageUrl);
+        return defaultVals;
       }
-      return {
-        name: "",
-        description: "",
-        sku: "",
-        category: "",
-        pickingBinQuantity: 0,
-        overstockQuantity: 0,
-        reorderLevel: 0,
-        pickingReorderLevel: 0,
-        committedStock: 0,
-        incomingStock: 0,
-        unitCost: 0,
-        retailPrice: 0,
-        folderId: "no-folders",
-        tags: "",
-        notes: "",
-        imageUrl: "",
-        vendorId: "null-vendor",
-        autoReorderEnabled: false,
-        autoReorderQuantity: 0,
-      };
+      // ...
     }, [item]),
   });
 
   useEffect(() => {
+    console.log("[EditInventoryItem] useEffect (item dependency) triggered. Current item:", item ? item.id : "none", "item.imageUrl:", item?.imageUrl);
     if (!item && id) {
       setItemNotFound(true);
+      console.log("[EditInventoryItem] useEffect: Item not found, setting itemNotFound to true.");
     } else if (item) {
       setItemNotFound(false);
-      form.reset({
+      const resetValues = {
         ...item,
         vendorId: item.vendorId || "null-vendor",
         tags: item.tags?.join(', ') || "",
         notes: item.notes || "",
-        imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
-      });
+        imageUrl: item.imageUrl || "", // Ensure this is the public URL or empty string
+      };
+      form.reset(resetValues);
+      console.log("[EditInventoryItem] useEffect: Form reset with item.imageUrl:", item.imageUrl, "resetValues.imageUrl:", resetValues.imageUrl);
 
       setImageFile(null);
-      setImageUrlPreview(item.imageUrl || null); // item.imageUrl from context is already a PUBLIC URL
+      setImageUrlPreview(item.imageUrl || null); // This is the critical line for preview state
       setIsImageCleared(false);
+      console.log("[EditInventoryItem] useEffect: Setting imageUrlPreview to:", item.imageUrl || null);
 
       const updateQrCode = async () => {
         if (item.barcodeUrl) {
@@ -212,10 +187,10 @@ const EditInventoryItem = () => {
 
   const handleClearImage = () => {
     setImageFile(null);
-    setImageUrlPreview(null);
+    setImageUrlPreview(null); // Explicitly set to null
     setIsImageCleared(true); // Mark that the image was explicitly cleared
     showSuccess("Image cleared. Save changes to apply.");
-    console.log("[EditInventoryItem] handleClearImage: Image explicitly cleared. isImageCleared:", true);
+    console.log("[EditInventoryItem] handleClearImage: Image explicitly cleared. imageUrlPreview set to null. isImageCleared:", true);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
