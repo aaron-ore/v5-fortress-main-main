@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getPublicUrlFromSupabase } from '@/integrations/supabase/storage'; // Import getPublicUrlFromSupabase
+import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
 import { deepEqual } from '@/lib/utils';
 import { useAuth } from './AuthContext';
 
@@ -12,7 +12,7 @@ export interface CompanyProfile {
   companyName: string;
   companyCurrency: string;
   companyAddress: string;
-  companyLogoUrl?: string; // This will now store the PUBLIC URL for display
+  companyLogoUrl?: string;
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
@@ -69,7 +69,8 @@ const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading: isLoadingAuth } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]
+);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
@@ -78,7 +79,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyName: companyData.name,
       companyCurrency: companyData.currency,
       companyAddress: companyData.address,
-      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined, // Convert internal path to public URL
+      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined,
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
@@ -116,9 +117,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const fetchProfile = useCallback(async () => {
-    console.log("[ProfileContext] fetchProfile called. User:", user?.id, "isLoadingAuth:", isLoadingAuth);
     if (!user) {
-      console.log("[ProfileContext] No user, setting profile to null.");
       setProfile(null);
       setIsLoadingProfile(false);
       return;
@@ -158,24 +157,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
-      console.log("[ProfileContext] Fetched profile data:", newProfileData);
       setProfile(prevProfile => {
         if (deepEqual(prevProfile, newProfileData)) {
-          console.log("[ProfileContext] Profile data is identical, skipping state update.");
           return prevProfile;
         }
-        console.log("[ProfileContext] Profile data changed, updating state.");
         return newProfileData;
       });
     }
     setIsLoadingProfile(false);
-    console.log("[ProfileContext] fetchProfile completed. isLoadingProfile set to false.");
   }, [user, isLoadingAuth]);
 
   const fetchAllProfiles = useCallback(async () => {
-    console.log("[ProfileContext] fetchAllProfiles called. profile?.organizationId:", profile?.organizationId);
     if (!profile?.organizationId) {
-      console.log("[ProfileContext] No organizationId, setting allProfiles to empty.");
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
       return;
@@ -195,26 +188,21 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAllProfiles([]);
     } else {
       const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null));
-      console.log("[ProfileContext] Fetched all profiles:", mappedProfiles);
       setAllProfiles(mappedProfiles);
     }
     setIsLoadingAllProfiles(false);
-    console.log("[ProfileContext] fetchAllProfiles completed. isLoadingAllProfiles set to false.");
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
-    console.log("[ProfileContext] Auth state changed. isLoadingAuth:", isLoadingAuth);
     if (!isLoadingAuth) {
       fetchProfile();
     }
   }, [isLoadingAuth, fetchProfile]);
 
   useEffect(() => {
-    console.log("[ProfileContext] Profile or isLoadingProfile changed. isLoadingProfile:", isLoadingProfile, "profile?.organizationId:", profile?.organizationId);
     if (!isLoadingProfile && profile?.organizationId) {
       fetchAllProfiles();
     } else if (!isLoadingProfile && !profile?.organizationId) {
-      console.log("[ProfileContext] Not loading profile, and no organizationId. Clearing allProfiles.");
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
     }
@@ -282,8 +270,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
-    console.log("[ProfileContext] updateCompanyProfile called with updates:", updates, "uniqueCode:", uniqueCode);
-
     if (!profile || !profile.organizationId) {
       const errorMessage = 'Organization not found. Cannot update company profile.';
       await logActivity("Update Company Profile Failed", errorMessage, profile, { updated_fields: updates, unique_code: uniqueCode }, true);
@@ -291,23 +277,19 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    // Convert public URL back to internal path for DB storage if it's present in updates
     let companyLogoUrlForDb: string | undefined = updates.companyLogoUrl;
     if (updates.companyLogoUrl) {
-      // If it's a public URL, extract the internal path. If it's already an internal path, it will remain unchanged.
-      // The `uploadFileToSupabase` function already returns the internal path, so this conversion is mainly for existing URLs.
-      const internalPath = updates.companyLogoUrl.startsWith('http') ? updates.companyLogoUrl.split('/public/company-logos/')[1] : updates.companyLogoUrl;
-      companyLogoUrlForDb = internalPath;
-    } else if (updates.companyLogoUrl === null) { // Explicitly set to null/undefined to clear
+      const internalPath = getFilePathFromPublicUrl(updates.companyLogoUrl, 'company-logos');
+      companyLogoUrlForDb = internalPath || undefined;
+    } else if (updates.companyLogoUrl === null) {
       companyLogoUrlForDb = undefined;
     }
-
 
     const payload: any = {
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: companyLogoUrlForDb, // This is the INTERNAL path or undefined
+      company_logo_url: companyLogoUrlForDb,
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId,
       stripe_subscription_id: updates.stripeSubscriptionId,
@@ -384,7 +366,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else {
       console.log("[ProfileContext] Onboarding wizard marked as completed for user:", profile.id);
       await logActivity("Mark Onboarding Wizard Completed Success", `Onboarding wizard marked as completed for user ${profile.id}.`, profile);
-      // Optimistically update local state
       setProfile(prev => prev ? { ...prev, hasOnboardingWizardCompleted: true } : null);
     }
   };
@@ -410,7 +391,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else {
       console.log("[ProfileContext] UI tutorial marked as shown for user:", profile.id);
       await logActivity("Mark UI Tutorial Shown Success", `UI tutorial marked as shown for user ${profile.id}.`, profile);
-      // Optimistically update local state
       setProfile(prev => prev ? { ...prev, hasUiTutorialShown: true } : null);
     }
   };
@@ -436,7 +416,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else {
       console.log("[ProfileContext] Upgrade prompt marked as seen for user:", profile.id);
       await logActivity("Mark Upgrade Prompt Seen Success", `Upgrade prompt marked as seen for user ${profile.id}.`, profile);
-      // Optimistically update local state
       setProfile(prev => prev ? { ...prev, hasSeenUpgradePrompt: true } : null);
     }
   };

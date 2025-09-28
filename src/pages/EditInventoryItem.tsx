@@ -32,7 +32,7 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage"; // NEW: Import getFilePathFromPublicUrl
+import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
@@ -53,7 +53,7 @@ const formSchema = z.object({
   folderId: z.string().min(1, "Folder is required"),
   tags: z.string().optional(),
   notes: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")), // This is for form validation, not DB storage
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
@@ -75,9 +75,9 @@ const EditInventoryItem = () => {
   const [qrCodeSvg, setQrCodeSvg] = useState<string | undefined>(undefined);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // This holds the PUBLIC URL for display
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isImageCleared, setIsImageCleared] = useState(false); // Flag to indicate if image was explicitly cleared
+  const [isImageCleared, setIsImageCleared] = useState(false);
 
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
@@ -87,7 +87,6 @@ const EditInventoryItem = () => {
     resolver: zodResolver(formSchema),
     defaultValues: useMemo(() => {
       if (item) {
-        console.log("[EditInventoryItem] Setting default form values from item:", item);
         return {
           name: item.name,
           description: item.description || "",
@@ -104,7 +103,7 @@ const EditInventoryItem = () => {
           folderId: item.folderId,
           tags: item.tags?.join(', ') || "",
           notes: item.notes || "",
-          imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "", // Convert internal path to public URL for form
+          imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "",
           vendorId: item.vendorId || "null-vendor",
           autoReorderEnabled: item.autoReorderEnabled,
           autoReorderQuantity: item.autoReorderQuantity,
@@ -138,25 +137,21 @@ const EditInventoryItem = () => {
     if (!item && id) {
       setItemNotFound(true);
     } else if (item) {
-      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl (from DB, internal path):", item.imageUrl);
       setItemNotFound(false);
       form.reset({
         ...item,
         vendorId: item.vendorId || "null-vendor",
         tags: item.tags?.join(', ') || "",
         notes: item.notes || "",
-        imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "", // Convert internal path to public URL for form
+        imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "",
       });
 
       setImageFile(null);
-      // Set imageUrlPreview to the public URL for display
       if (item.imageUrl) {
         const publicUrl = getPublicUrlFromSupabase(item.imageUrl, 'inventory-images');
         setImageUrlPreview(publicUrl);
-        console.log("[EditInventoryItem] Setting imageUrlPreview from item.imageUrl (converted to public URL):", publicUrl);
       } else {
         setImageUrlPreview(null);
-        console.log("[EditInventoryItem] item.imageUrl is null, setting imageUrlPreview to null.");
       }
       setIsImageCleared(false);
 
@@ -203,29 +198,25 @@ const EditInventoryItem = () => {
         setIsImageCleared(false);
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
-          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to (data:URL):", (reader.result as string).substring(0, 100) + '...');
+          setImageUrlPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
-        // Revert preview to current item's image if invalid file selected
         setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
       }
     } else {
       setImageFile(null);
-      // Revert preview to current item's image if file input cleared without selection
       setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
     }
   };
 
   const handleClearImage = () => {
     setImageFile(null);
-    setImageUrlPreview(null); // Set to null to clear preview
-    setIsImageCleared(true); // Mark that the image was intentionally cleared
+    setImageUrlPreview(null);
+    setIsImageCleared(true);
     showSuccess("Image cleared. Save changes to apply.");
-    console.log("[EditInventoryItem] Image cleared. imageUrlPreview set to null.");
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -238,16 +229,13 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined = item.imageUrl; // This is the INTERNAL path for DB
-
-    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrlForDb (from item, internal path):", finalImageUrlForDb);
+    let finalImageUrlForDb: string | undefined;
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
-        if (item.imageUrl) { // If there was an existing image (public URL)
-          console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one from storage.");
-          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // NEW: Convert public URL to internal path
+        if (item.imageUrl) {
+          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
             if (deleteError) {
@@ -258,14 +246,11 @@ const EditInventoryItem = () => {
             }
           }
         }
-        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // This returns INTERNAL path
-        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrlForDb (internal path) set to:", finalImageUrlForDb);
+        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
-        console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
-        if (item.imageUrl) { // If there was an existing image to clear (public URL)
-          console.log("[EditInventoryItem] onSubmit: Existing image URL found, attempting to delete from storage.");
-          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // NEW: Convert public URL to internal path
+        if (item.imageUrl) {
+          const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
             if (deleteError) {
@@ -276,10 +261,12 @@ const EditInventoryItem = () => {
             }
           }
         }
-        finalImageUrlForDb = undefined; // Set to undefined to clear in DB
-        console.log("[EditInventoryItem] onSubmit: Image cleared. finalImageUrlForDb will be undefined.");
+        finalImageUrlForDb = undefined;
+      } else {
+        // No new file, not cleared. Keep existing image.
+        // Convert the current public URL (item.imageUrl) back to its internal path.
+        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || undefined : undefined;
       }
-      // If no new file and not cleared, finalImageUrlForDb remains item.imageUrl (the existing internal path)
     } catch (error: any) {
       console.error("Error processing product image:", error);
       showError(`Failed to process product image: ${error.message}`);
@@ -299,20 +286,18 @@ const EditInventoryItem = () => {
         return;
       }
 
-      console.log("[EditInventoryItem] onSubmit: Updating item in DB with finalImageUrlForDb (internal path):", finalImageUrlForDb);
       await updateInventoryItem({
         ...item,
         ...values,
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb, // This is the INTERNAL path or undefined
+        imageUrl: finalImageUrlForDb,
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
       showSuccess("Inventory item updated successfully!");
-      await refreshInventory(); // Explicitly refresh inventory to get latest data, including image URL
-      console.log("[EditInventoryItem] onSubmit: refreshInventory() called.");
+      await refreshInventory();
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
       showError(`Failed to update item: ${error.message}`);
