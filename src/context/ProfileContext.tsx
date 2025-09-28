@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
+import { getPublicUrlFromSupabase } from '@/integrations/supabase/storage';
 import { deepEqual } from '@/lib/utils';
 import { useAuth } from './AuthContext';
 
