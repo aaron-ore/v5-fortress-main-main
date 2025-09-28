@@ -32,6 +32,7 @@ const Reports: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false); // NEW: State for sidebar visibility
+  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // NEW: State for selected item in forecast
 
   const reportContentRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,10 @@ const Reports: React.FC = () => {
   useEffect(() => {
     setAiSummary(null);
     setIsAiSummarySidebarOpen(false);
+    // Reset selected forecast item when changing reports
+    if (activeReportId !== "advanced-demand-forecast") {
+      setSelectedForecastItemId("all-items");
+    }
   }, [activeReportId, dateRange]);
 
   const handleClearDateFilter = () => {
@@ -82,6 +87,11 @@ const Reports: React.FC = () => {
     const finalPdfProps = {
       ...pdfProps,
       structuredLocations: structuredLocations,
+      // NEW: Pass forecast-specific props if it's the forecast report
+      ...(activeReportId === "advanced-demand-forecast" && {
+        forecastData: reportData.forecastData,
+        selectedItemName: reportData.selectedItemName,
+      }),
     };
 
     initiatePrint({ type: activeReportId as PrintContentData['type'], props: finalPdfProps });
@@ -236,7 +246,15 @@ const Reports: React.FC = () => {
               </div>
             ) : (
               <div ref={reportContentRef} className="space-y-6">
-                {CurrentReportComponent && <CurrentReportComponent {...reportData} />}
+                {CurrentReportComponent && (
+                  <CurrentReportComponent
+                    {...reportData}
+                    // NEW: Pass item selection handler for forecast report
+                    {...(activeReportId === "advanced-demand-forecast" && {
+                      onSelectItem: (itemId: string) => setSelectedForecastItemId(itemId),
+                    })}
+                  />
+                )}
               </div>
             )}
           </CardContent>

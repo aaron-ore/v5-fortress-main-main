@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Scale,
   FileText,
+  TrendingUp, // NEW: Import TrendingUp icon
 } from "lucide-react";
 import React from "react"; // Import React for React.ElementType
 
@@ -22,6 +23,7 @@ import SalesByProductReportContent from "@/components/reports/SalesByProductRepo
 import PurchaseOrderStatusReportContent from "@/components/reports/PurchaseOrderStatusReport";
 import ProfitabilityReportContent from "@/components/reports/ProfitabilityReport";
 import DiscrepancyReportContent from "@/components/reports/DiscrepancyReport";
+import AdvancedDemandForecastReportContent from "@/components/reports/AdvancedDemandForecastReport"; // NEW: Import AdvancedDemandForecastReport
 
 // PDF content components
 import DashboardSummaryPdfContent from "@/components/reports/pdf/DashboardSummaryPdfContent";
@@ -39,7 +41,7 @@ import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent";
 import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent";
 import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent";
 import PickingWavePdfContent from "@/components/reports/pdf/PickingWavePdfContent";
-import AiSummaryPdfContent from "@/components/reports/pdf/AiSummaryPdfContent"; // NEW: Import AiSummaryPdfContent
+import AiSummaryPdfContent from "@/components/reports/pdf/AiSummaryPdfContent";
 
 export interface ReportItem {
   id: string;
@@ -78,6 +80,7 @@ export const reportCategories: ReportCategory[] = [
     reports: [
       { id: "sales-by-customer", title: "Sales by Customer", description: "Revenue generated per customer.", icon: Users },
       { id: "sales-by-product", title: "Sales by Product", description: "Top-selling items by quantity/revenue.", icon: BarChart },
+      { id: "advanced-demand-forecast", title: "Advanced Demand Forecast", description: "AI-powered predictions for future demand.", icon: TrendingUp }, // NEW: Added Demand Forecast
     ],
   },
   {
@@ -107,6 +110,7 @@ export const reportContentComponents: { [key: string]: React.ElementType } = {
   "purchase-order-status": PurchaseOrderStatusReportContent,
   "profitability": ProfitabilityReportContent,
   "stock-discrepancy": DiscrepancyReportContent,
+  "advanced-demand-forecast": AdvancedDemandForecastReportContent, // NEW: Added Demand Forecast Report
 };
 
 // Map report IDs to their respective PDF content components
@@ -126,5 +130,5 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "invoice": InvoicePdfContent,
   "location-label": FolderLabelPdfContent,
   "picking-wave": PickingWavePdfContent,
-  "ai-summary": AiSummaryPdfContent, // NEW: Add AI summary PDF component
+  "ai-summary": AiSummaryPdfContent,
 };
