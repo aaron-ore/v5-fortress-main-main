@@ -229,11 +229,11 @@ const EditInventoryItem = () => {
             console.log("[EditInventoryItem] onSubmit: Deleting old image from storage. Internal path:", internalPathToDelete);
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-            else showSuccess("Old image deleted from storage.");
+            // Removed showSuccess for old image deletion
           }
         }
         finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns INTERNAL PATH
-        showSuccess("Product image uploaded successfully!");
+        // Removed showSuccess for new image upload
         console.log("[EditInventoryItem] onSubmit: New image uploaded. Internal path for DB:", finalImageUrlForDb);
       } else if (isImageCleared) {
         console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
@@ -243,7 +243,7 @@ const EditInventoryItem = () => {
             console.log("[EditInventoryItem] onSubmit: Deleting old image from storage due to clear. Internal path:", internalPathToDelete);
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-            else showSuccess("Old image deleted from storage.");
+            // Removed showSuccess for old image deletion
           }
         }
         finalImageUrlForDb = null; // Set to null to explicitly clear the image_url in DB

@@ -250,7 +250,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       try {
         finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns INTERNAL PATH
         console.log("[AddInventoryDialog] Uploaded image internal path:", finalImageUrl);
-        showSuccess("Product image uploaded successfully!");
+        // Removed showSuccess for new image upload
       } catch (error: any) {
         console.error("Error uploading product image:", error);
         showError(`Failed to upload product image: ${error.message}`);
