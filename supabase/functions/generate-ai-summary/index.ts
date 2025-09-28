@@ -55,8 +55,10 @@ serve(async (req) => {
     }
     console.log('Edge Function: GEMINI_API_KEY is present.');
 
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "text-bison-001" }); // Changed model to text-bison-001
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY, {
+      baseUrl: "https://generativelanguage.googleapis.com/v1", // Explicitly set to v1 API
+    });
+    const model = genAI.getGenerativeModel({ model: "text-bison-001" });
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
