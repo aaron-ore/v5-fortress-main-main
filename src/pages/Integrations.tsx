@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Label } from "@/components/ui/label";
-import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
+import { hasRequiredPlan } from "@/utils/planUtils";
+import ShopifyStoreUrlDialog from "@/components/integrations/ShopifyStoreUrlDialog"; // NEW: Import the new dialog
 
 interface ShopifyLocation {
   id: string;
@@ -63,6 +64,8 @@ const Integrations: React.FC = () => {
   const [mappingToEdit, setMappingToEdit] = useState<ShopifyLocationMapping | null>(null);
   const [mappingToDelete, setMappingToDelete] = useState<ShopifyLocationMapping | null>(null);
   const [isConfirmDeleteMappingOpen, setIsConfirmDeleteMappingOpen] = useState(false);
+
+  const [isShopifyStoreUrlDialogOpen, setIsShopifyStoreUrlDialogOpen] = useState(false); // NEW: State for the new dialog
 
   const qbCallbackProcessedRef = React.useRef(false);
   const shopifyCallbackProcessedRef = React.useRef(false);
@@ -216,23 +219,14 @@ const Integrations: React.FC = () => {
     }
   };
 
-  const handleConnectShopify = () => {
-    if (!canAccessShopify) { // NEW: Check plan access
-      showError("Shopify integration is a Premium/Enterprise feature. Please upgrade your plan.");
-      return;
-    }
+  // NEW: Function to initiate Shopify OAuth after getting store URL
+  const initiateShopifyOAuth = (shopifyStoreName: string) => {
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
       return;
     }
 
     const clientId = import.meta.env.VITE_SHOPIFY_CLIENT_ID;
-    const shopifyStoreName = prompt("Please enter your Shopify store name (e.g., your-store.myshopify.com):");
-
-    if (!shopifyStoreName) {
-      showError("Shopify store name is required to connect.");
-      return;
-    }
 
     if (!clientId) {
       showError("Shopify Client ID is not configured. Please add VITE_SHOPIFY_CLIENT_ID to your .env file.");
@@ -264,6 +258,14 @@ const Integrations: React.FC = () => {
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
     window.location.href = authUrl;
+  };
+
+  const handleConnectShopify = () => {
+    if (!canAccessShopify) {
+      showError("Shopify integration is a Premium/Enterprise feature. Please upgrade your plan.");
+      return;
+    }
+    setIsShopifyStoreUrlDialogOpen(true); // NEW: Open the custom dialog
   };
 
   const handleDisconnectShopify = async () => {
@@ -510,7 +512,7 @@ const Integrations: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Your Fortress account is linked with QuickBooks. You can now synchronize data.
               </p>
-              <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks}> {/* NEW: Disable based on plan */}
+              <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks}>
                 {isSyncingQuickBooks ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
@@ -521,7 +523,7 @@ const Integrations: React.FC = () => {
                   </>
                 )}
               </Button>
-              <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks}> {/* NEW: Disable based on plan */}
+              <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks}>
                 Disconnect QuickBooks
               </Button>
             </div>
@@ -530,7 +532,7 @@ const Integrations: React.FC = () => {
               <p className="text-muted-foreground">
                 Connect your QuickBooks account to enable automatic syncing of orders, inventory, and more.
               </p>
-              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks}> {/* NEW: Disable based on plan */}
+              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks}>
                 Connect to QuickBooks
               </Button>
               {!profile?.id && (
@@ -538,7 +540,7 @@ const Integrations: React.FC = () => {
                   Please log in to connect to QuickBooks.
                 </p>
               )}
-              {!canAccessQuickBooks && ( // NEW: Show upgrade message
+              {!canAccessQuickBooks && (
                 <p className="text-sm text-yellow-500">
                   QuickBooks integration requires a Premium or Enterprise plan.
                 </p>
@@ -562,7 +564,7 @@ const Integrations: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Your Fortress account is linked with Shopify. You can now synchronize product data.
               </p>
-              <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify}> {/* NEW: Disable based on plan */}
+              <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify}>
                 {isSyncingShopify ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
@@ -573,7 +575,7 @@ const Integrations: React.FC = () => {
                   </>
                 )}
               </Button>
-              <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify}> {/* NEW: Disable based on plan */}
+              <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify}>
                 Disconnect Shopify
               </Button>
 
@@ -584,7 +586,7 @@ const Integrations: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
                 </p>
-                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify}> {/* NEW: Disable based on plan */}
+                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify}>
                   {isFetchingShopifyLocations ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
@@ -610,7 +612,7 @@ const Integrations: React.FC = () => {
                             setSelectedFortressFolderId(existing?.fortress_location_id || null);
                             setMappingToEdit(existing || null);
                           }}
-                          disabled={isSavingMapping || !canAccessShopify} /* NEW: Disable based on plan */
+                          disabled={isSavingMapping || !canAccessShopify}
                         >
                           <SelectTrigger id="shopify-location-select">
                             <SelectValue placeholder="Select Shopify Location" />
@@ -629,7 +631,7 @@ const Integrations: React.FC = () => {
                         <Select
                           value={selectedFortressFolderId || ""}
                           onValueChange={setSelectedFortressFolderId}
-                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify} /* NEW: Disable based on plan */
+                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify}
                         >
                           <SelectTrigger id="fortress-folder-select">
                             <SelectValue placeholder="Select Fortress Folder" />
@@ -645,7 +647,7 @@ const Integrations: React.FC = () => {
                       </div>
                       <Button
                         onClick={handleSaveLocationMapping}
-                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify} /* NEW: Disable based on plan */
+                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify}
                       >
                         {isSavingMapping ? (
                           <>
@@ -681,10 +683,10 @@ const Integrations: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!profile?.role || profile.role !== 'admin' || !canAccessShopify}> {/* NEW: Disable based on plan */}
+                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!profile?.role || profile.role !== 'admin' || !canAccessShopify}>
                               <Edit className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !profile?.role || profile.role !== 'admin' || !canAccessShopify}> {/* NEW: Disable based on plan */}
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !profile?.role || profile.role !== 'admin' || !canAccessShopify}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
@@ -700,7 +702,7 @@ const Integrations: React.FC = () => {
               <p className="text-muted-foreground">
                 Connect your Shopify store to import products and synchronize inventory levels.
               </p>
-              <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify}> {/* NEW: Disable based on plan */}
+              <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify}>
                 Connect to Shopify
               </Button>
               {!profile?.id && (
@@ -708,7 +710,7 @@ const Integrations: React.FC = () => {
                   Please log in to connect to Shopify.
                 </p>
               )}
-              {!canAccessShopify && ( // NEW: Show upgrade message
+              {!canAccessShopify && (
                 <p className="text-sm text-yellow-500">
                   Shopify integration requires a Premium or Enterprise plan.
                 </p>
@@ -750,6 +752,14 @@ const Integrations: React.FC = () => {
           cancelText="Cancel"
         />
       )}
+
+      {/* NEW: Shopify Store URL Dialog */}
+      <ShopifyStoreUrlDialog
+        isOpen={isShopifyStoreUrlDialogOpen}
+        onClose={() => setIsShopifyStoreUrlDialogOpen(false)}
+        onConfirm={initiateShopifyOAuth}
+        isLoading={!profile?.id} // Disable if profile not loaded
+      />
     </div>
   );
 };
