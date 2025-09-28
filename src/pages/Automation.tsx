@@ -17,14 +17,14 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import AutomationRuleDialog from "@/components/automation/AutomationRuleDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
-import { showError } from "@/utils/toast"; // Import showError
-import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
-import { useNavigate } from "react-router-dom"; // NEW: Import useNavigate
+import { showError } from "@/utils/toast";
+import { hasRequiredPlan } from "@/utils/planUtils";
+import { useNavigate } from "react-router-dom";
 
 const Automation: React.FC = () => {
   const { automationRules, isLoadingRules, updateRule, deleteRule } = useAutomation();
   const { profile, isLoadingProfile } = useProfile();
-  const navigate = useNavigate(); // NEW: Initialize useNavigate
+  const navigate = useNavigate();
 
   const [isAutomationRuleDialogOpen, setIsAutomationRuleDialogOpen] = useState(false);
   const [ruleToEdit, setRuleToEdit] = useState<AutomationRule | null>(null);
@@ -33,11 +33,10 @@ const Automation: React.FC = () => {
   const [ruleToDelete, setRuleToDelete] = useState<AutomationRule | null>(null);
 
   const isAdmin = profile?.role === 'admin';
-  // NEW: Check Automation access based on plan
   const canAccessAutomation = hasRequiredPlan(profile?.companyProfile?.plan, 'enterprise');
 
   const handleCreateRuleClick = () => {
-    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
+    if (!isAdmin || !canAccessAutomation) {
       showError("You do not have permission to create automation rules.");
       return;
     }
@@ -46,7 +45,7 @@ const Automation: React.FC = () => {
   };
 
   const handleEditRuleClick = (rule: AutomationRule) => {
-    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
+    if (!isAdmin || !canAccessAutomation) {
       showError("You do not have permission to edit automation rules.");
       return;
     }
@@ -55,7 +54,7 @@ const Automation: React.FC = () => {
   };
 
   const handleDeleteRuleClick = (rule: AutomationRule) => {
-    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
+    if (!isAdmin || !canAccessAutomation) {
       showError("You do not have permission to delete automation rules.");
       return;
     }
@@ -72,7 +71,7 @@ const Automation: React.FC = () => {
   };
 
   const handleToggleRuleActive = async (rule: AutomationRule, newActiveState: boolean) => {
-    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
+    if (!isAdmin || !canAccessAutomation) {
       showError("You do not have permission to toggle automation rules.");
       return;
     }
@@ -165,7 +164,7 @@ const Automation: React.FC = () => {
     );
   }
 
-  if (!canAccessAutomation) { // NEW: Restrict access based on plan
+  if (!canAccessAutomation) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">

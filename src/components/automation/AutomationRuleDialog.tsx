@@ -18,9 +18,9 @@ import { useAutomation, AutomationRule } from "@/context/AutomationContext";
 import { showError } from "@/utils/toast";
 import { useInventory } from "@/context/InventoryContext";
 import { useCategories } from "@/context/CategoryContext";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder as type
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
+import { useOnboarding } from "@/context/OnboardingContext";
+import { useProfile } from "@/context/ProfileContext";
+import { hasRequiredPlan } from "@/utils/planUtils";
 
 interface AutomationRuleDialogProps {
   isOpen: boolean;
@@ -32,12 +32,10 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const { addRule, updateRule } = useAutomation();
   const { inventoryItems } = useInventory();
   const { categories } = useCategories();
-  const { inventoryFolders } = useOnboarding(); // Renamed from locations
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { inventoryFolders } = useOnboarding();
+  const { profile } = useProfile();
 
-  // NEW: Role-based permissions
   const isAdmin = profile?.role === 'admin';
-  // NEW: Check Automation access based on plan
   const canAccessAutomation = hasRequiredPlan(profile?.companyProfile?.plan, 'enterprise');
 
   const [name, setName] = useState("");
@@ -59,10 +57,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   const [actionEmailBody, setActionEmailBody] = useState("");
   const [actionCreatePoItemId, setActionCreatePoItemId] = useState("");
   const [actionCreatePoQuantity, setActionCreatePoQuantity] = useState("");
-
-  // Removed unused useMemo for orderStatuses and orderTypes
-  // const orderStatuses = useMemo(() => ["New Order", "Processing", "Packed", "Shipped", "On Hold / Problem", "Archived"], []);
-  // const orderTypes = useMemo(() => ["Sales", "Purchase"], []);
 
   useEffect(() => {
     if (isOpen) {
@@ -100,7 +94,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           setActionType("SEND_EMAIL");
           setActionEmailTo(ruleToEdit.actionJson.to);
           setActionEmailSubject(ruleToEdit.actionJson.subject);
-          setActionEmailBody(ruleToEdit.actionJson.body); // Fixed typo here
+          setActionEmailBody(ruleToEdit.actionJson.body);
         } else if (ruleToEdit.actionJson?.type === "CREATE_PURCHASE_ORDER") {
           setActionType("CREATE_PURCHASE_ORDER");
           setActionCreatePoItemId(ruleToEdit.actionJson.itemId);
@@ -137,7 +131,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
   }, [isOpen, ruleToEdit]);
 
   const handleSubmit = async () => {
-    if (!isAdmin || !canAccessAutomation) { // NEW: Check plan access
+    if (!isAdmin || !canAccessAutomation) {
       showError("You do not have permission to create or edit automation rules.");
       return;
     }
@@ -237,7 +231,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="conditionField">Field</Label>
-            {/* NEW: Disable based on plan */}
             <Select value={conditionField} onValueChange={setConditionField} disabled={!isAdmin || !canAccessAutomation}>
               <SelectTrigger id="conditionField"><SelectValue placeholder="Select field" /></SelectTrigger>
               <SelectContent>
@@ -262,7 +255,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           </div>
           <div className="space-y-2">
             <Label htmlFor="conditionOperator">Operator</Label>
-            {/* NEW: Disable based on plan */}
             <Select value={conditionOperator} onValueChange={setConditionOperator} disabled={!isAdmin || !canAccessAutomation}>
               <SelectTrigger id="conditionOperator"><SelectValue placeholder="Select operator" /></SelectTrigger>
               <SelectContent>
@@ -292,11 +284,9 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 placeholder="e.g., 10"
                 min="0"
                 step={["unitCost", "retailPrice"].includes(conditionField) ? "0.01" : "1"}
-                // NEW: Disable based on plan
                 disabled={!isAdmin || !canAccessAutomation}
               />
             ) : conditionField === "status" ? (
-              // NEW: Disable based on plan
               <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}>
                 <SelectTrigger id="conditionValue"><SelectValue placeholder="Select status" /></SelectTrigger>
                 <SelectContent>
@@ -306,7 +296,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 </SelectContent>
               </Select>
             ) : conditionField === "category" ? (
-              // NEW: Disable based on plan
               <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}>
                 <SelectTrigger id="conditionValue"><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
@@ -314,7 +303,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 </SelectContent>
               </Select>
             ) : conditionField === "folderId" ? (
-              // NEW: Disable based on plan
               <Select value={conditionValue} onValueChange={setConditionValue} disabled={!isAdmin || !canAccessAutomation}>
                 <SelectTrigger id="conditionValue"><SelectValue placeholder="Select folder" /></SelectTrigger>
                 <SelectContent>
@@ -339,7 +327,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
               value={actionNotificationMessage}
               onChange={(e) => setActionNotificationMessage(e.target.value)}
               placeholder="e.g., Item {itemName} is critically low in stock!"
-              // NEW: Disable based on plan
               disabled={!isAdmin || !canAccessAutomation}
             />
             <p className="text-xs text-muted-foreground">
@@ -352,7 +339,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionEmailTo">Recipient <span className="text-red-500">*</span></Label>
-              {/* NEW: Disable based on plan */}
               <Select value={actionEmailTo} onValueChange={setActionEmailTo} disabled={!isAdmin || !canAccessAutomation}>
                 <SelectTrigger id="actionEmailTo"><SelectValue placeholder="Select recipient" /></SelectTrigger>
                 <SelectContent>
@@ -368,7 +354,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                   onChange={(e) => setActionEmailTo(e.target.value)}
                   placeholder="e.g., alerts@yourcompany.com"
                   className="mt-2"
-                  // NEW: Disable based on plan
                   disabled={!isAdmin || !canAccessAutomation}
                 />
               )}
@@ -380,7 +365,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 value={actionEmailSubject}
                 onChange={(e) => setActionEmailSubject(e.target.value)}
                 placeholder="e.g., Low Stock Alert: {itemName}"
-                // NEW: Disable based on plan
                 disabled={!isAdmin || !canAccessAutomation}
               />
             </div>
@@ -392,7 +376,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionEmailBody(e.target.value)}
                 placeholder="e.g., Dear team, item {itemName} (SKU: {sku}) is now at {quantity} units."
                 rows={4}
-                // NEW: Disable based on plan
                 disabled={!isAdmin || !canAccessAutomation}
               />
               <p className="text-xs text-muted-foreground">
@@ -406,7 +389,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
           <>
             <div className="space-y-2">
               <Label htmlFor="actionCreatePoItemId">Item to Order <span className="text-red-500">*</span></Label>
-              {/* NEW: Disable based on plan */}
               <Select value={actionCreatePoItemId} onValueChange={setActionCreatePoItemId} disabled={!isAdmin || !canAccessAutomation}>
                 <SelectTrigger id="actionCreatePoItemId"><SelectValue placeholder="Select item" /></SelectTrigger>
                 <SelectContent>
@@ -427,7 +409,6 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
                 onChange={(e) => setActionCreatePoQuantity(e.target.value)}
                 placeholder="e.g., 100"
                 min="1"
-                // NEW: Disable based on plan
                 disabled={!isAdmin || !canAccessAutomation}
               />
             </div>
