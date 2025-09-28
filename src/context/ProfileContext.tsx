@@ -77,11 +77,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processing user ID: ${data.id}, Raw company_logo_url from DB: ${companyData?.company_logo_url}`);
 
+    // NEW: Check if company_logo_url is already a public URL before converting
+    const finalCompanyLogoUrl = companyData?.company_logo_url
+      ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
+      : undefined;
+
     const companyProfile: CompanyProfile | undefined = companyData ? {
       companyName: companyData.name,
       companyCurrency: companyData.currency,
       companyAddress: companyData.address,
-      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined, // Convert internal path to public URL
+      companyLogoUrl: finalCompanyLogoUrl, // Use the intelligently determined URL
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,

@@ -96,6 +96,11 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
 
     console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Processing item ID: ${item.id}, Raw image_url from DB: ${item.image_url}`);
 
+    // NEW: Check if image_url is already a public URL before converting
+    const finalImageUrl = item.image_url
+      ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
+      : undefined;
+
     return {
       id: item.id,
       name: item.name || "",
@@ -117,7 +122,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       notes: item.notes || undefined,
       status: item.status || "In Stock",
       lastUpdated: lastUpdatedString,
-      imageUrl: item.image_url ? getPublicUrlFromSupabase(item.image_url, 'inventory-images') : undefined, // Convert internal path to public URL
+      imageUrl: finalImageUrl, // Use the intelligently determined URL
       vendorId: item.vendor_id || undefined,
       barcodeUrl: item.barcode_url || undefined,
       organizationId: item.organization_id,

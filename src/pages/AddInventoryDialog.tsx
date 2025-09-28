@@ -203,7 +203,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       !finalMainFolderId || finalMainFolderId === "no-folders" ||
       !finalPickingBinFolderId || finalPickingBinFolderId === "no-folders" ||
       categories.length === 0 ||
-      (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
+      (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity)))
     ) {
       showError("Please fill in all required fields with valid numbers.");
       setIsAddingItem(false); // Reset loading state
