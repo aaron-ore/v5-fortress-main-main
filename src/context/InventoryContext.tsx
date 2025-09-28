@@ -50,6 +50,8 @@ export interface InventoryItem {
   autoReorderEnabled: boolean;
   autoReorderQuantity: number;
   createdAt: string; // Added createdAt
+  shopifyProductId?: string; // NEW: Shopify Product ID
+  shopifyVariantId?: string; // NEW: Shopify Variant ID
 }
 
 interface InventoryContextType {
@@ -99,7 +101,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     // NEW: Check if image_url is already a public URL before converting
     const finalImageUrl = item.image_url
       ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
-      : null; // Explicitly null if no URL or conversion fails
+      : null;
     
     console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: "${finalImageUrl}" (Type: ${typeof finalImageUrl})`);
 
@@ -131,6 +133,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       autoReorderEnabled: item.auto_reorder_enabled || false,
       autoReorderQuantity: isNaN(autoReorderQuantity) ? 0 : autoReorderQuantity,
       createdAt: createdAtString,
+      shopifyProductId: item.shopify_product_id || undefined, // NEW: Map Shopify Product ID
+      shopifyVariantId: item.shopify_variant_id || undefined, // NEW: Map Shopify Variant ID
     };
   };
 
@@ -242,7 +246,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt" | "imageUrl"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
@@ -288,6 +292,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         auto_reorder_enabled: item.autoReorderEnabled,
         auto_reorder_quantity: item.autoReorderQuantity,
         created_at: createdAt,
+        shopify_product_id: item.shopifyProductId, // NEW: Insert Shopify Product ID
+        shopify_variant_id: item.shopifyVariantId, // NEW: Insert Shopify Variant ID
       })
       .select();
 
@@ -351,6 +357,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         barcode_url: updatedItem.barcodeUrl,
         auto_reorder_enabled: updatedItem.autoReorderEnabled,
         auto_reorder_quantity: updatedItem.autoReorderQuantity,
+        shopify_product_id: updatedItem.shopifyProductId, // NEW: Update Shopify Product ID
+        shopify_variant_id: updatedItem.shopifyVariantId, // NEW: Update Shopify Variant ID
       })
       .eq("id", updatedItem.id)
       .eq("organization_id", profile.organizationId)

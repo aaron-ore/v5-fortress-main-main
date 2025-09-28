@@ -308,7 +308,8 @@ const Integrations: React.FC = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('sync-shopify-products', {
+      // NEW: Call the new sync-shopify-data Edge Function
+      const { data, error } = await supabase.functions.invoke('sync-shopify-data', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
