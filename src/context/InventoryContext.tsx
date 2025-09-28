@@ -18,7 +18,6 @@ import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
-import { logActivity } from "@/utils/logActivity";
 import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
 
@@ -246,8 +245,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const lastUpdated = new Date().toISOString();
     const createdAt = new Date().toISOString();
 
-    // Convert public URL to internal path for database storage
-    const internalImageUrl = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') : undefined;
+    // item.imageUrl is expected to be the INTERNAL PATH from uploadFileToSupabase
+    const internalImageUrl = item.imageUrl; 
+    console.log("[InventoryContext] addInventoryItem: Image URL for DB (internal path):", internalImageUrl);
 
     const { data, error } = await supabase
       .from("inventory_items")
@@ -311,8 +311,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const newStatus = totalQuantity > updatedItem.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
     const lastUpdated = new Date().toISOString().split('T')[0];
 
-    // Convert public URL to internal path for database storage
-    const internalImageUrl = updatedItem.imageUrl ? getFilePathFromPublicUrl(updatedItem.imageUrl, 'inventory-images') : undefined;
+    // updatedItem.imageUrl is expected to be the INTERNAL PATH or undefined
+    const internalImageUrl = updatedItem.imageUrl;
+    console.log("[InventoryContext] updateInventoryItem: Image URL for DB (internal path):", internalImageUrl);
 
     const { data, error } = await supabase
       .from("inventory_items")

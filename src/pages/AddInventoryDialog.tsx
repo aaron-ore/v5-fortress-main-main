@@ -239,12 +239,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
-    let finalImageUrl: string | undefined = undefined; // This will be the PUBLIC URL
+    let finalImageUrl: string | undefined = undefined; // This will be the INTERNAL PATH
     if (imageFile) {
       setIsUploadingImage(true);
       try {
-        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns PUBLIC URL
-        console.log("[AddInventoryDialog] Uploaded image URL:", finalImageUrl);
+        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns INTERNAL PATH
+        console.log("[AddInventoryDialog] Uploaded image internal path:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading product image:", error);
@@ -257,7 +257,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       }
     }
 
-    console.log("[AddInventoryDialog] Adding item with imageUrl:", finalImageUrl);
+    console.log("[AddInventoryDialog] Adding item with imageUrl (internal path):", finalImageUrl);
     const newItem = {
       name: itemName.trim(),
       description: description.trim(),
@@ -273,7 +273,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
-      imageUrl: finalImageUrl, // Pass PUBLIC URL to context
+      imageUrl: finalImageUrl, // Pass INTERNAL PATH to context
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,

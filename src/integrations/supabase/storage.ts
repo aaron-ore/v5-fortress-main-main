@@ -2,11 +2,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Uploads a file to a specified Supabase Storage bucket and returns its public URL.
+ * Uploads a file to a specified Supabase Storage bucket and returns its internal file path.
  * @param file The File object to upload.
  * @param bucketName The name of the Supabase Storage bucket.
  * @param folderPath The path within the bucket (e.g., 'avatars/', 'company-logos/').
- * @returns A promise that resolves with the public URL of the uploaded file.
+ * @returns A promise that resolves with the internal file path of the uploaded file.
  * @throws An error if the upload fails.
  */
 export const uploadFileToSupabase = async (file: File, bucketName: string, folderPath: string = ''): Promise<string> => {
@@ -18,6 +18,8 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
   const fileName = `${uuidv4()}.${fileExtension}`;
   const filePath = `${folderPath}${fileName}`; // This is the internal path
 
+  console.log(`[Storage] Uploading file to bucket: ${bucketName}, path: ${filePath}`);
+
   const { error } = await supabase.storage
     .from(bucketName)
     .upload(filePath, file, {
@@ -26,13 +28,12 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
     });
 
   if (error) {
-    console.error("Supabase file upload error:", error);
+    console.error("[Storage] Supabase file upload error:", error);
     throw new Error(`Failed to upload file: ${error.message}`);
   }
 
-  // Return the public URL directly
-  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
-  return data.publicUrl;
+  console.log(`[Storage] File uploaded successfully. Internal path: ${filePath}`);
+  return filePath; // Return the internal file path
 };
 
 /**
@@ -43,9 +44,16 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
  * @returns The file path within the bucket, or null if not found.
  */
 export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string): string | null => {
+  // Ensure publicUrl is actually a URL and contains the bucket name
+  if (!publicUrl || !publicUrl.includes(`/${bucketName}/`)) {
+    console.warn(`[Storage] getFilePathFromPublicUrl: Invalid publicUrl or bucketName mismatch. Public URL: ${publicUrl}, Bucket: ${bucketName}`);
+    return null;
+  }
   const regex = new RegExp(`/${bucketName}/(.+)`);
   const match = publicUrl.match(regex);
-  return match ? match[1] : null;
+  const filePath = match ? match[1] : null;
+  console.log(`[Storage] getFilePathFromPublicUrl: Public URL: ${publicUrl}, Extracted internal path: ${filePath}`);
+  return filePath;
 };
 
 /**
@@ -55,6 +63,12 @@ export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string):
  * @returns The full public URL of the file.
  */
 export const getPublicUrlFromSupabase = (filePath: string, bucketName: string): string => {
+  // Ensure filePath is not already a public URL
+  if (filePath.startsWith('http')) {
+    console.warn(`[Storage] getPublicUrlFromSupabase: filePath already looks like a public URL. Returning as is. FilePath: ${filePath}`);
+    return filePath;
+  }
   const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  console.log(`[Storage] getPublicUrlFromSupabase: Internal path: ${filePath}, Generated public URL: ${data.publicUrl}`);
   return data.publicUrl;
 };

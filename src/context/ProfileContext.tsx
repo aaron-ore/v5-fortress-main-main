@@ -277,16 +277,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    // `updates.companyLogoUrl` is expected to be a public URL or undefined/null from Settings.tsx
-    // Convert it to an internal path for database storage
-    const internalCompanyLogoPath = updates.companyLogoUrl ? getFilePathFromPublicUrl(updates.companyLogoUrl, 'company-logos') : undefined;
-    console.log("[ProfileContext] updateCompanyProfile: Converted public URL to internal path for DB:", internalCompanyLogoPath);
+    // updates.companyLogoUrl is expected to be the INTERNAL PATH or undefined from Settings.tsx
+    const companyLogoUrlForDb = updates.companyLogoUrl === null ? undefined : updates.companyLogoUrl;
+    console.log("[ProfileContext] updateCompanyProfile: Final companyLogoUrlForDb before DB update (internal path):", companyLogoUrlForDb);
 
     const payload: any = {
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: internalCompanyLogoPath, // Store internal path
+      company_logo_url: companyLogoUrlForDb, // Store internal path
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId,
       stripe_subscription_id: updates.stripeSubscriptionId,

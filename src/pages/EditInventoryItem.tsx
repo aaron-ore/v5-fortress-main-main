@@ -224,47 +224,50 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined; // This will be the PUBLIC URL to pass to context
+    let finalImageUrlForDb: string | undefined; // This will be the INTERNAL PATH to pass to context
+
+    console.log("[EditInventoryItem] onSubmit: Starting image processing.");
+    console.log("[EditInventoryItem] onSubmit: Current item.imageUrl (public from context):", item.imageUrl);
+    console.log("[EditInventoryItem] onSubmit: imageFile (new file selected):", imageFile);
+    console.log("[EditInventoryItem] onSubmit: isImageCleared (explicitly cleared):", isImageCleared);
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
+        console.log("[EditInventoryItem] onSubmit: New image file detected.");
         // If there was an existing image, delete it first
         if (item.imageUrl) { // item.imageUrl is already a PUBLIC URL from context
           const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
+            console.log("[EditInventoryItem] onSubmit: Deleting old image from storage. Internal path:", internalPathToDelete);
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
-            if (deleteError) {
-              console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`);
-            } else {
-              showSuccess("Old image deleted from storage.");
-            }
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            else showSuccess("Old image deleted from storage.");
           }
         }
-        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns PUBLIC URL
+        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns INTERNAL PATH
         showSuccess("Product image uploaded successfully!");
+        console.log("[EditInventoryItem] onSubmit: New image uploaded. Internal path for DB:", finalImageUrlForDb);
       } else if (isImageCleared) {
-        // If the image was explicitly cleared, delete the old one if it exists
+        console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
         if (item.imageUrl) { // item.imageUrl is already a PUBLIC URL from context
           const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
+            console.log("[EditInventoryItem] onSubmit: Deleting old image from storage due to clear. Internal path:", internalPathToDelete);
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
-            if (deleteError) {
-              console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`);
-            } else {
-              showSuccess("Old image deleted from storage.");
-            }
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            else showSuccess("Old image deleted from storage.");
           }
         }
         finalImageUrlForDb = undefined; // Set to undefined to clear the image_url in DB
+        console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to undefined (image cleared).");
       } else {
-        // No new file, not explicitly cleared. Keep existing image URL (which is already public).
-        finalImageUrlForDb = item.imageUrl;
+        // No new file, not explicitly cleared. Keep existing image's internal path.
+        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || undefined : undefined;
+        console.log("[EditInventoryItem] onSubmit: No image change. Keeping existing internal path:", finalImageUrlForDb);
       }
     } catch (error: any) {
-      console.error("Error processing product image:", error);
+      console.error("[EditInventoryItem] onSubmit: Error processing product image:", error);
       showError(`Failed to process product image: ${error.message}`);
       setIsSaving(false);
       setIsUploadingImage(false);
@@ -288,14 +291,14 @@ const EditInventoryItem = () => {
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb, // Pass PUBLIC URL to context
+        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH to context
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
       showSuccess("Inventory item updated successfully!");
       await refreshInventory();
     } catch (error: any) {
-      console.error("Failed to update inventory item:", error);
+      console.error("[EditInventoryItem] onSubmit: Failed to update inventory item:", error);
       showError(`Failed to update item: ${error.message}`);
     } finally {
       setIsSaving(false);
