@@ -26,7 +26,7 @@ serve(async (req) => {
         requestBody = JSON.parse(rawBody); // Then parse manually
       } catch (parseError: any) { // NEW: Catch parsing errors
         console.error('Edge Function: JSON parse error:', parseError.message);
-        console.error('Edge Function: Raw body that failed to parse:', rawBody);
+        console.error('Edge Function: Raw body that failed to parse:', rawError);
         throw new Error(`Failed to parse request body as JSON: ${parseError.message}`);
       }
     } else {
@@ -56,7 +56,7 @@ serve(async (req) => {
     console.log('Edge Function: GEMINI_API_KEY is present.');
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY); // Simplified constructor
-    const model = genAI.getGenerativeModel({ model: "text-bison-001" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Changed model to gemini-pro
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
