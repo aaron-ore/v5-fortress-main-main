@@ -18,6 +18,7 @@ import { useVendors } from "./VendorContext";
 import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { logActivity } from "@/utils/logActivity"; // FIXED: Added missing import
 import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
 

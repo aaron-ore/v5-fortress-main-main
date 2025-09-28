@@ -131,7 +131,7 @@ const Settings: React.FC = () => {
       console.log("[Settings] handleSaveCompanyProfile: Final companyLogoUrlForDb before calling updateCompanyProfile:", finalCompanyLogoUrlForDb);
 
     } catch (error: any) {
-      console.error("[Settings] handleSaveCompanyProfile: Error processing company logo:", error);
+      console.error("Error processing company logo:", error);
       showError(`Failed to process company logo: ${error.message}`);
       setIsSavingCompanyProfile(false);
       setIsUploadingImage(false);
