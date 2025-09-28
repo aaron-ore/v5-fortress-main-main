@@ -44,15 +44,17 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
  * @returns The file path within the bucket, or null if not found.
  */
 export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string): string | null => {
+  console.log(`[Storage] getFilePathFromPublicUrl called. Public URL: "${publicUrl}", Bucket: "${bucketName}"`);
   // Ensure publicUrl is actually a URL and contains the bucket name
   if (!publicUrl || !publicUrl.includes(`/${bucketName}/`)) {
-    console.warn(`[Storage] getFilePathFromPublicUrl: Invalid publicUrl or bucketName mismatch. Public URL: ${publicUrl}, Bucket: ${bucketName}`);
+    console.warn(`[Storage] getFilePathFromPublicUrl: Invalid publicUrl or bucketName mismatch. Returning null.`);
     return null;
   }
   const regex = new RegExp(`/${bucketName}/(.+)`);
   const match = publicUrl.match(regex);
+  console.log(`[Storage] getFilePathFromPublicUrl: Regex match result:`, match);
   const filePath = match ? match[1] : null;
-  console.log(`[Storage] getFilePathFromPublicUrl: Public URL: ${publicUrl}, Extracted internal path: ${filePath}`);
+  console.log(`[Storage] getFilePathFromPublicUrl: Extracted internal path: ${filePath}`);
   return filePath;
 };
 
@@ -63,6 +65,7 @@ export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string):
  * @returns The full public URL of the file.
  */
 export const getPublicUrlFromSupabase = (filePath: string, bucketName: string): string => {
+  console.log(`[Storage] getPublicUrlFromSupabase called. FilePath: "${filePath}", Bucket: "${bucketName}"`);
   // Ensure filePath is not already a public URL
   if (filePath.startsWith('http')) {
     console.warn(`[Storage] getPublicUrlFromSupabase: filePath already looks like a public URL. Returning as is. FilePath: ${filePath}`);
