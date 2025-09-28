@@ -5,7 +5,11 @@ const ERROR_THRESHOLD = 3; // Number of consecutive errors before showing a summ
 let summaryErrorToastId: string | number | null = null; // ID of the persistent summary error toast
 const activeToastIds: Set<string | number> = new Set(); // Track all active toast IDs
 
-const showToast = (type: 'success' | 'error', message: string, options?: any) => {
+const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, options?: any) => { // Added 'info' and 'warning' types
+  // Dismiss all currently active toasts before showing a new one
+  activeToastIds.forEach(id => toast.dismiss(id));
+  activeToastIds.clear();
+
   const id = toast[type](message, {
     ...options,
     onDismiss: (dismissedId: string | number) => {
@@ -64,6 +68,27 @@ export const showError = (message: string) => {
     // Show individual error toast
     showToast('error', message);
   }
+};
+
+// NEW: Added showInfo and showWarning to use the single toast logic
+export const showInfo = (message: string) => {
+  if (summaryErrorToastId !== null) {
+    toast.dismiss(summaryErrorToastId);
+    summaryErrorToastId = null;
+    consecutiveErrorCount = 0;
+  }
+  consecutiveErrorCount = 0;
+  showToast('info', message);
+};
+
+export const showWarning = (message: string) => {
+  if (summaryErrorToastId !== null) {
+    toast.dismiss(summaryErrorToastId);
+    summaryErrorToastId = null;
+    consecutiveErrorCount = 0;
+  }
+  consecutiveErrorCount = 0;
+  showToast('warning', message);
 };
 
 export const dismissToast = (toastId: string | number) => {
