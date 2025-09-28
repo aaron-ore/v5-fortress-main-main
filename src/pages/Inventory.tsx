@@ -210,11 +210,22 @@ const Inventory: React.FC = () => {
     return inventoryFolders.filter(folder => !folder.parentId);
   }, [inventoryFolders]);
 
+  // RECURSIVE FUNCTION TO GET ALL ITEMS IN A FOLDER AND ITS SUBFOLDERS
+  const getItemsInFolderRecursive = useCallback((folderId: string, allItems: InventoryItem[], allFolders: InventoryFolder[]): InventoryItem[] => {
+    let items = allItems.filter(item => item.folderId === folderId);
+    const directSubfolders = allFolders.filter(folder => folder.parentId === folderId);
+
+    for (const subfolder of directSubfolders) {
+      items = items.concat(getItemsInFolderRecursive(subfolder.id, allItems, allFolders));
+    }
+    return items;
+  }, []);
+
   const getFolderItemCounts = useCallback((folderId: string) => {
-    const items = inventoryItems.filter(item => item.folderId === folderId);
-    const subfolders = inventoryFolders.filter(folder => folder.parentId === folderId);
-    return { itemCount: items.length, subfolderCount: subfolders.length };
-  }, [inventoryItems, inventoryFolders]);
+    const itemsInFolderAndSubfolders = getItemsInFolderRecursive(folderId, inventoryItems, inventoryFolders);
+    const directSubfolders = inventoryFolders.filter(folder => folder.parentId === folderId);
+    return { itemCount: itemsInFolderAndSubfolders.length, subfolderCount: directSubfolders.length };
+  }, [inventoryItems, inventoryFolders, getItemsInFolderRecursive]);
 
   const filteredItems = useMemo(() => {
     return inventoryItems
@@ -269,7 +280,7 @@ const Inventory: React.FC = () => {
   };
 
   const handleCreateOrder = useCallback((item: InventoryItem) => {
-    showError(`Create order for ${item.name} (placeholder)`);
+    showError(`Create order for ${item.name} (feature not implemented yet)`);
   }, []);
 
   const navigateToFolder = useCallback((folderId: string) => {
