@@ -34,7 +34,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
 // Removed parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts
-import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getFilePathFromPublicUrl, getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
@@ -146,7 +146,7 @@ const EditInventoryItem = () => {
     if (!item && id) {
       setItemNotFound(true);
     } else if (item) {
-      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl:", item.imageUrl);
+      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl (from DB):", item.imageUrl);
       setItemNotFound(false);
       form.reset({
         ...item,
@@ -157,7 +157,15 @@ const EditInventoryItem = () => {
       // Removed setMainLocationParts and setPickingBinLocationParts
 
       setImageFile(null);
-      setImageUrlPreview(item.imageUrl || null); // Ensure preview reflects current item.imageUrl
+      // Convert internal path to public URL for preview
+      if (item.imageUrl) {
+        const publicUrl = getPublicUrlFromSupabase(item.imageUrl, 'inventory-images');
+        setImageUrlPreview(publicUrl);
+        console.log("[EditInventoryItem] Setting imageUrlPreview from item.imageUrl (converted to public URL):", publicUrl);
+      } else {
+        setImageUrlPreview(null);
+        console.log("[EditInventoryItem] item.imageUrl is null, setting imageUrlPreview to null.");
+      }
       setIsImageCleared(false);
 
       const updateQrCode = async () => {
@@ -204,17 +212,17 @@ const EditInventoryItem = () => {
         const reader = new FileReader();
         reader.onloadend = () => {
           setImageUrlPreview(reader.result as string);
-          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to:", reader.result);
+          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to (base64):", (reader.result as string).substring(0, 100) + '...');
         };
         reader.readAsDataURL(file);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
-        setImageUrlPreview(item?.imageUrl || null);
+        setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
       }
     } else {
       setImageFile(null);
-      setImageUrlPreview(item?.imageUrl || null);
+      setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
     }
   };
 
@@ -236,42 +244,43 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrl: string | undefined = item.imageUrl;
-    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrl (from item):", finalImageUrl);
+    let finalImageUrl: string | undefined = item.imageUrl; // This will store the INTERNAL path
+
+    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrl (from item, internal path):", finalImageUrl);
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
         if (item.imageUrl) {
-          console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one.");
-          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
-          console.log("[EditInventoryItem] onSubmit: Old image file path:", oldFilePath);
+          console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one from storage.");
+          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // item.imageUrl should be internal path
+          console.log("[EditInventoryItem] onSubmit: Old image file path for deletion:", oldFilePath);
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) {
               console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`); // NEW: Show error for storage deletion
+              showError(`Failed to delete old image from storage: ${deleteError.message}`);
             } else {
-              showSuccess("Old image deleted from storage."); // NEW: Success for storage deletion
+              showSuccess("Old image deleted from storage.");
             }
           }
         }
-        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrl set to:", finalImageUrl);
+        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // This returns INTERNAL path
+        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrl (internal path) set to:", finalImageUrl);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
-        if (item.imageUrl) {
+        if (item.imageUrl) { // item.imageUrl should be internal path
           console.log("[EditInventoryItem] onSubmit: Existing image URL found, attempting to delete from storage.");
-          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
-          console.log("[EditInventoryItem] onSubmit: Old image file path for cleared image:", oldFilePath);
+          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // item.imageUrl should be internal path
+          console.log("[EditInventoryItem] onSubmit: Old image file path for cleared image deletion:", oldFilePath);
           if (oldFilePath) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
             if (deleteError) {
               console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`); // NEW: Show error for storage deletion
+              showError(`Failed to delete old image from storage: ${deleteError.message}`);
             } else {
-              showSuccess("Old image deleted from storage."); // NEW: Success for storage deletion
+              showSuccess("Old image deleted from storage.");
             }
           }
         }
@@ -291,29 +300,27 @@ const EditInventoryItem = () => {
     try {
       const finalBarcodeValue = values.sku || undefined;
 
-      // Removed location string building logic
-
       if (!values.folderId || values.folderId === "no-folders") { // Validate folderId
         showError("Please select a folder for the item.");
         setIsSaving(false);
         return;
       }
 
-      console.log("[EditInventoryItem] onSubmit: Updating item in DB with imageUrl:", finalImageUrl);
+      console.log("[EditInventoryItem] onSubmit: Updating item in DB with finalImageUrl (internal path):", finalImageUrl);
       await updateInventoryItem({
         ...item,
         ...values,
         folderId: values.folderId, // Updated to folderId
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean), // Process tags
         notes: values.notes, // Process notes
-        imageUrl: finalImageUrl,
+        imageUrl: finalImageUrl, // This is the INTERNAL path
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
       showSuccess("Inventory item updated successfully!");
-      await refreshInventory(); // NEW: Explicitly refresh inventory
+      await refreshInventory(); // Explicitly refresh inventory to get latest data, including image URL
       console.log("[EditInventoryItem] onSubmit: refreshInventory() called.");
-      // Removed: navigate("/inventory"); // Keep on current page
+      // The useEffect that depends on 'item' will re-run and update imageUrlPreview correctly.
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
       showError(`Failed to update item: ${error.message}`);
@@ -712,40 +719,40 @@ const EditInventoryItem = () => {
                     />
                   </FormControl>
                 </FormItem>
+            )}
+          />
+          {form.watch("autoReorderEnabled") && (
+            <FormField
+              control={form.control}
+              name="autoReorderQuantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                  </FormControl>
+                  <FormDescription>
+                    This quantity will be ordered when stock drops to or below the overall reorder level.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-            {form.watch("autoReorderEnabled") && (
-              <FormField
-                control={form.control}
-                name="autoReorderQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantity to Auto-Reorder</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormDescription>
-                      This quantity will be ordered when stock drops to or below the overall reorder level.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
+          )}
+        </div>
 
-          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
-            {isSaving || isUploadingImage ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
-        </form>
-      </Form>
-    </div>
+        <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
+          {isSaving || isUploadingImage ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+            </>
+          ) : (
+            "Save Changes"
+          )}
+        </Button>
+      </form>
+    </Form>
+  </div>
   );
 };
 

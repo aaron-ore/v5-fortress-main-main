@@ -46,3 +46,14 @@ export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string):
   const match = publicUrl.match(regex);
   return match ? match[1] : null;
 };
+
+/**
+ * Generates the public URL for a file given its internal path and bucket name.
+ * @param filePath The internal path of the file within the bucket (e.g., 'items/uuid.png').
+ * @param bucketName The name of the Supabase Storage bucket.
+ * @returns The full public URL of the file.
+ */
+export const getPublicUrlFromSupabase = (filePath: string, bucketName: string): string => {
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  return data.publicUrl;
+};
