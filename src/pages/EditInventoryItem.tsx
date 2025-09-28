@@ -32,12 +32,10 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { uploadFileToSupabase, getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { uploadFileToSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
-
-void getPublicUrlFromSupabase; // Suppress TS6133: 'getPublicUrlFromSupabase' is declared but its value is never read.
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -55,7 +53,7 @@ const formSchema = z.object({
   folderId: z.string().min(1, "Folder is required"),
   tags: z.string().optional(),
   notes: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")), // This is a PUBLIC URL
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).or(z.literal(null)), // Allow null
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
@@ -98,7 +96,7 @@ const EditInventoryItem = () => {
           vendorId: item.vendorId || "null-vendor",
           tags: item.tags?.join(', ') || "",
           notes: item.notes || "",
-          imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
+          imageUrl: item.imageUrl || null, // Ensure this is the public URL or null
         };
         console.log("[EditInventoryItem] useForm defaultValues memo: item.imageUrl (from context):", item.imageUrl, "defaultVals.imageUrl:", defaultVals.imageUrl);
         return defaultVals;
@@ -107,7 +105,7 @@ const EditInventoryItem = () => {
         name: "", description: "", sku: "", category: "",
         pickingBinQuantity: 0, overstockQuantity: 0, reorderLevel: 0, pickingReorderLevel: 0,
         committedStock: 0, incomingStock: 0, unitCost: 0, retailPrice: 0,
-        folderId: "", tags: "", notes: "", imageUrl: "", vendorId: "null-vendor",
+        folderId: "", tags: "", notes: "", imageUrl: null, vendorId: "null-vendor", // Set to null
         autoReorderEnabled: false, autoReorderQuantity: 0,
       };
     }, [item]),
@@ -125,7 +123,7 @@ const EditInventoryItem = () => {
         vendorId: item.vendorId || "null-vendor",
         tags: item.tags?.join(', ') || "",
         notes: item.notes || "",
-        imageUrl: item.imageUrl || "", // Ensure this is the public URL or empty string
+        imageUrl: item.imageUrl || null, // Ensure this is the public URL or null
       };
       console.log("[EditInventoryItem] useEffect: Resetting form with resetValues.imageUrl:", resetValues.imageUrl);
       form.reset(resetValues);
@@ -197,10 +195,10 @@ const EditInventoryItem = () => {
 
   const handleClearImage = () => {
     setImageFile(null);
-    setImageUrlPreview(undefined); // Explicitly set to undefined
+    setImageUrlPreview(null); // Explicitly set to null
     setIsImageCleared(true); // Mark that the image was explicitly cleared
     showSuccess("Image cleared. Save changes to apply.");
-    console.log("[EditInventoryItem] handleClearImage: Image explicitly cleared. imageUrlPreview set to undefined. isImageCleared:", true);
+    console.log("[EditInventoryItem] handleClearImage: Image explicitly cleared. imageUrlPreview set to null. isImageCleared:", true);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -213,7 +211,7 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined; // This will be the INTERNAL PATH or undefined
+    let finalImageUrlForDb: string | null | undefined; // This will be the INTERNAL PATH or null
 
     console.log("[EditInventoryItem] onSubmit: Starting image processing.");
     console.log("[EditInventoryItem] onSubmit: Current item.imageUrl (public from context):", item.imageUrl);
@@ -248,11 +246,11 @@ const EditInventoryItem = () => {
             else showSuccess("Old image deleted from storage.");
           }
         }
-        finalImageUrlForDb = undefined; // Set to undefined to clear the image_url in DB
-        console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to undefined (image cleared).");
+        finalImageUrlForDb = null; // Set to null to explicitly clear the image_url in DB
+        console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to null (image cleared).");
       } else {
         // No new file, not explicitly cleared. Keep existing image's internal path.
-        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || undefined : undefined;
+        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') : null; // Ensure it's null if no image
         console.log("[EditInventoryItem] onSubmit: No image change. Keeping existing internal path:", finalImageUrlForDb);
       }
     } catch (error: any) {
@@ -280,7 +278,7 @@ const EditInventoryItem = () => {
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH or undefined to context
+        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH or null to context
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
@@ -692,7 +690,7 @@ const EditInventoryItem = () => {
                 name="autoReorderQuantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity to Auto-Reorder</Label>
+                    <FormLabel>Quantity to Auto-Reorder</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
                     </FormControl>
