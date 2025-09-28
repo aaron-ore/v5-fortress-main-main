@@ -100,6 +100,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const finalImageUrl = item.image_url
       ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
       : undefined;
+    
+    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: ${finalImageUrl}`);
 
     return {
       id: item.id,

@@ -63,13 +63,13 @@ const Settings: React.FC = () => {
         setCompanyLogoFile(null);
         // Revert preview to current logo if invalid file selected
         setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
-        console.log("[Settings] handleFileChange: Invalid file type. Reverting preview.");
+        console.log("[Settings] handleFileChange: Invalid file type. Reverting preview to:", profile?.companyProfile?.companyLogoUrl || undefined);
       }
     } else {
       setCompanyLogoFile(null);
       // Revert preview to current logo if file input cleared without selection
       setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
-      console.log("[Settings] handleFileChange: File input cleared without selection. Reverting preview.");
+      console.log("[Settings] handleFileChange: File input cleared without selection. Reverting preview to:", profile?.companyProfile?.companyLogoUrl || undefined);
     }
   };
 
@@ -78,7 +78,7 @@ const Settings: React.FC = () => {
     setCompanyLogoUrlPreview(undefined); // Set to undefined to clear preview
     setIsLogoCleared(true); // Mark that the logo was intentionally cleared
     showSuccess("Logo cleared. Save changes to apply.");
-    console.log("[Settings] handleClearLogo: Logo explicitly cleared. isLogoCleared:", true);
+    console.log("[Settings] handleClearLogo: Logo explicitly cleared. imageUrlPreview set to undefined. isLogoCleared:", true);
   };
 
   const handleSaveCompanyProfile = async () => {

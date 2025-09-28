@@ -83,7 +83,7 @@ const EditInventoryItem = () => {
 
   const item = useMemo(() => {
     const foundItem = inventoryItems.find((i) => i.id === id);
-    console.log("[EditInventoryItem] useMemo: Item found:", foundItem ? foundItem.id : "none", "imageUrl:", foundItem?.imageUrl);
+    console.log("[EditInventoryItem] useMemo: Item found:", foundItem ? foundItem.id : "none", "item.imageUrl (from context):", foundItem?.imageUrl);
     return foundItem;
   }, [inventoryItems, id]);
 
@@ -92,19 +92,27 @@ const EditInventoryItem = () => {
     defaultValues: useMemo(() => {
       if (item) {
         const defaultVals = {
-          // ... other fields ...
+          ...item,
+          vendorId: item.vendorId || "null-vendor",
+          tags: item.tags?.join(', ') || "",
+          notes: item.notes || "",
           imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
-          // ...
         };
-        console.log("[EditInventoryItem] useForm defaultValues memo: item.imageUrl:", item.imageUrl, "defaultVals.imageUrl:", defaultVals.imageUrl);
+        console.log("[EditInventoryItem] useForm defaultValues memo: item.imageUrl (from context):", item.imageUrl, "defaultVals.imageUrl:", defaultVals.imageUrl);
         return defaultVals;
       }
-      // ...
+      return { // Default values for new item if item is null
+        name: "", description: "", sku: "", category: "",
+        pickingBinQuantity: 0, overstockQuantity: 0, reorderLevel: 0, pickingReorderLevel: 0,
+        committedStock: 0, incomingStock: 0, unitCost: 0, retailPrice: 0,
+        folderId: "", tags: "", notes: "", imageUrl: "", vendorId: "null-vendor",
+        autoReorderEnabled: false, autoReorderQuantity: 0,
+      };
     }, [item]),
   });
 
   useEffect(() => {
-    console.log("[EditInventoryItem] useEffect (item dependency) triggered. Current item:", item ? item.id : "none", "item.imageUrl:", item?.imageUrl);
+    console.log("[EditInventoryItem] useEffect (item dependency) triggered. Current item:", item ? item.id : "none", "item.imageUrl (from context):", item?.imageUrl);
     if (!item && id) {
       setItemNotFound(true);
       console.log("[EditInventoryItem] useEffect: Item not found, setting itemNotFound to true.");
@@ -117,9 +125,9 @@ const EditInventoryItem = () => {
         notes: item.notes || "",
         imageUrl: item.imageUrl || "", // Ensure this is the public URL or empty string
       };
+      console.log("[EditInventoryItem] useEffect: Resetting form with resetValues.imageUrl:", resetValues.imageUrl);
       form.reset(resetValues);
-      console.log("[EditInventoryItem] useEffect: Form reset with item.imageUrl:", item.imageUrl, "resetValues.imageUrl:", resetValues.imageUrl);
-
+      
       setImageFile(null);
       setImageUrlPreview(item.imageUrl || null); // This is the critical line for preview state
       setIsImageCleared(false);
@@ -176,12 +184,12 @@ const EditInventoryItem = () => {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
         setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if invalid file selected
-        console.log("[EditInventoryItem] handleImageFileChange: Invalid file type selected. Reverting preview.");
+        console.log("[EditInventoryItem] handleImageFileChange: Invalid file type selected. Reverting preview to:", item?.imageUrl || null);
       }
     } else {
       setImageFile(null);
       setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
-      console.log("[EditInventoryItem] handleImageFileChange: File input cleared without selection. Reverting preview.");
+      console.log("[EditInventoryItem] handleImageFileChange: File input cleared without selection. Reverting preview to:", item?.imageUrl || null);
     }
   };
 

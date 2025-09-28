@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react'; // Import useEffect
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,11 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
   previewUrl,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    console.log(`[CustomFileInput - ${id}] Rendered with previewUrl:`, previewUrl, `(Type: ${typeof previewUrl})`);
+    console.log(`[CustomFileInput - ${id}] Has active preview:`, !!previewUrl && previewUrl !== "");
+  }, [previewUrl, id]);
 
   const handleButtonClick = () => {
     if (fileInputRef.current && !disabled && !isUploading) {

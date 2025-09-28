@@ -150,7 +150,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     setImageFile(null);
     setImageUrlPreview(null);
     showSuccess("Image cleared. Add item to apply.");
-    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared.");
+    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared. imageUrlPreview set to null.");
   };
 
   const handleSubmit = async () => {

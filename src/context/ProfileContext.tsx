@@ -81,6 +81,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
       : undefined;
+    
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Final companyLogoUrl for context: ${finalCompanyLogoUrl}`);
 
     const companyProfile: CompanyProfile | undefined = companyData ? {
       companyName: companyData.name,
