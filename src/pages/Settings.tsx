@@ -78,7 +78,7 @@ const Settings: React.FC = () => {
     setCompanyLogoUrlPreview(undefined); // Set to undefined to clear preview
     setIsLogoCleared(true); // Mark that the logo was intentionally cleared
     showSuccess("Logo cleared. Save changes to apply.");
-    console.log("[Settings] handleClearLogo: Logo explicitly cleared. isLogoCleared:", true);
+    console.log("[Settings] handleClearLogo: Logo explicitly cleared. imageUrlPreview set to undefined. isLogoCleared:", true);
   };
 
   const handleSaveCompanyProfile = async () => {
@@ -88,7 +88,7 @@ const Settings: React.FC = () => {
     }
 
     setIsSavingCompanyProfile(true);
-    let finalCompanyLogoUrlForDb: string | undefined; // This will be the INTERNAL PATH to pass to context
+    let finalCompanyLogoUrlForDb: string | null | undefined; // This will be the INTERNAL PATH or null
 
     console.log("[Settings] handleSaveCompanyProfile: Initial profile.companyProfile.companyLogoUrl (public from context):", profile?.companyProfile?.companyLogoUrl);
     console.log("[Settings] handleSaveCompanyProfile: companyLogoFile (new file selected):", companyLogoFile);
@@ -121,11 +121,11 @@ const Settings: React.FC = () => {
             else showSuccess("Old image deleted from storage.");
           }
         }
-        finalCompanyLogoUrlForDb = undefined; // Set to undefined to clear in DB
-        console.log("[Settings] handleSaveCompanyProfile: finalCompanyLogoUrlForDb set to undefined (logo cleared).");
+        finalCompanyLogoUrlForDb = null; // Set to null to explicitly clear in DB
+        console.log("[Settings] handleSaveCompanyProfile: finalCompanyLogoUrlForDb set to null (logo cleared).");
       } else {
         // No new file and not explicitly cleared. Keep existing internal path.
-        finalCompanyLogoUrlForDb = profile?.companyProfile?.companyLogoUrl ? getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos') || undefined : undefined;
+        finalCompanyLogoUrlForDb = profile?.companyProfile?.companyLogoUrl ? getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos') : null; // Ensure it's null if no logo
         console.log("[Settings] handleSaveCompanyProfile: No image change. Keeping existing internal path:", finalCompanyLogoUrlForDb);
       }
       console.log("[Settings] handleSaveCompanyProfile: Final companyLogoUrlForDb before calling updateCompanyProfile:", finalCompanyLogoUrlForDb);
@@ -145,7 +145,7 @@ const Settings: React.FC = () => {
         companyName: companyName,
         companyAddress: companyAddress,
         companyCurrency: companyCurrency,
-        companyLogoUrl: finalCompanyLogoUrlForDb, // This is the INTERNAL path or undefined
+        companyLogoUrl: finalCompanyLogoUrlForDb, // This is the INTERNAL path or null
       }, organizationCodeInput);
     } catch (error: any) {
       showError(`Failed to update company profile: ${error.message}`);

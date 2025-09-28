@@ -321,7 +321,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const newStatus = totalQuantity > updatedItem.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
     const lastUpdated = new Date().toISOString().split('T')[0];
 
-    // updatedItem.imageUrl is expected to be the INTERNAL PATH or undefined
+    // updatedItem.imageUrl is expected to be the INTERNAL PATH or null
     const internalImageUrl = updatedItem.imageUrl;
     console.log("[InventoryContext] updateInventoryItem: Image URL for DB (internal path):", internalImageUrl);
 

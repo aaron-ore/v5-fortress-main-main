@@ -188,7 +188,7 @@ const EditInventoryItem = () => {
       }
     } else {
       setImageFile(null);
-      imageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
+      setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
       console.log("[EditInventoryItem] handleImageFileChange: File input cleared without selection. Reverting preview to:", item?.imageUrl || null);
     }
   };
@@ -211,7 +211,7 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined; // This will be the INTERNAL PATH to pass to context
+    let finalImageUrlForDb: string | null | undefined; // This will be the INTERNAL PATH or null
 
     console.log("[EditInventoryItem] onSubmit: Starting image processing.");
     console.log("[EditInventoryItem] onSubmit: Current item.imageUrl (public from context):", item.imageUrl);
@@ -246,11 +246,11 @@ const EditInventoryItem = () => {
             else showSuccess("Old image deleted from storage.");
           }
         }
-        finalImageUrlForDb = undefined; // Set to undefined to clear the image_url in DB
-        console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to undefined (image cleared).");
+        finalImageUrlForDb = null; // Set to null to explicitly clear the image_url in DB
+        console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to null (image cleared).");
       } else {
         // No new file, not explicitly cleared. Keep existing image's internal path.
-        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || undefined : undefined;
+        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') : null; // Ensure it's null if no image
         console.log("[EditInventoryItem] onSubmit: No image change. Keeping existing internal path:", finalImageUrlForDb);
       }
     } catch (error: any) {
@@ -278,7 +278,7 @@ const EditInventoryItem = () => {
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH to context
+        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH or null to context
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });

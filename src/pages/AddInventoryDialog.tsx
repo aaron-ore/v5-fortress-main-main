@@ -243,7 +243,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
-    let finalImageUrl: string | undefined = undefined; // This will be the INTERNAL PATH
+    let finalImageUrl: string | undefined | null = null; // This will be the INTERNAL PATH or null
     if (imageFile) {
       setIsUploadingImage(true);
       try {
@@ -259,6 +259,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       } finally {
         setIsUploadingImage(false);
       }
+    } else {
+      // If no new file is selected, and imageUrlPreview is null (meaning it was cleared or never existed),
+      // then finalImageUrl should be null for the database.
+      // Otherwise, it remains undefined (meaning no change to existing image_url in DB).
+      finalImageUrl = imageUrlPreview === null ? null : undefined;
+      console.log("[AddInventoryDialog] No new image file. imageUrlPreview is null:", imageUrlPreview === null, "finalImageUrl for DB:", finalImageUrl);
     }
 
     console.log("[AddInventoryDialog] Adding item with imageUrl (internal path):", finalImageUrl);
@@ -277,7 +283,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
-      imageUrl: finalImageUrl, // Pass INTERNAL PATH to context
+      imageUrl: finalImageUrl, // Pass INTERNAL PATH or null to context
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
