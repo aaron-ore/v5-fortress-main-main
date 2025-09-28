@@ -43,7 +43,7 @@ export interface InventoryItem {
   notes?: string;
   status: string;
   lastUpdated: string;
-  imageUrl?: string | null; // This will now be a PUBLIC URL for UI consumption, or null
+  imageUrl: string | null | undefined; // Changed to explicitly include null and undefined
   vendorId?: string;
   barcodeUrl?: string;
   organizationId: string | null;
@@ -55,8 +55,8 @@ export interface InventoryItem {
 interface InventoryContextType {
   inventoryItems: InventoryItem[];
   isLoadingInventory: boolean;
-  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl?: string | null }) => Promise<void>;
-  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string; imageUrl?: string | null }) => Promise<void>;
+  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt" | "imageUrl"> & { vendorId?: string; imageUrl: string | null | undefined }) => Promise<void>;
+  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity" | "createdAt" | "imageUrl"> & { id: string; imageUrl: string | null | undefined }) => Promise<void>;
   deleteInventoryItem: (itemId: string) => Promise<void>;
   refreshInventory: () => Promise<void>;
 }
@@ -242,7 +242,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl?: string | null }) => {
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt" | "imageUrl"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
@@ -309,7 +309,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string; imageUrl?: string | null }) => {
+  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt" | "imageUrl"> & { id: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to update inventory items.";
