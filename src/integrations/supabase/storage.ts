@@ -42,6 +42,8 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
  * @returns The file path within the bucket, or null if not found.
  */
 export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string): string | null => {
+  // This function is no longer strictly needed if we consistently store internal paths in DB.
+  // However, it can be useful for parsing existing public URLs if they were stored directly.
   const regex = new RegExp(`/${bucketName}/(.+)`);
   const match = publicUrl.match(regex);
   return match ? match[1] : null;

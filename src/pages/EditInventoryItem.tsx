@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form"; // Corrected import
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-
 } from "@/components/ui/form";
 import {
   Select,
@@ -32,13 +31,11 @@ import { useVendors } from "@/context/VendorContext";
 import { PlusCircle, Loader2 } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 import { generateQrCodeSvg } from "@/utils/qrCodeGenerator";
-import { useOnboarding } from "@/context/OnboardingContext"; // Now imports InventoryFolder
-// Removed parseLocationString, buildLocationString, getUniqueLocationParts, LocationParts
-import { uploadFileToSupabase, getFilePathFromPublicUrl, getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
+import { useOnboarding } from "@/context/OnboardingContext";
+import { uploadFileToSupabase, getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
 import { supabase } from "@/lib/supabaseClient";
 import CustomFileInput from "@/components/CustomFileInput";
 import { useProfile } from "@/context/ProfileContext";
-// Removed: import { Label } from "@/components/ui/label"; // NEW: Import Label
 
 const formSchema = z.object({
   name: z.string().min(1, "Item name is required"),
@@ -53,10 +50,10 @@ const formSchema = z.object({
   incomingStock: z.number().min(0, "Must be non-negative"),
   unitCost: z.number().min(0, "Must be non-negative"),
   retailPrice: z.number().min(0, "Must be non-negative"),
-  folderId: z.string().min(1, "Folder is required"), // Changed from location to folderId
-  tags: z.string().optional(), // Added tags
-  notes: z.string().optional(), // Added notes
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  folderId: z.string().min(1, "Folder is required"),
+  tags: z.string().optional(),
+  notes: z.string().optional(),
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")), // This is for form validation, not DB storage
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
@@ -68,8 +65,8 @@ const EditInventoryItem = () => {
   const { inventoryItems, updateInventoryItem, refreshInventory } = useInventory();
   const { categories, addCategory } = useCategories();
   const { vendors } = useVendors();
-  const { inventoryFolders } = useOnboarding(); // Now imports InventoryFolder
-  const { profile } = useProfile(); // NEW: Get profile for role checks
+  const { inventoryFolders } = useOnboarding();
+  const { profile } = useProfile();
 
   const [itemNotFound, setItemNotFound] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -78,18 +75,13 @@ const EditInventoryItem = () => {
   const [qrCodeSvg, setQrCodeSvg] = useState<string | undefined>(undefined);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // This holds the PUBLIC URL for display
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isImageCleared, setIsImageCleared] = useState(false);
+  const [isImageCleared, setIsImageCleared] = useState(false); // Flag to indicate if image was explicitly cleared
 
-  // NEW: Role-based permissions
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
-  // Removed mainLocationParts and pickingBinLocationParts states
-
   const item = useMemo(() => inventoryItems.find((i) => i.id === id), [inventoryItems, id]);
-
-  // Removed uniqueAreas, uniqueRows, etc.
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -109,10 +101,10 @@ const EditInventoryItem = () => {
           incomingStock: item.incomingStock,
           unitCost: item.unitCost,
           retailPrice: item.retailPrice,
-          folderId: item.folderId, // Updated to folderId
-          tags: item.tags?.join(', ') || "", // Updated to tags
-          notes: item.notes || "", // Updated to notes
-          imageUrl: item.imageUrl || "",
+          folderId: item.folderId,
+          tags: item.tags?.join(', ') || "",
+          notes: item.notes || "",
+          imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "", // Convert internal path to public URL for form
           vendorId: item.vendorId || "null-vendor",
           autoReorderEnabled: item.autoReorderEnabled,
           autoReorderQuantity: item.autoReorderQuantity,
@@ -131,9 +123,9 @@ const EditInventoryItem = () => {
         incomingStock: 0,
         unitCost: 0,
         retailPrice: 0,
-        folderId: "no-folders", // Updated to folderId
-        tags: "", // Added tags
-        notes: "", // Added notes
+        folderId: "no-folders",
+        tags: "",
+        notes: "",
         imageUrl: "",
         vendorId: "null-vendor",
         autoReorderEnabled: false,
@@ -146,18 +138,18 @@ const EditInventoryItem = () => {
     if (!item && id) {
       setItemNotFound(true);
     } else if (item) {
-      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl (from DB):", item.imageUrl);
+      console.log("[EditInventoryItem] Item data loaded/updated in useEffect. Current item.imageUrl (from DB, internal path):", item.imageUrl);
       setItemNotFound(false);
       form.reset({
         ...item,
         vendorId: item.vendorId || "null-vendor",
-        tags: item.tags?.join(', ') || "", // Set tags for form
-        notes: item.notes || "", // Set notes for form
+        tags: item.tags?.join(', ') || "",
+        notes: item.notes || "",
+        imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "", // Convert internal path to public URL for form
       });
-      // Removed setMainLocationParts and setPickingBinLocationParts
 
       setImageFile(null);
-      // Convert internal path to public URL for preview
+      // Set imageUrlPreview to the public URL for display
       if (item.imageUrl) {
         const publicUrl = getPublicUrlFromSupabase(item.imageUrl, 'inventory-images');
         setImageUrlPreview(publicUrl);
@@ -211,24 +203,26 @@ const EditInventoryItem = () => {
         setIsImageCleared(false);
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageUrlPreview(reader.result as string);
-          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to (base64):", (reader.result as string).substring(0, 100) + '...');
+          setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
+          console.log("[EditInventoryItem] New image selected. imageUrlPreview set to (data:URL):", (reader.result as string).substring(0, 100) + '...');
         };
         reader.readAsDataURL(file);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
+        // Revert preview to current item's image if invalid file selected
         setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
       }
     } else {
       setImageFile(null);
+      // Revert preview to current item's image if file input cleared without selection
       setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
     }
   };
 
   const handleClearImage = () => {
     setImageFile(null);
-    setImageUrlPreview(null); // Set to null for consistency
+    setImageUrlPreview(null); // Set to null to clear preview
     setIsImageCleared(true); // Mark that the image was intentionally cleared
     showSuccess("Image cleared. Save changes to apply.");
     console.log("[EditInventoryItem] Image cleared. imageUrlPreview set to null.");
@@ -239,54 +233,49 @@ const EditInventoryItem = () => {
       showError("Item not found for update.");
       return;
     }
-    if (!canManageInventory) { // NEW: Check permission before saving
+    if (!canManageInventory) {
       showError("You do not have permission to update inventory items.");
       return;
     }
     setIsSaving(true);
-    let finalImageUrl: string | undefined = item.imageUrl; // This will store the INTERNAL path
+    let finalImageUrlForDb: string | undefined = item.imageUrl; // This will store the INTERNAL path for DB
 
-    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrl (from item, internal path):", finalImageUrl);
+    console.log("[EditInventoryItem] onSubmit: Initial finalImageUrlForDb (from item, internal path):", finalImageUrlForDb);
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
-        if (item.imageUrl) {
+        if (item.imageUrl) { // If there was an existing image (internal path)
           console.log("[EditInventoryItem] onSubmit: Existing image found, attempting to delete old one from storage.");
-          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // item.imageUrl should be internal path
-          console.log("[EditInventoryItem] onSubmit: Old image file path for deletion:", oldFilePath);
-          if (oldFilePath) {
-            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
-            if (deleteError) {
-              console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`);
-            } else {
-              showSuccess("Old image deleted from storage.");
-            }
+          // item.imageUrl is already the internal path, use it directly
+          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([item.imageUrl]);
+          if (deleteError) {
+            console.warn("Failed to delete old image from storage:", deleteError);
+            showError(`Failed to delete old image from storage: ${deleteError.message}`);
+          } else {
+            showSuccess("Old image deleted from storage.");
           }
         }
-        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // This returns INTERNAL path
-        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrl (internal path) set to:", finalImageUrl);
+        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // This returns INTERNAL path
+        console.log("[EditInventoryItem] onSubmit: Uploaded new image. finalImageUrlForDb (internal path) set to:", finalImageUrlForDb);
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
         console.log("[EditInventoryItem] onSubmit: Image was explicitly cleared.");
-        if (item.imageUrl) { // item.imageUrl should be internal path
+        if (item.imageUrl) { // If there was an existing image to clear (internal path)
           console.log("[EditInventoryItem] onSubmit: Existing image URL found, attempting to delete from storage.");
-          const oldFilePath = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images'); // item.imageUrl should be internal path
-          console.log("[EditInventoryItem] onSubmit: Old image file path for cleared image deletion:", oldFilePath);
-          if (oldFilePath) {
-            const { error: deleteError } = await supabase.storage.from('inventory-images').remove([oldFilePath]);
-            if (deleteError) {
-              console.warn("Failed to delete old image from storage:", deleteError);
-              showError(`Failed to delete old image from storage: ${deleteError.message}`);
-            } else {
-              showSuccess("Old image deleted from storage.");
-            }
+          // item.imageUrl is already the internal path, use it directly
+          const { error: deleteError } = await supabase.storage.from('inventory-images').remove([item.imageUrl]);
+          if (deleteError) {
+            console.warn("Failed to delete old image from storage:", deleteError);
+            showError(`Failed to delete old image from storage: ${deleteError.message}`);
+          } else {
+            showSuccess("Old image deleted from storage.");
           }
         }
-        finalImageUrl = undefined; // Set to undefined to clear in DB
-        console.log("[EditInventoryItem] onSubmit: Image cleared. finalImageUrl will be undefined.");
+        finalImageUrlForDb = undefined; // Set to undefined to clear in DB
+        console.log("[EditInventoryItem] onSubmit: Image cleared. finalImageUrlForDb will be undefined.");
       }
+      // If no new file and not cleared, finalImageUrlForDb remains item.imageUrl (the existing internal path)
     } catch (error: any) {
       console.error("Error processing product image:", error);
       showError(`Failed to process product image: ${error.message}`);
@@ -300,27 +289,26 @@ const EditInventoryItem = () => {
     try {
       const finalBarcodeValue = values.sku || undefined;
 
-      if (!values.folderId || values.folderId === "no-folders") { // Validate folderId
+      if (!values.folderId || values.folderId === "no-folders") {
         showError("Please select a folder for the item.");
         setIsSaving(false);
         return;
       }
 
-      console.log("[EditInventoryItem] onSubmit: Updating item in DB with finalImageUrl (internal path):", finalImageUrl);
+      console.log("[EditInventoryItem] onSubmit: Updating item in DB with finalImageUrlForDb (internal path):", finalImageUrlForDb);
       await updateInventoryItem({
         ...item,
         ...values,
-        folderId: values.folderId, // Updated to folderId
-        tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean), // Process tags
-        notes: values.notes, // Process notes
-        imageUrl: finalImageUrl, // This is the INTERNAL path
+        folderId: values.folderId,
+        tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
+        notes: values.notes,
+        imageUrl: finalImageUrlForDb, // This is the INTERNAL path or undefined
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
       showSuccess("Inventory item updated successfully!");
       await refreshInventory(); // Explicitly refresh inventory to get latest data, including image URL
       console.log("[EditInventoryItem] onSubmit: refreshInventory() called.");
-      // The useEffect that depends on 'item' will re-run and update imageUrlPreview correctly.
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
       showError(`Failed to update item: ${error.message}`);
@@ -330,7 +318,7 @@ const EditInventoryItem = () => {
   };
 
   const handleAddCategory = async () => {
-    if (!canManageInventory) { // NEW: Check permission before adding category
+    if (!canManageInventory) {
       showError("You do not have permission to add categories.");
       return;
     }
@@ -520,170 +508,170 @@ const EditInventoryItem = () => {
                       <FormLabel>Picking Bin Quantity</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="overstockQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Overstock Quantity</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="reorderLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Reorder Level (Total)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pickingReorderLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Picking Reorder Level</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="committedStock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Committed Stock</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="incomingStock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Incoming Stock</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="unitCost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Unit Cost</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="retailPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Retail Price</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            {/* Folder Selection */}
-            <FormField
-              control={form.control}
-              name="folderId"
-              render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory || inventoryFolders.length === 0}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a folder" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {inventoryFolders.length > 0 ? (
-                        inventoryFolders.map((folder) => (
-                          <SelectItem key={folder.id} value={folder.id}>
-                            {folder.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-folders" disabled>
-                          No folders set up.
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {inventoryFolders.length === 0 && (
-                    <FormDescription>
-                      You need to set up inventory folders first.
-                      <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
-                        <Link to="/folders">Manage Folders</Link>
-                      </Button>
-                    </FormDescription>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Tags Field */}
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel>Tags (comma-separated)</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g., fragile, electronics, high-value" disabled={!canManageInventory} />
-                  </FormControl>
-                  <FormDescription>
-                    Add keywords to help categorize and search for items.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {/* Notes Field */}
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
+                />
+                <FormField
+                  control={form.control}
+                  name="overstockQuantity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Overstock Quantity</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="reorderLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reorder Level (Total)</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pickingReorderLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Picking Reorder Level</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="committedStock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Committed Stock</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="incomingStock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Incoming Stock</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="unitCost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit Cost</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="retailPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Retail Price</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value || '0'))} disabled={!canManageInventory} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {/* Folder Selection */}
+              <FormField
+                control={form.control}
+                name="folderId"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Main Storage Folder <span className="text-red-500">*</span></FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={!canManageInventory || inventoryFolders.length === 0}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a folder" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {inventoryFolders.length > 0 ? (
+                          inventoryFolders.map((folder) => (
+                            <SelectItem key={folder.id} value={folder.id}>
+                              {folder.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-folders" disabled>
+                            No folders set up.
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {inventoryFolders.length === 0 && (
+                      <FormDescription>
+                        You need to set up inventory folders first.
+                        <Button variant="link" size="sm" asChild className="p-0 h-auto ml-1">
+                          <Link to="/folders">Manage Folders</Link>
+                        </Button>
+                      </FormDescription>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Tags Field */}
+              <FormField
+                control={form.control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Tags (comma-separated)</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., fragile, electronics, high-value" disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormDescription>
+                      Add keywords to help categorize and search for items.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Notes Field */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
                   <FormItem className="col-span-2">
                     <FormLabel>Notes</FormLabel>
                     <FormControl>
@@ -719,40 +707,40 @@ const EditInventoryItem = () => {
                     />
                   </FormControl>
                 </FormItem>
-            )}
-          />
-          {form.watch("autoReorderEnabled") && (
-            <FormField
-              control={form.control}
-              name="autoReorderQuantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity to Auto-Reorder</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
-                  </FormControl>
-                  <FormDescription>
-                    This quantity will be ordered when stock drops to or below the overall reorder level.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
               )}
             />
-          )}
-        </div>
+            {form.watch("autoReorderEnabled") && (
+              <FormField
+                control={form.control}
+                name="autoReorderQuantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quantity to Auto-Reorder</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value || '0'))} min="1" disabled={!canManageInventory} />
+                    </FormControl>
+                    <FormDescription>
+                      This quantity will be ordered when stock drops to or below the overall reorder level.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
 
-        <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
-          {isSaving || isUploadingImage ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
-            </>
-          ) : (
-            "Save Changes"
-          )}
-        </Button>
-      </form>
-    </Form>
-  </div>
+          <Button type="submit" className="w-full" disabled={isSaving || isUploadingImage || !canManageInventory}>
+            {isSaving || isUploadingImage ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 };
 

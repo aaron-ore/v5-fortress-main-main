@@ -4,15 +4,15 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
-import { deepEqual } from '@/lib/utils'; // Import deepEqual
-import { useAuth } from './AuthContext'; // NEW: Import useAuth
+import { getPublicUrlFromSupabase } from '@/integrations/supabase/storage'; // Import getPublicUrlFromSupabase
+import { deepEqual } from '@/lib/utils';
+import { useAuth } from './AuthContext';
 
 export interface CompanyProfile {
   companyName: string;
   companyCurrency: string;
   companyAddress: string;
-  companyLogoUrl?: string;
+  companyLogoUrl?: string; // This will now store the PUBLIC URL for display
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
@@ -43,9 +43,9 @@ export interface UserProfile {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
-  hasOnboardingWizardCompleted: boolean; // RENAMED: From hasOnboardingTutorialShown
-  hasUiTutorialShown: boolean; // NEW: Separate flag for UI tutorial
-  hasSeenUpgradePrompt: boolean; // NEW: Flag to track if user has seen the upgrade prompt
+  hasOnboardingWizardCompleted: boolean;
+  hasUiTutorialShown: boolean;
+  hasSeenUpgradePrompt: boolean;
 }
 
 interface ProfileContextType {
@@ -59,9 +59,9 @@ interface ProfileContextType {
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
-  markOnboardingWizardCompleted: () => Promise<void>; // NEW: Function to mark onboarding wizard as completed
-  markTutorialAsShown: () => Promise<void>; // MODIFIED: Now marks UI tutorial as shown
-  markUpgradePromptSeen: () => Promise<void>; // NEW: Function to mark upgrade prompt as seen
+  markOnboardingWizardCompleted: () => Promise<void>;
+  markTutorialAsShown: () => Promise<void>;
+  markUpgradePromptSeen: () => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -78,7 +78,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyName: companyData.name,
       companyCurrency: companyData.currency,
       companyAddress: companyData.address,
-      companyLogoUrl: companyData.company_logo_url || undefined,
+      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined, // Convert internal path to public URL
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
@@ -109,9 +109,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
-      hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false, // Mapped from new column
-      hasUiTutorialShown: data.has_ui_tutorial_shown ?? false, // Mapped from new column
-      hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false, // NEW: Mapped from new column
+      hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
+      hasUiTutorialShown: data.has_ui_tutorial_shown ?? false,
+      hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
     };
   };
 
@@ -170,7 +170,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     setIsLoadingProfile(false);
     console.log("[ProfileContext] fetchProfile completed. isLoadingProfile set to false.");
-  }, [user, isLoadingAuth]); // Removed 'profile' from dependency array here.
+  }, [user, isLoadingAuth]);
 
   const fetchAllProfiles = useCallback(async () => {
     console.log("[ProfileContext] fetchAllProfiles called. profile?.organizationId:", profile?.organizationId);
@@ -291,11 +291,23 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
+    // Convert public URL back to internal path for DB storage if it's present in updates
+    let companyLogoUrlForDb: string | undefined = updates.companyLogoUrl;
+    if (updates.companyLogoUrl) {
+      // If it's a public URL, extract the internal path. If it's already an internal path, it will remain unchanged.
+      // The `uploadFileToSupabase` function already returns the internal path, so this conversion is mainly for existing URLs.
+      const internalPath = updates.companyLogoUrl.startsWith('http') ? updates.companyLogoUrl.split('/public/company-logos/')[1] : updates.companyLogoUrl;
+      companyLogoUrlForDb = internalPath;
+    } else if (updates.companyLogoUrl === null) { // Explicitly set to null/undefined to clear
+      companyLogoUrlForDb = undefined;
+    }
+
+
     const payload: any = {
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: updates.companyLogoUrl,
+      company_logo_url: companyLogoUrlForDb, // This is the INTERNAL path or undefined
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId,
       stripe_subscription_id: updates.stripeSubscriptionId,
@@ -307,26 +319,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (uniqueCode !== undefined) {
       payload.unique_code = uniqueCode;
-    }
-
-    const oldCompanyLogoUrl = profile.companyProfile?.companyLogoUrl; // Declare here
-    if ((updates.companyLogoUrl === undefined || updates.companyLogoUrl === null || updates.companyLogoUrl === "") && oldCompanyLogoUrl) {
-        const oldFilePath = getFilePathFromPublicUrl(oldCompanyLogoUrl, 'company-logos');
-        if (oldFilePath) {
-            console.log(`[ProfileContext] Deleting old logo file: ${oldFilePath}`);
-            const { error: deleteError } = await supabase.storage
-                .from('company-logos')
-                .remove([oldFilePath]);
-
-            if (deleteError) {
-                console.error("[ProfileContext] Error deleting old company logo from storage:", deleteError);
-                showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
-                await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
-            } else {
-                console.log(`[ProfileContext] Old logo file ${oldFilePath} deleted successfully.`);
-                await logActivity("Company Logo Delete Success", `Old company logo deleted for organization ${profile.organizationId}.`, profile, { old_logo_url: oldCompanyLogoUrl });
-            }
-        }
     }
 
     const { error } = await supabase

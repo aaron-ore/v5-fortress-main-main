@@ -13,7 +13,7 @@ interface CustomFileInputProps {
   disabled?: boolean;
   accept?: string;
   isUploading?: boolean;
-  previewUrl?: string | null;
+  previewUrl?: string | null; // This is now expected to be a PUBLIC URL or data:URL
 }
 
 const CustomFileInput: React.FC<CustomFileInputProps> = ({
