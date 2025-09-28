@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js';
-import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.16.0";
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-// Inlined corsHeaders definition to avoid module resolution issues
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -19,14 +18,14 @@ serve(async (req) => {
 
     let requestBody;
     if (contentType && contentType.includes('application/json')) {
-      const rawBody = await req.text(); // Read as text first
-      console.log('Edge Function: Raw request body length:', rawBody.length); // NEW: Log body length
+      const rawBody = await req.text();
+      console.log('Edge Function: Raw request body length:', rawBody.length);
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
       try {
-        requestBody = JSON.parse(rawBody); // Then parse manually
-      } catch (parseError: any) { // NEW: Catch parsing errors
+        requestBody = JSON.parse(rawBody);
+      } catch (parseError: any) {
         console.error('Edge Function: JSON parse error:', parseError.message);
-        console.error('Edge Function: Raw body that failed to parse:', rawError);
+        console.error('Edge Function: Raw body that failed to parse:', rawBody);
         throw new Error(`Failed to parse request body as JSON: ${parseError.message}`);
       }
     } else {
@@ -54,9 +53,6 @@ serve(async (req) => {
       });
     }
     console.log('Edge Function: GEMINI_API_KEY is present.');
-
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY); // Simplified constructor
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" }); // Changed model to gemini-pro
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -170,9 +166,31 @@ Summary:`;
         break;
     }
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const summary = response.text();
+    // Make a raw fetch request to the Gemini API
+    const geminiApiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
+    console.log('Edge Function: Making direct fetch to Gemini API:', geminiApiUrl);
+
+    const geminiResponse = await fetch(geminiApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    });
+
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      console.error('Gemini API direct fetch error:', errorData);
+      throw new Error(`Gemini API error: ${errorData.error?.message || geminiResponse.statusText}`);
+    }
+
+    const geminiResult = await geminiResponse.json();
+    const summary = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate summary.";
 
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
