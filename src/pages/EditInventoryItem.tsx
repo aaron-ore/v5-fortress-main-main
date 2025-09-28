@@ -278,7 +278,7 @@ const EditInventoryItem = () => {
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb as string | null, // Explicitly cast to string | null
+        imageUrl: finalImageUrlForDb, // Pass INTERNAL PATH or null to context
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });

@@ -21,7 +21,6 @@ import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
 import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
-void getFilePathFromPublicUrl; // Suppress TS6133: 'getFilePathFromPublicUrl' is declared but its value is never read.
 
 export interface InventoryItem {
   id: string;
@@ -44,7 +43,7 @@ export interface InventoryItem {
   notes?: string;
   status: string;
   lastUpdated: string;
-  imageUrl?: string; // This will now be a PUBLIC URL for UI consumption
+  imageUrl?: string | null; // This will now be a PUBLIC URL for UI consumption, or null
   vendorId?: string;
   barcodeUrl?: string;
   organizationId: string | null;
@@ -56,8 +55,8 @@ export interface InventoryItem {
 interface InventoryContextType {
   inventoryItems: InventoryItem[];
   isLoadingInventory: boolean;
-  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string }) => Promise<void>;
-  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string }) => Promise<void>;
+  addInventoryItem: (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl?: string | null }) => Promise<void>;
+  updateInventoryItem: (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string; imageUrl?: string | null }) => Promise<void>;
   deleteInventoryItem: (itemId: string) => Promise<void>;
   refreshInventory: () => Promise<void>;
 }
@@ -100,7 +99,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     // NEW: Check if image_url is already a public URL before converting
     const finalImageUrl = item.image_url
       ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
-      : undefined;
+      : null; // Explicitly null if no URL or conversion fails
     
     console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: "${finalImageUrl}" (Type: ${typeof finalImageUrl})`);
 
@@ -243,7 +242,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string }) => {
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl?: string | null }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
@@ -310,7 +309,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string }) => {
+  const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt"> & { id: string; imageUrl?: string | null }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to update inventory items.";

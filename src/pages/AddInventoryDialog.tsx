@@ -284,7 +284,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
-      imageUrl: finalImageUrl as string | null, // Explicitly cast to string | null
+      imageUrl: finalImageUrl, // Pass INTERNAL PATH or null to context
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
