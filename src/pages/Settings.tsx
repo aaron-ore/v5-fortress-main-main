@@ -23,7 +23,7 @@ const Settings: React.FC = () => {
   const [companyAddress, setCompanyAddress] = useState(profile?.companyProfile?.companyAddress || "");
   const [companyCurrency, setCompanyCurrency] = useState(profile?.companyProfile?.companyCurrency || "USD");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
-  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl ? getPublicUrlFromSupabase(profile.companyProfile.companyLogoUrl, 'company-logos') : undefined); // Convert internal path to public URL for preview
+  const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl || undefined); // This is a PUBLIC URL
   const [isSavingCompanyProfile, setIsSavingCompanyProfile] = useState(false);
   const [organizationCodeInput, setOrganizationCodeInput] = useState<string>(profile?.companyProfile?.organizationCode || "");
   const [isSavingOrganizationCode, setIsSavingOrganizationCode] = useState(false);
@@ -38,11 +38,11 @@ const Settings: React.FC = () => {
       setCompanyName(profile.companyProfile.companyName || "");
       setCompanyAddress(profile.companyProfile.companyAddress || "");
       setCompanyCurrency(profile.companyProfile.companyCurrency || "USD");
-      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl ? getPublicUrlFromSupabase(profile.companyProfile.companyLogoUrl, 'company-logos') : undefined); // Convert internal path to public URL for preview
+      setCompanyLogoUrlPreview(profile.companyProfile.companyLogoUrl || undefined); // profile.companyProfile.companyLogoUrl is already a PUBLIC URL from context
       setOrganizationCodeInput(profile.companyProfile.organizationCode || "");
       setSelectedTheme(profile.companyProfile.organizationTheme || "dark");
       setIsLogoCleared(false); // Reset on profile load
-      console.log("[Settings] useEffect: Profile loaded. companyLogoUrl (internal):", profile.companyProfile.companyLogoUrl, "companyLogoUrlPreview (public):", (profile.companyProfile.companyLogoUrl ? getPublicUrlFromSupabase(profile.companyProfile.companyLogoUrl, 'company-logos') : undefined));
+      console.log("[Settings] useEffect: Profile loaded. companyLogoUrl (public from context):", profile.companyProfile.companyLogoUrl, "companyLogoUrlPreview (state):", companyLogoUrlPreview);
     }
   }, [profile?.companyProfile]);
 
@@ -62,20 +62,20 @@ const Settings: React.FC = () => {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
         // Revert preview to current logo if invalid file selected
-        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl ? getPublicUrlFromSupabase(profile.companyProfile.companyLogoUrl, 'company-logos') : undefined);
+        setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
         console.log("[Settings] handleFileChange: Invalid file type. Reverting preview.");
       }
     } else {
       setCompanyLogoFile(null);
       // Revert preview to current logo if file input cleared without selection
-      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl ? getPublicUrlFromSupabase(profile.companyProfile.companyLogoUrl, 'company-logos') : undefined);
+      setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
       console.log("[Settings] handleFileChange: File input cleared without selection. Reverting preview.");
     }
   };
 
   const handleClearLogo = () => {
     setCompanyLogoFile(null);
-    setImageUrlPreview(undefined); // Set to undefined to clear preview
+    setCompanyLogoUrlPreview(undefined); // Set to undefined to clear preview
     setIsLogoCleared(true); // Mark that the logo was intentionally cleared
     showSuccess("Logo cleared. Save changes to apply.");
     console.log("[Settings] handleClearLogo: Logo explicitly cleared. isLogoCleared:", true);
@@ -88,35 +88,44 @@ const Settings: React.FC = () => {
     }
 
     setIsSavingCompanyProfile(true);
-    let finalCompanyLogoUrlForDb: string | undefined = profile?.companyProfile?.companyLogoUrl; // This is the INTERNAL path from current profile
+    let finalCompanyLogoUrlForDb: string | undefined; // This will be the PUBLIC URL to pass to context
 
-    console.log("[Settings] handleSaveCompanyProfile: Initial finalCompanyLogoUrlForDb (from profile):", finalCompanyLogoUrlForDb);
+    console.log("[Settings] handleSaveCompanyProfile: Initial profile.companyProfile.companyLogoUrl (public from context):", profile?.companyProfile?.companyLogoUrl);
 
     try {
       if (companyLogoFile) {
         setIsUploadingImage(true);
         console.log("[Settings] handleSaveCompanyProfile: New companyLogoFile detected.");
-        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo (internal path)
-          console.log("[Settings] handleSaveCompanyProfile: Existing logo found, attempting to delete old one from storage. Old internal path:", profile.companyProfile.companyLogoUrl);
-          const { error: deleteError } = await supabase.storage.from('company-logos').remove([profile.companyProfile.companyLogoUrl]);
-          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-          else console.log("[Settings] handleSaveCompanyProfile: Old image deleted from storage.");
+        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo (public URL from context)
+          console.log("[Settings] handleSaveCompanyProfile: Existing logo found, attempting to delete old one from storage. Old public URL:", profile.companyProfile.companyLogoUrl);
+          const internalPathToDelete = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            else console.log("[Settings] handleSaveCompanyProfile: Old image deleted from storage.");
+          }
         }
-        finalCompanyLogoUrlForDb = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // This returns INTERNAL path
+        finalCompanyLogoUrlForDb = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // Returns PUBLIC URL
         showSuccess("Company logo uploaded successfully!");
-        console.log("[Settings] handleSaveCompanyProfile: New logo uploaded. New internal path:", finalCompanyLogoUrlForDb);
+        console.log("[Settings] handleSaveCompanyProfile: New logo uploaded. New public URL:", finalCompanyLogoUrlForDb);
       } else if (isLogoCleared) {
         console.log("[Settings] handleSaveCompanyProfile: Logo was explicitly cleared (isLogoCleared is true).");
-        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo to clear (internal path)
-          console.log("[Settings] handleSaveCompanyProfile: Existing logo found, attempting to delete from storage. Old internal path:", profile.companyProfile.companyLogoUrl);
-          const { error: deleteError } = await supabase.storage.from('company-logos').remove([profile.companyProfile.companyLogoUrl]);
-          if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-          else console.log("[Settings] handleSaveCompanyProfile: Old image deleted from storage.");
+        if (profile?.companyProfile?.companyLogoUrl) { // If there was an existing logo to clear (public URL from context)
+          console.log("[Settings] handleSaveCompanyProfile: Existing logo found, attempting to delete from storage. Old public URL:", profile.companyProfile.companyLogoUrl);
+          const internalPathToDelete = getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos');
+          if (internalPathToDelete) {
+            const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
+            if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
+            else console.log("[Settings] handleSaveCompanyProfile: Old image deleted from storage.");
+          }
         }
         finalCompanyLogoUrlForDb = undefined; // Set to undefined to clear in DB
         console.log("[Settings] handleSaveCompanyProfile: finalCompanyLogoUrlForDb set to undefined.");
+      } else {
+        // No new file and not explicitly cleared. Keep existing public URL.
+        finalCompanyLogoUrlForDb = profile?.companyProfile?.companyLogoUrl;
+        console.log("[Settings] handleSaveCompanyProfile: No image change. Keeping existing public URL:", finalCompanyLogoUrlForDb);
       }
-      // If no new file and not explicitly cleared, finalCompanyLogoUrlForDb remains its initial value (the existing internal path from profile).
       console.log("[Settings] handleSaveCompanyProfile: Final companyLogoUrlForDb before calling updateCompanyProfile:", finalCompanyLogoUrlForDb);
 
     } catch (error: any) {
@@ -134,7 +143,7 @@ const Settings: React.FC = () => {
         companyName: companyName,
         companyAddress: companyAddress,
         companyCurrency: companyCurrency,
-        companyLogoUrl: finalCompanyLogoUrlForDb, // This is the INTERNAL path or undefined
+        companyLogoUrl: finalCompanyLogoUrlForDb, // This is the PUBLIC URL or undefined
       }, organizationCodeInput);
     } catch (error: any) {
       showError(`Failed to update company profile: ${error.message}`);

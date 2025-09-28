@@ -12,7 +12,7 @@ export interface CompanyProfile {
   companyName: string;
   companyCurrency: string;
   companyAddress: string;
-  companyLogoUrl?: string;
+  companyLogoUrl?: string; // This will now be a PUBLIC URL for UI consumption
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
@@ -79,7 +79,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyName: companyData.name,
       companyCurrency: companyData.currency,
       companyAddress: companyData.address,
-      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined,
+      companyLogoUrl: companyData.company_logo_url ? getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos') : undefined, // Convert internal path to public URL
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
@@ -277,17 +277,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    // The `updates.companyLogoUrl` should already be the internal path or undefined from the caller (e.g., Settings.tsx)
-    // So, we can use it directly.
-    const companyLogoUrlForDb = updates.companyLogoUrl === null ? undefined : updates.companyLogoUrl;
-    console.log("[ProfileContext] updateCompanyProfile: Final companyLogoUrlForDb before DB update:", companyLogoUrlForDb);
-
+    // `updates.companyLogoUrl` is expected to be a public URL or undefined/null from Settings.tsx
+    // Convert it to an internal path for database storage
+    const internalCompanyLogoPath = updates.companyLogoUrl ? getFilePathFromPublicUrl(updates.companyLogoUrl, 'company-logos') : undefined;
+    console.log("[ProfileContext] updateCompanyProfile: Converted public URL to internal path for DB:", internalCompanyLogoPath);
 
     const payload: any = {
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: companyLogoUrlForDb, // Use directly
+      company_logo_url: internalCompanyLogoPath, // Store internal path
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId,
       stripe_subscription_id: updates.stripeSubscriptionId,

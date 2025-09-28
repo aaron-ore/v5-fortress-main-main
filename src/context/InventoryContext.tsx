@@ -19,6 +19,8 @@ import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
+import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+
 
 export interface InventoryItem {
   id: string;
@@ -41,7 +43,7 @@ export interface InventoryItem {
   notes?: string;
   status: string;
   lastUpdated: string;
-  imageUrl?: string;
+  imageUrl?: string; // This will now be a PUBLIC URL for UI consumption
   vendorId?: string;
   barcodeUrl?: string;
   organizationId: string | null;
@@ -92,7 +94,6 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const validatedCreatedAt = parseAndValidateDate(item.created_at);
     const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
-
     return {
       id: item.id,
       name: item.name || "",
@@ -114,7 +115,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       notes: item.notes || undefined,
       status: item.status || "In Stock",
       lastUpdated: lastUpdatedString,
-      imageUrl: item.image_url || undefined,
+      imageUrl: item.image_url ? getPublicUrlFromSupabase(item.image_url, 'inventory-images') : undefined, // Convert internal path to public URL
       vendorId: item.vendor_id || undefined,
       barcodeUrl: item.barcode_url || undefined,
       organizationId: item.organization_id,
@@ -245,6 +246,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const lastUpdated = new Date().toISOString();
     const createdAt = new Date().toISOString();
 
+    // Convert public URL to internal path for database storage
+    const internalImageUrl = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') : undefined;
 
     const { data, error } = await supabase
       .from("inventory_items")
@@ -267,7 +270,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         notes: item.notes,
         status: status,
         last_updated: lastUpdated,
-        image_url: item.imageUrl,
+        image_url: internalImageUrl, // Store internal path
         vendor_id: item.vendorId, // Corrected to item.vendorId
         barcode_url: item.barcodeUrl,
         user_id: session.user.id,
@@ -308,6 +311,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const newStatus = totalQuantity > updatedItem.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
     const lastUpdated = new Date().toISOString().split('T')[0];
 
+    // Convert public URL to internal path for database storage
+    const internalImageUrl = updatedItem.imageUrl ? getFilePathFromPublicUrl(updatedItem.imageUrl, 'inventory-images') : undefined;
+
     const { data, error } = await supabase
       .from("inventory_items")
       .update({
@@ -329,7 +335,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         notes: updatedItem.notes,
         status: newStatus,
         last_updated: lastUpdated,
-        image_url: updatedItem.imageUrl,
+        image_url: internalImageUrl, // Store internal path
         vendor_id: updatedItem.vendorId,
         barcode_url: updatedItem.barcodeUrl,
         auto_reorder_enabled: updatedItem.autoReorderEnabled,

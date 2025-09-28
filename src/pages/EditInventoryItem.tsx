@@ -53,7 +53,7 @@ const formSchema = z.object({
   folderId: z.string().min(1, "Folder is required"),
   tags: z.string().optional(),
   notes: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")), // This is a PUBLIC URL
   vendorId: z.string().optional().or(z.literal("null-vendor")),
   autoReorderEnabled: z.boolean().default(false),
   autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
@@ -75,9 +75,9 @@ const EditInventoryItem = () => {
   const [qrCodeSvg, setQrCodeSvg] = useState<string | undefined>(undefined);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // This will be a public URL or data:URL
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isImageCleared, setIsImageCleared] = useState(false);
+  const [isImageCleared, setIsImageCleared] = useState(false); // Flag to indicate if logo was explicitly cleared
 
   const canManageInventory = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
@@ -103,7 +103,7 @@ const EditInventoryItem = () => {
           folderId: item.folderId,
           tags: item.tags?.join(', ') || "",
           notes: item.notes || "",
-          imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "",
+          imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
           vendorId: item.vendorId || "null-vendor",
           autoReorderEnabled: item.autoReorderEnabled,
           autoReorderQuantity: item.autoReorderQuantity,
@@ -143,16 +143,11 @@ const EditInventoryItem = () => {
         vendorId: item.vendorId || "null-vendor",
         tags: item.tags?.join(', ') || "",
         notes: item.notes || "",
-        imageUrl: item.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : "",
+        imageUrl: item.imageUrl || "", // item.imageUrl from context is already a PUBLIC URL
       });
 
       setImageFile(null);
-      if (item.imageUrl) {
-        const publicUrl = getPublicUrlFromSupabase(item.imageUrl, 'inventory-images');
-        setImageUrlPreview(publicUrl);
-      } else {
-        setImageUrlPreview(null);
-      }
+      setImageUrlPreview(item.imageUrl || null); // item.imageUrl from context is already a PUBLIC URL
       setIsImageCleared(false);
 
       const updateQrCode = async () => {
@@ -198,24 +193,24 @@ const EditInventoryItem = () => {
         setIsImageCleared(false);
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageUrlPreview(reader.result as string);
+          setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
         };
         reader.readAsDataURL(file);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
-        setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
+        setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if invalid file selected
       }
     } else {
       setImageFile(null);
-      setImageUrlPreview(item?.imageUrl ? getPublicUrlFromSupabase(item.imageUrl, 'inventory-images') : null);
+      setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
     }
   };
 
   const handleClearImage = () => {
     setImageFile(null);
     setImageUrlPreview(null);
-    setIsImageCleared(true);
+    setIsImageCleared(true); // Mark that the image was explicitly cleared
     showSuccess("Image cleared. Save changes to apply.");
   };
 
@@ -229,12 +224,13 @@ const EditInventoryItem = () => {
       return;
     }
     setIsSaving(true);
-    let finalImageUrlForDb: string | undefined;
+    let finalImageUrlForDb: string | undefined; // This will be the PUBLIC URL to pass to context
 
     try {
       if (imageFile) {
         setIsUploadingImage(true);
-        if (item.imageUrl) {
+        // If there was an existing image, delete it first
+        if (item.imageUrl) { // item.imageUrl is already a PUBLIC URL from context
           const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
@@ -246,10 +242,11 @@ const EditInventoryItem = () => {
             }
           }
         }
-        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
+        finalImageUrlForDb = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns PUBLIC URL
         showSuccess("Product image uploaded successfully!");
       } else if (isImageCleared) {
-        if (item.imageUrl) {
+        // If the image was explicitly cleared, delete the old one if it exists
+        if (item.imageUrl) { // item.imageUrl is already a PUBLIC URL from context
           const internalPathToDelete = getFilePathFromPublicUrl(item.imageUrl, 'inventory-images');
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('inventory-images').remove([internalPathToDelete]);
@@ -261,11 +258,10 @@ const EditInventoryItem = () => {
             }
           }
         }
-        finalImageUrlForDb = undefined;
+        finalImageUrlForDb = undefined; // Set to undefined to clear the image_url in DB
       } else {
-        // No new file, not cleared. Keep existing image.
-        // Convert the current public URL (item.imageUrl) back to its internal path.
-        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || undefined : undefined;
+        // No new file, not explicitly cleared. Keep existing image URL (which is already public).
+        finalImageUrlForDb = item.imageUrl;
       }
     } catch (error: any) {
       console.error("Error processing product image:", error);
@@ -292,7 +288,7 @@ const EditInventoryItem = () => {
         folderId: values.folderId,
         tags: values.tags?.split(',').map((tag: string) => tag.trim()).filter(Boolean),
         notes: values.notes,
-        imageUrl: finalImageUrlForDb,
+        imageUrl: finalImageUrlForDb, // Pass PUBLIC URL to context
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });

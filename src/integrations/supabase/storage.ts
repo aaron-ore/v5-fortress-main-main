@@ -2,11 +2,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Uploads a file to a specified Supabase Storage bucket and returns its internal path.
+ * Uploads a file to a specified Supabase Storage bucket and returns its public URL.
  * @param file The File object to upload.
  * @param bucketName The name of the Supabase Storage bucket.
  * @param folderPath The path within the bucket (e.g., 'avatars/', 'company-logos/').
- * @returns A promise that resolves with the internal path of the uploaded file within the bucket.
+ * @returns A promise that resolves with the public URL of the uploaded file.
  * @throws An error if the upload fails.
  */
 export const uploadFileToSupabase = async (file: File, bucketName: string, folderPath: string = ''): Promise<string> => {
@@ -30,8 +30,9 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
     throw new Error(`Failed to upload file: ${error.message}`);
   }
 
-  // Return the internal file path, as this is what the Edge Function expects for download.
-  return filePath;
+  // Return the public URL directly
+  const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+  return data.publicUrl;
 };
 
 /**
@@ -42,8 +43,6 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
  * @returns The file path within the bucket, or null if not found.
  */
 export const getFilePathFromPublicUrl = (publicUrl: string, bucketName: string): string | null => {
-  // This function is no longer strictly needed if we consistently store internal paths in DB.
-  // However, it can be useful for parsing existing public URLs if they were stored directly.
   const regex = new RegExp(`/${bucketName}/(.+)`);
   const match = publicUrl.match(regex);
   return match ? match[1] : null;
