@@ -302,7 +302,7 @@ const EditInventoryItem = () => {
       });
       showSuccess("Inventory item updated successfully!");
       await refreshInventory(); // NEW: Explicitly refresh inventory
-      navigate("/inventory");
+      // Removed: navigate("/inventory"); // Keep on current page
     } catch (error: any) {
       console.error("Failed to update inventory item:", error);
       showError(`Failed to update item: ${error.message}`);
