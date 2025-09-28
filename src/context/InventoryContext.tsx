@@ -94,6 +94,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     const validatedCreatedAt = parseAndValidateDate(item.created_at);
     const createdAtString = validatedCreatedAt ? validatedCreatedAt.toISOString() : new Date().toISOString();
 
+    console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Processing item ID: ${item.id}, Raw image_url from DB: ${item.image_url}`);
+
     return {
       id: item.id,
       name: item.name || "",

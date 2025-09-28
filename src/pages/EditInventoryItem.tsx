@@ -196,14 +196,17 @@ const EditInventoryItem = () => {
           setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
         };
         reader.readAsDataURL(file);
+        console.log("[EditInventoryItem] handleImageFileChange: New file selected. File name:", file.name);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
         setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if invalid file selected
+        console.log("[EditInventoryItem] handleImageFileChange: Invalid file type selected. Reverting preview.");
       }
     } else {
       setImageFile(null);
-      imageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
+      setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if file input cleared without selection
+      console.log("[EditInventoryItem] handleImageFileChange: File input cleared without selection. Reverting preview.");
     }
   };
 
@@ -212,6 +215,7 @@ const EditInventoryItem = () => {
     setImageUrlPreview(null);
     setIsImageCleared(true); // Mark that the image was explicitly cleared
     showSuccess("Image cleared. Save changes to apply.");
+    console.log("[EditInventoryItem] handleClearImage: Image explicitly cleared. isImageCleared:", true);
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {

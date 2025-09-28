@@ -132,14 +132,17 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
           setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
         };
         reader.readAsDataURL(file);
+        console.log("[AddInventoryDialog] handleImageChange: New file selected. File name:", file.name);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setImageFile(null);
         setImageUrlPreview(null);
+        console.log("[AddInventoryDialog] handleImageChange: Invalid file type selected.");
       }
     } else {
       setImageFile(null);
       setImageUrlPreview(null);
+      console.log("[AddInventoryDialog] handleImageChange: File input cleared without selection.");
     }
   };
 
@@ -147,6 +150,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     setImageFile(null);
     setImageUrlPreview(null);
     showSuccess("Image cleared. Add item to apply.");
+    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared.");
   };
 
   const handleSubmit = async () => {

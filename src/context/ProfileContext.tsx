@@ -75,6 +75,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processing user ID: ${data.id}, Raw company_logo_url from DB: ${companyData?.company_logo_url}`);
+
     const companyProfile: CompanyProfile | undefined = companyData ? {
       companyName: companyData.name,
       companyCurrency: companyData.currency,

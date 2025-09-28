@@ -57,13 +57,13 @@ const Settings: React.FC = () => {
           setCompanyLogoUrlPreview(reader.result as string); // This is a data:URL for immediate preview
         };
         reader.readAsDataURL(file);
-        console.log("[Settings] handleFileChange: New file selected. companyLogoFile:", file.name);
+        console.log("[Settings] handleFileChange: New file selected. File name:", file.name);
       } else {
         showError("Please select an image file (PNG, JPG, GIF, SVG).");
         setCompanyLogoFile(null);
         // Revert preview to current logo if invalid file selected
         setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
-        console.log("[Settings] handleFileChange: Invalid file type. Reverting preview.");
+        console.log("[Settings] handleFileChange: Invalid file type selected. Reverting preview.");
       }
     } else {
       setCompanyLogoFile(null);
@@ -126,7 +126,7 @@ const Settings: React.FC = () => {
       } else {
         // No new file and not explicitly cleared. Keep existing internal path.
         finalCompanyLogoUrlForDb = profile?.companyProfile?.companyLogoUrl ? getFilePathFromPublicUrl(profile.companyProfile.companyLogoUrl, 'company-logos') || undefined : undefined;
-        console.log("[Settings] handleSaveCompanyProfile: No image change. Keeping existing internal path:", finalCompanyLogoUrlForDb);
+        console.log("[Settings] handleSaveCompanyProfile: No logo change. Keeping existing internal path:", finalCompanyLogoUrlForDb);
       }
       console.log("[Settings] handleSaveCompanyProfile: Final companyLogoUrlForDb before calling updateCompanyProfile:", finalCompanyLogoUrlForDb);
 
