@@ -26,29 +26,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import uploadFileToSupabase
 import { Loader2 } from "lucide-react"; // Import Loader2 for the spinner
-import { z } from "zod"; // NEW: Import z for schema definition
-
-const formSchema = z.object({
-  name: z.string().min(1, "Item name is required"),
-  description: z.string().optional(),
-  sku: z.string().min(1, "SKU is required"),
-  category: z.string().min(1, "Category is required"),
-  pickingBinQuantity: z.number().min(0, "Must be non-negative"),
-  overstockQuantity: z.number().min(0, "Must be non-negative"),
-  reorderLevel: z.number().min(0, "Must be non-negative"),
-  pickingReorderLevel: z.number().min(0, "Must be non-negative"),
-  committedStock: z.number().min(0, "Must be non-negative"),
-  incomingStock: z.number().min(0, "Must be non-negative"),
-  unitCost: z.number().min(0, "Must be non-negative"),
-  retailPrice: z.number().min(0, "Must be non-negative"),
-  folderId: z.string().min(1, "Folder is required"),
-  tags: z.string().optional(),
-  notes: z.string().optional(),
-  imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")).or(z.literal(null)), // Allow null
-  vendorId: z.string().optional().or(z.literal("null-vendor")),
-  autoReorderEnabled: z.boolean().default(false),
-  autoReorderQuantity: z.number().min(0, "Must be non-negative").optional(),
-});
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -171,9 +148,9 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
 
   const handleClearImage = () => {
     setImageFile(null);
-    setImageUrlPreview(null);
+    setImageUrlPreview(undefined); // Explicitly set to undefined
     showSuccess("Image cleared. Add item to apply.");
-    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared. imageUrlPreview set to null.");
+    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared. imageUrlPreview set to undefined.");
   };
 
   const handleSubmit = async () => {
@@ -266,7 +243,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       return;
     }
 
-    let finalImageUrl: string | undefined | null = null; // This will be the INTERNAL PATH or null
+    let finalImageUrl: string | undefined = undefined; // This will be the INTERNAL PATH or undefined
     if (imageFile) {
       setIsUploadingImage(true);
       try {
@@ -282,12 +259,15 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       } finally {
         setIsUploadingImage(false);
       }
+    } else if (imageUrlPreview === undefined) { // If image was explicitly cleared
+      finalImageUrl = undefined;
+      console.log("[AddInventoryDialog] Image was explicitly cleared. finalImageUrl for DB:", finalImageUrl);
     } else {
-      // If no new file is selected, and imageUrlPreview is null (meaning it was cleared or never existed),
-      // then finalImageUrl should be null for the database.
-      // Otherwise, it remains undefined (meaning no change to existing image_url in DB).
-      finalImageUrl = imageUrlPreview === null ? null : undefined;
-      console.log("[AddInventoryDialog] No new image file. imageUrlPreview is null:", imageUrlPreview === null, "finalImageUrl for DB:", finalImageUrl);
+      // No new file, not explicitly cleared. Keep existing image's internal path.
+      // This case should ideally not happen in AddInventoryDialog as it's for new items.
+      // But for robustness, if imageUrlPreview somehow holds a public URL, convert it back.
+      finalImageUrl = imageUrlPreview ? getFilePathFromPublicUrl(imageUrlPreview, 'inventory-images') || undefined : undefined;
+      console.log("[AddInventoryDialog] No new file, not cleared. Keeping existing internal path:", finalImageUrl);
     }
 
     console.log("[AddInventoryDialog] Adding item with imageUrl (internal path):", finalImageUrl);
@@ -306,7 +286,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
-      imageUrl: finalImageUrl, // Pass INTERNAL PATH or null to context
+      imageUrl: finalImageUrl, // Pass INTERNAL PATH or undefined to context
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,

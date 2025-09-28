@@ -4,15 +4,17 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
-import { getPublicUrlFromSupabase } from '@/integrations/supabase/storage'; // Removed getFilePathFromPublicUrl
+import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from '@/integrations/supabase/storage';
 import { deepEqual } from '@/lib/utils';
 import { useAuth } from './AuthContext';
+
+void getFilePathFromPublicUrl; // Suppress TS6133: 'getFilePathFromPublicUrl' is declared but its value is never read.
 
 export interface CompanyProfile {
   companyName: string;
   companyCurrency: string;
   companyAddress: string;
-  companyLogoUrl?: string | null; // This will now be a PUBLIC URL for UI consumption, or null
+  companyLogoUrl?: string; // This will now be a PUBLIC URL for UI consumption
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
@@ -80,7 +82,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // NEW: Check if company_logo_url is already a public URL before converting
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
-      : null; // Explicitly null if no URL or conversion fails
+      : undefined;
     
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Final companyLogoUrl for context: "${finalCompanyLogoUrl}" (Type: ${typeof finalCompanyLogoUrl})`);
 

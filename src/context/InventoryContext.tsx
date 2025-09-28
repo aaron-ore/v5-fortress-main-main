@@ -19,8 +19,9 @@ import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
-import { getPublicUrlFromSupabase } from "@/integrations/supabase/storage"; // Removed getFilePathFromPublicUrl
+import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
+void getFilePathFromPublicUrl; // Suppress TS6133: 'getFilePathFromPublicUrl' is declared but its value is never read.
 
 export interface InventoryItem {
   id: string;
@@ -43,7 +44,7 @@ export interface InventoryItem {
   notes?: string;
   status: string;
   lastUpdated: string;
-  imageUrl?: string | null; // This will now be a PUBLIC URL for UI consumption, or null
+  imageUrl?: string; // This will now be a PUBLIC URL for UI consumption
   vendorId?: string;
   barcodeUrl?: string;
   organizationId: string | null;
@@ -99,7 +100,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     // NEW: Check if image_url is already a public URL before converting
     const finalImageUrl = item.image_url
       ? (item.image_url.startsWith('http') ? item.image_url : getPublicUrlFromSupabase(item.image_url, 'inventory-images'))
-      : null; // Explicitly null if no URL or conversion fails
+      : undefined;
     
     console.log(`[InventoryContext] mapSupabaseItemToInventoryItem: Final imageUrl for context: "${finalImageUrl}" (Type: ${typeof finalImageUrl})`);
 
