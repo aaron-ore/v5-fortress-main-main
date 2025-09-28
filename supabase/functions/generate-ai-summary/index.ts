@@ -169,6 +169,8 @@ Summary:`;
     // Make a raw fetch request to the Gemini API
     const geminiApiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
     console.log('Edge Function: Making direct fetch to Gemini API:', geminiApiUrl);
+    console.log('Edge Function: Gemini API request body (prompt):', JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }, null, 2).substring(0, 500) + '...');
+
 
     const geminiResponse = await fetch(geminiApiUrl, {
       method: 'POST',
@@ -183,6 +185,8 @@ Summary:`;
       }),
     });
 
+    console.log('Edge Function: Gemini API response status:', geminiResponse.status, geminiResponse.statusText);
+
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.json();
       console.error('Gemini API direct fetch error:', errorData);
@@ -190,6 +194,8 @@ Summary:`;
     }
 
     const geminiResult = await geminiResponse.json();
+    console.log('Edge Function: Full Gemini API response:', JSON.stringify(geminiResult, null, 2));
+
     const summary = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "Failed to generate summary.";
 
     return new Response(JSON.stringify({ summary }), {
