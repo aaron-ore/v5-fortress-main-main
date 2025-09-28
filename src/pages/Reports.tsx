@@ -212,7 +212,8 @@ const Reports: React.FC = () => {
             <Button
               onClick={handleSummarizeReport}
               disabled={!reportData || isSummarizing || !canAccessAiSummary}
-              variant="secondary"
+              style={{ backgroundColor: '#9BFBCD', color: 'hsl(var(--foreground))' }} // Apply custom background color
+              className="hover:bg-[#7ee0c2] text-foreground" // Add a hover effect for the custom color
               size="sm"
             >
               {isSummarizing ? (
