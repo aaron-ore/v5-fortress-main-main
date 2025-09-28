@@ -38,7 +38,8 @@ import PutawayLabelPdfContent from "@/components/reports/pdf/PutawayLabelPdfCont
 import InvoicePdfContent from "@/components/reports/pdf/InvoicePdfContent";
 import PurchaseOrderPdfContent from "@/components/reports/pdf/PurchaseOrderPdfContent";
 import FolderLabelPdfContent from "@/components/reports/pdf/FolderLabelPdfContent";
-import PickingWavePdfContent from "@/components/reports/pdf/PickingWavePdfContent"; // Ensure this import is present and correct
+import PickingWavePdfContent from "@/components/reports/pdf/PickingWavePdfContent";
+import AiSummaryPdfContent from "@/components/reports/pdf/AiSummaryPdfContent"; // NEW: Import AiSummaryPdfContent
 
 export interface ReportItem {
   id: string;
@@ -125,4 +126,5 @@ export const pdfContentComponents: { [key: string]: React.ElementType } = {
   "invoice": InvoicePdfContent,
   "location-label": FolderLabelPdfContent,
   "picking-wave": PickingWavePdfContent,
+  "ai-summary": AiSummaryPdfContent, // NEW: Add AI summary PDF component
 };

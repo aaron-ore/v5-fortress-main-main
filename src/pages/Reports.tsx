@@ -1,23 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, AlertTriangle, FileText, Printer, Loader2, Brain } from "lucide-react";
+import { BarChart, AlertTriangle, FileText, Printer, Loader2, Brain, FilterX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { DateRange } from "react-day-picker";
 import { isValid } from "date-fns";
 import { usePrint, PrintContentData } from "@/context/PrintContext";
-import { useProfile } from "@/context/ProfileContext"; // Corrected import path
+import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
 import { supabase } from "@/lib/supabaseClient";
-import { hasRequiredPlan } from "@/utils/planUtils"; // NEW: Import hasRequiredPlan
+import { hasRequiredPlan } from "@/utils/planUtils";
 
-// Import the ReportSidebar component
 import ReportSidebar from "@/components/reports/ReportSidebar";
+import AiSummarySidebar from "@/components/reports/AiSummarySidebar"; // NEW: Import AiSummarySidebar
 
-// Import report categories and component mappings from the new config file
 import { reportCategories, reportContentComponents, pdfContentComponents } from "@/lib/reportConfig";
 
 
@@ -30,8 +29,9 @@ const Reports: React.FC = () => {
 
   const [activeReportId, setActiveReportId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [aiSummary, setAiSummary] = useState<string | null>(null); // State for AI summary
-  const [isSummarizing, setIsSummarizing] = useState(false); // State for AI summary loading
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false); // NEW: State for sidebar visibility
 
   const reportContentRef = useRef<HTMLDivElement>(null);
 
@@ -49,9 +49,10 @@ const Reports: React.FC = () => {
     }
   }, [location.hash, navigate]);
 
-  // Reset AI summary when report or date range changes
+  // Reset AI summary and close sidebar when report or date range changes
   useEffect(() => {
     setAiSummary(null);
+    setIsAiSummarySidebarOpen(false);
   }, [activeReportId, dateRange]);
 
   const handleClearDateFilter = () => {
@@ -87,7 +88,6 @@ const Reports: React.FC = () => {
     showSuccess("Report sent to printer!");
   }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
 
-  // NEW: Check AI Summary access based on plan
   const canAccessAiSummary = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
   const handleSummarizeReport = async () => {
@@ -95,13 +95,14 @@ const Reports: React.FC = () => {
       showError("No report data available to summarize.");
       return;
     }
-    if (!canAccessAiSummary) { // NEW: Use canAccessAiSummary
+    if (!canAccessAiSummary) {
       showError("AI Summary is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
 
     setIsSummarizing(true);
-    setAiSummary(null); // Clear previous summary
+    setAiSummary(null);
+    setIsAiSummarySidebarOpen(true); // NEW: Open the sidebar when summarizing starts
 
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -114,8 +115,7 @@ const Reports: React.FC = () => {
         reportData: reportData,
       };
 
-      // --- START: Direct fetch call to Edge Function ---
-      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/generate-ai-summary`; // Hardcode project ref
+      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/generate-ai-summary`;
       console.log("[Reports.tsx] Invoking AI summary Edge Function via direct fetch:", edgeFunctionUrl);
       console.log("[Reports.tsx] Payload being sent:", JSON.stringify(payload, null, 2));
 
@@ -141,7 +141,6 @@ const Reports: React.FC = () => {
       }
 
       const data = await response.json();
-      // --- END: Direct fetch call ---
 
       if (data.error) {
         throw new Error(data.error);
@@ -152,6 +151,7 @@ const Reports: React.FC = () => {
     } catch (error: any) {
       console.error("Error generating AI summary:", error);
       showError(`Failed to generate AI summary: ${error.message}`);
+      setAiSummary(null); // Ensure summary is cleared on error
     } finally {
       setIsSummarizing(false);
     }
@@ -201,7 +201,6 @@ const Reports: React.FC = () => {
             </CardTitle>
             <Button
               onClick={handleSummarizeReport}
-              // NEW: Disable based on plan
               disabled={!reportData || isSummarizing || !canAccessAiSummary}
               variant="secondary"
               size="sm"
@@ -243,25 +242,23 @@ const Reports: React.FC = () => {
           </CardContent>
         </Card>
 
-        {aiSummary && (
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                <Brain className="h-6 w-6 text-primary" /> AI Report Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground whitespace-pre-wrap">{aiSummary}</p>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="mt-4 flex flex-wrap gap-2 justify-end">
           <Button onClick={handlePrintReport} disabled={!reportData}>
             <Printer className="h-4 w-4 mr-2" /> Print/PDF
           </Button>
         </div>
       </div>
+
+      {/* NEW: AI Summary Sidebar */}
+      <AiSummarySidebar
+        isOpen={isAiSummarySidebarOpen}
+        onClose={() => setIsAiSummarySidebarOpen(false)}
+        summaryText={aiSummary}
+        isSummarizing={isSummarizing}
+        onGenerateSummary={handleSummarizeReport}
+        reportTitle={currentReportTitle}
+        activeReportId={activeReportId}
+      />
     </div>
   );
 };
