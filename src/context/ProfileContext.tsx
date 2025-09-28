@@ -8,7 +8,6 @@ import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from '@/integratio
 import { deepEqual } from '@/lib/utils';
 import { useAuth } from './AuthContext';
 
-void getFilePathFromPublicUrl; // Suppress TS6133: 'getFilePathFromPublicUrl' is declared but its value is never read.
 
 export interface CompanyProfile {
   companyName: string;

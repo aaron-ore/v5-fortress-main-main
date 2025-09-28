@@ -19,7 +19,7 @@ import { processAutoReorder } from "@/utils/autoReorderLogic";
 import { useNotifications } from "./NotificationContext";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { logActivity } from "@/utils/logActivity";
-import { getPublicUrlFromSupabase, getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
+import { getPublicUrlFromSupabase } from "@/integrations/supabase/storage";
 
 
 export interface InventoryItem {
@@ -242,7 +242,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [inventoryItems, vendors, profile, addOrder, addNotification]);
 
-  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt" | "imageUrl"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
+  const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
       const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
