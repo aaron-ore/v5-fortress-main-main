@@ -167,7 +167,8 @@ Summary:`;
     }
 
     // Make a raw fetch request to the Gemini API
-    const geminiApiUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
+    // CHANGED: API version from v1 to v1beta
+    const geminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
     console.log('Edge Function: Making direct fetch to Gemini API:', geminiApiUrl);
     console.log('Edge Function: Gemini API request body (prompt):', JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }, null, 2).substring(0, 500) + '...');
 
