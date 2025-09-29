@@ -36,6 +36,7 @@ export interface NavItem {
   adminOnly?: boolean;
   mobileOnly?: boolean;
   action?: () => void;
+  tag?: string; // NEW: Optional tag for items
 }
 
 export const mainNavItems: NavItem[] = [
@@ -46,7 +47,7 @@ export const mainNavItems: NavItem[] = [
   { title: "Customers", href: "/customers", icon: User },
   { title: "Vendors", href: "/vendors", icon: Truck },
   { title: "Folders", href: "/folders", icon: MapPin },
-  { title: "Integrations", href: "/integrations", icon: Plug },
+  { title: "Integrations", href: "/integrations", icon: Plug, tag: "Coming Soon" }, // NEW: Added 'Coming Soon' tag
   { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
   {
     title: "Warehouse Operations",

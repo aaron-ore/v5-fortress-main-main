@@ -18,6 +18,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSidebar } from "@/context/SidebarContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge"; // NEW: Import Badge
 
 interface SidebarProps {
   // isCollapsed: boolean; // REMOVED: No longer passed as prop
@@ -115,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="ml-2">
-                  {item.title}
+                  {item.title} {item.tag && <Badge variant="secondary" className="ml-1">{item.tag}</Badge>} {/* NEW: Display tag in tooltip */}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -136,6 +137,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                   <div className="flex items-center">
                     <item.icon className={cn("h-5 w-5 text-current", !isCollapsed && "mr-3")} />
                     {!isCollapsed && <span className="truncate text-current">{item.title}</span>}
+                    {item.tag && !isCollapsed && <Badge variant="secondary" className="ml-auto">{item.tag}</Badge>} {/* NEW: Display tag */}
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-1">
@@ -172,11 +174,12 @@ const Sidebar: React.FC<SidebarProps> = () => {
                       {unreadCount}
                     </span>
                   )}
+                  {item.tag && !isCollapsed && <Badge variant="secondary" className="ml-auto">{item.tag}</Badge>} {/* NEW: Display tag */}
                 </Button>
               </TooltipTrigger>
               {isCollapsed && (
                 <TooltipContent side="right" className="ml-2">
-                  {item.title}
+                  {item.title} {item.tag && <Badge variant="secondary" className="ml-1">{item.tag}</Badge>} {/* NEW: Display tag in tooltip */}
                 </TooltipContent>
               )}
             </Tooltip>
