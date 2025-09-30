@@ -64,7 +64,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canProcessReturns) {
-      showError("You do not have permission to process returns.");
+      showError("No permission to process returns.");
       return;
     }
     const lowerCaseScannedData = scannedData.toLowerCase();
@@ -80,13 +80,13 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       setReturnDestinationFolderId(foundItem.folderId);
       showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
-      showError(`No item found with SKU/Barcode: "${scannedData}".`);
+      showError(`No item found with SKU/Barcode.`);
     }
   };
 
   const handleScanClick = () => {
     if (!canProcessReturns) {
-      showError("You do not have permission to process returns.");
+      showError("No permission to process returns.");
       return;
     }
     setIsScanning(true);
@@ -95,17 +95,17 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
 
   const handleProcessReturn = async () => {
     if (!canProcessReturns) {
-      showError("You do not have permission to process returns.");
+      showError("No permission to process returns.");
       return;
     }
     if (!scannedItem || !returnQuantity || !returnReason || !returnDestinationFolderId) {
-      showError("Please scan an item and fill in all return details.");
+      showError("Scan item and fill details.");
       return;
     }
 
     const quantity = parseInt(returnQuantity);
     if (isNaN(quantity) || quantity <= 0) {
-      showError("Please enter a valid positive quantity for the return.");
+      showError("Enter valid positive quantity.");
       return;
     }
 
@@ -145,7 +145,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     });
 
     await refreshInventory();
-    showSuccess(`Processed return for ${quantity} units of ${scannedItem.name}. Stock updated and directed to ${getFolderName(returnDestinationFolderId)}.`);
+    showSuccess(`Processed return for ${quantity} units.`);
 
     setScannedItem(null);
     setReturnQuantity("");

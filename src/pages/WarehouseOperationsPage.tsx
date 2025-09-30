@@ -145,9 +145,9 @@ const WarehouseOperationsPage: React.FC = () => {
         dialogStates["item-lookup"].setIsOpen(true);
         navigate(`${location.pathname}#item-lookup`, { replace: true });
         setActiveTab("");
-        showSuccess(`Scanned: ${decodedText}. Opening Item Lookup.`);
+        showSuccess(`Scanned: ${decodedText}.`);
       } else {
-        showError("You do not have permission to use Item Lookup.");
+        showError("No permission for Item Lookup.");
       }
     }
     setIsCameraScannerDialogOpen(false);
@@ -229,7 +229,7 @@ const WarehouseOperationsPage: React.FC = () => {
             )}
             onClick={() => {
               if (!op.canAccess) { // NEW: Check permission before clicking
-                showError("You do not have permission to access this operation.");
+                showError("No permission to access this operation.");
                 return;
               }
               if (op.type === "tab") {

@@ -87,7 +87,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canVerifyShipping) {
-      showError("You do not have permission to perform shipping verification.");
+      showError("No permission for shipping verification.");
       setVerificationStatus("error");
       return;
     }
@@ -100,7 +100,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     );
 
     if (!foundItem) {
-      showError(`Scanned item (SKU/Barcode: ${scannedData}) not found in inventory.`);
+      showError(`Scanned item not in inventory.`);
       setVerificationStatus("error");
       return;
     }
@@ -108,7 +108,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     const expectedItem = expectedItemsMap.get(foundItem.sku);
 
     if (!expectedItem) {
-      showError(`Scanned item ${foundItem.name} (SKU: ${foundItem.sku}) is not expected for this route/truck.`);
+      showError(`Scanned item not expected for this route.`);
       setVerificationStatus("error");
       return;
     }
@@ -116,16 +116,16 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
     if (expectedItem.scannedQuantity < expectedItem.quantity) {
       expectedItem.scannedQuantity++;
       expectedItemsMap.set(foundItem.sku, expectedItem);
-      showSuccess(`Verified: ${foundItem.name}. Scanned ${expectedItem.scannedQuantity}/${expectedItem.quantity}.`);
+      showSuccess(`Verified: ${foundItem.name}.`);
     } else {
-      showError(`All units of ${foundItem.name} (SKU: ${foundItem.sku}) already scanned.`);
+      showError(`All units of ${foundItem.name} scanned.`);
       setVerificationStatus("error");
     }
 
     const allItemsScanned = Array.from(expectedItemsMap.values()).every(item => item.scannedQuantity >= item.quantity);
     if (allItemsScanned) {
       setVerificationStatus("success");
-      showSuccess("All items for this route/truck have been verified!");
+      showSuccess("All items verified!");
     } else {
       setVerificationStatus("idle");
     }
@@ -133,7 +133,7 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const handleScanButtonClick = () => {
     if (!canVerifyShipping) {
-      showError("You do not have permission to perform shipping verification.");
+      showError("No permission for shipping verification.");
       return;
     }
     setIsScanning(true);
@@ -142,18 +142,18 @@ const ShippingVerificationTool: React.FC<ShippingVerificationToolProps> = ({ onS
 
   const handleCompleteShipment = async () => {
     if (!canVerifyShipping) {
-      showError("You do not have permission to complete shipments.");
+      showError("No permission to complete shipments.");
       return;
     }
     if (verificationStatus !== "success") {
-      showError("Please verify all items before completing the shipment.");
+      showError("Verify all items before completing.");
       return;
     }
 
     for (const order of ordersForRoute) {
       await updateOrder({ ...order, status: "Shipped" });
     }
-    showSuccess(`Shipment for route ${selectedDeliveryRoute} (Truck: ${truckId}) completed! Orders updated to "Shipped".`);
+    showSuccess(`Shipment for route ${selectedDeliveryRoute} completed!`);
     setSelectedDeliveryRoute("all");
     setTruckId("");
     setVerificationStatus("idle");

@@ -25,22 +25,22 @@ const AccountSettings: React.FC = () => {
 
   const handleChangePassword = () => {
     if (newPassword !== confirmNewPassword) {
-      showSuccess("New passwords do not match.");
+      showSuccess("Passwords do not match.");
       return;
     }
-    showSuccess("Password changed successfully!");
+    showSuccess("Password changed!");
     setCurrentPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
   };
 
   const handleSaveGeneralSettings = () => {
-    showSuccess("General settings saved!");
+    showSuccess("Settings saved!");
   };
 
   const handleToggleTwoFactorAuth = (checked: boolean) => {
     setTwoFactorAuth(checked);
-    showSuccess(`Two-factor authentication ${checked ? "enabled" : "disabled"}!`);
+    showSuccess(`2FA ${checked ? "enabled" : "disabled"}!`);
   };
 
   const hasGeneralSettingsChanges = selectedLanguage !== "en";

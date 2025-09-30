@@ -35,7 +35,7 @@ const Vendors: React.FC = () => {
 
   const handleAddVendorClick = () => {
     if (!canManageVendors) { // NEW: Check permission before adding
-      showError("You do not have permission to add vendors.");
+      showError("No permission to add vendors.");
       return;
     }
     setVendorToEdit(null);
@@ -44,7 +44,7 @@ const Vendors: React.FC = () => {
 
   const handleEditVendorClick = (vendor: Vendor) => {
     if (!canManageVendors) { // NEW: Check permission before editing
-      showError("You do not have permission to edit vendors.");
+      showError("No permission to edit vendors.");
       return;
     }
     setVendorToEdit(vendor);
@@ -53,7 +53,7 @@ const Vendors: React.FC = () => {
 
   const handleDeleteVendorClick = (vendorId: string, vendorName: string) => {
     if (!canDeleteVendors) { // NEW: Check permission before deleting
-      showError("You do not have permission to delete vendors.");
+      showError("No permission to delete vendors.");
       return;
     }
     setVendorToDelete({ id: vendorId, name: vendorName });

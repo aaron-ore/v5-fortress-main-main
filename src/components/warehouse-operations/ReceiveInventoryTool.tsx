@@ -91,12 +91,12 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handlePoNumberSubmit = async (poNum?: string) => {
     if (!canReceiveInventory) { // NEW: Check permission before submitting PO
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     const currentPoNum = poNum || poNumberInput.trim();
     if (!currentPoNum) {
-      showError("Please enter a Purchase Order Number.");
+      showError("Enter PO Number.");
       return;
     }
 
@@ -121,9 +121,9 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         };
       });
       setReceivedItems(itemsWithDetails);
-      showSuccess(`Purchase Order ${foundPO.id} loaded.`);
+      showSuccess(`PO ${foundPO.id} loaded.`);
     } else {
-      showError(`Purchase Order "${currentPoNum}" not found or not a Purchase Order.`);
+      showError(`PO "${currentPoNum}" not found.`);
       setSelectedPO(null);
       setReceivedItems([]);
     }
@@ -131,7 +131,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handleReceivedQuantityChange = (itemId: number, quantity: string) => {
     if (!canReceiveInventory) { // NEW: Check permission before changing quantity
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     setReceivedItems((prev) =>
@@ -143,7 +143,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handleLotNumberChange = (itemId: number, lot: string) => {
     if (!canReceiveInventory) { // NEW: Check permission before changing lot number
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     setReceivedItems((prev) =>
@@ -155,7 +155,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handleExpirationDateChange = (itemId: number, date: string) => {
     if (!canReceiveInventory) { // NEW: Check permission before changing expiration date
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     setReceivedItems((prev) =>
@@ -168,11 +168,11 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canReceiveInventory) { // NEW: Check permission before scanning
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     if (!selectedPO) {
-      showError("Please load a Purchase Order before scanning items.");
+      showError("Load PO before scanning items.");
       return;
     }
 
@@ -187,18 +187,18 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         setReceivedItems(prev => prev.map(item =>
           item.id === itemToReceive.id ? { ...item, receivedQuantity: item.receivedQuantity + 1 } : item
         ));
-        showSuccess(`Scanned: ${itemToReceive.itemName}. Received count increased.`);
+        showSuccess(`Scanned: ${itemToReceive.itemName}.`);
       } else {
-        showError(`${itemToReceive.itemName} already fully received for this PO.`);
+        showError(`${itemToReceive.itemName} fully received.`);
       }
     } else {
-      showError(`Scanned item (SKU/Barcode: ${scannedData}) not found in this Purchase Order.`);
+      showError(`Scanned item not in PO.`);
     }
   };
 
   const handleScanClick = () => {
     if (!canReceiveInventory) { // NEW: Check permission before scanning
-      showError("You do not have permission to receive inventory.");
+      showError("No permission to receive inventory.");
       return;
     }
     setIsScanning(true);
@@ -207,11 +207,11 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handlePrintPutawayLabel = async (item: ReceivedItemDisplay) => {
     if (!canReceiveInventory) { // NEW: Check permission before printing label
-      showError("You do not have permission to print putaway labels.");
+      showError("No permission to print labels.");
       return;
     }
     if (!item.inventoryItemDetails || !item.suggestedPutawayFolderId) {
-      showError("Cannot print label: Missing item details or putaway folder.");
+      showError("Missing item/folder details.");
       return;
     }
 
@@ -240,7 +240,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
       };
 
       initiatePrint({ type: "putaway-label", props: labelProps });
-      showSuccess(`Putaway label for ${item.itemName} sent to printer.`);
+      showSuccess(`Label for ${item.itemName} sent.`);
     } catch (error: any) {
       showError(`Failed to generate/print label: ${error.message}`);
     }
@@ -248,11 +248,11 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
 
   const handleCompleteReceive = async () => {
     if (!canReceiveInventory) { // NEW: Check permission before completing receive
-      showError("You do not have permission to complete receiving.");
+      showError("No permission to complete receiving.");
       return;
     }
     if (!selectedPO) {
-      showError("No Purchase Order selected to complete receiving.");
+      showError("No PO selected to complete.");
       return;
     }
 
@@ -282,7 +282,7 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
             folderId: inventoryItem.folderId, // Pass folderId
           });
         } else {
-          showError(`Inventory item for ${item.itemName} not found.`);
+          showError(`Item for ${item.itemName} not found.`);
           updatesSuccessful = false;
         }
       }
@@ -297,13 +297,13 @@ const ReceiveInventoryTool: React.FC<ReceiveInventoryToolProps> = ({ onScanReque
         notes: selectedPO.notes
       };
       await updateOrder(updatedPO);
-      showSuccess(`Shipment for PO ${selectedPO.id} received successfully! Inventory updated and ready for putaway.`);
+      showSuccess(`PO ${selectedPO.id} received!`);
       refreshInventory();
       setPoNumberInput("");
       setSelectedPO(null);
       setReceivedItems([]);
     } else {
-      showError("Some items could not be updated. Check console for details.");
+      showError("Some items could not be updated.");
     }
   };
 

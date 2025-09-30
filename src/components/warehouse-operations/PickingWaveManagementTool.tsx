@@ -32,7 +32,7 @@ const PickingWaveManagementTool: React.FC = () => {
   const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
-  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [selectedOrderIds, setSelectedOrderIds] = new Set();
   const [generatedPickList, setGeneratedPickList] = useState<PickListItem[]>([]);
   const [currentWaveId, setCurrentWaveId] = useState<string | null>(null);
 
@@ -68,11 +68,11 @@ const PickingWaveManagementTool: React.FC = () => {
 
   const handleCreatePickingWave = () => {
     if (!canManagePickingWaves) {
-      showError("You do not have permission to create picking waves.");
+      showError("No permission to create waves.");
       return;
     }
     if (selectedOrderIds.size === 0) {
-      showError("Please select at least one order to create a picking wave.");
+      showError("Select at least one order.");
       return;
     }
 
@@ -115,20 +115,20 @@ const PickingWaveManagementTool: React.FC = () => {
       updateOrder({ ...order, status: "Processing" });
     });
 
-    showSuccess(`Picking Wave ${newWaveId} created for ${selectedOrderIds.size} orders.`);
+    showSuccess(`Wave ${newWaveId} created for ${selectedOrderIds.size} orders.`);
   };
 
   const handlePrintPickList = () => {
     if (!canManagePickingWaves) {
-      showError("You do not have permission to print picking lists.");
+      showError("No permission to print lists.");
       return;
     }
     if (!currentWaveId || generatedPickList.length === 0) {
-      showError("No picking wave generated to print.");
+      showError("No picking wave to print.");
       return;
     }
     if (!companyProfile) {
-      showError("Company profile not set up. Please complete onboarding or set company details in settings.");
+      showError("Company profile not set up.");
       return;
     }
 
@@ -151,12 +151,12 @@ const PickingWaveManagementTool: React.FC = () => {
     };
 
     initiatePrint({ type: "picking-wave", props: pdfProps });
-    showSuccess("Picking wave pick list sent to printer!");
+    showSuccess("Pick list sent to printer!");
   };
 
   const handleOrderSelection = (orderId: string, checked: boolean) => {
     if (!canManagePickingWaves) {
-      showError("You do not have permission to select orders for picking waves.");
+      showError("No permission to select orders.");
       return;
     }
     setSelectedOrderIds(prev => {

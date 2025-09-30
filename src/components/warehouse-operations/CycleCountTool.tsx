@@ -68,11 +68,11 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
 
   const startCycleCount = () => {
     if (!canCycleCount) {
-      showError("You do not have permission to start a cycle count.");
+      showError("No permission to start count.");
       return;
     }
     if (filteredInventory.length === 0) {
-      showError("No items found for the selected folder to start a cycle count.");
+      showError("No items found for count.");
       return;
     }
     const initialItems: CountedItem[] = filteredInventory.map(item => ({
@@ -89,12 +89,12 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     }));
     setItemsToCount(initialItems);
     setIsCounting(true);
-    showSuccess(`Cycle count started for ${selectedFolder === "all" ? "all folders" : inventoryFolders.find(folder => folder.id === selectedFolder)?.name || selectedFolder}.`);
+    showSuccess(`Count started for ${selectedFolder === "all" ? "all folders" : inventoryFolders.find(folder => folder.id === selectedFolder)?.name || selectedFolder}.`);
   };
 
   const handleCountedQuantityChange = (itemId: string, locationType: 'pickingBin' | 'overstock', quantity: string) => {
     if (!canCycleCount) {
-      showError("You do not have permission to perform cycle counts.");
+      showError("No permission to count.");
       return;
     }
     setItemsToCount(prev =>
@@ -115,11 +115,11 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canCycleCount) {
-      showError("You do not have permission to perform cycle counts.");
+      showError("No permission to count.");
       return;
     }
     if (!isCounting) {
-      showError("Please start a cycle count before scanning items.");
+      showError("Start count before scanning.");
       return;
     }
 
@@ -135,15 +135,15 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
           item.id === scannedItem.id ? { ...item, isScanned: true, countedPickingBinQuantity: item.countedPickingBinQuantity + 1 } : item
         )
       );
-      showSuccess(`Scanned: ${scannedItem.name}. Picking bin count increased.`);
+      showSuccess(`Scanned: ${scannedItem.name}.`);
     } else {
-      showError(`Item with SKU/Barcode "${scannedData}" not found in this count.`);
+      showError(`Item not found in count.`);
     }
   };
 
   const handleScanClick = () => {
     if (!canCycleCount) {
-      showError("You do not have permission to perform cycle counts.");
+      showError("No permission to count.");
       return;
     }
     setIsScanning(true);
@@ -152,7 +152,7 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
 
   const completeCycleCount = async () => {
     if (!canCycleCount) {
-      showError("You do not have permission to complete cycle counts.");
+      showError("No permission to complete count.");
       return;
     }
     let discrepanciesFound = 0;
@@ -215,9 +215,9 @@ const CycleCountTool: React.FC<CycleCountToolProps> = ({ onScanRequest, scannedD
     }
 
     if (discrepanciesFound > 0) {
-      showSuccess(`Cycle count completed. ${updatesSuccessful} discrepancies processed.`);
+      showSuccess(`Count completed. ${updatesSuccessful} discrepancies processed.`);
     } else {
-      showSuccess("Cycle count completed. No discrepancies found.");
+      showSuccess("Count completed. No discrepancies found.");
     }
     
     refreshInventory();

@@ -123,7 +123,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error fetching inventory folders:", error);
-      showError("Failed to load inventory folders.");
+      showError("Failed to load folders.");
       await logActivity("Inventory Folder Fetch Failed", `Failed to load inventory folders for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setInventoryFolders([]);
     } else {
@@ -151,7 +151,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error fetching custom roles:", error);
-      showError("Failed to load custom roles.");
+      showError("Failed to load roles.");
       await logActivity("Custom Role Fetch Failed", `Failed to load custom roles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setCustomRoles([]);
     } else {
@@ -192,7 +192,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (!profile) {
       console.warn("[OnboardingContext] Profile is null, cannot save company profile to Supabase.");
-      const errorMessage = "User profile not loaded. Please log in again.";
+      const errorMessage = "User profile not loaded. Log in again.";
       await logActivity("Set Company Profile Failed", errorMessage, profile, { profile_data: profileData }, true);
       showError(errorMessage);
       return;
@@ -226,7 +226,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         if (profileUpdateError) throw profileUpdateError;
         console.log("[OnboardingContext] Profile updated with new organization_id and role.");
 
-        showSuccess(`Organization "${profileData.name}" created and assigned! You are now an admin. Your unique company code is: ${uniqueCodeToPersist}`);
+        showSuccess(`Organization "${profileData.name}" created! Code: ${uniqueCodeToPersist}`);
         await logActivity("Organization Created", `New organization "${profileData.name}" created with code: ${uniqueCodeToPersist}.`, profile, { organization_id: organizationIdToUse, organization_name: profileData.name, unique_code: uniqueCodeToPersist });
 
       } else {
@@ -244,7 +244,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
 
         if (existingOrgWithName) {
-          throw new Error(`An organization with the name "${profileData.name}" already exists. Please choose a different name.`);
+          throw new Error(`Organization "${profileData.name}" exists.`);
         }
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
@@ -281,7 +281,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
                 if (deleteError) {
                     console.error("[OnboardingContext] Error deleting old company logo from storage:", deleteError);
-                    showError(`Failed to delete old company logo from storage: ${deleteError.message}`);
+                    showError(`Failed to delete old logo: ${deleteError.message}`);
                     await logActivity("Company Logo Delete Failed", `Failed to delete old company logo for organization ${profile.organizationId}.`, profile, { error_message: deleteError.message, old_logo_url: oldCompanyLogoUrl }, true);
                 } else {
                     console.log(`[OnboardingContext] Old logo file ${oldFilePath} deleted successfully.`);
@@ -313,7 +313,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           throw updateOrgError;
         }
         console.log("[OnboardingContext] Organization updated successfully.");
-        showSuccess(`Company profile for "${profileData.name}" updated successfully!`);
+        showSuccess(`Company profile for "${profileData.name}" updated!`);
         await logActivity("Company Profile Update Success", `Company profile for "${profileData.name}" updated.`, profile, { organization_id: organizationIdToUse, updated_fields: updatePayload });
       }
       
@@ -332,7 +332,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const addInventoryFolder = async (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">): Promise<InventoryFolder | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to add inventory folders.";
+      const errorMessage = "Login/org ID required to add folders.";
       await logActivity("Add Inventory Folder Failed", errorMessage, profile, { folder_name: folder.name }, true);
       showError(errorMessage);
       return null;
@@ -399,7 +399,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const updateInventoryFolder = async (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to update inventory folders.";
+      const errorMessage = "Login/org ID required to update folders.";
       await logActivity("Update Inventory Folder Failed", errorMessage, profile, { folder_id: folder.id, folder_name: folder.name }, true);
       showError(errorMessage);
       return;
@@ -436,7 +436,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const removeInventoryFolder = async (folderId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an an organization ID to remove inventory folders.";
+      const errorMessage = "Login/org ID required to remove folders.";
       await logActivity("Remove Inventory Folder Failed", errorMessage, profile, { folder_id: folderId }, true);
       showError(errorMessage);
       return;
@@ -464,7 +464,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   const addCustomRole = async (role: Omit<CustomRole, "id" | "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to add custom roles.");
+      showError("Login/org ID required to add roles.");
       return;
     }
 
@@ -477,21 +477,20 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         description: role.description,
         features: role.features,
       })
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error("Error adding custom role:", error);
       showError(`Failed to add role: ${error.message}`);
     } else if (data) {
-      showSuccess(`Custom role "${role.name}" added successfully!`);
+      showSuccess(`Role "${role.name}" added!`);
     }
   };
 
   const updateCustomRole = async (role: Omit<CustomRole, "createdAt" | "userId" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to update custom roles.");
+      showError("Login/org ID required to update roles.");
       return;
     }
 
@@ -511,30 +510,30 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error("Error updating custom role:", error);
       showError(`Failed to update role: ${error.message}`);
     } else if (data) {
-      showSuccess(`Custom role "${role.name}" updated successfully!`);
+      showSuccess(`Role "${role.name}" updated!`);
     }
   };
 
   const deleteCustomRole = async (roleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to delete custom roles.");
+      showError("Login/org ID required to delete roles.");
       return;
     }
 
-    const roleToDelete = customRoles.find(r => r.id === roleId);
+    const ruleToDelete = customRoles.find(r => r.id === roleId);
 
     const { error } = await supabase
       .from("custom_roles")
       .delete()
-      .eq("id", roleId)
+      .eq("id", ruleId)
       .eq("organization_id", profile.organizationId);
 
     if (error) {
       console.error("Error deleting custom role:", error);
       showError(`Failed to delete role: ${error.message}`);
     } else {
-      showSuccess(`Custom role "${roleToDelete?.name || roleId}" deleted.`);
+      showSuccess(`Rule "${ruleToDelete?.name || ruleId}" deleted.`);
     }
   };
 

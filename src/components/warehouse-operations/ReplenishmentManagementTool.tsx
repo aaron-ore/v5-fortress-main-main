@@ -54,11 +54,11 @@ const ReplenishmentManagementTool: React.FC = () => {
 
   const handleCreateTask = async (item: InventoryItem) => {
     if (!canManageReplenishment) {
-      showError("You do not have permission to create replenishment tasks.");
+      showError("No permission to create tasks.");
       return;
     }
     if (item.overstockQuantity <= 0) {
-      showError(`No overstock available for ${item.name} to replenish.`);
+      showError(`No overstock for ${item.name}.`);
       return;
     }
 
@@ -68,7 +68,7 @@ const ReplenishmentManagementTool: React.FC = () => {
     );
 
     if (quantityToMove <= 0) {
-      showError(`No quantity needed for ${item.name} or overstock is too low.`);
+      showError(`No quantity needed for ${item.name}.`);
       return;
     }
 
@@ -83,11 +83,11 @@ const ReplenishmentManagementTool: React.FC = () => {
 
   const handleAssignTask = async () => {
     if (!canManageReplenishment) {
-      showError("You do not have permission to assign replenishment tasks.");
+      showError("No permission to assign tasks.");
       return;
     }
     if (!selectedTask || assignedTo === "unassigned") {
-      showError("Please select a task and an operator to assign.");
+      showError("Select task and operator.");
       return;
     }
 
@@ -109,7 +109,7 @@ const ReplenishmentManagementTool: React.FC = () => {
 
   const handleCompleteTask = async () => {
     if (!canManageReplenishment) {
-      showError("You do not have permission to complete replenishment tasks.");
+      showError("No permission to complete tasks.");
       return;
     }
     if (!selectedTask) {
@@ -119,7 +119,7 @@ const ReplenishmentManagementTool: React.FC = () => {
 
     const item = inventoryItems.find(inv => inv.id === selectedTask.itemId);
     if (!item) {
-      showError(`Inventory item for task ${selectedTask.id} not found.`);
+      showError(`Item for task ${selectedTask.id} not found.`);
       return;
     }
 
@@ -140,7 +140,7 @@ const ReplenishmentManagementTool: React.FC = () => {
 
     await refreshInventory();
     setSelectedTask(null);
-    showSuccess(`Replenishment task ${selectedTask.id} completed. ${selectedTask.quantity} units moved to picking bin.`);
+    showSuccess(`Task ${selectedTask.id} completed. Units moved.`);
   };
 
   return (

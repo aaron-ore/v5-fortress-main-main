@@ -65,7 +65,7 @@ const AddEditCustomerDialog: React.FC<AddEditCustomerDialogProps> = ({
 
   const handleSubmit = async () => {
     if (!canManageCustomers) { // NEW: Check permission before submitting
-      showError("You do not have permission to add or edit customers.");
+      showError("No permission to manage customers.");
       return;
     }
     if (!name.trim()) {

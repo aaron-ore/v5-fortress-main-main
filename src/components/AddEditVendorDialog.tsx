@@ -66,7 +66,7 @@ const AddEditVendorDialog: React.FC<AddEditVendorDialogProps> = ({
 
   const handleSubmit = async () => {
     if (!canManageVendors) { // NEW: Check permission before submitting
-      showError("You do not have permission to add or edit vendors.");
+      showError("No permission to manage vendors.");
       return;
     }
     if (!name.trim()) {

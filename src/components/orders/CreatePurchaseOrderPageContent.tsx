@@ -137,7 +137,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handleAddItem = () => {
     if (!canManageOrders) { // NEW: Check permission before adding item
-      showError("You do not have permission to add items to orders.");
+      showError("No permission to add items.");
       return;
     }
     setItems([
@@ -148,7 +148,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handleRemoveItem = (id: number) => {
     if (!canManageOrders) { // NEW: Check permission before removing item
-      showError("You do not have permission to remove items from orders.");
+      showError("No permission to remove items.");
       return;
     }
     setItems(items.filter((item) => item.id !== id));
@@ -160,7 +160,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
     value: string | number,
   ) => {
     if (!canManageOrders) { // NEW: Check permission before changing item
-      showError("You do not have permission to edit order items.");
+      showError("No permission to edit items.");
       return;
     }
     setItems(
@@ -177,7 +177,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handleAddSelectedInventoryItems = (selectedInventoryItems: InventoryItem[]) => {
     if (!canManageOrders) { // NEW: Check permission before adding selected items
-      showError("You do not have permission to add items from inventory to orders.");
+      showError("No permission to add inventory items.");
       return;
     }
     const newOrderItems: POItem[] = selectedInventoryItems.map((invItem) => ({
@@ -196,11 +196,11 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handleSubmit = async () => {
     if (!canManageOrders) { // NEW: Check permission before submitting
-      showError("You do not have permission to create orders.");
+      showError("No permission to create orders.");
       return;
     }
     if (!customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
-      showError(`Please fill in all required Purchase Order details and ensure all items have valid names, quantities, and prices.`);
+      showError(`Fill all required PO details.`);
       return;
     }
 
@@ -230,15 +230,15 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handlePrintPdf = () => {
     if (!canViewOrders) { // NEW: Check permission before printing
-      showError("You do not have permission to print purchase orders.");
+      showError("No permission to print POs.");
       return;
     }
     if (!orderNumber || !customerSupplierName.trim() || !dueDate || items.some(item => !item.itemName || isNaN(item.quantity) || item.quantity <= 0 || isNaN(item.unitPrice) || item.unitPrice <= 0)) {
-      showError(`Please fill in all required Purchase Order details before generating the PDF.`);
+      showError(`Fill all required PO details.`);
       return;
     }
     if (!profile?.companyProfile) {
-      showError("Company profile not set up. Please complete onboarding or set company details in settings.");
+      showError("Company profile not set up.");
       return;
     }
 
@@ -280,7 +280,7 @@ const CreatePurchaseOrderPageContent: React.FC<CreatePurchaseOrderPageContentPro
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canManageOrders) { // NEW: Check permission before dragging
-      showError("You do not have permission to reorder items in orders.");
+      showError("No permission to reorder items.");
       return;
     }
     const { active, over } = event;

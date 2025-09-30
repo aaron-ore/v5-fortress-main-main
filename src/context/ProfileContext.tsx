@@ -162,7 +162,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error fetching profile:', error);
-      showError('Failed to load user profile.');
+      showError('Failed to load profile.');
       await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message }, true);
       setProfile(null);
     } else if (data) {
@@ -193,7 +193,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error fetching all profiles:', error);
-      showError('Failed to load all user profiles.');
+      showError('Failed to load all profiles.');
       await logActivity("All Profiles Fetch Failed", `Failed to load all profiles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setAllProfiles([]);
     } else {
@@ -242,7 +242,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showError(`Failed to update profile: ${error.message}`);
       throw error;
     } else {
-      showSuccess('Profile updated successfully!');
+      showSuccess('Profile updated!');
       await logActivity("Update User Profile Success", `User profile for ${profile.email} updated.`, profile, { updated_fields: updates });
       await fetchProfile();
     }
@@ -250,7 +250,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateUserRole = async (userId: string, newRole: string, organizationId: string) => {
     if (!profile || profile.role !== 'admin' || profile.organizationId !== organizationId) {
-      const errorMessage = 'You do not have permission to update user roles in this organization.';
+      const errorMessage = 'No permission to update roles.';
       await logActivity("Update User Role Failed", errorMessage, profile, { target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
       showError(errorMessage);
       return;
@@ -268,7 +268,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
       if (data.error) throw new Error(data.error);
 
-      showSuccess(`User role updated to ${newRole} for ${userId}.`);
+      showSuccess(`Role updated to ${newRole} for ${userId}.`);
       await logActivity("Update User Role Success", `User ${userId} role updated to ${newRole}.`, profile, { target_user_id: userId, new_role: newRole, organization_id: organizationId });
       await fetchAllProfiles();
     } catch (error: any) {
@@ -281,7 +281,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
     if (!profile || !profile.organizationId) {
-      const errorMessage = 'Organization not found. Cannot update company profile.';
+      const errorMessage = 'Organization not found. Cannot update profile.';
       await logActivity("Update Company Profile Failed", errorMessage, profile, { updated_fields: updates, unique_code: uniqueCode }, true);
       showError(errorMessage);
       return;
@@ -317,10 +317,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (error) {
       console.error('Error updating company profile:', error);
       await logActivity("Update Company Profile Failed", `Failed to update company profile for organization ${profile.organizationId}.`, profile, { error_message: error.message, updated_fields: payload }, true);
-      showError(`Failed to update company profile: ${error.message}`);
+      showError(`Failed to update profile: ${error.message}`);
       throw error;
     } else {
-      showSuccess('Company profile updated successfully!');
+      showSuccess('Company profile updated!');
       await logActivity("Update Company Profile Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { updated_fields: payload });
       await fetchProfile();
     }
@@ -328,7 +328,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateOrganizationTheme = async (newTheme: string) => {
     if (!profile || profile.role !== 'admin' || !profile.organizationId) {
-      const errorMessage = 'You do not have permission to update the organization theme.';
+      const errorMessage = 'No permission to update theme.';
       await logActivity("Update Organization Theme Failed", errorMessage, profile, { new_theme: newTheme }, true);
       showError(errorMessage);
       return;
@@ -345,7 +345,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showError(`Failed to update theme: ${error.message}`);
       throw error;
     } else {
-      showSuccess('Organization theme updated successfully!');
+      showSuccess('Organization theme updated!');
       await logActivity("Update Organization Theme Success", `Organization theme updated to ${newTheme} for organization ${profile.organizationId}.`, profile, { new_theme: newTheme });
       await fetchProfile();
     }

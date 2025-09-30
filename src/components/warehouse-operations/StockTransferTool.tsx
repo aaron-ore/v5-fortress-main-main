@@ -77,7 +77,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
 
   const handleItemSelect = (itemId: string) => {
     if (!canTransferStock) {
-      showError("You do not have permission to transfer stock.");
+      showError("No permission to transfer stock.");
       return;
     }
     setSelectedItemId(itemId);
@@ -87,7 +87,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canTransferStock) {
-      showError("You do not have permission to transfer stock.");
+      showError("No permission to transfer stock.");
       return;
     }
     const lowerCaseScannedData = scannedData.toLowerCase();
@@ -101,13 +101,13 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
       handleItemSelect(foundItem.id);
       showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
-      showError(`No item found with SKU/Barcode: "${scannedData}".`);
+      showError(`No item found with SKU/Barcode.`);
     }
   };
 
   const handleScanClick = () => {
     if (!canTransferStock) {
-      showError("You do not have permission to transfer stock.");
+      showError("No permission to transfer stock.");
       return;
     }
     setIsScanning(true);
@@ -116,11 +116,11 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
 
   const handleSubmitTransfer = async () => {
     if (!canTransferStock) {
-      showError("You do not have permission to transfer stock.");
+      showError("No permission to transfer stock.");
       return;
     }
     if (!selectedItem || !fromFolderId || !toFolderId || !transferQuantity) {
-      showError("Please fill in all required fields.");
+      showError("Fill all required fields.");
       return;
     }
     if (fromFolderId === toFolderId) {
@@ -130,7 +130,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
 
     const quantity = parseInt(transferQuantity);
     if (isNaN(quantity) || quantity <= 0) {
-      showError("Please enter a valid positive quantity to transfer.");
+      showError("Enter valid positive quantity.");
       return;
     }
     if (!selectedItem) {
@@ -138,7 +138,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
       return;
     }
     if (selectedItem.quantity < quantity) {
-      showError(`Not enough stock at ${getFolderName(fromFolderId)}. Available: ${selectedItem.quantity}`);
+      showError(`Not enough stock at ${getFolderName(fromFolderId)}.`);
       return;
     }
 
@@ -165,7 +165,7 @@ const StockTransferTool: React.FC<StockTransferToolProps> = ({ onScanRequest, sc
         folderId: fromFolderId,
       });
 
-      showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}.`);
+      showSuccess(`Transferred ${quantity} units of ${selectedItem.name}.`);
       refreshInventory();
       setSearchTerm("");
       setSelectedItemId("");

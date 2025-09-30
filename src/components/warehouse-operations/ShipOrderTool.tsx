@@ -62,11 +62,11 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   const handleSoNumberSubmit = async () => {
     if (!canShipOrders) { // NEW: Check permission before submitting SO
-      showError("You do not have permission to ship orders.");
+      showError("No permission to ship orders.");
       return;
     }
     if (!soNumberInput.trim()) {
-      showError("Please enter a Sales Order Number.");
+      showError("Enter Sales Order Number.");
       return;
     }
 
@@ -87,9 +87,9 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         };
       });
       setPickedItems(itemsWithDetails);
-      showSuccess(`Sales Order ${foundSO.id} loaded.`);
+      showSuccess(`SO ${foundSO.id} loaded.`);
     } else {
-      showError(`Sales Order "${soNumberInput.trim()}" not found or is not a Sales Order.`);
+      showError(`SO "${soNumberInput.trim()}" not found.`);
       setSelectedSO(null);
       setPickedItems([]);
     }
@@ -97,7 +97,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   const handlePickedQuantityChange = (itemId: number, quantity: string) => {
     if (!canShipOrders) { // NEW: Check permission before changing quantity
-      showError("You do not have permission to ship orders.");
+      showError("No permission to ship orders.");
       return;
     }
     setPickedItems((prev) =>
@@ -110,11 +110,11 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canShipOrders) { // NEW: Check permission before scanning
-      showError("You do not have permission to ship orders.");
+      showError("No permission to ship orders.");
       return;
     }
     if (!selectedSO) {
-      showError("Please load a Sales Order before scanning items.");
+      showError("Load SO before scanning items.");
       return;
     }
 
@@ -129,18 +129,18 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         setPickedItems(prev => prev.map(item =>
           item.id === itemToPick.id ? { ...item, pickedQuantity: item.pickedQuantity + 1 } : item
         ));
-        showSuccess(`Scanned: ${itemToPick.itemName}. Picked count increased.`);
+        showSuccess(`Scanned: ${itemToPick.itemName}.`);
       } else {
-        showError(`${itemToPick.itemName} already fully picked for this order.`);
+        showError(`${itemToPick.itemName} fully picked.`);
       }
     } else {
-      showError(`Scanned item (SKU/Barcode: ${scannedData}) not found in this Sales Order.`);
+      showError(`Scanned item not in SO.`);
     }
   };
 
   const handleScanItemClick = () => {
     if (!canShipOrders) { // NEW: Check permission before scanning
-      showError("You do not have permission to ship orders.");
+      showError("No permission to ship orders.");
       return;
     }
     setIsScanning(true);
@@ -149,11 +149,11 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
 
   const handleCompleteShipment = async () => {
     if (!canShipOrders) { // NEW: Check permission before completing shipment
-      showError("You do not have permission to ship orders.");
+      showError("No permission to ship orders.");
       return;
     }
     if (!selectedSO) {
-      showError("No Sales Order selected to complete shipment.");
+      showError("No SO selected to complete.");
       return;
     }
 
@@ -165,7 +165,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
         const inventoryItem = inventoryItems.find(inv => inv.id === item.inventoryItemId);
         if (inventoryItem) {
           if (inventoryItem.quantity < item.pickedQuantity) {
-            showError(`Not enough stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}`);
+            showError(`Not enough stock for ${inventoryItem.name}.`);
             updatesSuccessful = false;
             break;
           }
@@ -189,7 +189,7 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
             folderId: inventoryItem.folderId, // Pass folderId
           });
         } else {
-          showError(`Inventory item for ${item.itemName} not found.`);
+          showError(`Item for ${item.itemName} not found.`);
           updatesSuccessful = false;
         }
       }
@@ -202,13 +202,13 @@ const ShipOrderTool: React.FC<ShipOrderToolProps> = ({ onScanRequest, scannedDat
       const newStatus = allItemsPicked ? "Shipped" : "Packed";
       const updatedSO = { ...selectedSO, status: newStatus as OrderItem['status'] };
       await updateOrder(updatedSO);
-      showSuccess(`Shipment for SO ${selectedSO.id} completed. Status updated to "${newStatus}".`);
+      showSuccess(`Shipment for SO ${selectedSO.id} completed.`);
       refreshInventory();
       setSoNumberInput("");
       setSelectedSO(null);
       setPickedItems([]);
     } else {
-      showError("Some items could not be updated. Check console for details.");
+      showError("Some items could not be updated.");
     }
   };
 

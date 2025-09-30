@@ -61,11 +61,11 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
 
   const handleSoNumberSubmit = async () => {
     if (!canFulfillOrders) { // NEW: Check permission before submitting SO
-      showError("You do not have permission to fulfill orders.");
+      showError("No permission to fulfill orders.");
       return;
     }
     if (!soNumberInput.trim()) {
-      showError("Please enter a Sales Order Number.");
+      showError("Enter Sales Order Number.");
       return;
     }
 
@@ -86,9 +86,9 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
         };
       });
       setFulfilledItems(itemsWithDetails);
-      showSuccess(`Sales Order ${foundSO.id} loaded.`);
+      showSuccess(`SO ${foundSO.id} loaded.`);
     } else {
-      showError(`Sales Order "${soNumberInput.trim()}" not found or is not a Sales Order.`);
+      showError(`SO "${soNumberInput.trim()}" not found.`);
       setSelectedSO(null);
       setFulfilledItems([]);
     }
@@ -96,7 +96,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
 
   const handleFulfilledQuantityChange = (itemId: number, quantity: string) => {
     if (!canFulfillOrders) { // NEW: Check permission before changing quantity
-      showError("You do not have permission to fulfill orders.");
+      showError("No permission to fulfill orders.");
       return;
     }
     setFulfilledItems((prev) =>
@@ -109,11 +109,11 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false); // Scanning is complete
     if (!canFulfillOrders) { // NEW: Check permission before scanning
-      showError("You do not have permission to fulfill orders.");
+      showError("No permission to fulfill orders.");
       return;
     }
     if (!selectedSO) {
-      showError("Please load a Sales Order before scanning items.");
+      showError("Load SO before scanning items.");
       return;
     }
 
@@ -128,18 +128,18 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
         setFulfilledItems(prev => prev.map(item =>
           item.id === itemToFulfill.id ? { ...item, fulfilledQuantity: item.fulfilledQuantity + 1 } : item
         ));
-        showSuccess(`Scanned: ${itemToFulfill.itemName}. Fulfilled count increased.`);
+        showSuccess(`Scanned: ${itemToFulfill.itemName}.`);
       } else {
-        showError(`${itemToFulfill.itemName} already fully fulfilled for this order.`);
+        showError(`${itemToFulfill.itemName} fully fulfilled.`);
       }
     } else {
-      showError(`Scanned item (SKU/Barcode: ${scannedData}) not found in this order.`);
+      showError(`Scanned item not in order.`);
     }
   };
 
   const handleScanItem = () => {
     if (!canFulfillOrders) { // NEW: Check permission before scanning
-      showError("You do not have permission to fulfill orders.");
+      showError("No permission to fulfill orders.");
       return;
     }
     setIsScanning(true);
@@ -148,11 +148,11 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
 
   const handleCompleteOrder = async () => {
     if (!canFulfillOrders) { // NEW: Check permission before completing order
-      showError("You do not have permission to fulfill orders.");
+      showError("No permission to fulfill orders.");
       return;
     }
     if (!selectedSO) {
-      showError("No Sales Order selected to complete fulfillment.");
+      showError("No SO selected to complete.");
       return;
     }
 
@@ -164,7 +164,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
         const inventoryItem = inventoryItems.find(inv => inv.id === item.inventoryItemId);
         if (inventoryItem) {
           if (inventoryItem.quantity < item.fulfilledQuantity) {
-            showError(`Not enough stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}`);
+            showError(`Not enough stock for ${inventoryItem.name}.`);
             updatesSuccessful = false;
             break;
           }
@@ -188,7 +188,7 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
             folderId: inventoryItem.folderId, // Pass folderId
           });
         } else {
-          showError(`Inventory item for ${item.itemName} not found.`);
+          showError(`Item for ${item.itemName} not found.`);
           updatesSuccessful = false;
         }
       }
@@ -201,13 +201,13 @@ const FulfillOrderTool: React.FC<FulfillOrderToolProps> = ({ onScanRequest, scan
       const newStatus = allItemsFulfilled ? "Packed" : "Processing"; // If partially fulfilled, keep as processing
       const updatedSO = { ...selectedSO, status: newStatus as OrderItem['status'] };
       await updateOrder(updatedSO);
-      showSuccess(`Fulfillment for SO ${selectedSO.id} completed. Status updated to "${newStatus}".`);
+      showSuccess(`SO ${selectedSO.id} fulfilled. Status: "${newStatus}".`);
       refreshInventory();
       setSoNumberInput("");
       setSelectedSO(null);
       setFulfilledItems([]);
     } else {
-      showError("Some items could not be updated. Please check the console for details.");
+      showError("Some items could not be updated.");
     }
   };
 

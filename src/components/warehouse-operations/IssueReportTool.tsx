@@ -55,7 +55,7 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
   const handleScannedBarcode = (scannedData: string) => {
     setIsScanning(false);
     if (!canReportIssues) {
-      showError("You do not have permission to report issues.");
+      showError("No permission to report issues.");
       return;
     }
     const lowerCaseScannedData = scannedData.toLowerCase();
@@ -68,15 +68,15 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
     if (foundItem) {
       setItemId(foundItem.id);
       setFolderId(foundItem.folderId);
-      showSuccess(`Scanned item: ${foundItem.name}. Item and folder pre-filled.`);
+      showSuccess(`Scanned item: ${foundItem.name}.`);
     } else {
-      showError(`No item found with SKU/Barcode: "${scannedData}".`);
+      showError(`No item found with SKU/Barcode.`);
     }
   };
 
   const handleScanClick = () => {
     if (!canReportIssues) {
-      showError("You do not have permission to report issues.");
+      showError("No permission to report issues.");
       return;
     }
     setIsScanning(true);
@@ -85,11 +85,11 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
 
   const handleSubmitReport = async () => {
     if (!canReportIssues) {
-      showError("You do not have permission to report issues.");
+      showError("No permission to report issues.");
       return;
     }
     if (!issueType || !description.trim() || !contactInfo.trim()) {
-      showError("Please fill in all required fields (Issue Type, Description, Contact Info).");
+      showError("Fill all required fields.");
       return;
     }
 
@@ -103,9 +103,9 @@ const IssueReportTool: React.FC<IssueReportToolProps> = ({ onScanRequest, scanne
       timestamp: new Date().toISOString(),
     };
 
-    console.log("Issue Report Submitted:", reportDetails);
+    console.log("Feedback Submitted:", reportDetails);
     addNotification(`New Issue Reported: ${issueType} for ${selectedItem?.name || 'N/A'}`, "warning");
-    showSuccess("Issue report submitted successfully! A manager has been notified.");
+    showSuccess("Issue report submitted!");
 
     if (profile?.organizationId && profile?.id) {
       const { error: logError } = await supabase

@@ -121,7 +121,7 @@ const EditPurchaseOrder: React.FC = () => {
 
   const handleAddItem = () => {
     if (!canManageOrders) {
-      showError("You do not have permission to add items to orders.");
+      showError("No permission to add items.");
       return;
     }
     setItems([
@@ -132,7 +132,7 @@ const EditPurchaseOrder: React.FC = () => {
 
   const handleRemoveItem = (id: number) => {
     if (!canManageOrders) {
-      showError("You do not have permission to remove items from orders.");
+      showError("No permission to remove items.");
       return;
     }
     setItems(items.filter((item) => item.id !== id));
@@ -144,7 +144,7 @@ const EditPurchaseOrder: React.FC = () => {
     value: string | number,
   ) => {
     if (!canManageOrders) {
-      showError("You do not have permission to edit order items.");
+      showError("No permission to edit items.");
       return;
     }
     setItems(
@@ -161,11 +161,11 @@ const EditPurchaseOrder: React.FC = () => {
 
   const handleSubmit = () => {
     if (!canManageOrders) {
-      showError("You do not have permission to save order changes.");
+      showError("No permission to save changes.");
       return;
     }
     if (!poNumber || !supplier || !poDate || !status || !dueDate || !orderType || !shippingMethod || items.some(item => !item.itemName || item.quantity <= 0 || item.unitPrice <= 0)) {
-      showError("Please fill in all required fields and ensure all items have valid names, quantities, and prices.");
+      showError("Fill all required fields.");
       return;
     }
 
@@ -185,13 +185,13 @@ const EditPurchaseOrder: React.FC = () => {
       terms: terms,
     };
     updateOrder(updatedOrder);
-    showSuccess(`Updated Purchase Order ${poNumber}!`);
+    showSuccess(`Updated PO ${poNumber}!`);
     navigate("/orders");
   };
 
   const handleArchiveClick = () => {
     if (!canArchiveOrders) {
-      showError("You do not have permission to archive orders.");
+      showError("No permission to archive orders.");
       return;
     }
     setIsConfirmArchiveDialogOpen(true);
@@ -200,7 +200,7 @@ const EditPurchaseOrder: React.FC = () => {
   const confirmArchiveOrder = () => {
     if (order) {
       archiveOrder(order.id);
-      showSuccess(`Order ${order.id} has been archived.`);
+      showSuccess(`Order ${order.id} archived.`);
       navigate("/orders");
     }
     setIsConfirmArchiveDialogOpen(false);
@@ -208,15 +208,15 @@ const EditPurchaseOrder: React.FC = () => {
 
   const handlePrintPdf = () => {
     if (!canViewOrders) {
-      showError("You do not have permission to print orders.");
+      showError("No permission to print POs.");
       return;
     }
     if (!poNumber || !supplier || items.some(item => !item.itemName || item.quantity <= 0 || item.unitPrice <= 0)) {
-      showError("Please fill in all required PO details before generating the PDF.");
+      showError("Fill all required PO details.");
       return;
     }
     if (!profile?.companyProfile) {
-      showError("Company profile not set up. Please complete onboarding or set company details in settings.");
+      showError("Company profile not set up.");
       return;
     }
 
@@ -249,7 +249,7 @@ const EditPurchaseOrder: React.FC = () => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!canManageOrders) {
-      showError("You do not have permission to reorder items in orders.");
+      showError("No permission to reorder items.");
       return;
     }
     const { active, over } = event;

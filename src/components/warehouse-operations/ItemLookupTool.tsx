@@ -68,12 +68,12 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
 
   const handleSearch = (term: string = searchTerm) => {
     if (!canLookupItems) { // NEW: Check permission before searching
-      showError("You do not have permission to lookup items.");
+      showError("No permission to lookup items.");
       setSelectedItem(null);
       return;
     }
     if (!term.trim()) {
-      showError("Please enter a search term.");
+      showError("Enter a search term.");
       setSelectedItem(null);
       return;
     }
@@ -101,7 +101,7 @@ const ItemLookupTool: React.FC<ItemLookupToolProps> = ({ onScanRequest, scannedD
 
   const handleScanClick = () => {
     if (!canLookupItems) { // NEW: Check permission before scanning
-      showError("You do not have permission to scan items.");
+      showError("No permission to scan items.");
       return;
     }
     onScanRequest(handleScannedBarcode);

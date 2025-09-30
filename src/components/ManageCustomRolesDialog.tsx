@@ -87,7 +87,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   const handleSaveRole = async () => {
     if (!isAdmin) {
-      showError("You do not have permission to create or edit automation rules.");
+      showError("No permission to manage rules.");
       return;
     }
     if (!newRoleName.trim()) {
@@ -113,7 +113,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   const handleEditRoleClick = (role: CustomRole) => {
     if (!isAdmin) {
-      showError("You do not have permission to edit automation rules.");
+      showError("No permission to edit rules.");
       return;
     }
     setRoleToEdit(role);
@@ -122,7 +122,7 @@ const ManageCustomRolesDialog: React.FC<ManageCustomRolesDialogProps> = ({
 
   const handleDeleteRoleClick = (role: CustomRole) => {
     if (!isAdmin) {
-      showError("You do not have permission to delete automation rules.");
+      showError("No permission to delete rules.");
       return;
     }
     setRoleToDelete(role);

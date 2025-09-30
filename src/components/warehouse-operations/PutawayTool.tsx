@@ -77,7 +77,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
   const handleScannedData = (scannedData: string) => {
     setIsScanning(false);
     if (!canPutaway) { // NEW: Check permission before processing scanned data
-      showError("You do not have permission to use Putaway.");
+      showError("No permission to use Putaway.");
       return;
     }
     const lowerCaseScannedData = scannedData.toLowerCase();
@@ -86,23 +86,23 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
       const foundPO = receivedPOs.find(po => po.id.toLowerCase() === lowerCaseScannedData);
       if (foundPO) {
         handlePoSelect(foundPO.id);
-        showSuccess(`PO ${foundPO.id} loaded. Now scan a folder.`); // Updated text
+        showSuccess(`PO ${foundPO.id} loaded. Scan folder.`); // Updated text
         setCurrentScanMode("folder"); // Next step is to scan folder
       } else {
-        showError(`Purchase Order "${scannedData}" not found or not ready for putaway.`);
+        showError(`PO "${scannedData}" not found.`); // Updated text
       }
     } else if (currentScanMode === "folder") { // Changed from location to folder
       const foundFolder = inventoryFolders.find(folder => folder.name.toLowerCase() === lowerCaseScannedData); // Find folder by name
       if (foundFolder) {
         setScannedFolderId(foundFolder.id); // Set folderId
-        showSuccess(`Folder ${foundFolder.name} scanned. Now scan an item.`); // Updated text
+        showSuccess(`Folder ${foundFolder.name} scanned. Scan item.`); // Updated text
         setCurrentScanMode("item");
       } else {
         showError(`Folder "${scannedData}" not recognized.`); // Updated text
       }
     } else if (currentScanMode === "item") {
       if (!selectedPO || !scannedFolderId) {
-        showError("Please load a PO and scan a folder first."); // Updated text
+        showError("Load PO and scan folder first."); // Updated text
         return;
       }
 
@@ -119,19 +119,19 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
           confirmPutaway(itemToPutAway);
         } else {
           // Allow override, but warn
-          showError(`Scanned item ${itemToPutAway.itemName} is suggested for ${getFolderName(itemToPutAway.suggestedPutawayFolderId)}, but scanned folder is ${getFolderName(scannedFolderId)}. Confirm to override.`); // Updated text
+          showError(`Item suggested for ${getFolderName(itemToPutAway.suggestedPutawayFolderId)}, scanned ${getFolderName(scannedFolderId)}. Confirm to override.`); // Updated text
           // For now, we'll just confirm, but a real system might ask for explicit confirmation
           confirmPutaway(itemToPutAway);
         }
       } else {
-        showError(`Scanned item (SKU/Barcode: ${scannedData}) not found in this PO or already put away.`);
+        showError(`Scanned item not in PO.`);
       }
     }
   };
 
   const handleScanClick = (_mode: "po" | "folder" | "item") => { // Changed from location to folder
     if (!canPutaway) { // NEW: Check permission before scanning
-      showError("You do not have permission to use Putaway.");
+      showError("No permission to use Putaway.");
       return;
     }
     setIsScanning(true);
@@ -140,7 +140,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
 
   const handlePoSelect = async (orderId: string) => {
     if (!canPutaway) { // NEW: Check permission before selecting PO
-      showError("You do not have permission to use Putaway.");
+      showError("No permission to use Putaway.");
       return;
     }
     const foundPO = orders.find(
@@ -159,10 +159,10 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
         };
       });
       setItemsToPutAway(itemsWithDetails);
-      showSuccess(`Purchase Order ${foundPO.id} loaded. Ready for putaway.`);
+      showSuccess(`PO ${foundPO.id} loaded. Ready for putaway.`);
       setCurrentScanMode("folder"); // Next step is to scan folder
     } else {
-      showError(`Purchase Order "${orderId}" not found or not ready for putaway.`);
+      showError(`PO "${orderId}" not found.`);
       setSelectedPO(null);
       setItemsToPutAway([]);
       setCurrentScanMode("po");
@@ -171,11 +171,11 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
 
   const confirmPutaway = async (itemToPutAway: PutawayItemDisplay) => {
     if (!canPutaway) { // NEW: Check permission before confirming putaway
-      showError("You do not have permission to use Putaway.");
+      showError("No permission to use Putaway.");
       return;
     }
     if (!selectedPO || !scannedFolderId || !itemToPutAway.inventoryItemDetails) {
-      showError("Missing data for putaway confirmation.");
+      showError("Missing data for putaway.");
       return;
     }
 
@@ -211,7 +211,7 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
     const allItemsPutAway = itemsToPutAway.every(item => item.isPutAway || item.id === itemToPutAway.id);
     if (allItemsPutAway) {
       await updateOrder({ ...selectedPO, putawayStatus: "Completed" });
-      showSuccess(`All items from PO ${selectedPO.id} have been put away!`);
+      showSuccess(`All items from PO ${selectedPO.id} put away!`);
       setSelectedPO(null);
       setItemsToPutAway([]);
       setScannedFolderId(null);
@@ -257,8 +257,8 @@ const PutawayTool: React.FC<PutawayToolProps> = ({ onScanRequest, scannedDataFro
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-pos" disabled>No POs ready for putaway</SelectItem>
-              )}
+                  <SelectItem value="no-pos" disabled>No POs ready for putaway</SelectItem>
+                )}
             </SelectContent>
           </Select>
           <Button onClick={() => handleScanClick("po")} disabled={isScanning || !canPutaway}> {/* NEW: Disable if no permission */}
