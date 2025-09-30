@@ -63,12 +63,13 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     verbose: false,
   };
 
+  // Use a more lenient facingMode initially for broader compatibility
   const html5QrcodeCameraScanConfig: Html5QrcodeCameraScanConfig = {
     fps: 10,
     aspectRatio: 1.0,
     disableFlip: false,
     videoConstraints: {
-      facingMode: { exact: "environment" }
+      facingMode: "environment" // Prefer environment camera, but not exact
     }
   };
 
@@ -132,11 +133,11 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     loadingStartTimeRef.current = Date.now();
     currentAttemptsRef.current = 0; // Reset attempts for a new start cycle
 
-    if (!html5QrCodeRef.current) {
-      html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
+    // Ensure a fresh Html5Qrcode instance for each start attempt
+    if (html5QrCodeRef.current) {
+      await clearScanner();
     }
-
-    const cameraSelection: string | MediaTrackConstraints = html5QrcodeCameraScanConfig.videoConstraints || "environment";
+    html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
 
     const attemptStart = async () => {
       if (!isOpen || manualInputMode) { // Check again before each retry
@@ -153,7 +154,32 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       }
 
       currentAttemptsRef.current++;
-      console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS}) with selection:`, cameraSelection);
+      console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS})`);
+
+      let cameraSelection: string | MediaTrackConstraints = html5QrcodeCameraScanConfig.videoConstraints || "environment";
+
+      // Fallback to enumerate devices if initial constraints fail
+      if (currentAttemptsRef.current > 1) { // On retry, try enumerating devices
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length > 0) {
+            console.log("[CameraScannerDialog] Found camera devices:", devices);
+            // Try to find an environment camera, otherwise use the first one
+            const environmentCamera = devices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("environment"));
+            cameraSelection = environmentCamera ? environmentCamera.id : devices[0].id;
+            console.log("[CameraScannerDialog] Using specific camera ID:", cameraSelection);
+          } else {
+            console.warn("[CameraScannerDialog] No camera devices found during enumeration.");
+            throw new Error("No camera devices found.");
+          }
+        } catch (enumError) {
+          console.error("[CameraScannerDialog] Error enumerating cameras:", enumError);
+          setScannerError("Failed to access camera devices. Check permissions.");
+          setIsScannerLoading(false);
+          isStartingRef.current = false;
+          return;
+        }
+      }
 
       const startupPromise = new Promise<void>(async (resolve, reject) => {
         try {
@@ -230,7 +256,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     };
 
     attemptStart();
-  }, [isOpen, manualInputMode, stopScanner, onScanSuccess, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig]);
+  }, [isOpen, manualInputMode, stopScanner, onScanSuccess, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, clearScanner]);
 
   const handleRetryScan = useCallback(async () => {
     console.log("[CameraScannerDialog] Manual retry initiated.");
@@ -253,13 +279,9 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   useEffect(() => {
     console.log(`[CameraScannerDialog] useEffect: isOpen=${isOpen}, manualInputMode=${manualInputMode}, isCameraStartedRef.current=${isCameraStartedRef.current}`);
     if (isOpen) {
-      if (manualInputMode) {
-        // If switching to manual mode while camera is running, stop it
-        if (isCameraStartedRef.current) {
-          stopScanner();
-        }
-      } else {
-        // If in camera mode, ensure scanner is started
+      // Reset manual input mode when dialog opens to ensure camera attempts to start
+      setManualInputMode(false); 
+      if (!manualInputMode) {
         startScanner();
       }
     } else {
@@ -267,8 +289,6 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       if (isCameraStartedRef.current) {
         stopScanner();
       }
-      // Reset manual input mode when dialog closes
-      setManualInputMode(false);
     }
 
     // Cleanup function for when the dialog component unmounts
