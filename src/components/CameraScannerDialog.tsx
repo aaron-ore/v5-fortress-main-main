@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -111,17 +111,19 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
                   <XCircle className="h-8 w-8 mb-2" />
                   <p className="font-semibold">Camera Error:</p>
                   <p className="text-sm">{cameraError}</p>
+                  <p className="text-xs mt-2">Please ensure a back camera is available and permissions are granted.</p>
                   <Button onClick={handleRetryCamera} className="mt-4" variant="secondary">Retry Camera</Button>
                 </div>
               )}
-              {/* Render CameraFeed only when not in manual input mode */}
-              <CameraFeed
-                key={cameraFeedKey} // Force re-mount on key change
-                isActive={isOpen && !manualInputMode}
-                onScanSuccess={onScanSuccess}
-                onLoading={handleCameraFeedLoading}
-                onError={handleCameraFeedError}
-              />
+              <div className="absolute inset-0">
+                <CameraFeed
+                  key={cameraFeedKey} // Force re-mount on key change
+                  isActive={isOpen && !manualInputMode}
+                  onScanSuccess={onScanSuccess}
+                  onLoading={handleCameraFeedLoading}
+                  onError={handleCameraFeedError}
+                />
+              </div>
             </div>
           )}
         </div>
