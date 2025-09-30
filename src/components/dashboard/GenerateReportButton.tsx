@@ -33,7 +33,7 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
 
   const handleGenerateReport = () => {
     if (!profile?.companyProfile?.companyName || !profile?.companyProfile?.companyAddress || !profile?.companyProfile?.companyCurrency) {
-      showError("Company profile not set up. Please complete onboarding or set company details in settings.");
+      showError("Company profile not set up. Complete onboarding/settings.");
       return;
     }
 
@@ -46,6 +46,7 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
       totalStockValue,
       totalUnitsOnHand, // NEW: Pass totalUnitsOnHand
       lowStockItems,
+      onClose,
       outOfStockItems,
       recentSalesOrders,
       recentPurchaseOrders,

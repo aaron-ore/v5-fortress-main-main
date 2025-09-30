@@ -15,7 +15,7 @@ const SlowMovingDeadstockCard: React.FC<SlowMovingDeadstockCardProps> = ({ slowM
   };
 
   const handleBundleItems = (item: string) => {
-    showSuccess(`Bundling ${item} with other items.`);
+    showSuccess(`Bundling ${item}.`);
   };
 
   return (
