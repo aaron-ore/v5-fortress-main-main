@@ -28,8 +28,8 @@ interface CameraScannerDialogProps {
 }
 
 const QR_SCANNER_DIV_ID = "qr-code-full-region";
-const MAX_START_ATTEMPTS = 3;
-const RETRY_DELAY_MS = 1500; // 1.5 seconds
+const MAX_START_ATTEMPTS = 3; // Max attempts for initial camera start (excluding device enumeration retries)
+const RETRY_DELAY_MS = 1500; // 1.5 seconds delay between retries
 const CAMERA_STARTUP_TIMEOUT_MS = 10000; // 10 seconds for camera to start
 const MIN_LOADING_DISPLAY_TIME = 500; // Minimum 500ms for the loading overlay
 
@@ -43,7 +43,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const isCameraStartedRef = useRef(false); // Tracks if camera stream is actively running
   const isStartingRef = useRef(false); // Prevents multiple concurrent start attempts
-  const currentAttemptsRef = useRef(0);
+  const currentAttemptIndexRef = useRef(0); // Tracks current retry attempt index
   const loadingStartTimeRef = useRef<number | null>(null);
 
   const [isScannerLoading, setIsScannerLoading] = useState(true);
@@ -67,7 +67,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     fps: 10,
     aspectRatio: 1.0,
     disableFlip: false,
-    // videoConstraints will be determined dynamically
+    // videoConstraints will be determined dynamically in startScanner
   };
 
   const stopScanner = useCallback(async () => {
@@ -100,7 +100,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         html5QrCodeRef.current = null;
         isCameraStartedRef.current = false;
         isStartingRef.current = false;
-        currentAttemptsRef.current = 0;
+        currentAttemptIndexRef.current = 0;
         setIsScannerLoading(false);
       }
     } else {
@@ -128,7 +128,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     setIsScannerLoading(true);
     setScannerError(null);
     loadingStartTimeRef.current = Date.now();
-    currentAttemptsRef.current = 0; // Reset attempts for a new start cycle
+    currentAttemptIndexRef.current = 0; // Reset attempts for a new start cycle
 
     // Ensure a fresh Html5Qrcode instance for each start attempt
     if (html5QrCodeRef.current) {
@@ -136,7 +136,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     }
     html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
 
-    const attemptStart = async () => {
+    const tryStartCamera = async () => {
       if (!isOpen || manualInputMode) { // Check again before each retry
         console.log("[CameraScannerDialog] Aborting retry: dialog closed or manual input mode activated.");
         isStartingRef.current = false;
@@ -150,22 +150,24 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         return;
       }
 
-      currentAttemptsRef.current++;
-      console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS})`);
+      currentAttemptIndexRef.current++;
+      console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptIndexRef.current}/${MAX_START_ATTEMPTS})`);
 
-      let cameraSelection: string | MediaTrackConstraints = "environment"; // Default to lenient environment
+      let cameraSelection: string | MediaTrackConstraints;
 
-      if (currentAttemptsRef.current === 1) {
-        // First attempt: try exact environment
+      // Strategy 1: Try specific facing modes
+      if (currentAttemptIndexRef.current === 1) {
         cameraSelection = { facingMode: { exact: "environment" } };
         console.log("[CameraScannerDialog] Attempt 1: Trying exact 'environment' facingMode.");
-      } else if (currentAttemptsRef.current === 2) {
-        // Second attempt: try lenient environment
+      } else if (currentAttemptIndexRef.current === 2) {
         cameraSelection = { facingMode: "environment" };
         console.log("[CameraScannerDialog] Attempt 2: Trying lenient 'environment' facingMode.");
+      } else if (currentAttemptIndexRef.current === 3) {
+        cameraSelection = { facingMode: "user" }; // Fallback to front camera
+        console.log("[CameraScannerDialog] Attempt 3: Trying 'user' (front) facingMode.");
       } else {
-        // Third attempt (and subsequent retries): enumerate devices
-        console.log("[CameraScannerDialog] Attempt 3+: Enumerating camera devices for explicit selection.");
+        // Strategy 2: Enumerate devices and try by ID
+        console.log("[CameraScannerDialog] Attempt 4+: Enumerating camera devices for explicit selection.");
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0) {
@@ -233,7 +235,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         setIsScannerLoading(false);
         isStartingRef.current = false;
       } catch (err: any) {
-        console.error(`[CameraScannerDialog] Error starting scanner on attempt ${currentAttemptsRef.current}:`, err);
+        console.error(`[CameraScannerDialog] Error starting scanner on attempt ${currentAttemptIndexRef.current}:`, err);
         isCameraStartedRef.current = false; // Ensure this is false on error
         let errorMessage = "Failed to start camera. ";
         if (err.message === "Camera startup timed out.") {
@@ -250,9 +252,9 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
           errorMessage += "Unknown error. Ensure working camera. ";
         }
         
-        if (currentAttemptsRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
+        if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
           console.log(`[CameraScannerDialog] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
-          setTimeout(attemptStart, RETRY_DELAY_MS);
+          setTimeout(tryStartCamera, RETRY_DELAY_MS);
         } else {
           setScannerError(errorMessage);
           setIsScannerLoading(false);
@@ -261,7 +263,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       }
     };
 
-    attemptStart();
+    tryStartCamera();
   }, [isOpen, manualInputMode, stopScanner, onScanSuccess, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, clearScanner]);
 
   const handleRetryScan = useCallback(async () => {
