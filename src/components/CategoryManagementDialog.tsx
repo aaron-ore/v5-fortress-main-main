@@ -39,15 +39,15 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
 
   const handleAddCategory = () => {
     if (!canManageCategories) { // NEW: Check permission before adding
-      showError("You do not have permission to add categories.");
+      showError("No permission to add categories.");
       return;
     }
     if (newCategoryName.trim() === "") {
-      showError("Category name cannot be empty.");
+      showError("Category name empty.");
       return;
     }
     if (categories.some(cat => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
-      showError("This category already exists.");
+      showError("Category already exists.");
       return;
     }
     addCategory(newCategoryName.trim());
@@ -57,7 +57,7 @@ const CategoryManagementDialog: React.FC<CategoryManagementDialogProps> = ({
 
   const handleRemoveCategoryClick = (id: string, name: string) => {
     if (!canManageCategories) { // NEW: Check permission before removing
-      showError("You do not have permission to delete categories.");
+      showError("No permission to delete categories.");
       return;
     }
     setCategoryToDelete({ id, name });

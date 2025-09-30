@@ -99,7 +99,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
   const addStockMovement = async (movement: Omit<StockMovement, "id" | "timestamp" | "organizationId" | "userId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to log stock movements.");
+      showError("Login/org ID required to log movements.");
       return;
     }
 
@@ -121,7 +121,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
 
     if (error) {
       console.error("Error adding stock movement:", error);
-      showError(`Failed to log stock movement: ${error.message}`);
+      showError(`Failed to log movement: ${error.message}`);
     } else if (data && data.length > 0) {
       const newMovement: StockMovement = mapSupabaseMovementToStockMovement(data[0]);
       setStockMovements((prev) => [newMovement, ...prev]);

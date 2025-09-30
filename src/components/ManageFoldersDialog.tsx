@@ -50,11 +50,11 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
 
   const handleAddFolder = async () => {
     if (!canManageFolders) { // NEW: Check permission before adding
-      showError("You do not have permission to add folders.");
+      showError("No permission to add folders.");
       return;
     }
     if (newFolderName.trim() === "") {
-      showError("Folder name cannot be empty.");
+      showError("Folder name empty.");
       return;
     }
     // Check if folder name already exists at the root level (for simplicity, no parent_id check here)
@@ -62,7 +62,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
       folder.name.toLowerCase() === newFolderName.trim().toLowerCase()
     );
     if (existingFolder) {
-      showError("This folder already exists.");
+      showError("Folder already exists.");
       return;
     }
 
@@ -82,7 +82,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
 
   const handleEditFolderClick = (folder: InventoryFolder) => {
     if (!canManageFolders) { // NEW: Check permission before editing
-      showError("You do not have permission to edit folders.");
+      showError("No permission to edit folders.");
       return;
     }
     setFolderToEdit(folder);
@@ -91,11 +91,11 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
 
   const handleSaveEditedFolder = async () => {
     if (!canManageFolders) { // NEW: Check permission before saving
-      showError("You do not have permission to save folder changes.");
+      showError("No permission to save changes.");
       return;
     }
     if (!folderToEdit || !editingFolderName.trim()) {
-      showError("Folder name cannot be empty.");
+      showError("Folder name empty.");
       return;
     }
 
@@ -104,7 +104,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
       f.name.toLowerCase() === editingFolderName.trim().toLowerCase() && f.id !== folderToEdit.id
     );
     if (duplicateExists) {
-      showError("A folder with this name already exists.");
+      showError("Folder name already exists.");
       return;
     }
 
@@ -116,7 +116,7 @@ const ManageFoldersDialog: React.FC<ManageFoldersDialogProps> = ({
 
   const handleRemoveFolderClick = (folder: InventoryFolder) => { // Renamed from handleRemoveLocationClick
     if (!canManageFolders) { // NEW: Check permission before removing
-      showError("You do not have permission to delete folders.");
+      showError("No permission to delete folders.");
       return;
     }
     setFolderToDelete(folder);

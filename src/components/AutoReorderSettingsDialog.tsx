@@ -45,17 +45,17 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
 
   const handleSaveSettings = async () => {
     if (!canManageInventory) {
-      showError("You do not have permission to save auto-reorder settings.");
+      showError("No permission to save settings.");
       return;
     }
     const parsedLevel = parseInt(defaultReorderLevel);
     if (isNaN(parsedLevel) || parsedLevel < 0) {
-      showError("Default Reorder Level must be a non-negative number.");
+      showError("Reorder Level must be non-negative.");
       return;
     }
 
     if (!profile?.organizationId) {
-      showError("Organization not found. Cannot save auto-reorder settings.");
+      showError("Organization not found. Cannot save settings.");
       return;
     }
 
@@ -66,7 +66,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
         enableAutoReorderNotifications: enableAutoReorderNotifications,
         enableAutoReorder: enableAutoReorder,
       });
-      showSuccess("Auto-reorder settings saved successfully!");
+      showSuccess("Auto-reorder settings saved!");
       onClose();
     } catch (error: any) {
       console.error("Error saving auto-reorder settings:", error);

@@ -7,7 +7,7 @@ interface ExportData {
 
 export const exportToExcel = (data: ExportData[], filename: string, sheetName: string = "Sheet1") => {
   if (!data || data.length === 0) {
-    showError("No data available to export.");
+    showError("No data to export.");
     return;
   }
 

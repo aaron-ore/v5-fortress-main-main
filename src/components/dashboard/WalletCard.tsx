@@ -44,7 +44,7 @@ const WalletCard: React.FC<WalletCardProps> = ({ totalStockValue }) => {
 
   const handleSettings = () => {
     navigate("/account-settings");
-    showSuccess("Navigating to Account Settings for wallet-related preferences.");
+    showSuccess("Navigating to Account Settings.");
   };
 
   return (

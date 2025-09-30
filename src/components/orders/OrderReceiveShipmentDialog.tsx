@@ -67,11 +67,11 @@ const ReceiveShipmentDialog: React.FC<ReceiveShipmentDialogProps> = ({ isOpen, o
 
   const handleSubmit = async () => {
     if (!selectedOrderId) {
-      showError("Please select a Purchase Order.");
+      showError("Select a Purchase Order.");
       return;
     }
     if (receivedItems.every(item => item.quantity === 0)) {
-      showError("Please enter quantities for items received.");
+      showError("Enter quantities for items received.");
       return;
     }
 
@@ -106,7 +106,7 @@ const ReceiveShipmentDialog: React.FC<ReceiveShipmentDialogProps> = ({ isOpen, o
             reason: `Received from PO ${selectedOrderId}`,
           });
         } else {
-          showError(`Item ${receivedItem.itemId} not found in inventory.`);
+          showError(`Item ${receivedItem.itemId} not found.`);
           allUpdatesSuccessful = false;
         }
       }
@@ -116,11 +116,11 @@ const ReceiveShipmentDialog: React.FC<ReceiveShipmentDialogProps> = ({ isOpen, o
       // Update PO status (e.g., to 'Shipped' or 'Partially Received')
       const updatedOrder: OrderItem = { ...order, status: "Shipped", notes: notes || order.notes };
       updateOrder(updatedOrder);
-      showSuccess(`Shipment for PO ${selectedOrderId} received successfully! Inventory updated.`);
+      showSuccess(`Shipment for PO ${selectedOrderId} received.`);
       refreshInventory(); // Ensure inventory context is refreshed
       onClose();
     } else {
-      showError("Some items could not be updated. Check console for details.");
+      showError("Some items could not be updated.");
     }
   };
 
@@ -179,7 +179,7 @@ const ReceiveShipmentDialog: React.FC<ReceiveShipmentDialogProps> = ({ isOpen, o
                   })}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No items found for this PO or PO not selected.</p>
+                <p className="text-muted-foreground text-sm">No items found for this PO.</p>
               )}
             </div>
           )}

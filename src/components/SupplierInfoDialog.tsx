@@ -45,7 +45,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
         setSupplier(foundVendor);
         showSuccess(`Supplier found for ${itemName}.`);
       } else {
-        showError(`No supplier found for vendor ID: ${vendorId}.`);
+        showError(`No supplier found for vendor ID.`);
         setSupplier(null);
       }
       setIsLoadingSupplier(false);
@@ -70,7 +70,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
           </DialogHeader>
           <div className="grid gap-4 py-4 text-sm">
             <div className="text-center text-muted-foreground py-4">
-              <p>You do not have permission to view supplier information.</p>
+              <p>No permission to view supplier info.</p>
             </div>
           </div>
           <DialogFooter>
@@ -123,8 +123,8 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
             </>
           ) : (
             <div className="text-center text-muted-foreground py-4">
-              <p>No supplier information available for this item.</p>
-              <p className="text-xs mt-2">Ensure the item has a vendor assigned.</p>
+              <p>No supplier info available.</p>
+              <p className="text-xs mt-2">Ensure item has a vendor assigned.</p>
             </div>
           )}
           <div className="mt-4 p-3 bg-muted/20 rounded-md text-xs text-muted-foreground">

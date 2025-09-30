@@ -33,11 +33,11 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
 
   const handleScan = () => {
     if (!canUseTools) { // NEW: Check permission before scanning
-      showError("You do not have permission to scan items.");
+      showError("No permission to scan items.");
       return;
     }
     if (!barcode) {
-      showError("Please enter a barcode or SKU to scan.");
+      showError("Enter barcode or SKU.");
       return;
     }
 
@@ -46,10 +46,10 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
     );
 
     if (foundItem) {
-      showSuccess(`Item found: ${foundItem.name} (SKU: ${foundItem.sku})`);
+      showSuccess(`Item found: ${foundItem.name}.`);
       // In a real application, you might navigate to the item's edit page or show its details
     } else {
-      showError(`No item found with barcode/SKU: ${barcode}`);
+      showError(`No item found with barcode/SKU.`);
     }
 
     setBarcode(""); // Clear input after scan attempt

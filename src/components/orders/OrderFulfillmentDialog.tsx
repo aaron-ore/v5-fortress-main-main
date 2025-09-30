@@ -66,11 +66,11 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
 
   const handleSubmit = async () => {
     if (!selectedOrderId) {
-      showError("Please select a Sales Order.");
+      showError("Select a Sales Order.");
       return;
     }
     if (fulfilledItems.every(item => item.quantity === 0)) {
-      showError("Please enter quantities for items to fulfill.");
+      showError("Enter quantities to fulfill.");
       return;
     }
 
@@ -87,7 +87,7 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
         const inventoryItem = inventoryItems.find(inv => inv.id === fulfilledItem.itemId);
         if (inventoryItem) {
           if (inventoryItem.quantity < fulfilledItem.quantity) {
-            showError(`Not enough stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}`);
+            showError(`Not enough stock for ${inventoryItem.name}.`);
             allUpdatesSuccessful = false;
             break;
           }
@@ -110,7 +110,7 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
             reason: `Fulfilled for SO ${selectedOrderId}`,
           });
         } else {
-          showError(`Item ${fulfilledItem.itemId} not found in inventory.`);
+          showError(`Item ${fulfilledItem.itemId} not found.`);
           allUpdatesSuccessful = false;
           break;
         }
@@ -121,11 +121,11 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
       // Update Order status
       const updatedOrder: OrderItem = { ...order, status: "Packed", notes: notes || order.notes };
       updateOrder(updatedOrder);
-      showSuccess(`Order ${selectedOrderId} fulfilled and packed! Inventory updated.`);
+      showSuccess(`Order ${selectedOrderId} fulfilled and packed.`);
       refreshInventory(); // Ensure inventory context is refreshed
       onClose();
     } else {
-      showError("Order fulfillment failed for some items. Check console for details.");
+      showError("Order fulfillment failed for some items.");
     }
   };
 
@@ -185,7 +185,7 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
                   })}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No items found for this SO or SO not selected.</p>
+                <p className="text-muted-foreground text-sm">No items found for this SO.</p>
               )}
             </div>
           )}

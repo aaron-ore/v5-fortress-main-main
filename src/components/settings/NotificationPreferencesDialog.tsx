@@ -26,7 +26,7 @@ const NotificationPreferencesDialog: React.FC<NotificationPreferencesDialogProps
   const [shipmentUpdateEmail, setShipmentUpdateEmail] = React.useState(false);
 
   const handleSavePreferences = () => {
-    showSuccess("Notification preferences saved!");
+    showSuccess("Preferences saved!");
     // In a real app, you'd send these settings to a backend
     console.log({
       lowStockEmail,

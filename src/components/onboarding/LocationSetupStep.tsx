@@ -18,7 +18,7 @@ const FolderSetupStep: React.FC<FolderSetupStepProps> = ({ onNext, onBack }) => 
 
   const handleAddFolder = async () => { // Renamed from handleAddLocation
     if (newFolderName.trim() === "") {
-      showError("Folder name cannot be empty.");
+      showError("Folder name empty.");
       return;
     }
     // Check if folder name already exists at the root level (for simplicity, no parent_id check here)
@@ -26,7 +26,7 @@ const FolderSetupStep: React.FC<FolderSetupStepProps> = ({ onNext, onBack }) => 
       folder.name.toLowerCase() === newFolderName.trim().toLowerCase()
     );
     if (existingFolder) {
-      showError("This folder already exists.");
+      showError("Folder already exists.");
       return;
     }
 

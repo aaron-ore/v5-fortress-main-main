@@ -81,7 +81,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
       if (file.name.endsWith(".csv")) {
         setSelectedFile(file);
       } else {
-        showError("Please select a CSV file.");
+        showError("Select a CSV file.");
         setSelectedFile(null);
       }
     } else {
@@ -91,11 +91,11 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
 
   const handleUpload = async () => {
     if (!canManageInventory) { // NEW: Check permission before uploading
-      showError("You do not have permission to perform bulk inventory updates.");
+      showError("No permission for bulk updates.");
       return;
     }
     if (!selectedFile) {
-      showError("Please select a CSV file to upload.");
+      showError("Select a CSV file to upload.");
       return;
     }
 
@@ -117,7 +117,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
-          showError("The CSV file is empty or contains no data rows.");
+          showError("CSV file is empty.");
           setIsUploading(false);
           return;
         }
@@ -136,7 +136,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
 
           const existingItem = inventoryItems.find(item => item.sku === skuToUpdate);
           if (!existingItem) {
-            errors.push(`SKU '${skuToUpdate}': Item not found in inventory. Skipping update.`);
+            errors.push(`SKU '${skuToUpdate}': Item not found. Skipping.`);
             errorCount++;
             continue;
           }
@@ -151,13 +151,13 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
               if (["quantity", "reorderLevel", "committedStock", "incomingStock"].includes(field)) {
                 value = parseInt(String(value) || '0'); // Ensure string before parseInt, default to '0'
                 if (isNaN(value) || value < 0) {
-                  errors.push(`SKU '${skuToUpdate}': Invalid number for field '${field}'. Skipping update for this field.`);
+                  errors.push(`SKU '${skuToUpdate}': Invalid number for '${field}'.`);
                   continue;
                 }
               } else if (["unitCost", "retailPrice"].includes(field)) {
                 value = parseFloat(String(value) || '0'); // Ensure string before parseFloat, default to '0'
                 if (isNaN(value) || value < 0) {
-                  errors.push(`SKU '${skuToUpdate}': Invalid number for field '${field}'. Skipping update for this field.`);
+                  errors.push(`SKU '${skuToUpdate}': Invalid number for '${field}'.`);
                   continue;
                 }
               } else {
@@ -179,29 +179,29 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
               await updateInventoryItem({ ...existingItem, ...updatedFields });
               successCount++;
             } catch (updateError: any) {
-              errors.push(`Failed to update item '${existingItem.name}' (SKU: ${skuToUpdate}): ${updateError.message || 'Unknown error'}.`);
+              errors.push(`Failed to update item '${existingItem.name}'.`);
               errorCount++;
             }
           } else {
-            errors.push(`SKU '${skuToUpdate}': No changes detected or invalid fields provided. Skipping.`);
+            errors.push(`SKU '${skuToUpdate}': No changes detected. Skipping.`);
             errorCount++;
           }
         }
 
         if (successCount > 0) {
-          showSuccess(`Successfully updated ${successCount} item(s).`);
+          showSuccess(`Updated ${successCount} item(s).`);
         }
         if (errorCount > 0) {
-          showError(`Failed to update ${errorCount} item(s). See console for details.`);
+          showError(`Failed to update ${errorCount} item(s).`);
           console.error("CSV Bulk Update Summary - Errors:", errors);
         }
         if (successCount === 0 && errorCount === 0) {
-          showError("No valid updates found in the CSV.");
+          showError("No valid updates found.");
         }
         refreshInventory(); // Refresh inventory after bulk update
         onClose();
       } catch (parseError: any) {
-        showError(`Error parsing CSV file: ${parseError.message}`);
+        showError(`Error parsing CSV: ${parseError.message}`);
         console.error("CSV Parse Error:", parseError);
       } finally {
         setIsUploading(false);
@@ -232,7 +232,7 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
       document.body.removeChild(link);
       showSuccess("Bulk update CSV template downloaded!");
     } else {
-      showError("Your browser does not support downloading files directly.");
+      showError("Browser does not support downloads.");
     }
   };
 

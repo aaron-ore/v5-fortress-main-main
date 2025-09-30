@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import DailyIssuesDialog from "./DailyIssuesDialog";
@@ -45,7 +45,7 @@ const IssuesCard: React.FC<IssuesCardProps> = ({ dailyIssuesCount, previousPerio
             onClick={() => setIsDailyIssuesDialogOpen(true)}
             disabled={dailyIssuesCount === 0}
           >
-            <AlertTriangle className="h-4 w-4 mr-2" /> View Issues
+            <Scale className="h-4 w-4 mr-2" /> View Issues
           </Button>
         </CardContent>
       </Card>

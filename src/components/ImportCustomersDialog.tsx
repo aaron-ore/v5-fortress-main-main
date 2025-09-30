@@ -74,7 +74,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       if (file.name.endsWith(".csv")) {
         setSelectedFile(file);
       } else {
-        showError("Please select a CSV file.");
+        showError("Select a CSV file.");
         setSelectedFile(null);
       }
     } else {
@@ -84,7 +84,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
   const processCsvData = async (data: any[], actionForDuplicates: "skip" | "update") => {
     if (!canManageCustomers) { // NEW: Check permission before processing
-      showError("You do not have permission to import customer data.");
+      showError("No permission to import customer data.");
       setIsUploading(false);
       return;
     }
@@ -102,7 +102,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       const notes = String(row.notes || '').trim();
 
       if (!name) {
-        errors.push(`Row: Missing Customer Name. Cannot import customer.`);
+        errors.push(`Row: Missing Customer Name. Cannot import.`);
         errorCount++;
         continue;
       }
@@ -113,7 +113,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
       if (isDuplicate) {
         if (actionForDuplicates === "skip") {
-          errors.push(`Customer '${name}': Skipped due to duplicate entry confirmation.`);
+          errors.push(`Customer '${name}': Skipped duplicate.`);
           errorCount++;
           continue;
         } else if (actionForDuplicates === "update") {
@@ -133,12 +133,12 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
               await updateCustomer(updatedCustomerData);
               successCount++;
             } catch (updateError: any) {
-              errors.push(`Failed to update customer '${name}': ${updateError.message || 'Unknown error'}.`);
+              errors.push(`Failed to update customer '${name}'.`);
               errorCount++;
             }
             continue;
           } else {
-            errors.push(`Customer '${name}': Not found for update, despite being marked as duplicate.`);
+            errors.push(`Customer '${name}': Not found for update.`);
             errorCount++;
             continue;
           }
@@ -157,18 +157,18 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         await addCustomer(newCustomerData);
         successCount++;
       } catch (addError: any) {
-        errors.push(`Failed to add customer '${name}': ${addError.message || 'Unknown error'}.`);
+        errors.push(`Failed to add customer '${name}'.`);
         errorCount++;
       }
     }
 
     if (successCount > 0) {
-      showSuccess(`Successfully imported ${successCount} customer(s).`);
+      showSuccess(`Imported ${successCount} customer(s).`);
     }
     if (errorCount > 0) {
       const errorMessage = errorCount === 1
         ? errors[0]
-        : `Failed to import ${errorCount} customer(s) due to various issues (e.g., duplicate names/emails, invalid data).`;
+        : `Failed to import ${errorCount} customer(s).`;
       showError(errorMessage);
       console.error("CSV Import Summary - Errors:", errors);
     }
@@ -178,11 +178,11 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
 
   const handleUpload = async () => {
     if (!canManageCustomers) { // NEW: Check permission before uploading
-      showError("You do not have permission to import customer data.");
+      showError("No permission to import customer data.");
       return;
     }
     if (!selectedFile) {
-      showError("Please select a CSV file to upload.");
+      showError("Select a CSV file to upload.");
       return;
     }
 
@@ -204,7 +204,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
-          showError("The CSV file is empty or contains no data rows.");
+          showError("CSV file is empty.");
           setIsUploading(false);
           return;
         }
@@ -238,7 +238,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
         }
 
       } catch (parseError: any) {
-        showError(`Error parsing CSV file: ${parseError.message}`);
+        showError(`Error parsing CSV: ${parseError.message}`);
         console.error("CSV Parse Error:", parseError);
       } finally {
       }
@@ -267,7 +267,7 @@ const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
       document.body.removeChild(link);
       showSuccess("Customer CSV template downloaded!");
     } else {
-      showError("Your browser does not support downloading files directly.");
+      showError("Browser does not support downloads.");
     }
   };
 

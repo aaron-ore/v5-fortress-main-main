@@ -78,11 +78,11 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
 
   const handleSaveFolderDetails = async () => {
     if (disabled) { // NEW: Check disabled prop
-      showError("You do not have permission to save folder details.");
+      showError("No permission to save.");
       return;
     }
     if (!folderName || !selectedColor) {
-      showError("Please fill in the folder name and select a color.");
+      showError("Fill folder name and color.");
       return;
     }
 
@@ -95,7 +95,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
     );
 
     if (duplicateExists) {
-      showError(`A folder with the name "${folderName}" already exists in this level. Please choose a unique name.`);
+      showError(`Folder "${folderName}" already exists.`);
       return;
     }
 
@@ -111,17 +111,17 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
 
   const handleGenerateAndPrint = async () => {
     if (disabled) { // NEW: Check disabled prop
-      showError("You do not have permission to generate and print labels.");
+      showError("No permission to print labels.");
       return;
     }
     if (!folderName || !selectedColor || !quantity) {
-      showError("Please fill in the folder name and select a color.");
+      showError("Fill folder name, color, and quantity.");
       return;
     }
 
     const numQuantity = parseInt(quantity);
     if (isNaN(numQuantity) || numQuantity <= 0 || numQuantity > 100) {
-      showError("Please enter a valid quantity between 1 and 100.");
+      showError("Enter quantity between 1 and 100.");
       return;
     }
 
@@ -134,7 +134,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
           folderName: folderName,
           color: selectedColor,
           qrCodeSvg: qrSvg,
-          // Removed printDate and folderIdentifier as they are no longer needed by FolderLabelPdfContent
+          // Removed printDate and folderIdentifier from props
         },
       }));
 
@@ -144,7 +144,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
         for (const label of labelsToPrint) {
           initiatePrint(label);
         }
-        showSuccess(`Generated and sent ${numQuantity} folder labels to printer!`);
+        showSuccess(`Generated ${numQuantity} folder labels.`);
       }
     } catch (error: any) {
       showError(`Failed to generate labels: ${error.message}`);
@@ -153,11 +153,11 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
 
   const handleDownloadPng = async () => {
     if (disabled) { // NEW: Check disabled prop
-      showError("You do not have permission to download labels.");
+      showError("No permission to download labels.");
       return;
     }
     if (!labelPreviewRef.current) {
-      showError("No label preview available to download.");
+      showError("No label preview to download.");
       return;
     }
 
@@ -178,7 +178,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
       showSuccess("Label downloaded as PNG!");
     } catch (error: any) {
       console.error("Error downloading label as PNG:", error);
-      showError(`Failed to download label as PNG: ${error.message}`);
+      showError(`Failed to download label: ${error.message}`);
     }
   };
 

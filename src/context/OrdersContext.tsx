@@ -128,7 +128,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const updateOrder = async (updatedOrder: OrderItem) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to update orders.";
+      const errorMessage = "Login/org ID required to update orders.";
       await logActivity("Update Order Failed", errorMessage, profile, { order_id: updatedOrder.id, order_type: updatedOrder.type }, true);
       showError(errorMessage);
       return;
@@ -166,7 +166,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
           order.id === updatedOrder.id ? addedOrder : order,
         ),
       );
-      showSuccess(`Order ${updatedOrder.id} updated successfully!`);
+      showSuccess(`Order ${updatedOrder.id} updated!`);
       await logActivity("Update Order Success", `Order ${updatedOrder.id} updated to status: ${updatedOrder.status}.`, profile, { order_id: updatedOrder.id, new_status: updatedOrder.status });
     }
   };
@@ -174,7 +174,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const addOrder = async (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to add orders.";
+      const errorMessage = "Login/org ID required to add orders.";
       await logActivity("Add Order Failed", errorMessage, profile, { order_type: newOrder.type, customer_supplier: newOrder.customerSupplier }, true);
       showError(errorMessage);
       return;
@@ -212,7 +212,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
     } else if (data && data.length > 0) {
       const addedOrder: OrderItem = mapSupabaseOrderItemToOrderItem(data[0]);
       setOrders((prevOrders) => [...prevOrders, addedOrder]);
-      showSuccess(`Order ${addedOrder.id} created successfully!`);
+      showSuccess(`Order ${addedOrder.id} created!`);
       await logActivity("Add Order Success", `New ${addedOrder.type} order ${addedOrder.id} created for ${addedOrder.customerSupplier}.`, profile, { order_id: addedOrder.id, order_type: addedOrder.type, customer_supplier: addedOrder.customerSupplier });
     }
   };
@@ -220,7 +220,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const archiveOrder = async (orderId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to archive orders.";
+      const errorMessage = "Login/org ID required to archive orders.";
       await logActivity("Archive Order Failed", errorMessage, profile, { order_id: orderId }, true);
       showError(errorMessage);
       return;
@@ -242,7 +242,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
           order.id === orderId ? { ...order, status: "Archived" } : order,
         ),
       );
-      showSuccess(`Order ${orderId} has been archived.`);
+      showSuccess(`Order ${orderId} archived.`);
       await logActivity("Archive Order Success", `Order ${orderId} archived.`, profile, { order_id: orderId });
     }
   };

@@ -141,7 +141,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
   const addRule = async (rule: Omit<AutomationRule, "id" | "organizationId" | "userId" | "createdAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to add automation rules.");
+      showError("Login/org ID required to add rules.");
       return;
     }
 
@@ -163,14 +163,14 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error("Error adding automation rule:", error);
       showError(`Failed to add rule: ${error.message}`);
     } else if (data) {
-      showSuccess(`Automation rule "${rule.name}" added successfully!`);
+      showSuccess(`Rule "${rule.name}" added!`);
     }
   };
 
   const updateRule = async (updatedRule: Omit<AutomationRule, "organizationId" | "userId" | "createdAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to update automation rules.");
+      showError("Login/org ID required to update rules.");
       return;
     }
 
@@ -193,14 +193,14 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error("Error updating automation rule:", error);
       showError(`Failed to update rule: ${error.message}`);
     } else if (data) {
-      showSuccess(`Automation rule "${updatedRule.name}" updated successfully!`);
+      showSuccess(`Rule "${updatedRule.name}" updated!`);
     }
   };
 
   const deleteRule = async (ruleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to delete automation rules.");
+      showError("Login/org ID required to delete rules.");
       return;
     }
 
@@ -216,7 +216,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error("Error deleting automation rule:", error);
       showError(`Failed to delete rule: ${error.message}`);
     } else {
-      showSuccess(`Automation rule "${ruleToDelete?.name || ruleId}" deleted.`);
+      showSuccess(`Rule "${ruleToDelete?.name || ruleId}" deleted.`);
     }
   };
 

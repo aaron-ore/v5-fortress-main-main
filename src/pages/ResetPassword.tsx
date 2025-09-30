@@ -23,7 +23,7 @@ const ResetPassword: React.FC = () => {
         setIsSessionValid(true);
       } else {
         // If no session, it means the user might have landed here without a valid token
-        showError("Invalid or expired password reset link. Please request a new one.");
+        showError("Invalid/expired reset link.");
         navigate("/auth");
       }
     };
@@ -41,7 +41,7 @@ const ResetPassword: React.FC = () => {
     }
 
     if (password.length < 6) {
-      showError("Password must be at least 6 characters long.");
+      showError("Password too short.");
       setLoading(false);
       return;
     }
@@ -51,7 +51,7 @@ const ResetPassword: React.FC = () => {
     if (error) {
       showError(error.message);
     } else {
-      showSuccess("Your password has been updated successfully! You can now log in.");
+      showSuccess("Password updated! Please log in.");
       navigate("/auth");
     }
     setLoading(false);

@@ -122,17 +122,17 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const handleAdjustStock = async () => {
     if (!currentItem) return;
     if (!canManageInventory) {
-      showError("You do not have permission to adjust stock.");
+      showError("No permission to adjust stock.");
       return;
     }
 
     const amount = parseInt(adjustmentAmount);
     if (isNaN(amount) || amount <= 0) {
-      showError("Please enter a valid positive number for adjustment.");
+      showError("Enter valid positive number.");
       return;
     }
     if (!adjustmentReason) {
-      showError("Please select a reason for the stock adjustment.");
+      showError("Select a reason for adjustment.");
       return;
     }
 
@@ -145,7 +145,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         newPickingBinQuantity += amount;
       } else {
         if (newPickingBinQuantity < amount) {
-          showError("Cannot subtract more than available stock in picking bin.");
+          showError("Not enough stock in picking bin.");
           return;
         }
         newPickingBinQuantity -= amount;
@@ -155,7 +155,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
         newOverstockQuantity += amount;
       } else {
         if (newOverstockQuantity < amount) {
-          showError("Cannot subtract more than available stock in overstock.");
+          showError("Not enough stock in overstock.");
           return;
         }
         newOverstockQuantity -= amount;
@@ -184,7 +184,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
       });
 
       await refreshInventory();
-      showSuccess(`Stock for ${currentItem.name} adjusted by ${adjustmentType === 'add' ? '+' : '-'}${amount} in ${adjustmentTarget === "pickingBin" ? "Picking Bin" : "Overstock"} due to: ${adjustmentReason}. New total quantity: ${newPickingBinQuantity + newOverstockQuantity}.`);
+      showSuccess(`Stock for ${currentItem.name} adjusted.`);
       onClose();
     } catch (error: any) {
       console.error("Error adjusting stock:", error);
@@ -195,14 +195,14 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
   const handleToggleAutoReorder = async (checked: boolean) => {
     if (!currentItem) return;
     if (!canManageInventory) {
-      showError("You do not have permission to manage auto-reorder settings.");
+      showError("No permission to manage auto-reorder.");
       return;
     }
     setAutoReorderEnabled(checked);
 
     const parsedAutoReorderQuantity = parseInt(autoReorderQuantity) || 0;
     if (checked && (isNaN(parsedAutoReorderQuantity) || parsedAutoReorderQuantity <= 0)) {
-      showError("Please set a valid positive quantity for auto-reorder before enabling.");
+      showError("Set positive quantity for auto-reorder.");
       setAutoReorderEnabled(false);
       return;
     }
@@ -225,21 +225,21 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
   const handleManualReorder = async () => {
     if (!currentItem || !currentItem.vendorId) {
-      showError("Cannot manually reorder: Item or vendor not specified.");
+      showError("Cannot reorder: Item/vendor not specified.");
       return;
     }
     if (!canCreateOrders) {
-      showError("You do not have permission to create orders.");
+      showError("No permission to create orders.");
       return;
     }
     if (currentItem.autoReorderQuantity <= 0) {
-      showError("Please set a positive auto-reorder quantity before manually reordering.");
+      showError("Set positive auto-reorder quantity first.");
       return;
     }
 
     const vendor = vendors.find(v => v.id === currentItem.vendorId);
     if (!vendor) {
-      showError(`Cannot manually reorder: Vendor for ${currentItem.name} not found.`);
+      showError(`Cannot reorder: Vendor for ${currentItem.name} not found.`);
       return;
     }
 
@@ -271,7 +271,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
     try {
       await addOrder(newPurchaseOrder);
-      showSuccess(`Manual reorder placed for ${currentItem.name} (PO: ${newPoNumber}). Email simulated to ${vendor.email || 'vendor'}.`);
+      showSuccess(`Manual reorder placed for ${currentItem.name}.`);
       console.log(`Simulating email to ${vendor.email} for PO ${newPoNumber} with items:`, poItems);
       onClose();
     } catch (error: any) {
@@ -282,7 +282,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
 
   const handleDeleteItemClick = () => {
     if (!canDeleteInventory) {
-      showError("You do not have permission to delete inventory items.");
+      showError("No permission to delete items.");
       return;
     }
     setIsConfirmDeleteDialogOpen(true);
@@ -292,7 +292,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
     if (!currentItem) return;
     try {
       await deleteInventoryItem(currentItem.id);
-      showSuccess(`${currentItem.name} has been deleted.`);
+      showSuccess(`${currentItem.name} deleted.`);
       setIsConfirmDeleteDialogOpen(false);
       onClose();
     } catch (error: any) {
@@ -517,7 +517,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                                 lastUpdated: new Date().toISOString().split('T')[0],
                               };
                               updateInventoryItem(updatedItem); // Update immediately
-                              showSuccess(`Auto-reorder quantity for ${currentItem.name} updated to ${newQty}.`);
+                              showSuccess(`Auto-reorder quantity updated.`);
                             }
                           }
                         }}
@@ -570,7 +570,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                   </ul>
                 </ScrollArea>
               ) : (
-                <p className="text-center text-muted-foreground text-sm py-4">No stock movement history for this item.</p>
+                <p className="text-center text-muted-foreground text-sm py-4">No stock movement history.</p>
               )}
               {itemStockMovements.length > 3 && (
                 <Button variant="link" onClick={handleViewAllHistory} className="w-full mt-2">

@@ -78,11 +78,11 @@ const Orders: React.FC = () => {
 
   const handleSyncSalesOrders = async () => {
     if (!canSyncQuickBooks) { // NEW: Check permission before syncing
-      showError("You do not have permission to sync with QuickBooks.");
+      showError("No permission to sync QuickBooks.");
       return;
     }
     if (!profile?.quickbooksAccessToken || !profile?.quickbooksRealmId) {
-      showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected in Settings.");
+      showError("QuickBooks not fully connected.");
       return;
     }
     setIsSyncingQuickBooks(true);
@@ -90,7 +90,7 @@ const Orders: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        showError("You must be logged in to sync with QuickBooks.");
+        showError("Login required to sync QuickBooks.");
         return;
       }
 
@@ -109,7 +109,7 @@ const Orders: React.FC = () => {
         throw new Error(data.error);
       }
 
-      showSuccess(data.message || "Sales orders synced successfully!");
+      showSuccess(data.message || "Sales orders synced!");
       console.log("QuickBooks Sync Results:", data.results);
       await fetchProfile();
     } catch (error: any) {

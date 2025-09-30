@@ -145,7 +145,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
       console.error("Error resolving discrepancy:", error);
       showError("Failed to resolve discrepancy.");
     } else {
-      showSuccess(`Discrepancy ${discrepancyToResolve.id} marked as resolved.`);
+      showSuccess(`Discrepancy ${discrepancyToResolve.id} resolved.`);
       fetchDiscrepancies();
     }
     setIsConfirmDialogOpen(false);
@@ -169,7 +169,7 @@ const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps
             {isLoading ? (
               <p className="text-center text-muted-foreground py-8">Loading discrepancies...</p>
             ) : discrepancies.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No pending stock discrepancies for this period. Great job!</p>
+              <p className="text-center text-muted-foreground py-8">No pending stock discrepancies. Great job!</p>
             ) : (
               <ScrollArea className="flex-grow max-h-[calc(100vh-250px)] border border-border rounded-md p-3">
                 <div className="space-y-4">

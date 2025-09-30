@@ -1,16 +1,26 @@
 import { toast } from "sonner";
 
 let consecutiveErrorCount = 0;
-const ERROR_THRESHOLD = 3; // Number of consecutive errors before showing a summary
+const ERROR_THRESHOLD = 10; // Number of consecutive errors before showing a summary
 let summaryErrorToastId: string | number | null = null; // ID of the persistent summary error toast
 const activeToastIds: Set<string | number> = new Set(); // Track all active toast IDs
 
-const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, options?: any) => { // Added 'info' and 'warning' types
+const truncateMessage = (message: string, wordLimit: number = 10): string => {
+  const words = message.split(' ');
+  if (words.length > wordLimit) {
+    return words.slice(0, wordLimit).join(' ') + '...';
+  }
+  return message;
+};
+
+const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, options?: any) => {
   // Dismiss all currently active toasts before showing a new one
   activeToastIds.forEach(id => toast.dismiss(id));
   activeToastIds.clear();
 
-  const id = toast[type](message, {
+  const truncatedMessage = truncateMessage(message);
+
+  const id = toast[type](truncatedMessage, {
     ...options,
     onDismiss: (dismissedId: string | number) => {
       activeToastIds.delete(dismissedId);
@@ -58,7 +68,7 @@ export const showError = (message: string) => {
     activeToastIds.forEach(id => toast.dismiss(id));
     activeToastIds.clear();
 
-    const summaryMessage = "Multiple errors detected. Please contact support if the issue persists.";
+    const summaryMessage = "Multiple errors. Contact support if issue persists.";
     summaryErrorToastId = showToast('error', summaryMessage, {
       duration: Infinity, // Make summary error toast persistent until dismissed manually
       closeButton: true,
@@ -70,7 +80,6 @@ export const showError = (message: string) => {
   }
 };
 
-// NEW: Added showInfo and showWarning to use the single toast logic
 export const showInfo = (message: string) => {
   if (summaryErrorToastId !== null) {
     toast.dismiss(summaryErrorToastId);

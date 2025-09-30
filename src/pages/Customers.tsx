@@ -45,7 +45,7 @@ const Customers: React.FC = () => {
 
   const handleAddCustomerClick = () => {
     if (!canManageCustomers) { // NEW: Check permission before adding
-      showError("You do not have permission to add customers.");
+      showError("No permission to add customers.");
       return;
     }
     setCustomerToEdit(null);
@@ -54,7 +54,7 @@ const Customers: React.FC = () => {
 
   const handleEditCustomerClick = (customer: Customer) => {
     if (!canManageCustomers) { // NEW: Check permission before editing
-      showError("You do not have permission to edit customers.");
+      showError("No permission to edit customers.");
       return;
     }
     setCustomerToEdit(customer);
@@ -63,7 +63,7 @@ const Customers: React.FC = () => {
 
   const handleDeleteCustomerClick = (customerId: string, customerName: string) => {
     if (!canDeleteCustomers) { // NEW: Check permission before deleting
-      showError("You do not have permission to delete customers.");
+      showError("No permission to delete customers.");
       return;
     }
     setCustomerToDelete({ id: customerId, name: customerName });

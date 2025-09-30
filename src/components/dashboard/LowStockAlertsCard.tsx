@@ -20,7 +20,7 @@ const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }
   const handleReorder = (itemName: string, itemSku: string, vendorId?: string) => {
     setSelectedItemForSupplier({ name: itemName, sku: itemSku, vendorId: vendorId });
     setIsSupplierInfoDialogOpen(true);
-    addNotification(`Reorder initiated for ${itemName} (SKU: ${itemSku}).`, "info");
+    addNotification(`Reorder initiated for ${itemName}.`, "info");
   };
 
   return (
@@ -42,7 +42,7 @@ const LowStockAlertsCard: React.FC<LowStockAlertsCardProps> = ({ lowStockItems }
             </ul>
           </ScrollArea>
         ) : (
-          <p className="text-center text-muted-foreground text-sm py-4 flex-grow flex items-center justify-center">No low stock items currently. Good job!</p>
+          <p className="text-center text-muted-foreground text-sm py-4 flex-grow flex items-center justify-center">No low stock items. Good job!</p>
         )}
         <Button className="w-full mt-auto" onClick={() => lowStockItems.length > 0 ? handleReorder("Multiple Items", "N/A", undefined) : showSuccess("No items to reorder.")} disabled={lowStockItems.length === 0}>
           Reorder Now <ArrowRight className="ml-2 h-4 w-4" />

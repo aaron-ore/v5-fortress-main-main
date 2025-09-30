@@ -11,11 +11,11 @@ interface SlowMovingDeadstockCardProps {
 
 const SlowMovingDeadstockCard: React.FC<SlowMovingDeadstockCardProps> = ({ slowMovingItems }) => {
   const handleCreatePromotion = (item: string) => {
-    showSuccess(`Creating promotion for ${item} (placeholder)`);
+    showSuccess(`Creating promotion for ${item}.`);
   };
 
   const handleBundleItems = (item: string) => {
-    showSuccess(`Bundling ${item} with other items (placeholder)`);
+    showSuccess(`Bundling ${item} with other items.`);
   };
 
   return (

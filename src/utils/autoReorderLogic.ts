@@ -49,8 +49,8 @@ export const processAutoReorder = async (
 
     const vendor = vendors.find(v => v.id === item.vendorId);
     if (!vendor) {
-      addNotification(`Auto-reorder failed for ${item.name}: No vendor found.`, "error");
-      showError(`Auto-reorder failed for ${item.name}: No vendor found.`);
+      addNotification(`Auto-reorder failed for ${item.name}.`, "error");
+      showError(`Auto-reorder failed for ${item.name}.`);
       continue;
     }
 
@@ -84,8 +84,8 @@ export const processAutoReorder = async (
     try {
       await addOrder(newPurchaseOrder);
       lastReorderAttempt[item.id] = now; // Mark as attempted
-      addNotification(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}).`, "success");
-      showSuccess(`Auto-reorder placed for ${item.name} (PO: ${newPoNumber}). Email simulated to ${vendor.email || 'vendor'}.`);
+      addNotification(`Auto-reorder placed for ${item.name}.`, "success");
+      showSuccess(`Auto-reorder placed for ${item.name}.`);
       
       if (profile?.companyProfile?.enableAutoReorderNotifications && vendor.email) {
         const emailSubject = `New Purchase Order: ${newPoNumber} for ${item.name}`;
@@ -105,7 +105,7 @@ export const processAutoReorder = async (
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError || !sessionData.session) {
           console.error("Failed to get session for sending email:", sessionError);
-          addNotification(`Failed to send reorder email for ${item.name}: User session missing.`, "error");
+          addNotification(`Failed to send reorder email.`, "error");
         } else {
           const { data: emailResponse, error: emailError } = await supabase.functions.invoke('send-email', {
             body: JSON.stringify({
@@ -121,21 +121,21 @@ export const processAutoReorder = async (
 
           if (emailError) {
             console.error('Error invoking send-email Edge Function:', emailError);
-            addNotification(`Failed to send reorder email for ${item.name}: ${emailError.message}`, "error");
+            addNotification(`Failed to send reorder email.`, "error");
           } else if (emailResponse.error) {
             console.error('send-email Edge Function returned error:', emailResponse.error);
-            addNotification(`Failed to send reorder email for ${item.name}: ${emailResponse.error}`, "error");
+            addNotification(`Failed to send reorder email.`, "error");
           } else {
             console.log('Reorder email sent successfully via Brevo:', emailResponse);
-            addNotification(`Reorder email sent to ${vendor.email} for ${item.name}.`, "info");
+            addNotification(`Reorder email sent to ${vendor.email}.`, "info");
           }
         }
       } else if (profile?.companyProfile?.enableAutoReorderNotifications && !vendor.email) {
-        addNotification(`No email address for vendor ${vendor.name}. Reorder email not sent.`, "warning");
+        addNotification(`No email for vendor ${vendor.name}.`, "warning");
       }
     } catch (error: any) {
-      addNotification(`Failed to auto-reorder ${item.name}: ${error.message}`, "error");
-      showError(`Failed to auto-reorder ${item.name}: ${error.message}`);
+      addNotification(`Failed to auto-reorder ${item.name}.`, "error");
+      showError(`Failed to auto-reorder ${item.name}.`);
     }
   }
 };

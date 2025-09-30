@@ -45,7 +45,7 @@ const FolderCard: React.FC<FolderCardProps> = ({
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
     if (!canManageFolders) { // NEW: Check permission before deleting
-      showError("You do not have permission to delete folders.");
+      showError("No permission to delete folders.");
       return;
     }
     setIsConfirmDeleteDialogOpen(true);
@@ -59,7 +59,7 @@ const FolderCard: React.FC<FolderCardProps> = ({
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click from triggering
     if (!canManageFolders) { // NEW: Check permission before editing
-      showError("You do not have permission to edit folders.");
+      showError("No permission to edit folders.");
       return;
     }
     onEdit(folder);

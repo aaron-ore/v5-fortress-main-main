@@ -41,7 +41,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
   const { inventoryItems } = useInventory();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [selectedItemIds, setSelectedItemIds] = new Set();
 
   useEffect(() => {
     if (!isOpen) {
@@ -82,7 +82,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
     );
     if (itemsToAdd.length > 0) {
       onAddItems(itemsToAdd);
-      showSuccess(`Added ${itemsToAdd.length} item(s) to the order.`);
+      showSuccess(`Added ${itemsToAdd.length} item(s).`);
       onClose();
     } else {
       showSuccess("No items selected.");

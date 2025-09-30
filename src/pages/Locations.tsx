@@ -10,10 +10,17 @@ import { usePrint } from "@/context/PrintContext";
 import FolderLabelGenerator from "@/components/FolderLabelGenerator"; // FIXED: Corrected import path
 import FolderInventoryViewDialog from "@/components/FolderInventoryViewDialog"; // FIXED: Corrected import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { showError } from "@/utils/toast"; // Import showError
 
 const Folders = () => { // Renamed component and removed React.FC
   const { inventoryFolders, addInventoryFolder, updateInventoryFolder, removeInventoryFolder } = useOnboarding(); // Updated context functions
   const {  } = usePrint();
+  const { profile } = useProfile(); // NEW: Get profile for role checks
+
+  // NEW: Role-based permissions
+  const canViewFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager' || profile?.role === 'viewer';
+  const canManageFolders = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<InventoryFolder | null>(null); // Updated type
@@ -25,16 +32,28 @@ const Folders = () => { // Renamed component and removed React.FC
   const [folderToViewInventory, setFolderToViewInventory] = useState<string | null>(null); // Renamed state
 
   const handleAddFolderClick = () => { // Renamed
+    if (!canManageFolders) { // NEW: Check permission before adding
+      showError("No permission to add folders.");
+      return;
+    }
     setFolderToEdit(null);
     setIsFolderLabelGeneratorOpen(true); // Reusing the label generator for folder details
   };
 
   const handleEditFolderClick = (folder: InventoryFolder) => { // Renamed
+    if (!canManageFolders) { // NEW: Check permission before editing
+      showError("No permission to edit folders.");
+      return;
+    }
     setFolderToEdit(folder);
     setIsFolderLabelGeneratorOpen(true); // Reusing the label generator for folder details
   };
 
   const handleDeleteFolderClick = (folder: InventoryFolder) => { // Renamed
+    if (!canManageFolders) { // NEW: Check permission before deleting
+      showError("No permission to delete folders.");
+      return;
+    }
     setFolderToDelete(folder);
     setIsConfirmDeleteDialogOpen(true);
   };
@@ -65,6 +84,19 @@ const Folders = () => { // Renamed component and removed React.FC
     setIsFolderLabelGeneratorOpen(false);
   };
 
+  if (!canViewFolders) { // NEW: Check permission for viewing page
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Card className="p-6 text-center bg-card border-border">
+          <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
+          <CardContent>
+            <p className="text-muted-foreground">You do not have permission to view folders.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col flex-grow space-y-6 p-6">
       <h1 className="text-3xl font-bold">Folder Management</h1> {/* Updated title */}
@@ -79,9 +111,11 @@ const Folders = () => { // Renamed component and removed React.FC
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-4 flex-grow flex flex-col">
-            <Button onClick={handleAddFolderClick} aria-label="Add new folder"> {/* Updated button text */}
-              <PlusCircle className="h-4 w-4 mr-2" /> Add New Folder
-            </Button>
+            {canManageFolders && ( // NEW: Only show if user can manage folders
+              <Button onClick={handleAddFolderClick} aria-label="Add new folder"> {/* Updated button text */}
+                <PlusCircle className="h-4 w-4 mr-2" /> Add New Folder
+              </Button>
+            )}
 
             {inventoryFolders.length > 0 ? (
               <div className="space-y-2 flex-grow flex flex-col">
@@ -97,24 +131,26 @@ const Folders = () => { // Renamed component and removed React.FC
                         >
                           {folder.name} {/* Display folder name */}
                         </Button>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditFolderClick(folder)}
-                            aria-label={`Edit label for ${folder.name}`}
-                          >
-                            <Edit className="h-4 w-4 text-primary" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteFolderClick(folder)}
-                            aria-label={`Remove folder ${folder.name}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                        {canManageFolders && ( // NEW: Only show if user can manage folders
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditFolderClick(folder)}
+                              aria-label={`Edit label for ${folder.name}`}
+                            >
+                              <Edit className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteFolderClick(folder)}
+                              aria-label={`Remove folder ${folder.name}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -165,6 +201,7 @@ const Folders = () => { // Renamed component and removed React.FC
             initialFolder={folderToEdit}
             onSave={handleSaveFolder}
             onClose={() => setIsFolderLabelGeneratorOpen(false)}
+            disabled={!canManageFolders} // NEW: Disable generator if no permission
           />
         </DialogContent>
       </Dialog>

@@ -56,7 +56,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
 
   const handleSubmit = async () => {
     if (!selectedItemId || !fromFolderId || !toFolderId || !transferQuantity) {
-      showError("Please fill in all required fields.");
+      showError("Fill all required fields.");
       return;
     }
     if (fromFolderId === toFolderId) {
@@ -66,7 +66,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
 
     const quantity = parseInt(transferQuantity);
     if (isNaN(quantity) || quantity <= 0) {
-      showError("Please enter a valid positive quantity to transfer.");
+      showError("Enter valid positive quantity.");
       return;
     }
     if (!selectedItem) {
@@ -74,7 +74,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
       return;
     }
     if (selectedItem.quantity < quantity) {
-      showError(`Not enough stock at ${getFolderName(fromFolderId)}. Available: ${selectedItem.quantity}`);
+      showError(`Not enough stock at ${getFolderName(fromFolderId)}.`);
       return;
     }
 
@@ -105,7 +105,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
     // In this simplified model, we're just moving the item's folder and updating its quantity.
     // If items were truly separate entities per folder, this would be more complex.
 
-    showSuccess(`Transferred ${quantity} units of ${selectedItem.name} from ${getFolderName(fromFolderId)} to ${getFolderName(toFolderId)}.`);
+    showSuccess(`Transferred ${quantity} units of ${selectedItem.name}.`);
     refreshInventory(); // Ensure inventory context is refreshed
     onClose();
   };

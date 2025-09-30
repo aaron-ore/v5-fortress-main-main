@@ -41,7 +41,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose }) => {
 
   const handleSubmitFeedback = () => {
     if (!subject.trim() || !description.trim()) {
-      showError("Please fill in both the subject and description.");
+      showError("Fill subject and description.");
       return;
     }
 
@@ -55,8 +55,8 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose }) => {
     };
 
     console.log("Feedback Submitted:", feedbackDetails);
-    addNotification(`New Feedback: ${subject.trim()} from ${profile?.fullName || 'Anonymous'}`, "info");
-    showSuccess("Thank you for your feedback! We've received your submission.");
+    addNotification(`New Feedback: ${subject.trim()}.`, "info");
+    showSuccess("Feedback submitted!");
 
     onClose();
   };

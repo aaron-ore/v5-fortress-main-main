@@ -77,7 +77,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       showSuccess("Manual input submitted!");
       onClose();
     } else {
-      showError("Please enter a barcode or QR code value.");
+      showError("Enter barcode/QR value.");
     }
   };
 

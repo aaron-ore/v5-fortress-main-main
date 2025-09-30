@@ -16,6 +16,7 @@ import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useOnboarding } from "@/context/OnboardingContext";
+import { Badge } from "@/components/ui/badge"; // NEW: Import Badge
 
 interface MobileDrawerContentProps {
   onLinkClick: () => void;
@@ -32,12 +33,12 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
       if (error.message.includes("Auth session missing")) {
-        showSuccess("Logged out successfully!");
+        showSuccess("Logged out!");
       } else {
         showError("Failed to log out: " + error.message);
       }
     } else {
-      showSuccess("Logged out successfully!");
+      showSuccess("Logged out!");
     }
     onLinkClick();
   };
@@ -76,6 +77,7 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
                     <item.icon className="h-5 w-5 mr-3" />
                     <span className="truncate">{item.title}</span>
                   </div>
+                  {item.tag && <Badge variant="secondary" className="ml-auto">{item.tag}</Badge>} {/* NEW: Display tag */}
                 </AccordionTrigger>
                 <AccordionContent className="pb-1">
                   {renderNavItems(item.children, true)}
@@ -108,6 +110,7 @@ const MobileDrawerContent: React.FC<MobileDrawerContentProps> = ({ onLinkClick }
                 {unreadCount}
               </span>
             )}
+            {item.tag && <Badge variant="secondary" className="ml-auto">{item.tag}</Badge>} {/* NEW: Display tag */}
           </Button>
         );
       })}

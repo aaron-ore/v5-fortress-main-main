@@ -33,7 +33,7 @@ const Users: React.FC = () => {
 
   const handleDeleteUserClick = (user: UserProfile) => {
     if (profile?.role !== 'admin') {
-      showError("You do not have permission to delete users.");
+      showError("No permission to delete users.");
       return;
     }
     setUserToDelete(user);
@@ -61,7 +61,7 @@ const Users: React.FC = () => {
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
     if (profile?.role !== 'admin') {
-      showError("You do not have permission to update user roles.");
+      showError("No permission to update roles.");
       return;
     }
     if (!profile?.organizationId) {
@@ -78,9 +78,9 @@ const Users: React.FC = () => {
   const handleCopyOrganizationCode = () => {
     if (profile?.companyProfile?.organizationCode) {
       navigator.clipboard.writeText(profile.companyProfile.organizationCode);
-      showSuccess("Organization Code copied to clipboard!");
+      showSuccess("Organization Code copied!");
     } else {
-      showError("No Organization Code available to copy.");
+      showError("No Organization Code available.");
     }
   };
 

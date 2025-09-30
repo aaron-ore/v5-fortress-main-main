@@ -92,7 +92,7 @@ const HelpCenter: React.FC = () => {
   );
 
   const handleSearch = () => {
-    showSuccess(`Searching help articles for: "${searchTerm}".`);
+    showSuccess(`Searching help for: "${searchTerm}".`);
   };
 
   const handleContactSupport = () => {

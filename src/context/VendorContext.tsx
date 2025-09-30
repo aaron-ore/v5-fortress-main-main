@@ -78,7 +78,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const addVendor = async (vendor: Omit<Vendor, "id" | "createdAt" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to add vendors.";
+      const errorMessage = "Login/org ID required to add vendors.";
       await logActivity("Add Vendor Failed", errorMessage, profile, { vendor_name: vendor.name }, true);
       showError(errorMessage);
       return;
@@ -115,7 +115,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         createdAt: data[0].created_at,
       };
       setVendors((prevVendors) => [...prevVendors, newVendor]);
-      showSuccess(`Vendor "${vendor.name}" added successfully!`);
+      showSuccess(`Vendor "${vendor.name}" added!`);
       await logActivity("Add Vendor Success", `Added new vendor: ${vendor.name}.`, profile, { vendor_id: data[0].id, vendor_name: vendor.name });
     }
   };
@@ -123,7 +123,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const updateVendor = async (updatedVendor: Vendor) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to update vendors.";
+      const errorMessage = "Login/org ID required to update vendors.";
       await logActivity("Update Vendor Failed", errorMessage, profile, { vendor_id: updatedVendor.id, vendor_name: updatedVendor.name }, true);
       showError(errorMessage);
       return;
@@ -164,7 +164,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           vendor.id === updatedVendorFromDB.id ? updatedVendorFromDB : vendor,
         ),
       );
-      showSuccess(`Vendor "${updatedVendor.name}" updated successfully!`);
+      showSuccess(`Vendor "${updatedVendor.name}" updated!`);
       await logActivity("Update Vendor Success", `Updated vendor: ${updatedVendor.name} (ID: ${updatedVendor.id}).`, profile, { vendor_id: updatedVendor.id, vendor_name: updatedVendor.name, updated_fields: updatedVendor });
     }
   };
@@ -172,7 +172,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const deleteVendor = async (vendorId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to delete vendors.";
+      const errorMessage = "Login/org ID required to delete vendors.";
       await logActivity("Delete Vendor Failed", errorMessage, profile, { vendor_id: vendorId }, true);
       showError(errorMessage);
       return;
@@ -190,7 +190,7 @@ export const VendorProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       showError(`Failed to delete vendor: ${error.message}`);
     } else {
       setVendors((prevVendors) => prevVendors.filter(vendor => vendor.id !== vendorId));
-      showSuccess("Vendor deleted successfully!");
+      showSuccess("Vendor deleted!");
       await logActivity("Delete Vendor Success", `Deleted vendor with ID: ${vendorId}.`, profile, { vendor_id: vendorId });
     }
   };

@@ -94,7 +94,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   const addReplenishmentTask = async (task: Omit<ReplenishmentTask, "id" | "createdAt" | "organizationId" | "status" | "completedAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to add replenishment tasks.");
+      showError("Login/org ID required to add tasks.");
       return;
     }
 
@@ -114,7 +114,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     if (error) {
       console.error("Error adding replenishment task:", error);
-      showError(`Failed to add replenishment task: ${error.message}`);
+      showError(`Failed to add task: ${error.message}`);
     } else if (data && data.length > 0) {
       const newTask: ReplenishmentTask = mapSupabaseTaskToReplenishmentTask(data[0]);
       setReplenishmentTasks((prev) => [...prev, newTask]);
@@ -125,7 +125,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   const updateReplenishmentTask = async (updatedTask: ReplenishmentTask) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("You must be logged in and have an organization ID to update replenishment tasks.");
+      showError("Login/org ID required to update tasks.");
       return;
     }
 
@@ -147,7 +147,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     if (error) {
       console.error("Error updating replenishment task:", error);
-      showError(`Failed to update replenishment task: ${error.message}`);
+      showError(`Failed to update task: ${error.message}`);
     } else if (data && data.length > 0) {
       const updatedTaskFromDB: ReplenishmentTask = mapSupabaseTaskToReplenishmentTask(data[0]);
       setReplenishmentTasks((prev) =>
@@ -155,7 +155,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
           task.id === updatedTask.id ? updatedTaskFromDB : task,
         ),
       );
-      showSuccess(`Replenishment task ${updatedTask.id} updated to ${updatedTask.status}.`);
+      showSuccess(`Task ${updatedTask.id} updated to ${updatedTask.status}.`);
     }
   };
 

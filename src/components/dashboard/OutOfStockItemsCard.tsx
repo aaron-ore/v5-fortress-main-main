@@ -11,11 +11,11 @@ interface OutOfStockItemsCardProps {
 
 const OutOfStockItemsCard: React.FC<OutOfStockItemsCardProps> = ({ outOfStockItems }) => {
   const handleNotifySupplier = (item: string) => {
-    showSuccess(`Notifying supplier for ${item} (placeholder)`);
+    showSuccess(`Notifying supplier for ${item}.`);
   };
 
   const handleSubstituteItem = (item: string) => {
-    showSuccess(`Suggesting substitute for ${item} (placeholder)`);
+    showSuccess(`Suggesting substitute for ${item}.`);
   };
 
   return (

@@ -24,8 +24,9 @@ import { useProfile } from "@/context/ProfileContext";
 import { Link } from "react-router-dom";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CustomFileInput from "@/components/CustomFileInput";
-import { uploadFileToSupabase } from "@/integrations/supabase/storage"; // Import uploadFileToSupabase
+import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import { Loader2 } from "lucide-react"; // Import Loader2 for the spinner
+
 
 interface AddInventoryDialogProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const [barcodeValue, setBarcodeValue] = useState("");
   const [qrCodeSvgPreview, setQrCodeSvgPreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // This will be a public URL or data:URL
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false); // NEW: Loading state for adding item
   const [autoReorderEnabled, setAutoReorderEnabled] = useState(false); // State for auto-reorder switch
@@ -129,17 +130,20 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
         setImageFile(file);
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImageUrlPreview(reader.result as string);
+          setImageUrlPreview(reader.result as string); // This is a data:URL for immediate preview
         };
         reader.readAsDataURL(file);
+        console.log("[AddInventoryDialog] handleImageChange: New file selected. File name:", file.name);
       } else {
-        showError("Please select an image file (PNG, JPG, GIF, SVG).");
+        showError("Select an image file.");
         setImageFile(null);
         setImageUrlPreview(null);
+        console.log("[AddInventoryDialog] handleImageChange: Invalid file type selected.");
       }
     } else {
       setImageFile(null);
       setImageUrlPreview(null);
+      console.log("[AddInventoryDialog] handleImageChange: File input cleared without selection.");
     }
   };
 
@@ -147,11 +151,12 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     setImageFile(null);
     setImageUrlPreview(null);
     showSuccess("Image cleared. Add item to apply.");
+    console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared. imageUrlPreview set to null.");
   };
 
   const handleSubmit = async () => {
     if (!canManageInventory) { // NEW: Check permission before submitting
-      showError("You do not have permission to add inventory items.");
+      showError("No permission to add items.");
       return;
     }
     setIsAddingItem(true); // Set loading state to true
@@ -199,21 +204,21 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       !finalMainFolderId || finalMainFolderId === "no-folders" ||
       !finalPickingBinFolderId || finalPickingBinFolderId === "no-folders" ||
       categories.length === 0 ||
-      (autoReorderEnabled && (isNaN(parseInt(autoReorderQuantity || '0')) || parseInt(autoReorderQuantity || '0') <= 0))
+      (autoReorderEnabled && (parsedAutoReorderQuantity <= 0 || isNaN(parsedAutoReorderQuantity)))
     ) {
-      showError("Please fill in all required fields with valid numbers.");
+      showError("Fill all required fields.");
       setIsAddingItem(false); // Reset loading state
       return;
     }
 
     if (inventoryFolders.length === 0) {
-      showError("You need to set up inventory folders first. Please go to Manage Folders.");
+      showError("Set up inventory folders first.");
       setIsAddingItem(false); // Reset loading state
       return;
     }
 
     if (!profile?.organizationId) {
-      showError("Organization ID not found. Please ensure your company profile is set up.");
+      showError("Organization ID not found.");
       setIsAddingItem(false); // Reset loading state
       return;
     }
@@ -226,7 +231,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       .single();
 
     if (existingItem) {
-      showError(`An item with SKU '${sku.trim()}' already exists in your organization. Please use a unique SKU.`);
+      showError(`SKU '${sku.trim()}' already exists.`);
       setIsAddingItem(false); // Reset loading state
       return;
     }
@@ -234,18 +239,18 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       // No item found, proceed
     } else if (fetchError) {
       console.error("Error checking for duplicate SKU:", fetchError);
-      showError("Failed to check for duplicate SKU. Please try again.");
+      showError("Failed to check for duplicate SKU.");
       setIsAddingItem(false); // Reset loading state
       return;
     }
 
-    let finalImageUrl: string | undefined = undefined;
+    let finalImageUrl: string | undefined | null = null; // This will be the INTERNAL PATH or null
     if (imageFile) {
       setIsUploadingImage(true);
       try {
-        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/');
-        console.log("[AddInventoryDialog] Uploaded image URL:", finalImageUrl);
-        showSuccess("Product image uploaded successfully!");
+        finalImageUrl = await uploadFileToSupabase(imageFile, 'inventory-images', 'items/'); // Returns INTERNAL PATH
+        console.log("[AddInventoryDialog] Uploaded image internal path:", finalImageUrl);
+        // Removed showSuccess for new image upload
       } catch (error: any) {
         console.error("Error uploading product image:", error);
         showError(`Failed to upload product image: ${error.message}`);
@@ -255,9 +260,15 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       } finally {
         setIsUploadingImage(false);
       }
+    } else {
+      // If no new file is selected, and imageUrlPreview is null (meaning it was cleared or never existed),
+      // then finalImageUrl should be null for the database.
+      // Otherwise, it remains undefined (meaning no change to existing image_url in DB).
+      finalImageUrl = imageUrlPreview === null ? null : undefined;
+      console.log("[AddInventoryDialog] No new image file. imageUrlPreview is null:", imageUrlPreview === null, "finalImageUrl for DB:", finalImageUrl);
     }
 
-    console.log("[AddInventoryDialog] Adding item with imageUrl:", finalImageUrl);
+    console.log("[AddInventoryDialog] Adding item with imageUrl (internal path):", finalImageUrl);
     const newItem = {
       name: itemName.trim(),
       description: description.trim(),
@@ -273,7 +284,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       retailPrice: parseFloat(retailPrice),
       folderId: finalMainFolderId,
       pickingBinFolderId: finalPickingBinFolderId,
-      imageUrl: finalImageUrl,
+      imageUrl: finalImageUrl, // Pass INTERNAL PATH or null to context
       vendorId: selectedVendorId === "none" ? undefined : selectedVendorId, // Corrected to item.vendorId
       barcodeUrl: barcodeValue || undefined,
       autoReorderEnabled: autoReorderEnabled,
@@ -282,7 +293,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
 
     try {
       await addInventoryItem(newItem);
-      showSuccess(`Added ${finalPickingBinQuantity + finalOverstockQuantity} of ${itemName} to inventory!`);
+      showSuccess(`Added ${finalPickingBinQuantity + finalOverstockQuantity} of ${itemName}!`);
       onClose();
     } catch (error: any) {
       console.error("Failed to add inventory item:", error);

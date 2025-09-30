@@ -39,11 +39,11 @@ const EditTotalWalletBalanceDialog: React.FC<EditTotalWalletBalanceDialogProps> 
   const handleSave = () => {
     const newTotalBalance = parseFloat(totalBalanceInput);
     if (isNaN(newTotalBalance) || newTotalBalance < 0) {
-      showError("Please enter a valid non-negative number for the total wallet balance.");
+      showError("Enter valid non-negative number.");
       return;
     }
     onSave(newTotalBalance, currentStockValue); // Pass stock value for calculation in parent
-    showSuccess("Total wallet balance updated successfully!");
+    showSuccess("Wallet balance updated!");
     onClose();
   };
 
