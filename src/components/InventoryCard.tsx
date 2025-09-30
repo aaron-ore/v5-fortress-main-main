@@ -56,14 +56,14 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
   };
 
   return (
-    <Card className="group relative bg-card border-border rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-lg flex flex-col aspect-square">
+    <Card className="group relative bg-card border-border rounded-lg shadow-sm transition-all duration-200 hover:shadow-lg flex flex-col"> {/* Removed overflow-hidden and aspect-square */}
       <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between flex-shrink-0">
         <CardTitle className="text-base font-semibold text-foreground truncate">
           {item.name}
         </CardTitle>
         <Package className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="p-4 pt-0 flex-grow flex flex-col justify-between">
+      <CardContent className="p-3 pt-0 flex-grow flex flex-col justify-between"> {/* Adjusted padding */}
         {isSidebarCollapsed && (
           <div className="flex items-center justify-center h-24 bg-muted/30 rounded-md mb-3 overflow-hidden flex-shrink-0">
             {item.imageUrl ? (
@@ -87,9 +87,9 @@ const InventoryCard: React.FC<InventoryCardProps> = ({
             </Button>
           </p>
         </div>
-        <div className="flex items-baseline justify-between mt-3 flex-shrink-0">
-          <span className="text-4xl font-bold text-foreground">{item.quantity}</span>
-          <Badge variant={statusVariant} className="text-xs"> {/* Adjusted font size here */}
+        <div className="flex items-center justify-between mt-3 flex-shrink-0"> {/* Changed items-baseline to items-center */}
+          <span className="text-3xl font-bold text-foreground">{item.quantity}</span> {/* Reduced font size */}
+          <Badge variant={statusVariant} className="text-xs">
             {item.status}
           </Badge>
         </div>
