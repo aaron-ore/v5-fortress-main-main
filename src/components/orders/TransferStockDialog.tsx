@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,9 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
   const [transferQuantity, setTransferQuantity] = useState("");
   const [notes, setNotes] = useState("");
 
-  const selectedItem = inventoryItems.find(item => item.id === selectedItemId);
+  const selectedItem = useMemo(() => {
+    return inventoryItems.find(item => item.id === selectedItemId);
+  }, [inventoryItems, selectedItemId]);
 
   React.useEffect(() => {
     if (isOpen) {
