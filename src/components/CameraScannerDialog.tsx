@@ -155,20 +155,25 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
 
       let cameraSelection: string | MediaTrackConstraints;
 
-      // Strategy 1: Try specific facing modes
-      if (currentAttemptIndexRef.current === 1) {
-        cameraSelection = { facingMode: { exact: "environment" } };
-        console.log("[CameraScannerDialog] Attempt 1: Trying exact 'environment' facingMode.");
-      } else if (currentAttemptIndexRef.current === 2) {
-        cameraSelection = { facingMode: "environment" };
-        console.log("[CameraScannerDialog] Attempt 2: Trying lenient 'environment' facingMode.");
-      } else if (currentAttemptIndexRef.current === 3) {
-        cameraSelection = { facingMode: "user" }; // Fallback to front camera
-        console.log("[CameraScannerDialog] Attempt 3: Trying 'user' (front) facingMode.");
-      } else {
-        // Strategy 2: Enumerate devices and try by ID
-        console.log("[CameraScannerDialog] Attempt 4+: Enumerating camera devices for explicit selection.");
-        try {
+      try {
+        // Step 1: Explicitly request camera permissions first
+        console.log("[CameraScannerDialog] Requesting camera permissions via getUserMedia...");
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log("[CameraScannerDialog] Camera permissions granted.");
+
+        // Strategy 1: Try specific facing modes
+        if (currentAttemptIndexRef.current === 1) {
+          cameraSelection = { facingMode: { exact: "environment" } };
+          console.log("[CameraScannerDialog] Attempt 1: Trying exact 'environment' facingMode.");
+        } else if (currentAttemptIndexRef.current === 2) {
+          cameraSelection = { facingMode: "environment" };
+          console.log("[CameraScannerDialog] Attempt 2: Trying lenient 'environment' facingMode.");
+        } else if (currentAttemptIndexRef.current === 3) {
+          cameraSelection = { facingMode: "user" }; // Fallback to front camera
+          console.log("[CameraScannerDialog] Attempt 3: Trying 'user' (front) facingMode.");
+        } else {
+          // Strategy 2: Enumerate devices and try by ID
+          console.log("[CameraScannerDialog] Attempt 4+: Enumerating camera devices for explicit selection.");
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0) {
             console.log("[CameraScannerDialog] Found camera devices:", devices);
@@ -180,48 +185,40 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
             console.warn("[CameraScannerDialog] No camera devices found during enumeration.");
             throw new Error("No camera devices found.");
           }
-        } catch (enumError) {
-          console.error("[CameraScannerDialog] Error enumerating cameras:", enumError);
-          setScannerError("Failed to access camera devices. Check permissions.");
-          setIsScannerLoading(false);
-          isStartingRef.current = false;
-          return;
         }
-      }
 
-      const startupPromise = new Promise<void>(async (resolve, reject) => {
-        try {
-          if (!html5QrCodeRef.current) {
-            throw new Error("Html5Qrcode instance is null before start attempt.");
-          }
-          await html5QrCodeRef.current.start(
-            cameraSelection,
-            html5QrcodeCameraScanConfig,
-            async (decodedText) => {
-              console.log("[CameraScannerDialog] Scan successful:", decodedText);
-              await stopScanner(); // Stop camera after successful scan
-              onScanSuccess(decodedText);
-              resolve(); // Resolve the startup promise on successful scan
-            },
-            (errorMessage) => {
-              if (!errorMessage.includes("No QR code found")) {
-                console.warn("[CameraScannerDialog] Scan error (not 'No QR code found'):", errorMessage);
-              }
+        const startupPromise = new Promise<void>(async (resolve, reject) => {
+          try {
+            if (!html5QrCodeRef.current) {
+              throw new Error("Html5Qrcode instance is null before start attempt.");
             }
-          );
-          console.log("[CameraScannerDialog] Scanner started and ready.");
-          isCameraStartedRef.current = true;
-          resolve(); // Resolve the startup promise on successful camera start
-        } catch (err) {
-          reject(err); // Reject on any error during camera start
-        }
-      });
+            await html5QrCodeRef.current.start(
+              cameraSelection,
+              html5QrcodeCameraScanConfig,
+              async (decodedText) => {
+                console.log("[CameraScannerDialog] Scan successful:", decodedText);
+                await stopScanner(); // Stop camera after successful scan
+                onScanSuccess(decodedText);
+                resolve(); // Resolve the startup promise on successful scan
+              },
+              (errorMessage) => {
+                if (!errorMessage.includes("No QR code found")) {
+                  console.warn("[CameraScannerDialog] Scan error (not 'No QR code found'):", errorMessage);
+                }
+              }
+            );
+            console.log("[CameraScannerDialog] Scanner started and ready.");
+            isCameraStartedRef.current = true;
+            resolve(); // Resolve the startup promise on successful camera start
+          } catch (err) {
+            reject(err); // Reject on any error during camera start
+          }
+        });
 
-      const timeoutPromise = new Promise<void>((_, reject) =>
-        setTimeout(() => reject(new Error("Camera startup timed out.")), CAMERA_STARTUP_TIMEOUT_MS)
-      );
+        const timeoutPromise = new Promise<void>((_, reject) =>
+          setTimeout(() => reject(new Error("Camera startup timed out.")), CAMERA_STARTUP_TIMEOUT_MS)
+        );
 
-      try {
         await Promise.race([startupPromise, timeoutPromise]);
 
         const elapsedTime = Date.now() - (loadingStartTimeRef.current || 0);
@@ -235,24 +232,24 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         setIsScannerLoading(false);
         isStartingRef.current = false;
       } catch (err: any) {
-        console.error(`[CameraScannerDialog] Error starting scanner on attempt ${currentAttemptIndexRef.current}:`, err);
+        console.error(`[CameraScannerDialog] Error during camera start or permission request on attempt ${currentAttemptIndexRef.current}:`, err);
         isCameraStartedRef.current = false; // Ensure this is false on error
         let errorMessage = "Failed to start camera. ";
-        if (err.message === "Camera startup timed out.") {
+        if (err.name === "NotAllowedError") {
+          errorMessage = "Camera access denied. Please grant permission in your browser settings. ";
+        } else if (err.name === "NotFoundError") {
+          errorMessage = "No camera devices found. Ensure a camera is connected and enabled. ";
+        } else if (err.message === "Camera startup timed out.") {
           errorMessage = "Camera startup timed out. ";
         } else if (err.name === "NotReadableError") {
           errorMessage += "Camera in use or hardware issue. Close other camera apps. ";
-        } else if (err.name === "NotAllowedError") {
-          errorMessage += "Camera access denied. Grant permission in browser settings. ";
         } else if (err.name === "OverconstrainedError") {
           errorMessage += "Camera settings issue. Try restarting device/apps. ";
-        } else if (err.name === "NotFoundError") {
-          errorMessage += "No camera devices found. ";
         } else {
           errorMessage += "Unknown error. Ensure working camera. ";
         }
         
-        if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
+        if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
           console.log(`[CameraScannerDialog] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
           setTimeout(tryStartCamera, RETRY_DELAY_MS);
         } else {
