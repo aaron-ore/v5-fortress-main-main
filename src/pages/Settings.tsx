@@ -61,7 +61,7 @@ const Settings: React.FC = () => {
         reader.readAsDataURL(file);
         console.log("[Settings] handleFileChange: New file selected. File name:", file.name);
       } else {
-        showError("Please select an image file (PNG, JPG, GIF, SVG).");
+        showError("Select an image file.");
         setCompanyLogoFile(null);
         // Revert preview to current logo if invalid file selected
         setCompanyLogoUrlPreview(profile?.companyProfile?.companyLogoUrl || undefined);
@@ -79,13 +79,13 @@ const Settings: React.FC = () => {
     setCompanyLogoFile(null);
     setCompanyLogoUrlPreview(undefined); // Set to undefined to clear preview
     setIsLogoCleared(true); // Mark that the logo was intentionally cleared
-    showSuccess("Logo cleared. Save changes to apply.");
+    showSuccess("Logo cleared. Save changes.");
     console.log("[Settings] handleClearLogo: Logo explicitly cleared. isLogoCleared:", true);
   };
 
   const handleSaveCompanyProfile = async () => {
     if (!companyName || !companyCurrency || !companyAddress) {
-      showError("Please fill in all company profile fields.");
+      showError("Fill all company profile fields.");
       return;
     }
 
@@ -106,11 +106,11 @@ const Settings: React.FC = () => {
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-            else showSuccess("Old image deleted from storage.");
+            else showSuccess("Old image deleted.");
           }
         }
         finalCompanyLogoUrlForDb = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/'); // Returns INTERNAL PATH
-        showSuccess("Company logo uploaded successfully!");
+        showSuccess("Company logo uploaded!");
         console.log("[Settings] handleSaveCompanyProfile: New logo uploaded. Internal path for DB:", finalCompanyLogoUrlForDb);
       } else if (isLogoCleared) {
         console.log("[Settings] handleSaveCompanyProfile: Logo was explicitly cleared (isLogoCleared is true).");
@@ -120,7 +120,7 @@ const Settings: React.FC = () => {
           if (internalPathToDelete) {
             const { error: deleteError } = await supabase.storage.from('company-logos').remove([internalPathToDelete]);
             if (deleteError) console.warn("Failed to delete old image from storage:", deleteError);
-            else showSuccess("Old image deleted from storage.");
+            else showSuccess("Old image deleted.");
           }
         }
         finalCompanyLogoUrlForDb = undefined; // Set to undefined to clear in DB
@@ -134,7 +134,7 @@ const Settings: React.FC = () => {
 
     } catch (error: any) {
       console.error("Error processing company logo:", error);
-      showError(`Failed to process company logo: ${error.message}`);
+      showError(`Failed to process logo: ${error.message}`);
       setIsSavingCompanyProfile(false);
       setIsUploadingImage(false);
       return;
@@ -150,7 +150,7 @@ const Settings: React.FC = () => {
         companyLogoUrl: finalCompanyLogoUrlForDb, // This is the INTERNAL path or undefined
       }, organizationCodeInput);
     } catch (error: any) {
-      showError(`Failed to update company profile: ${error.message}`);
+      showError(`Failed to update profile: ${error.message}`);
     } finally {
       setIsSavingCompanyProfile(false);
     }
@@ -158,15 +158,15 @@ const Settings: React.FC = () => {
 
   const handleSaveOrganizationCode = async () => {
     if (!profile?.organizationId) {
-      showError("Organization not found. Please set up your company profile first.");
+      showError("Org not found. Set up profile first.");
       return;
     }
     if (!organizationCodeInput.trim()) {
-      showError("Organization Code cannot be empty.");
+      showError("Org Code cannot be empty.");
       return;
     }
     if (organizationCodeInput === (profile?.companyProfile?.organizationCode || "")) {
-      showSuccess("No changes to save for Organization Code.");
+      showSuccess("No changes to save.");
       return;
     }
 
@@ -176,7 +176,7 @@ const Settings: React.FC = () => {
         organizationCode: organizationCodeInput.trim(),
       }, organizationCodeInput.trim());
     } catch (error: any) {
-      showError(`Failed to update Organization Code: ${error.message}`);
+      showError(`Failed to update Org Code: ${error.message}`);
     } finally {
       setIsSavingOrganizationCode(false);
     }
@@ -184,11 +184,11 @@ const Settings: React.FC = () => {
 
   const handleSaveTheme = async () => {
     if (!profile?.organizationId) {
-      showError("Organization not found. Please set up your company profile first.");
+      showError("Org not found. Set up profile first.");
       return;
     }
     if (selectedTheme === (profile?.companyProfile?.organizationTheme || "dark")) {
-      showSuccess("No changes to save for Theme.");
+      showSuccess("No changes to save.");
       return;
     }
     setIsSavingTheme(true);

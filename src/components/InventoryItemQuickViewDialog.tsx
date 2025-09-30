@@ -458,7 +458,7 @@ const InventoryItemQuickViewDialog: React.FC<InventoryItemQuickViewDialogProps> 
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="overstock" id="target-overstock" />
                         <Label htmlFor="target-overstock">Overstock</Label>
-                      </div>
+                      </div >
                     </RadioGroup>
                   </div>
                   <div className="space-y-2">

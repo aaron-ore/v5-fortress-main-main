@@ -88,7 +88,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       if (file.name.endsWith(".csv")) {
         setSelectedFile(file);
       } else {
-        showError("Please select a CSV file.");
+        showError("Select a CSV file.");
         setSelectedFile(null);
       }
     } else {
@@ -114,12 +114,12 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
 
   const invokeEdgeFunction = async (actionForDuplicates: "skip" | "add_to_stock" | "update") => { // Removed dataToProcess parameter
     if (!profile?.organizationId || !profile?.id) {
-      showError("User or organization not loaded. Cannot perform import.");
+      showError("User/org not loaded. Cannot import.");
       setIsUploading(false);
       return;
     }
     if (!canManageInventory) { // NEW: Check permission before invoking edge function
-      showError("You do not have permission to import inventory data.");
+      showError("No permission to import data.");
       setIsUploading(false);
       return;
     }
@@ -132,11 +132,11 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         throw new Error("No file selected for upload.");
       }
       uploadedFilePath = await uploadFileToSupabase(selectedFile, 'csv-uploads', 'inventory-imports/');
-      showSuccess("CSV file uploaded to storage. Processing...");
+      showSuccess("CSV uploaded. Processing...");
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
+        throw new Error("Session expired. Log in again.");
       }
 
       const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/process-csv-inventory-upload`;
@@ -171,7 +171,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       if (result.success) {
         showSuccess(result.message);
       } else {
-        showError(result.message || "Bulk import completed with errors. Check console for details.");
+        showError(result.message || "Import errors. Check console.");
         console.error("Bulk Import Errors:", result.errors);
       }
       refreshInventory();
@@ -189,11 +189,11 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
 
   const handleUpload = async () => {
     if (!canManageInventory) { // NEW: Check permission before uploading
-      showError("You do not have permission to import inventory data.");
+      showError("No permission to import data.");
       return;
     }
     if (!selectedFile) {
-      showError("Please select a CSV file to upload.");
+      showError("Select a CSV file to upload.");
       return;
     }
 
@@ -215,7 +215,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
         const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
-          showError("The CSV file is empty or contains no data rows.");
+          showError("CSV file is empty.");
           setIsUploading(false);
           return;
         }
@@ -275,7 +275,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       document.body.removeChild(link);
       showSuccess("CSV template downloaded!");
     } else {
-      showError("Your browser does not support downloading files directly.");
+      showError("Browser doesn't support downloads.");
     }
   };
 
@@ -333,7 +333,7 @@ const ImportCsvDialog: React.FC<ImportCsvDialogProps> = ({
       };
       await addInventoryFolder(newFolder); // Use addInventoryFolder
     }
-    showSuccess(`Added new folders: ${newFoldersToConfirm.join(", ")}`);
+    showSuccess(`Added ${newFoldersToConfirm.length} new folders.`);
 
     if (jsonDataToProcess) {
       await invokeEdgeFunction(duplicateAction); // Removed jsonDataToProcess

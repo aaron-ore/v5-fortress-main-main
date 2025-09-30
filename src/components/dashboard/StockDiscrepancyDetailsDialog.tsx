@@ -44,7 +44,7 @@ interface DiscrepancyLog {
 const StockDiscrepancyDetailsDialog: React.FC<StockDiscrepancyDetailsDialogProps> = ({ isOpen, onClose, dateRange }) => {
   const { profile, allProfiles, fetchAllProfiles } = useProfile();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
-  const [discrepancies, setDiscrepancies] = useState<DiscrepancyLog[]>([]);
+  const [discrepancies, setDiscrepancies] = useState<DiscrecrepancyLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [discrepancyToResolve, setDiscrepancyToResolve] = useState<DiscrepancyLog | null>(null);

@@ -65,7 +65,7 @@ const Users: React.FC = () => {
       return;
     }
     if (!profile?.organizationId) {
-      showError("Organization ID not found for role update.");
+      showError("Org ID not found for role update.");
       return;
     }
     try {
@@ -78,9 +78,9 @@ const Users: React.FC = () => {
   const handleCopyOrganizationCode = () => {
     if (profile?.companyProfile?.organizationCode) {
       navigator.clipboard.writeText(profile.companyProfile.organizationCode);
-      showSuccess("Organization Code copied!");
+      showSuccess("Org Code copied!");
     } else {
-      showError("No Organization Code available.");
+      showError("No Org Code available.");
     }
   };
 

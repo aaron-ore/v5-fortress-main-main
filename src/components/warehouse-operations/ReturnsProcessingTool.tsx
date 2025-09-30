@@ -78,9 +78,9 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
       setScannedItem(foundItem);
       setReturnQuantity("1");
       setReturnDestinationFolderId(foundItem.folderId);
-      showSuccess(`Scanned item: ${foundItem.name}.`);
+      showSuccess(`Scanned: ${foundItem.name}.`);
     } else {
-      showError(`No item found with SKU/Barcode.`);
+      showError(`Item not found.`);
     }
   };
 
@@ -145,7 +145,7 @@ const ReturnsProcessingTool: React.FC<ReturnsProcessingToolProps> = ({ onScanReq
     });
 
     await refreshInventory();
-    showSuccess(`Processed return for ${quantity} units.`);
+    showSuccess(`Processed ${quantity} units.`);
 
     setScannedItem(null);
     setReturnQuantity("");

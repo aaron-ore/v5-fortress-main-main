@@ -34,11 +34,11 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
 
   const handleStartFreeTrial = async (plan: 'standard' | 'premium') => {
     if (!profile?.organizationId) {
-      showError("Organization not found. Cannot start trial.");
+      showError("Org not found. Cannot start trial.");
       return;
     }
     if (!profile?.id) {
-      showError("User not found. Please log in again.");
+      showError("User not found. Log in again.");
       return;
     }
 
@@ -46,7 +46,7 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
+        throw new Error("Session expired. Log in again.");
       }
 
       // Find the price ID for the selected plan (e.g., 'standard' monthly)
@@ -103,7 +103,7 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
   const handleContinueWithFreePlan = () => {
     markUpgradePromptSeen();
     onClose();
-    showSuccess("Continuing with the Free plan. You can upgrade anytime!");
+    showSuccess("Continuing with Free plan. Upgrade anytime!");
   };
 
   return (

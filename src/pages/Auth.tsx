@@ -31,7 +31,7 @@ const Auth: React.FC = () => {
     if (plan) {
       setSelectedPlanFromUrl(plan);
       setIsLogin(false);
-      showSuccess(`You've selected the ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! Please sign up to continue.`);
+      showSuccess(`Selected ${plan} plan! Sign up.`);
     }
   }, [location.search]);
 
@@ -52,7 +52,7 @@ const Auth: React.FC = () => {
         showError(error.message);
         await logActivity("Login Failed", `User ${email} failed to log in.`, profile, { error_message: error.message }, true);
       } else {
-        showSuccess("Logged in successfully!");
+        showSuccess("Logged in!");
         await logActivity("Login Success", `User ${email} logged in successfully.`, profile);
       }
     } else {
@@ -69,7 +69,7 @@ const Auth: React.FC = () => {
         showError(error.message);
         await logActivity("Signup Failed", `User ${email} failed to sign up.`, profile, { error_message: error.message, full_name: fullName, company_code: companyCode, plan: selectedPlanFromUrl }, true);
       } else {
-        showSuccess("Account created! Please check your email to confirm.");
+        showSuccess("Account created! Check email to confirm.");
         await logActivity("Signup Success", `User ${email} signed up successfully.`, profile, { full_name: fullName, company_code: companyCode, plan: selectedPlanFromUrl });
         setIsLogin(true);
         setFullName("");
@@ -82,7 +82,7 @@ const Auth: React.FC = () => {
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      showError("Please enter your email address to reset your password.");
+      showError("Enter email to reset password.");
       return;
     }
     setLoading(true);
@@ -93,7 +93,7 @@ const Auth: React.FC = () => {
       showError(error.message);
       await logActivity("Forgot Password Failed", `Password reset request failed for ${email}.`, profile, { error_message: error.message }, true);
     } else {
-      showSuccess("Password reset email sent! Check your inbox.");
+      showSuccess("Password reset email sent! Check inbox.");
       await logActivity("Forgot Password Request", `Password reset email sent to ${email}.`, profile);
     }
     setLoading(false);

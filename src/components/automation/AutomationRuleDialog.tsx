@@ -132,7 +132,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
 
   const handleSubmit = async () => {
     if (!isAdmin || !canAccessAutomation) {
-      showError("You do not have permission to create or edit automation rules.");
+      showError("No permission to manage rules.");
       return;
     }
     if (!name.trim()) {
@@ -145,7 +145,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
 
     if (triggerType === "ON_STOCK_LEVEL_CHANGE") {
       if (!conditionField || !conditionOperator || !conditionValue) {
-        showError("Please define a complete condition for Stock Level Change.");
+        showError("Define a complete condition.");
         return;
       }
       conditionJson = {
@@ -155,7 +155,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
       };
     } else if (triggerType === "ON_ORDER_STATUS_CHANGE") {
       if (!conditionOrderType || !conditionNewStatus) {
-        showError("Please define order type and new status for Order Status Change condition.");
+        showError("Define order type and new status.");
         return;
       }
       conditionJson = {
@@ -165,7 +165,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
       };
     } else if (triggerType === "ON_NEW_INVENTORY_ITEM") {
       if (!conditionField || !conditionOperator || !conditionValue) {
-        showError("Please define a complete condition for New Inventory Item.");
+        showError("Define a complete condition.");
         return;
       }
       conditionJson = {
@@ -177,7 +177,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
 
     if (actionType === "SEND_NOTIFICATION") {
       if (!actionNotificationMessage.trim()) {
-        showError("Notification message is required for the 'Send Notification' action.");
+        showError("Notification message is required.");
         return;
       }
       actionJson = {
@@ -186,7 +186,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
       };
     } else if (actionType === "SEND_EMAIL") {
       if (!actionEmailTo || !actionEmailSubject.trim() || !actionEmailBody.trim()) {
-        showError("Email recipient, subject, and body are required for the 'Send Email' action.");
+        showError("Email recipient, subject, and body are required.");
         return;
       }
       actionJson = {
@@ -198,7 +198,7 @@ const AutomationRuleDialog: React.FC<AutomationRuleDialogProps> = ({ isOpen, onC
     } else if (actionType === "CREATE_PURCHASE_ORDER") {
       const quantity = parseInt(actionCreatePoQuantity);
       if (!actionCreatePoItemId || isNaN(quantity) || quantity <= 0) {
-        showError("Please select an item and enter a valid positive quantity for the 'Create Purchase Order' action.");
+        showError("Select item and valid quantity.");
         return;
       }
       actionJson = {

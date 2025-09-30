@@ -150,7 +150,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
   const handleClearImage = () => {
     setImageFile(null);
     setImageUrlPreview(null);
-    showSuccess("Image cleared. Add item to apply.");
+    showSuccess("Image cleared. Add item.");
     console.log("[AddInventoryDialog] handleClearImage: Image explicitly cleared. imageUrlPreview set to null.");
   };
 
@@ -218,7 +218,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
     }
 
     if (!profile?.organizationId) {
-      showError("Organization ID not found.");
+      showError("Org ID not found.");
       setIsAddingItem(false); // Reset loading state
       return;
     }
@@ -253,7 +253,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
         // Removed showSuccess for new image upload
       } catch (error: any) {
         console.error("Error uploading product image:", error);
-        showError(`Failed to upload product image: ${error.message}`);
+        showError(`Failed to upload image: ${error.message}`);
         setIsAddingItem(false); // Reset loading state
         setIsUploadingImage(false);
         return;
@@ -297,7 +297,7 @@ const AddInventoryDialog: React.FC<AddInventoryDialogProps> = ({
       onClose();
     } catch (error: any) {
       console.error("Failed to add inventory item:", error);
-      showError("Failed to add item: " + (error.message || "Unknown error. Please check console for details."));
+      showError("Failed to add item: " + (error.message || "Unknown error. Check console."));
     } finally {
       setIsAddingItem(false); // Reset loading state
     }

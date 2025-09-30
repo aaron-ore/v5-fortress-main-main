@@ -148,16 +148,16 @@ const AppContent = () => {
     const stripeSuccess = params.get('stripe_success'); // NEW: Handle Stripe success
     const stripeCancel = params.get('stripe_cancel'); // NEW: Handle Stripe cancel
 
-    console.log('AppContent.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
-    console.log('AppContent.tsx: quickbooks_error from URL parameters:', quickbooksError);
-    console.log('AppContent.tsx: shopify_success from URL parameters:', shopifySuccess);
-    console.log('AppContent.tsx: shopify_error from URL parameters:', shopifyError);
-    console.log('AppContent.tsx: stripe_success from URL parameters:', stripeSuccess); // NEW: Log Stripe params
-    console.log('AppContent.tsx: stripe_cancel from URL parameters:', stripeCancel); // NEW: Log Stripe params
+    console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
+    console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
+    console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
+    console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
+    console.log('Integrations.tsx: stripe_success from URL parameters:', stripeSuccess); // NEW: Log Stripe params
+    console.log('Integrations.tsx: stripe_cancel from URL parameters:', stripeCancel); // NEW: Log Stripe params
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
-        showSuccess("QuickBooks connected successfully!");
+        showSuccess("QuickBooks connected!");
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -168,7 +168,7 @@ const AppContent = () => {
     // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
-        showSuccess("Shopify connected successfully!");
+        showSuccess("Shopify connected!");
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
@@ -179,9 +179,9 @@ const AppContent = () => {
     // NEW: Handle Stripe callback
     if (stripeSuccess || stripeCancel) {
       if (stripeSuccess) {
-        showSuccess("Subscription process completed successfully!");
+        showSuccess("Subscription complete!");
       } else if (stripeCancel) {
-        showError("Subscription process cancelled.");
+        showError("Subscription cancelled.");
       }
       // Clear Stripe parameters from URL
       const newSearchParams = new URLSearchParams(params);

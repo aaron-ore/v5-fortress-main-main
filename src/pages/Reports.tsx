@@ -77,11 +77,11 @@ const Reports: React.FC = () => {
 
   const handlePrintReport = useCallback(() => {
     if (!reportData || !pdfProps || !CurrentPdfComponent) {
-      showError("No report data to print. Please generate the report first.");
+      showError("No report data to print.");
       return;
     }
     if (!profile?.companyProfile) {
-      showError("Company profile not set up. Please complete onboarding or set company details in settings.");
+      showError("Company profile not set up.");
       return;
     }
 
@@ -103,11 +103,11 @@ const Reports: React.FC = () => {
 
   const handleSummarizeReport = async () => {
     if (!reportData) {
-      showError("No report data available to summarize.");
+      showError("No report data to summarize.");
       return;
     }
     if (!canAccessAiSummary) {
-      showError("AI Summary is a Premium/Enterprise feature. Please upgrade your plan.");
+      showError("AI Summary requires Premium/Enterprise.");
       return;
     }
 
@@ -118,7 +118,7 @@ const Reports: React.FC = () => {
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
+        throw new Error("Session expired. Log in again.");
       }
 
       const payload = {
@@ -136,7 +136,6 @@ const Reports: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
-        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -158,7 +157,7 @@ const Reports: React.FC = () => {
       }
 
       setAiSummary(data.summary);
-      showSuccess("AI summary generated successfully!");
+      showSuccess("AI summary generated!");
     } catch (error: any) {
       console.error("Error generating AI summary:", error);
       showError(`Failed to generate AI summary: ${error.message}`);

@@ -49,7 +49,7 @@ const ScanItemDialog: React.FC<ScanItemDialogProps> = ({
       showSuccess(`Item found: ${foundItem.name}.`);
       // In a real application, you might navigate to the item's edit page or show its details
     } else {
-      showError(`No item found with barcode/SKU.`);
+      showError(`No item found.`);
     }
 
     setBarcode(""); // Clear input after scan attempt

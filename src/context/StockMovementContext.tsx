@@ -82,7 +82,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
 
     if (error) {
       console.error("Error fetching stock movements:", error);
-      showError("Failed to load stock movements.");
+      showError("Failed to load movements.");
     } else {
       const fetchedMovements: StockMovement[] = data.map(mapSupabaseMovementToStockMovement);
       setStockMovements(fetchedMovements);
@@ -99,7 +99,7 @@ export const StockMovementProvider: React.FC<{ children: ReactNode }> = ({ child
   const addStockMovement = async (movement: Omit<StockMovement, "id" | "timestamp" | "organizationId" | "userId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to log movements.");
+      showError("Login/org ID required.");
       return;
     }
 

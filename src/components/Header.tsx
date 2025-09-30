@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
   const handleLogout = async () => {
     const { data: { session } = { session: null } } = await supabase.auth.getSession();
     if (!session) {
-      showSuccess("You are already logged out.");
+      showSuccess("Already logged out.");
       navigate("/auth");
       return;
     }
@@ -45,7 +45,7 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
     if (error) {
       showError("Failed to log out: " + error.message);
     } else {
-      showSuccess("Logged out successfully!");
+      showSuccess("Logged out!");
       navigate("/auth");
     }
   };

@@ -230,9 +230,9 @@ const BulkUpdateDialog: React.FC<BulkUpdateDialogProps> = ({ isOpen, onClose }) 
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      showSuccess("Bulk update CSV template downloaded!");
+      showSuccess("Bulk update template downloaded!");
     } else {
-      showError("Browser does not support downloads.");
+      showError("Browser doesn't support downloads.");
     }
   };
 

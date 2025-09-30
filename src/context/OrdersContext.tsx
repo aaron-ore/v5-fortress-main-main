@@ -128,7 +128,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const updateOrder = async (updatedOrder: OrderItem) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to update orders.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Update Order Failed", errorMessage, profile, { order_id: updatedOrder.id, order_type: updatedOrder.type }, true);
       showError(errorMessage);
       return;
@@ -174,7 +174,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const addOrder = async (newOrder: Omit<OrderItem, "id" | "organizationId"> & { id?: string }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to add orders.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Add Order Failed", errorMessage, profile, { order_type: newOrder.type, customer_supplier: newOrder.customerSupplier }, true);
       showError(errorMessage);
       return;
@@ -189,7 +189,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
         type: newOrder.type,
         customer_supplier: newOrder.customerSupplier,
         created_at: newOrder.date,
-        status: newOrder.status,
+        status: "New Order",
         total_amount: newOrder.totalAmount,
         due_date: newOrder.dueDate,
         item_count: newOrder.itemCount,
@@ -220,7 +220,7 @@ export const OrdersProvider: React.FC<{ children: ReactNode }> = ({
   const archiveOrder = async (orderId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to archive orders.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Archive Order Failed", errorMessage, profile, { order_id: orderId }, true);
       showError(errorMessage);
       return;

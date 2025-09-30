@@ -55,7 +55,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
     }
 
     if (!profile?.organizationId) {
-      showError("Organization not found. Cannot save settings.");
+      showError("Org not found. Cannot save settings.");
       return;
     }
 
