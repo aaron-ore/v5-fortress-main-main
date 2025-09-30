@@ -36,11 +36,15 @@ const SlowMovingDeadstockCard: React.FC<SlowMovingDeadstockCardProps> = ({ slowM
                 </div>
               </li>
             ))}
+            {slowMovingItems.length > 0 && (
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                These items have not moved in a while.
+              </p>
+            )}
           </ul>
         ) : (
           <p className="text-center text-muted-foreground text-sm py-4">No slow-moving or deadstock items detected. Great!</p>
         )}
-        <p className="text-xs text-muted-foreground mt-auto text-center">Highlights items sitting too long in storage.</p>
       </CardContent>
     </Card>
   );
