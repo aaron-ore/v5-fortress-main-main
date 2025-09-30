@@ -2,12 +2,12 @@
 
 import React from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  Sheet, // Changed from Dialog
+  SheetContent, // Changed from DialogContent
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"; // Changed import from dialog to sheet
 import IssueReportTool from "@/components/warehouse-operations/IssueReportTool";
 import { AlertTriangle } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
@@ -34,30 +34,30 @@ const IssueReportDialog: React.FC<IssueReportDialogProps> = ({
 
   if (!canReportIssues) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
+      <Sheet open={isOpen} onOpenChange={onClose}> {/* Changed from Dialog */}
+        <SheetContent side="right" className="w-full sm:max-w-full h-full flex flex-col p-0"> {/* Adjusted for full screen */}
           <Card className="p-6 text-center bg-card border-border">
             <CardTitle className="text-2xl font-bold mb-4">Access Denied</CardTitle>
             <CardContent>
               <p className="text-muted-foreground">You do not have permission to report issues.</p>
             </CardContent>
           </Card>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px] flex flex-col h-[90vh] max-h-[700px] p-0">
-        <DialogHeader className="p-4 pb-2">
-          <DialogTitle className="flex items-center gap-2">
+    <Sheet open={isOpen} onOpenChange={onClose}> {/* Changed from Dialog */}
+      <SheetContent side="right" className="w-full sm:max-w-full h-full flex flex-col p-0"> {/* Adjusted for full screen */}
+        <SheetHeader className="p-4 pb-2">
+          <SheetTitle className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-primary" /> Report an Issue
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             Report damaged items, discrepancies, or other warehouse issues.
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <div className="flex-grow overflow-hidden p-4 pt-0">
           <IssueReportTool
             onScanRequest={onScanRequest}
@@ -65,8 +65,8 @@ const IssueReportDialog: React.FC<IssueReportDialogProps> = ({
             onScannedDataProcessed={onScannedDataProcessed}
           />
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
 

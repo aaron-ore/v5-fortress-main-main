@@ -7,9 +7,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import WarehouseDashboard from "@/components/warehouse-operations/WarehouseDashboard";
 import CameraScannerDialog from "@/components/CameraScannerDialog";
 import { cn } from "@/lib/utils";
-import { showSuccess, showError } from "@/utils/toast"; // Import showError
+import { showSuccess, showError } from "@/utils/toast";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 import { useSidebar } from "@/context/SidebarContext";
 
 
@@ -31,8 +31,8 @@ const WarehouseOperationsPage: React.FC = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useProfile(); // NEW: Get profile for role checks
-  const { isCollapsed: _isCollapsed } = useSidebar(); // Use isCollapsed from SidebarContext
+  const { profile } = useProfile();
+  const { isCollapsed: _isCollapsed } = useSidebar();
 
 
   // NEW: Role-based permissions for warehouse operations
@@ -112,7 +112,7 @@ const WarehouseOperationsPage: React.FC = () => {
       setActiveTab("dashboard");
     } else {
       const dialogKey = hash as keyof typeof dialogStates;
-      if (dialogStates[dialogKey] && dialogStates[dialogKey].canAccess) { // NEW: Check canAccess
+      if (dialogStates[dialogKey] && dialogStates[dialogKey].canAccess) {
         dialogStates[dialogKey].setIsOpen(true);
         setActiveTab("");
       } else {
@@ -122,7 +122,7 @@ const WarehouseOperationsPage: React.FC = () => {
         }
       }
     }
-  }, [location.hash, navigate, location.pathname, profile, dialogStates]); // Added dialogStates to dependencies
+  }, [location.hash, navigate, location.pathname, profile, dialogStates]);
 
   const requestScan = (callback: (scannedData: string) => void) => {
     setScanCallback(() => callback);
@@ -134,18 +134,18 @@ const WarehouseOperationsPage: React.FC = () => {
       scanCallback(decodedText);
       setScanCallback(null);
     } else {
+      // If no specific tool requested a scan, default to Item Lookup
       setScannedDataForTool(decodedText);
-      // Automatically open Item Lookup if no specific tool is active
       Object.entries(dialogStates).forEach(([_key, state]) => {
         if (state.isOpen && _key !== "item-lookup") {
           state.setIsOpen(false);
         }
       });
-      if (canLookupItems) { // NEW: Check permission before opening Item Lookup
+      if (canLookupItems) {
         dialogStates["item-lookup"].setIsOpen(true);
         navigate(`${location.pathname}#item-lookup`, { replace: true });
         setActiveTab("");
-        showSuccess(`Scanned: ${decodedText}.`);
+        showSuccess(`Scanned: ${decodedText}. Opening Item Lookup.`);
       } else {
         showError("No permission for Item Lookup.");
       }
@@ -188,7 +188,7 @@ const WarehouseOperationsPage: React.FC = () => {
     );
   }
 
-  if (!canViewWarehouseOps) { // NEW: Check permission for viewing page
+  if (!canViewWarehouseOps) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -207,8 +207,8 @@ const WarehouseOperationsPage: React.FC = () => {
 
       <Button
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-3 flex items-center justify-center gap-2 mb-4"
-        onClick={() => requestScan(() => {})}
-        disabled={!canLookupItems} // NEW: Disable global scan if no lookup permission
+        onClick={() => requestScan(handleScanSuccessFromDialog)} // Fixed global scan button
+        disabled={!canLookupItems}
       >
         <Scan className="h-6 w-6" />
         Scan Item
@@ -228,7 +228,7 @@ const WarehouseOperationsPage: React.FC = () => {
                   : "text-foreground hover:bg-muted/50 hover:text-primary"
             )}
             onClick={() => {
-              if (!op.canAccess) { // NEW: Check permission before clicking
+              if (!op.canAccess) {
                 showError("No permission to access this operation.");
                 return;
               }
@@ -251,7 +251,7 @@ const WarehouseOperationsPage: React.FC = () => {
                 navigate(`/${op.value}`);
               }
             }}
-            disabled={!op.canAccess} // NEW: Disable button if no permission
+            disabled={!op.canAccess}
           >
             <op.icon className="h-6 w-6 sm:h-7 sm:w-7 mb-1" />
             <span className="text-xs sm:text-sm font-semibold">{op.label}</span>
