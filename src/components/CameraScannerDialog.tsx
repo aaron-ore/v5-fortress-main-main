@@ -63,14 +63,11 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     verbose: false,
   };
 
-  // Use a more lenient facingMode initially for broader compatibility
   const html5QrcodeCameraScanConfig: Html5QrcodeCameraScanConfig = {
     fps: 10,
     aspectRatio: 1.0,
     disableFlip: false,
-    videoConstraints: {
-      facingMode: "environment" // Prefer environment camera, but not exact
-    }
+    // videoConstraints will be determined dynamically
   };
 
   const stopScanner = useCallback(async () => {
@@ -156,10 +153,19 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       currentAttemptsRef.current++;
       console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS})`);
 
-      let cameraSelection: string | MediaTrackConstraints = html5QrcodeCameraScanConfig.videoConstraints || "environment";
+      let cameraSelection: string | MediaTrackConstraints = "environment"; // Default to lenient environment
 
-      // Fallback to enumerate devices if initial constraints fail
-      if (currentAttemptsRef.current > 1) { // On retry, try enumerating devices
+      if (currentAttemptsRef.current === 1) {
+        // First attempt: try exact environment
+        cameraSelection = { facingMode: { exact: "environment" } };
+        console.log("[CameraScannerDialog] Attempt 1: Trying exact 'environment' facingMode.");
+      } else if (currentAttemptsRef.current === 2) {
+        // Second attempt: try lenient environment
+        cameraSelection = { facingMode: "environment" };
+        console.log("[CameraScannerDialog] Attempt 2: Trying lenient 'environment' facingMode.");
+      } else {
+        // Third attempt (and subsequent retries): enumerate devices
+        console.log("[CameraScannerDialog] Attempt 3+: Enumerating camera devices for explicit selection.");
         try {
           const devices = await Html5Qrcode.getCameras();
           if (devices && devices.length > 0) {
