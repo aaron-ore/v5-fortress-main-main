@@ -78,7 +78,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
   const addCustomer = async (customer: Omit<Customer, "id" | "createdAt" | "organizationId">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to add customers.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Add Customer Failed", errorMessage, profile, { customer_name: customer.name }, true);
       showError(errorMessage);
       return;
@@ -123,7 +123,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
   const updateCustomer = async (updatedCustomer: Customer) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to update customers.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Update Customer Failed", errorMessage, profile, { customer_id: updatedCustomer.id, customer_name: updatedCustomer.name }, true);
       showError(errorMessage);
       return;
@@ -172,7 +172,7 @@ export const CustomerProvider: React.FC<{ children: ReactNode }> = ({ children }
   const deleteCustomer = async (customerId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "Login/org ID required to delete customers.";
+      const errorMessage = "Login/org ID required.";
       await logActivity("Delete Customer Failed", errorMessage, profile, { customer_id: customerId }, true);
       showError(errorMessage);
       return;

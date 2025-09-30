@@ -77,7 +77,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
 
     if (error) {
       console.error("Error fetching automation rules:", error);
-      showError("Failed to load automation rules.");
+      showError("Failed to load rules.");
       setAutomationRules([]);
     } else {
       const fetchedRules: AutomationRule[] = data.map(mapSupabaseRuleToAutomationRule);
@@ -141,7 +141,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
   const addRule = async (rule: Omit<AutomationRule, "id" | "organizationId" | "userId" | "createdAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to add rules.");
+      showError("Login/org ID required.");
       return;
     }
 
@@ -170,7 +170,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
   const updateRule = async (updatedRule: Omit<AutomationRule, "organizationId" | "userId" | "createdAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to update rules.");
+      showError("Login/org ID required.");
       return;
     }
 
@@ -200,7 +200,7 @@ export const AutomationProvider: React.FC<{ children: ReactNode }> = ({ children
   const deleteRule = async (ruleId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to delete rules.");
+      showError("Login/org ID required.");
       return;
     }
 

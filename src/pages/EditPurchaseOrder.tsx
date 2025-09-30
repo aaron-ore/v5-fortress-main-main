@@ -96,7 +96,7 @@ const EditPurchaseOrder: React.FC = () => {
         setSupplierContact("");
         setTerms(foundOrder.terms || "Net 30");
       } else {
-        showError("Purchase Order not found.");
+        showError("PO not found.");
         navigate("/orders");
       }
     }
@@ -200,7 +200,7 @@ const EditPurchaseOrder: React.FC = () => {
   const confirmArchiveOrder = () => {
     if (order) {
       archiveOrder(order.id);
-      showSuccess(`Order ${order.id} archived.`);
+      showSuccess(`PO ${order.id} archived.`);
       navigate("/orders");
     }
     setIsConfirmArchiveDialogOpen(false);

@@ -76,7 +76,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
 
     if (error) {
       console.error("Error fetching replenishment tasks:", error);
-      showError("Failed to load replenishment tasks.");
+      showError("Failed to load tasks.");
       setReplenishmentTasks([]);
     } else {
       const fetchedTasks: ReplenishmentTask[] = data.map(mapSupabaseTaskToReplenishmentTask);
@@ -94,7 +94,7 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
   const addReplenishmentTask = async (task: Omit<ReplenishmentTask, "id" | "createdAt" | "organizationId" | "status" | "completedAt">) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to add tasks.");
+      showError("Login/org ID required.");
       return;
     }
 
@@ -118,14 +118,14 @@ export const ReplenishmentProvider: React.FC<{ children: ReactNode }> = ({ child
     } else if (data && data.length > 0) {
       const newTask: ReplenishmentTask = mapSupabaseTaskToReplenishmentTask(data[0]);
       setReplenishmentTasks((prev) => [...prev, newTask]);
-      showSuccess(`Replenishment task for ${task.itemName} created!`);
+      showSuccess(`Task for ${task.itemName} created!`);
     }
   };
 
   const updateReplenishmentTask = async (updatedTask: ReplenishmentTask) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to update tasks.");
+      showError("Login/org ID required.");
       return;
     }
 

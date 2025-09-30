@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Package, AlertCircle, TrendingUp, Scan, Receipt, DollarSign, Boxes, FilterX, Loader2, AlertTriangle } from "lucide-react";
+import { PlusCircle, Package, AlertCircle, TrendingUp, Scan as ScanIcon, Receipt, DollarSign, Boxes, FilterX, Loader2, AlertTriangle } from "lucide-react";
 import AddInventoryDialog from "@/components/AddInventoryDialog";
 import ScanItemDialog from "@/components/ScanItemDialog";
 import {
@@ -157,7 +157,7 @@ const ClassicDashboard: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           <Button onClick={() => setIsScanItemDialogOpen(true)}>
-            <Scan className="h-4 w-4 mr-2" /> Scan Item
+            <ScanIcon className="h-4 w-4 mr-2" /> Scan Item
           </Button>
           <Button variant="outline" onClick={() => navigate("/inventory")}>
             <Package className="h-4 w-4 mr-2" /> Manage Inventory

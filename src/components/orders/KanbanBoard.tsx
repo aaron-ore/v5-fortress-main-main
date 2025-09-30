@@ -70,7 +70,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ onOrderClick, filteredOrders 
 
     const updatedOrder = { ...activeOrder, status: targetColumnStatus };
     updateOrder(updatedOrder);
-    showSuccess(`Order ${activeOrder.id} moved to ${targetColumnStatus}.`);
+    showSuccess(`Order ${activeOrder.id} moved.`);
   };
 
   return (

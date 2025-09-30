@@ -63,7 +63,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
   const addCategory = async (name: string): Promise<Category | null> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to add categories.");
+      showError("Login/org ID required.");
       return null;
     }
 
@@ -117,7 +117,7 @@ export const CategoryProvider: React.FC<{ children: ReactNode }> = ({ children }
   const removeCategory = async (id: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      showError("Login/org ID required to remove categories.");
+      showError("Login/org ID required.");
       return;
     }
 

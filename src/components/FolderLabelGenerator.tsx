@@ -95,7 +95,7 @@ const FolderLabelGenerator: React.FC<FolderLabelGeneratorProps> = ({
     );
 
     if (duplicateExists) {
-      showError(`Folder "${folderName}" already exists.`);
+      showError("Folder already exists.");
       return;
     }
 

@@ -45,14 +45,14 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
         setSupplier(foundVendor);
         showSuccess(`Supplier found for ${itemName}.`);
       } else {
-        showError(`No supplier found for vendor ID.`);
+        showError(`No supplier found.`);
         setSupplier(null);
       }
       setIsLoadingSupplier(false);
     } else if (isOpen && !vendorId) {
       setSupplier(null);
       setIsLoadingSupplier(false);
-      showError(`No vendor assigned to ${itemName}.`);
+      showError(`No vendor assigned.`);
     }
   }, [isOpen, vendorId, vendors, itemName]);
 
@@ -119,7 +119,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
               <div className="space-y-1">
                 <p className="font-semibold text-foreground">Address:</p>
                 <p className="text-muted-foreground">{supplier.address || "N/A"}</p>
-              </div>
+              </div >
             </>
           ) : (
             <div className="text-center text-muted-foreground py-4">

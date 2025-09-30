@@ -121,11 +121,11 @@ const FulfillOrderDialog: React.FC<FulfillOrderDialogProps> = ({ isOpen, onClose
       // Update Order status
       const updatedOrder: OrderItem = { ...order, status: "Packed", notes: notes || order.notes };
       updateOrder(updatedOrder);
-      showSuccess(`Order ${selectedOrderId} fulfilled and packed.`);
+      showSuccess(`Order ${selectedOrderId} fulfilled.`);
       refreshInventory(); // Ensure inventory context is refreshed
       onClose();
     } else {
-      showError("Order fulfillment failed for some items.");
+      showError("Order fulfillment failed.");
     }
   };
 

@@ -16,7 +16,7 @@ export const exportToExcel = (data: ExportData[], filename: string, sheetName: s
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
     XLSX.writeFile(wb, `${filename}.xlsx`);
-    showSuccess(`Exported "${filename}.xlsx" successfully!`);
+    showSuccess(`Exported "${filename}.xlsx"!`);
   } catch (error) {
     console.error("Error exporting to Excel:", error);
     showError(`Failed to export "${filename}.xlsx".`);

@@ -183,8 +183,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
                   min="1"
                   max={selectedItem.quantity}
                 />
-                <p className="text-xs text-muted-foreground">Available: {selectedItem.quantity} units</p>
-              </div>
+              </div >
             </>
           )}
 
