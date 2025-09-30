@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useNavigate } from "react-router-dom";
-import { showError } from "@/utils/toast"; // Import showError
+import { showError } from "@/utils/toast";
 
 
 interface FolderCardProps {
@@ -81,10 +81,17 @@ const FolderCard: React.FC<FolderCardProps> = ({
               {folder.name}
             </CardTitle>
           </div>
-          {canManageFolders && ( // NEW: Only show dropdown if user can manage folders
+          {canManageFolders && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Removed opacity-0 and group-hover:opacity-100 to make the button always visible */}
+                {/* Added onClick to stop propagation so clicking the dots doesn't trigger card navigation */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreVertical className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
