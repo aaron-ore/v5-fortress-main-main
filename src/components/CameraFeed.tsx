@@ -41,7 +41,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
 
   const html5QrcodeCameraScanConfig: Html5QrcodeCameraScanConfig = {
     fps: 10,
-    aspectRatio: 1.0,
+    // Removed aspectRatio: 1.0 to allow native camera aspect ratio for better compatibility
     disableFlip: false,
   };
 
@@ -160,32 +160,20 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
         stream.getTracks().forEach(track => track.stop());
         console.log("[CameraFeed] Camera permissions granted and temporary stream stopped.");
 
-        // Strategy 1: Try specific facing modes
-        if (currentAttemptIndexRef.current === 1) {
-          cameraSelection = { facingMode: { exact: "environment" } };
-          console.log("[CameraFeed] Attempt 1: Trying exact 'environment' facingMode.");
-        } else if (currentAttemptIndexRef.current === 2) {
-          cameraSelection = { facingMode: "environment" };
-          console.log("[CameraFeed] Attempt 2: Trying lenient 'environment' facingMode.");
-        } else if (currentAttemptIndexRef.current === 3) {
-          cameraSelection = { facingMode: "user" }; // Fallback to front camera
-          console.log("[CameraFeed] Attempt 3: Trying 'user' (front) facingMode.");
+        // Strategy: Enumerate devices and try to find a back camera, otherwise use the first one
+        console.log("[CameraFeed] Enumerating camera devices for explicit selection.");
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          console.log("[CameraFeed] Found camera devices:", devices);
+          // Prioritize back camera
+          const backCamera = devices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("environment"));
+          cameraSelection = backCamera ? backCamera.id : devices[0].id;
+          console.log("[CameraFeed] Using specific camera ID:", cameraSelection);
         } else {
-          // Strategy 2: Enumerate devices and try by ID
-          console.log("[CameraFeed] Attempt 4+: Enumerating camera devices for explicit selection.");
-          const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0) {
-            console.log("[CameraFeed] Found camera devices:", devices);
-            // Try to find an environment camera, otherwise use the first one
-            const environmentCamera = devices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("environment"));
-            cameraSelection = environmentCamera ? environmentCamera.id : devices[0].id;
-            console.log("[CameraFeed] Using specific camera ID:", cameraSelection);
-          } else {
-            console.warn("[CameraFeed] No camera devices found during enumeration.");
-            throw new Error("No camera devices found.");
-          }
+          console.warn("[CameraFeed] No camera devices found during enumeration.");
+          throw new Error("No camera devices found.");
         }
-
+        
         const html5QrcodeStartPromise = new Promise<void>(async (resolve, reject) => {
           try {
             if (!html5QrCodeRef.current) {
@@ -247,7 +235,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
         } else if (err.name === "OverconstrainedError") {
           errorMessage += "Camera settings issue. Try restarting device/apps. ";
         } else {
-          errorMessage += "Unknown error. Ensure working camera. ";
+          errorMessage += `Unknown error: ${err.message}. Ensure working camera. `;
         }
         
         if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS) {
