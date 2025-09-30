@@ -249,14 +249,15 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const addInventoryItem = async (item: Omit<InventoryItem, "id" | "status" | "lastUpdated" | "organizationId" | "quantity" | "createdAt" | "imageUrl"> & { vendorId?: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to add inventory items.";
+      const errorMessage = "Login/org ID required to add items.";
       await logActivity("Add Inventory Item Failed", errorMessage, profile, { item_name: item.name, sku: item.sku }, true);
-      throw new Error(errorMessage);
+      showError(errorMessage);
+      return;
     }
 
     const totalQuantity = item.pickingBinQuantity + item.overstockQuantity;
     const status = totalQuantity > item.reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
-    const lastUpdated = new Date().toISOString();
+    const lastUpdated = new Date().toISOString().split('T')[0];
     const createdAt = new Date().toISOString();
 
     // item.imageUrl is expected to be the INTERNAL PATH from uploadFileToSupabase
@@ -305,7 +306,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
       const newItem: InventoryItem = mapSupabaseItemToInventoryItem(data[0]);
       setInventoryItems((prevItems) => [...prevItems, newItem].sort((a, b) => a.name.localeCompare(b.name)));
 
-      showSuccess(`Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
+      showSuccess(`Added new item: ${data[0].name}.`);
       await logActivity("Add Inventory Item Success", `Added new inventory item: ${data[0].name} (SKU: ${data[0].sku}).`, profile, { item_id: data[0].id, item_name: data[0].name, sku: data[0].sku });
     } else {
       const errorMessage = "Failed to add item: No data returned after insert.";
@@ -318,9 +319,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const updateInventoryItem = async (updatedItem: Omit<InventoryItem, "quantity" | "createdAt" | "imageUrl"> & { id: string; imageUrl: string | null | undefined }) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to update inventory items.";
+      const errorMessage = "Login/org ID required to update items.";
       await logActivity("Update Inventory Item Failed", errorMessage, profile, { item_id: updatedItem.id, item_name: updatedItem.name, sku: updatedItem.sku }, true);
-      throw new Error(errorMessage);
+      showError(errorMessage);
+      return;
     }
 
     const totalQuantity = updatedItem.pickingBinQuantity + updatedItem.overstockQuantity;
@@ -367,9 +369,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     if (error) {
       console.error("Error updating inventory item:", error);
       await logActivity("Update Inventory Item Failed", `Failed to update inventory item: ${updatedItem.name} (SKU: ${updatedItem.sku}).`, profile, { error_message: error.message, item_id: updatedItem.id, item_name: updatedItem.name, sku: updatedItem.sku, updated_fields: updatedItem }, true);
-      throw new Error(error.message || 'Failed to update item: Unknown error.');
+      showError(`Failed to update item: ${error.message}`);
     } else if (data && data.length > 0) {
-      showSuccess(`Updated inventory item: ${data[0].name} (SKU: ${data[0].sku}).`);
+      showSuccess(`Item updated: ${data[0].name}.`);
       await logActivity("Update Inventory Item Success", `Updated inventory item: ${data[0].name} (SKU: ${data[0].sku}).`, profile, { item_id: data[0].id, item_name: data[0].name, sku: data[0].sku, updated_fields: updatedItem });
     } else {
       const errorMessage = "Update might not have been saved. Check database permissions.";
@@ -382,9 +384,10 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   const deleteInventoryItem = async (itemId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || !profile?.organizationId) {
-      const errorMessage = "You must be logged in and have an organization ID to delete inventory items.";
+      const errorMessage = "Login/org ID required to delete items.";
       await logActivity("Delete Inventory Item Failed", errorMessage, profile, { item_id: itemId }, true);
-      throw new Error(errorMessage);
+      showError(errorMessage);
+      return;
     }
 
     const { error } = await supabase
@@ -396,9 +399,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
     if (error) {
       console.error("Error deleting inventory item:", error);
       await logActivity("Delete Inventory Item Failed", `Failed to delete inventory item with ID: ${itemId}.`, profile, { error_message: error.message, item_id: itemId }, true);
-      throw new Error(error.message || 'Failed to delete item: Unknown error.');
+      showError(`Failed to delete item: ${error.message}`);
     } else {
-      showSuccess("Item deleted successfully!");
+      showSuccess("Item deleted!");
       await logActivity("Delete Inventory Item Success", `Deleted inventory item with ID: ${itemId}.`, profile, { item_id: itemId });
     }
   };

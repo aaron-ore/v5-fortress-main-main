@@ -181,7 +181,7 @@ const EditInventoryItem = () => {
         reader.readAsDataURL(file);
         console.log("[EditInventoryItem] handleImageFileChange: New file selected. File name:", file.name);
       } else {
-        showError("Please select an image file (PNG, JPG, GIF, SVG).");
+        showError("Select an image file.");
         setImageFile(null);
         setImageUrlPreview(item?.imageUrl || null); // Revert to existing public URL if invalid file selected
         console.log("[EditInventoryItem] handleImageFileChange: Invalid file type selected. Reverting preview to:", item?.imageUrl || null);
@@ -207,7 +207,7 @@ const EditInventoryItem = () => {
       return;
     }
     if (!canManageInventory) {
-      showError("You do not have permission to update inventory items.");
+      showError("No permission to update items.");
       return;
     }
     setIsSaving(true);
@@ -267,7 +267,7 @@ const EditInventoryItem = () => {
       const finalBarcodeValue = values.sku || undefined;
 
       if (!values.folderId || values.folderId === "no-folders") {
-        showError("Please select a folder for the item.");
+        showError("Select a folder for the item.");
         setIsSaving(false);
         return;
       }
@@ -282,7 +282,7 @@ const EditInventoryItem = () => {
         vendorId: values.vendorId === "null-vendor" ? undefined : values.vendorId,
         barcodeUrl: finalBarcodeValue,
       });
-      showSuccess("Inventory item updated successfully!");
+      showSuccess("Item updated!");
       await refreshInventory();
     } catch (error: any) {
       console.error("[EditInventoryItem] onSubmit: Failed to update inventory item:", error);
@@ -294,7 +294,7 @@ const EditInventoryItem = () => {
 
   const handleAddCategory = async () => {
     if (!canManageInventory) {
-      showError("You do not have permission to add categories.");
+      showError("No permission to add categories.");
       return;
     }
     if (newCategoryName.trim()) {
@@ -311,7 +311,7 @@ const EditInventoryItem = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-4">
         <h1 className="text-4xl font-bold text-destructive">404</h1>
-        <p className="text-xl text-muted-foreground">Inventory Item Not Found</p>
+        <p className="text-xl text-muted-foreground">Item not found.</p>
         <Button onClick={() => navigate("/inventory")}>Back to Inventory</Button>
       </div>
     );

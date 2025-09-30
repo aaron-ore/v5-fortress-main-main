@@ -88,7 +88,7 @@ const Integrations: React.FC = () => {
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
-        showSuccess("QuickBooks connected successfully!");
+        showSuccess("QuickBooks connected!");
       } else if (quickbooksError) {
         showError(`QuickBooks connection failed: ${quickbooksError}`);
       }
@@ -99,7 +99,7 @@ const Integrations: React.FC = () => {
     // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
-        showSuccess("Shopify connected successfully!");
+        showSuccess("Shopify connected!");
       } else if (shopifyError) {
         showError(`Shopify connection failed: ${shopifyError}`);
       }
@@ -181,7 +181,7 @@ const Integrations: React.FC = () => {
       return;
     }
     if (!profile?.quickbooksAccessToken || !profile?.quickbooksRealmId) {
-      showError("QuickBooks is not fully connected. Please ensure your QuickBooks company is selected in Settings.");
+      showError("QuickBooks not fully connected.");
       return;
     }
     setIsSyncingQuickBooks(true);
@@ -189,7 +189,7 @@ const Integrations: React.FC = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        showError("You must be logged in to sync with QuickBooks.");
+        showError("Login required to sync QuickBooks.");
         return;
       }
 
@@ -208,7 +208,7 @@ const Integrations: React.FC = () => {
         throw new Error(data.error);
       }
 
-      showSuccess(data.message || "Sales orders synced successfully!");
+      showSuccess(data.message || "Sales orders synced!");
       console.log("QuickBooks Sync Results:", data.results);
       await fetchProfile();
     } catch (error: any) {
@@ -298,7 +298,7 @@ const Integrations: React.FC = () => {
       return;
     }
     if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
-      showError("Shopify is not connected. Please connect your Shopify store first.");
+      showError("Shopify not connected. Please connect your Shopify store first.");
       return;
     }
     setIsSyncingShopify(true);
@@ -326,7 +326,7 @@ const Integrations: React.FC = () => {
         throw new Error(data.error);
       }
 
-      showSuccess(data.message || "Shopify products synced successfully!");
+      showSuccess(data.message || "Shopify products synced!");
       console.log("Shopify Product Sync Results:", data.results);
       await fetchProfile();
     } catch (error: any) {
@@ -339,7 +339,7 @@ const Integrations: React.FC = () => {
 
   const fetchShopifyLocations = async () => {
     if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
-      showError("Shopify is not connected. Please connect your Shopify store first.");
+      showError("Shopify not connected. Please connect your Shopify store first.");
       return;
     }
     setIsFetchingShopifyLocations(true);
@@ -365,7 +365,7 @@ const Integrations: React.FC = () => {
       }
 
       setShopifyLocations(data.locations);
-      showSuccess("Shopify locations fetched successfully!");
+      showSuccess("Shopify locations fetched!");
     } catch (error: any) {
       console.error("Error fetching Shopify locations:", error);
       showError(`Failed to fetch Shopify locations: ${error.message}`);
@@ -395,7 +395,7 @@ const Integrations: React.FC = () => {
 
   const handleSaveLocationMapping = async () => {
     if (!profile?.organizationId || !profile?.id || !selectedShopifyLocationId || !selectedFortressFolderId) {
-      showError("Please select both a Shopify location and a Fortress folder.");
+      showError("Select both a Shopify location and a Fortress folder.");
       return;
     }
 
@@ -416,7 +416,7 @@ const Integrations: React.FC = () => {
           .eq('id', existingMapping.id)
           .eq('organization_id', profile.organizationId);
         if (error) throw error;
-        showSuccess(`Mapping for ${shopifyLoc.name} updated successfully!`);
+        showSuccess(`Mapping for ${shopifyLoc.name} updated!`);
       } else {
         const { error } = await supabase
           .from('shopify_location_mappings')
@@ -428,7 +428,7 @@ const Integrations: React.FC = () => {
             user_id: profile.id,
           });
         if (error) throw error;
-        showSuccess(`Mapping for ${shopifyLoc.name} created successfully!`);
+        showSuccess(`Mapping for ${shopifyLoc.name} created!`);
       }
       
       await fetchShopifyLocationMappings();
