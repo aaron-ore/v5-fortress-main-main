@@ -119,7 +119,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
               <div className="space-y-1">
                 <p className="font-semibold text-foreground">Address:</p>
                 <p className="text-muted-foreground">{supplier.address || "N/A"}</p>
-              </div >
+              </div>
             </>
           ) : (
             <div className="text-center text-muted-foreground py-4">

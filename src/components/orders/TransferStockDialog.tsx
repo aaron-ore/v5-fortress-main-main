@@ -183,7 +183,7 @@ const TransferStockDialog: React.FC<TransferStockDialogProps> = ({ isOpen, onClo
                   min="1"
                   max={selectedItem.quantity}
                 />
-              </div >
+              </div>
             </>
           )}
 

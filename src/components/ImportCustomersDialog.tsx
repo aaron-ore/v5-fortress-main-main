@@ -1,37 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Download, Users } from "lucide-react";
-import * as XLSX from 'xlsx';
-import { useCustomers, Customer } from "@/context/CustomerContext";
-import { showError, showSuccess } from "@/utils/toast";
-import { generateCustomerCsvTemplate } from "@/utils/csvGenerator";
-import DuplicateCustomersWarningDialog from "@/components/DuplicateCustomersWarningDialog";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
-
-interface CsvDuplicateCustomer {
-  name: string;
-  email?: string;
-}
-
-interface ImportCustomersDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const ImportCustomersDialog: React.FC<ImportCustomersDialogProps> = ({
-  isOpen,
-  onClose,
-}) => {
+import { useState, useEffect, useMemo } => {
   const { addCustomer, updateCustomer, customers } = useCustomers();
   const { profile } = useProfile(); // NEW: Get profile for role checks
 
