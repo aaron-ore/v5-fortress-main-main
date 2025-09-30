@@ -85,7 +85,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
     }
   }, [onLoading]);
 
-  const startScanner = useCallback(async () => {
+  const attemptCameraStart = useCallback(async () => {
     if (isStartingRef.current) {
       console.log("[CameraFeed] Start already in progress, skipping.");
       return;
@@ -119,13 +119,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
     loadingStartTimeRef.current = Date.now();
     currentAttemptIndexRef.current = 0; // Reset attempts for a new start cycle
 
-    // Ensure a fresh Html5Qrcode instance for each start attempt
-    if (html5QrCodeRef.current) {
-      await clearScanner();
-    }
-    html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
-
-    const attemptCameraStart = async () => {
+    const executeStartAttempt = async () => {
       if (!isActive) { // Check again before each retry
         console.log("[CameraFeed] Aborting retry: isActive is false.");
         isStartingRef.current = false;
@@ -147,6 +141,12 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
       let cameraSelection: string | MediaTrackConstraints;
 
       try {
+        // Ensure a fresh Html5Qrcode instance for each start attempt
+        if (html5QrCodeRef.current) {
+          await clearScanner(); // Clear previous instance before creating a new one
+        }
+        html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
+
         // Step 1: Explicitly request camera permissions first
         console.log("[CameraFeed] Requesting camera permissions via getUserMedia...");
         const permissionPromise = new Promise<MediaStream>((resolve, reject) => {
@@ -240,7 +240,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
         
         if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS) {
           console.log(`[CameraFeed] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
-          setTimeout(attemptCameraStart, RETRY_DELAY_MS);
+          setTimeout(executeStartAttempt, RETRY_DELAY_MS);
         } else {
           setInternalScannerError(errorMessage);
           onError(errorMessage);
@@ -251,21 +251,22 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
       }
     };
 
-    attemptCameraStart();
+    executeStartAttempt(); // Initial call to start the process
   }, [isActive, onScanSuccess, onLoading, onError, stopScanner, clearScanner]);
+
 
   const handleRetryScan = useCallback(async () => {
     console.log("[CameraFeed] Manual retry initiated.");
     await stopScanner(); // Ensure it's stopped before retrying
     await new Promise(resolve => setTimeout(resolve, 500)); // Give some time to release camera resources
-    startScanner();
-  }, [stopScanner, startScanner]);
+    attemptCameraStart(); // Call the main attempt function
+  }, [stopScanner, attemptCameraStart]);
 
   // Effect to manage scanner lifecycle based on isActive prop
   useEffect(() => {
     console.log(`[CameraFeed] useEffect (isActive): isActive=${isActive}, isCameraStartedRef.current=${isCameraStartedRef.current}`);
     if (isActive) {
-      startScanner();
+      attemptCameraStart(); // Call the main attempt function
     } else {
       stopScanner();
     }
@@ -275,7 +276,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({ onScanSuccess, onLoading, onErr
       console.log("[CameraFeed] Component unmounting. Performing full cleanup.");
       clearScanner();
     };
-  }, [isActive, startScanner, stopScanner, clearScanner]);
+  }, [isActive, attemptCameraStart, stopScanner, clearScanner]);
 
   return (
     <div ref={scannerDivRef} className="relative w-full h-full">
