@@ -46,7 +46,6 @@ const GenerateReportButton: React.FC<GenerateReportButtonProps> = ({
       totalStockValue,
       totalUnitsOnHand, // NEW: Pass totalUnitsOnHand
       lowStockItems,
-      onClose,
       outOfStockItems,
       recentSalesOrders,
       recentPurchaseOrders,

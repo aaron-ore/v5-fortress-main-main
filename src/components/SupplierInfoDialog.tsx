@@ -63,7 +63,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Truck className="h-6 w-6 text-primary" /> Supplier for "{itemName}"
-            </CardTitle>
+            </DialogTitle>
             <DialogDescription>
               Details for the primary supplier of {itemName} (SKU: {itemSku}).
             </DialogDescription>
@@ -87,7 +87,7 @@ const SupplierInfoDialog: React.FC<SupplierInfoDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="h-6 w-6 text-primary" /> Supplier for "{itemName}"
-          </CardTitle>
+          </DialogTitle>
           <DialogDescription>
             Details for the primary supplier of {itemName} (SKU: {itemSku}).
           </DialogDescription>

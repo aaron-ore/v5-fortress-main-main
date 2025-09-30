@@ -32,7 +32,7 @@ const PickingWaveManagementTool: React.FC = () => {
   const canManagePickingWaves = profile?.role === 'admin' || profile?.role === 'inventory_manager';
 
   const [selectedDeliveryRoute, setSelectedDeliveryRoute] = useState("all");
-  const [selectedOrderIds, setSelectedOrderIds] = new Set();
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [generatedPickList, setGeneratedPickList] = useState<PickListItem[]>([]);
   const [currentWaveId, setCurrentWaveId] = useState<string | null>(null);
 

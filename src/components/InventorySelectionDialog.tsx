@@ -41,7 +41,7 @@ const InventorySelectionDialog: React.FC<InventorySelectionDialogProps> = ({
   const { inventoryItems } = useInventory();
   const { inventoryFolders } = useOnboarding(); // Renamed from locations
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedItemIds, setSelectedItemIds] = new Set();
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isOpen) {

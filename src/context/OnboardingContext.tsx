@@ -60,8 +60,8 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted } = useProfile(); // NEW: Get markOnboardingWizardCompleted
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(false); // Default to false
+  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted } = useProfile();
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(false);
 
   const companyProfile = profile?.companyProfile || null;
 
@@ -521,19 +521,19 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
 
-    const ruleToDelete = customRoles.find(r => r.id === roleId);
+    const roleToDelete = customRoles.find(r => r.id === roleId);
 
     const { error } = await supabase
       .from("custom_roles")
       .delete()
-      .eq("id", ruleId)
+      .eq("id", roleId)
       .eq("organization_id", profile.organizationId);
 
     if (error) {
       console.error("Error deleting custom role:", error);
       showError(`Failed to delete role: ${error.message}`);
     } else {
-      showSuccess(`Rule "${ruleToDelete?.name || ruleId}" deleted.`);
+      showSuccess(`Rule "${roleToDelete?.name || roleId}" deleted.`);
     }
   };
 
