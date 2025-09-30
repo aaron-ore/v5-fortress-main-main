@@ -40,8 +40,8 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   description = "Point your camera at a barcode or QR code to scan.",
 }) => {
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isCameraStartedRef = useRef(false);
-  const isStartingRef = useRef(false);
+  const isCameraStartedRef = useRef(false); // Tracks if camera stream is actively running
+  const isStartingRef = useRef(false); // Prevents multiple concurrent start attempts
   const currentAttemptsRef = useRef(0);
   const loadingStartTimeRef = useRef<number | null>(null);
 
@@ -82,7 +82,8 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       } catch (e) {
         console.warn("[CameraScannerDialog] Error during scanner stop (might be already stopped or camera not found):", e);
       } finally {
-        isCameraStartedRef.current = false;
+        isCameraStartedRef.current = false; // Mark as stopped
+        setIsScannerLoading(false); // Ensure loading is off
       }
     } else {
       console.log("[CameraScannerDialog] No active scanner instance to stop.");
@@ -99,6 +100,10 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         console.warn("[CameraScannerDialog] Error during scanner clear:", e);
       } finally {
         html5QrCodeRef.current = null;
+        isCameraStartedRef.current = false;
+        isStartingRef.current = false;
+        currentAttemptsRef.current = 0;
+        setIsScannerLoading(false);
       }
     } else {
       console.log("[CameraScannerDialog] No scanner instance to clear.");
@@ -106,14 +111,18 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   }, []);
 
   const startScanner = useCallback(async () => {
-    if (isStartingRef.current || !isOpen || manualInputMode) {
-      console.log("[CameraScannerDialog] Not starting scanner: already starting, dialog closed, or manual input mode.");
+    if (isStartingRef.current) {
+      console.log("[CameraScannerDialog] Start already in progress, skipping.");
       return;
     }
     if (isCameraStartedRef.current) {
-      console.log("[CameraScannerDialog] Camera already started, skipping new start.");
+      console.log("[CameraScannerDialog] Camera already started, no need to restart.");
       setScannerError(null);
       setIsScannerLoading(false);
+      return;
+    }
+    if (!isOpen || manualInputMode) {
+      console.log("[CameraScannerDialog] Not starting scanner: dialog closed or manual input mode.");
       return;
     }
 
@@ -121,23 +130,23 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     setIsScannerLoading(true);
     setScannerError(null);
     loadingStartTimeRef.current = Date.now();
-    currentAttemptsRef.current = 0;
-
-    // Ensure previous scanner is stopped before attempting a new start
-    await stopScanner();
-    await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure camera resource is released
+    currentAttemptsRef.current = 0; // Reset attempts for a new start cycle
 
     if (!html5QrCodeRef.current) {
       html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
     }
 
-    // No need to enumerate cameras if we are using facingMode constraint
-    // The `start` method will handle camera selection based on constraints.
     const cameraSelection: string | MediaTrackConstraints = html5QrcodeCameraScanConfig.videoConstraints || "environment";
 
     const attemptStart = async () => {
-      if (!isOpen || manualInputMode) {
+      if (!isOpen || manualInputMode) { // Check again before each retry
         console.log("[CameraScannerDialog] Aborting retry: dialog closed or manual input mode activated.");
+        isStartingRef.current = false;
+        setIsScannerLoading(false);
+        return;
+      }
+      if (isCameraStartedRef.current) { // Check if it somehow started in between retries
+        console.log("[CameraScannerDialog] Camera already started during retry, aborting further attempts.");
         isStartingRef.current = false;
         setIsScannerLoading(false);
         return;
@@ -180,7 +189,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         isStartingRef.current = false;
       } catch (err: any) {
         console.error(`[CameraScannerDialog] Error starting scanner on attempt ${currentAttemptsRef.current}:`, err);
-        isCameraStartedRef.current = false;
+        isCameraStartedRef.current = false; // Ensure this is false on error
         let errorMessage = "Failed to start camera. ";
         if (err.name === "NotReadableError") {
           errorMessage += "Camera in use or hardware issue. Close other camera apps. ";
@@ -208,10 +217,12 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     attemptStart();
   }, [isOpen, manualInputMode, stopScanner, onScanSuccess, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig]);
 
-  const handleRetryScan = useCallback(() => {
-    currentAttemptsRef.current = 0; // Reset attempts for a manual retry
+  const handleRetryScan = useCallback(async () => {
+    console.log("[CameraScannerDialog] Manual retry initiated.");
+    await stopScanner(); // Ensure it's stopped before retrying
+    await new Promise(resolve => setTimeout(resolve, 500)); // Give some time to release
     startScanner();
-  }, [startScanner]);
+  }, [stopScanner, startScanner]);
 
   const handleManualInputSubmit = () => {
     if (manualInputValue.trim()) {
@@ -223,21 +234,21 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     }
   };
 
-  // Effect to manage scanner state when dialog opens/closes or mode changes
+  // Main effect to manage scanner lifecycle based on dialog state and manual input mode
   useEffect(() => {
+    console.log(`[CameraScannerDialog] useEffect: isOpen=${isOpen}, manualInputMode=${manualInputMode}, isCameraStartedRef.current=${isCameraStartedRef.current}`);
     if (isOpen && !manualInputMode) {
       startScanner();
-    } else if (!isOpen || manualInputMode) {
+    } else if (!isOpen && isCameraStartedRef.current) { // Only stop if it's actually running and dialog is closing
+      stopScanner();
+    } else if (manualInputMode && isCameraStartedRef.current) { // Stop if switching to manual mode while camera is running
       stopScanner();
     }
+
     // Cleanup function for when the dialog component unmounts
     return () => {
       console.log("[CameraScannerDialog] Component unmounting. Performing full cleanup.");
       clearScanner(); // Only clear when component unmounts
-      isCameraStartedRef.current = false;
-      isStartingRef.current = false;
-      currentAttemptsRef.current = 0;
-      setIsScannerLoading(false);
     };
   }, [isOpen, manualInputMode, startScanner, stopScanner, clearScanner]);
 
