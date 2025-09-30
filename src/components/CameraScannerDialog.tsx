@@ -30,6 +30,7 @@ interface CameraScannerDialogProps {
 const QR_SCANNER_DIV_ID = "qr-code-full-region";
 const MAX_START_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1500; // 1.5 seconds
+const CAMERA_STARTUP_TIMEOUT_MS = 10000; // 10 seconds for camera to start
 const MIN_LOADING_DISPLAY_TIME = 500; // Minimum 500ms for the loading overlay
 
 const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
@@ -66,8 +67,6 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     fps: 10,
     aspectRatio: 1.0,
     disableFlip: false,
-    // Explicitly request environment camera for better mobile experience
-    // This is often more reliable than device IDs or labels for selecting the back camera.
     videoConstraints: {
       facingMode: { exact: "environment" }
     }
@@ -84,6 +83,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       } finally {
         isCameraStartedRef.current = false; // Mark as stopped
         setIsScannerLoading(false); // Ensure loading is off
+        isStartingRef.current = false; // Ensure starting flag is reset
       }
     } else {
       console.log("[CameraScannerDialog] No active scanner instance to stop.");
@@ -155,28 +155,41 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       currentAttemptsRef.current++;
       console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptsRef.current}/${MAX_START_ATTEMPTS}) with selection:`, cameraSelection);
 
-      try {
-        if (!html5QrCodeRef.current) {
-          throw new Error("Html5Qrcode instance is null before start attempt.");
-        }
-        await html5QrCodeRef.current.start(
-          cameraSelection,
-          html5QrcodeCameraScanConfig,
-          async (decodedText) => {
-            console.log("[CameraScannerDialog] Scan successful:", decodedText);
-            await stopScanner(); // Stop camera after successful scan
-            onScanSuccess(decodedText);
-            // onClose(); // Dialog will close via onScanSuccess callback
-          },
-          (errorMessage) => {
-            if (!errorMessage.includes("No QR code found")) {
-              console.warn("[CameraScannerDialog] Scan error (not 'No QR code found'):", errorMessage);
-            }
+      const startupPromise = new Promise<void>(async (resolve, reject) => {
+        try {
+          if (!html5QrCodeRef.current) {
+            throw new Error("Html5Qrcode instance is null before start attempt.");
           }
-        );
-        console.log("[CameraScannerDialog] Scanner started and ready.");
-        isCameraStartedRef.current = true;
-        
+          await html5QrCodeRef.current.start(
+            cameraSelection,
+            html5QrcodeCameraScanConfig,
+            async (decodedText) => {
+              console.log("[CameraScannerDialog] Scan successful:", decodedText);
+              await stopScanner(); // Stop camera after successful scan
+              onScanSuccess(decodedText);
+              resolve(); // Resolve the startup promise on successful scan
+            },
+            (errorMessage) => {
+              if (!errorMessage.includes("No QR code found")) {
+                console.warn("[CameraScannerDialog] Scan error (not 'No QR code found'):", errorMessage);
+              }
+            }
+          );
+          console.log("[CameraScannerDialog] Scanner started and ready.");
+          isCameraStartedRef.current = true;
+          resolve(); // Resolve the startup promise on successful camera start
+        } catch (err) {
+          reject(err); // Reject on any error during camera start
+        }
+      });
+
+      const timeoutPromise = new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error("Camera startup timed out.")), CAMERA_STARTUP_TIMEOUT_MS)
+      );
+
+      try {
+        await Promise.race([startupPromise, timeoutPromise]);
+
         const elapsedTime = Date.now() - (loadingStartTimeRef.current || 0);
         if (elapsedTime < MIN_LOADING_DISPLAY_TIME) {
             const remainingTime = MIN_LOADING_DISPLAY_TIME - elapsedTime;
@@ -191,7 +204,9 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
         console.error(`[CameraScannerDialog] Error starting scanner on attempt ${currentAttemptsRef.current}:`, err);
         isCameraStartedRef.current = false; // Ensure this is false on error
         let errorMessage = "Failed to start camera. ";
-        if (err.name === "NotReadableError") {
+        if (err.message === "Camera startup timed out.") {
+          errorMessage = "Camera startup timed out. ";
+        } else if (err.name === "NotReadableError") {
           errorMessage += "Camera in use or hardware issue. Close other camera apps. ";
         } else if (err.name === "NotAllowedError") {
           errorMessage += "Camera access denied. Grant permission in browser settings. ";
@@ -203,7 +218,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
           errorMessage += "Unknown error. Ensure working camera. ";
         }
         
-        if (currentAttemptsRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError")) {
+        if (currentAttemptsRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotAllowedError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
           console.log(`[CameraScannerDialog] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
           setTimeout(attemptStart, RETRY_DELAY_MS);
         } else {
@@ -237,12 +252,23 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   // Main effect to manage scanner lifecycle based on dialog state and manual input mode
   useEffect(() => {
     console.log(`[CameraScannerDialog] useEffect: isOpen=${isOpen}, manualInputMode=${manualInputMode}, isCameraStartedRef.current=${isCameraStartedRef.current}`);
-    if (isOpen && !manualInputMode) {
-      startScanner();
-    } else if (!isOpen && isCameraStartedRef.current) { // Only stop if it's actually running and dialog is closing
-      stopScanner();
-    } else if (manualInputMode && isCameraStartedRef.current) { // Stop if switching to manual mode while camera is running
-      stopScanner();
+    if (isOpen) {
+      if (manualInputMode) {
+        // If switching to manual mode while camera is running, stop it
+        if (isCameraStartedRef.current) {
+          stopScanner();
+        }
+      } else {
+        // If in camera mode, ensure scanner is started
+        startScanner();
+      }
+    } else {
+      // If dialog is closing, stop scanner if it's running
+      if (isCameraStartedRef.current) {
+        stopScanner();
+      }
+      // Reset manual input mode when dialog closes
+      setManualInputMode(false);
     }
 
     // Cleanup function for when the dialog component unmounts
