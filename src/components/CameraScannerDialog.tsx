@@ -12,12 +12,7 @@ import { XCircle, QrCode, Keyboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { showSuccess, showError } from "@/utils/toast";
-import { Html5Qrcode, Html5QrcodeSupportedFormats, Html5QrcodeFullConfig, Html5QrcodeCameraScanConfig } from "html5-qrcode";
-
-// Simplified QrScanner component (now purely presentational)
-const QrScannerDisplay: React.FC<{ divId: string }> = ({ divId }) => {
-  return <div id={divId} className="w-full h-full" />;
-};
+import CameraFeed from "./CameraFeed"; // Import the new CameraFeed component
 
 interface CameraScannerDialogProps {
   isOpen: boolean;
@@ -27,12 +22,6 @@ interface CameraScannerDialogProps {
   description?: string;
 }
 
-const QR_SCANNER_DIV_ID = "qr-code-full-region";
-const MAX_START_ATTEMPTS = 3; // Max attempts for initial camera start (excluding device enumeration retries)
-const RETRY_DELAY_MS = 1500; // 1.5 seconds delay between retries
-const CAMERA_STARTUP_TIMEOUT_MS = 10000; // 10 seconds for camera to start
-const MIN_LOADING_DISPLAY_TIME = 500; // Minimum 500ms for the loading overlay
-
 const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   isOpen,
   onClose,
@@ -40,235 +29,22 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
   title = "Scan Barcode / QR Code",
   description = "Point your camera at a barcode or QR code to scan.",
 }) => {
-  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const isCameraStartedRef = useRef(false); // Tracks if camera stream is actively running
-  const isStartingRef = useRef(false); // Prevents multiple concurrent start attempts
-  const currentAttemptIndexRef = useRef(0); // Tracks current retry attempt index
-  const loadingStartTimeRef = useRef<number | null>(null);
-
-  const [isScannerLoading, setIsScannerLoading] = useState(true);
-  const [scannerError, setScannerError] = useState<string | null>(null);
   const [manualInputMode, setManualInputMode] = useState(false);
   const [manualInputValue, setManualInputValue] = useState("");
+  const [cameraFeedKey, setCameraFeedKey] = useState(0); // Key to force CameraFeed re-mount
+  const [isCameraLoading, setIsCameraLoading] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const html5QrcodeConstructorConfig: Html5QrcodeFullConfig = {
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.QR_CODE,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E,
-    ],
-    verbose: false,
-  };
-
-  const html5QrcodeCameraScanConfig: Html5QrcodeCameraScanConfig = {
-    fps: 10,
-    aspectRatio: 1.0,
-    disableFlip: false,
-    // videoConstraints will be determined dynamically in startScanner
-  };
-
-  const stopScanner = useCallback(async () => {
-    if (html5QrCodeRef.current && isCameraStartedRef.current) {
-      console.log("[CameraScannerDialog] Attempting to stop scanner...");
-      try {
-        await html5QrCodeRef.current.stop();
-        console.log("[CameraScannerDialog] Scanner stopped successfully.");
-      } catch (e) {
-        console.warn("[CameraScannerDialog] Error during scanner stop (might be already stopped or camera not found):", e);
-      } finally {
-        isCameraStartedRef.current = false; // Mark as stopped
-        setIsScannerLoading(false); // Ensure loading is off
-        isStartingRef.current = false; // Ensure starting flag is reset
-      }
-    } else {
-      console.log("[CameraScannerDialog] No active scanner instance to stop.");
+  // Reset states when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setManualInputMode(false);
+      setManualInputValue("");
+      setCameraFeedKey(prev => prev + 1); // Force CameraFeed to re-mount and re-initialize
+      setIsCameraLoading(true);
+      setCameraError(null);
     }
-  }, []);
-
-  const clearScanner = useCallback(async () => {
-    if (html5QrCodeRef.current) {
-      console.log("[CameraScannerDialog] Attempting to clear scanner instance...");
-      try {
-        await html5QrCodeRef.current.clear();
-        console.log("[CameraScannerDialog] Scanner instance cleared.");
-      } catch (e) {
-        console.warn("[CameraScannerDialog] Error during scanner clear:", e);
-      } finally {
-        html5QrCodeRef.current = null;
-        isCameraStartedRef.current = false;
-        isStartingRef.current = false;
-        currentAttemptIndexRef.current = 0;
-        setIsScannerLoading(false);
-      }
-    } else {
-      console.log("[CameraScannerDialog] No scanner instance to clear.");
-    }
-  }, []);
-
-  const startScanner = useCallback(async () => {
-    if (isStartingRef.current) {
-      console.log("[CameraScannerDialog] Start already in progress, skipping.");
-      return;
-    }
-    if (isCameraStartedRef.current) {
-      console.log("[CameraScannerDialog] Camera already started, no need to restart.");
-      setScannerError(null);
-      setIsScannerLoading(false);
-      return;
-    }
-    if (!isOpen || manualInputMode) {
-      console.log("[CameraScannerDialog] Not starting scanner: dialog closed or manual input mode.");
-      return;
-    }
-
-    isStartingRef.current = true;
-    setIsScannerLoading(true);
-    setScannerError(null);
-    loadingStartTimeRef.current = Date.now();
-    currentAttemptIndexRef.current = 0; // Reset attempts for a new start cycle
-
-    // Ensure a fresh Html5Qrcode instance for each start attempt
-    if (html5QrCodeRef.current) {
-      await clearScanner();
-    }
-    html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
-
-    const tryStartCamera = async () => {
-      if (!isOpen || manualInputMode) { // Check again before each retry
-        console.log("[CameraScannerDialog] Aborting retry: dialog closed or manual input mode activated.");
-        isStartingRef.current = false;
-        setIsScannerLoading(false);
-        return;
-      }
-      if (isCameraStartedRef.current) { // Check if it somehow started in between retries
-        console.log("[CameraScannerDialog] Camera already started during retry, aborting further attempts.");
-        isStartingRef.current = false;
-        setIsScannerLoading(false);
-        return;
-      }
-
-      currentAttemptIndexRef.current++;
-      console.log(`[CameraScannerDialog] Attempting camera start (attempt ${currentAttemptIndexRef.current}/${MAX_START_ATTEMPTS})`);
-
-      let cameraSelection: string | MediaTrackConstraints;
-
-      try {
-        // Step 1: Explicitly request camera permissions first
-        console.log("[CameraScannerDialog] Requesting camera permissions via getUserMedia...");
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        console.log("[CameraScannerDialog] Camera permissions granted.");
-
-        // Strategy 1: Try specific facing modes
-        if (currentAttemptIndexRef.current === 1) {
-          cameraSelection = { facingMode: { exact: "environment" } };
-          console.log("[CameraScannerDialog] Attempt 1: Trying exact 'environment' facingMode.");
-        } else if (currentAttemptIndexRef.current === 2) {
-          cameraSelection = { facingMode: "environment" };
-          console.log("[CameraScannerDialog] Attempt 2: Trying lenient 'environment' facingMode.");
-        } else if (currentAttemptIndexRef.current === 3) {
-          cameraSelection = { facingMode: "user" }; // Fallback to front camera
-          console.log("[CameraScannerDialog] Attempt 3: Trying 'user' (front) facingMode.");
-        } else {
-          // Strategy 2: Enumerate devices and try by ID
-          console.log("[CameraScannerDialog] Attempt 4+: Enumerating camera devices for explicit selection.");
-          const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0) {
-            console.log("[CameraScannerDialog] Found camera devices:", devices);
-            // Try to find an environment camera, otherwise use the first one
-            const environmentCamera = devices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("environment"));
-            cameraSelection = environmentCamera ? environmentCamera.id : devices[0].id;
-            console.log("[CameraScannerDialog] Using specific camera ID:", cameraSelection);
-          } else {
-            console.warn("[CameraScannerDialog] No camera devices found during enumeration.");
-            throw new Error("No camera devices found.");
-          }
-        }
-
-        const startupPromise = new Promise<void>(async (resolve, reject) => {
-          try {
-            if (!html5QrCodeRef.current) {
-              throw new Error("Html5Qrcode instance is null before start attempt.");
-            }
-            await html5QrCodeRef.current.start(
-              cameraSelection,
-              html5QrcodeCameraScanConfig,
-              async (decodedText) => {
-                console.log("[CameraScannerDialog] Scan successful:", decodedText);
-                await stopScanner(); // Stop camera after successful scan
-                onScanSuccess(decodedText);
-                resolve(); // Resolve the startup promise on successful scan
-              },
-              (errorMessage) => {
-                if (!errorMessage.includes("No QR code found")) {
-                  console.warn("[CameraScannerDialog] Scan error (not 'No QR code found'):", errorMessage);
-                }
-              }
-            );
-            console.log("[CameraScannerDialog] Scanner started and ready.");
-            isCameraStartedRef.current = true;
-            resolve(); // Resolve the startup promise on successful camera start
-          } catch (err) {
-            reject(err); // Reject on any error during camera start
-          }
-        });
-
-        const timeoutPromise = new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error("Camera startup timed out.")), CAMERA_STARTUP_TIMEOUT_MS)
-        );
-
-        await Promise.race([startupPromise, timeoutPromise]);
-
-        const elapsedTime = Date.now() - (loadingStartTimeRef.current || 0);
-        if (elapsedTime < MIN_LOADING_DISPLAY_TIME) {
-            const remainingTime = MIN_LOADING_DISPLAY_TIME - elapsedTime;
-            console.log(`[CameraScannerDialog] Delaying onReady/onLoading(false) by ${remainingTime}ms to meet minimum loading display time.`);
-            await new Promise(resolve => setTimeout(resolve, remainingTime));
-        }
-
-        setScannerError(null);
-        setIsScannerLoading(false);
-        isStartingRef.current = false;
-      } catch (err: any) {
-        console.error(`[CameraScannerDialog] Error during camera start or permission request on attempt ${currentAttemptIndexRef.current}:`, err);
-        isCameraStartedRef.current = false; // Ensure this is false on error
-        let errorMessage = "Failed to start camera. ";
-        if (err.name === "NotAllowedError") {
-          errorMessage = "Camera access denied. Please grant permission in your browser settings. ";
-        } else if (err.name === "NotFoundError") {
-          errorMessage = "No camera devices found. Ensure a camera is connected and enabled. ";
-        } else if (err.message === "Camera startup timed out.") {
-          errorMessage = "Camera startup timed out. ";
-        } else if (err.name === "NotReadableError") {
-          errorMessage += "Camera in use or hardware issue. Close other camera apps. ";
-        } else if (err.name === "OverconstrainedError") {
-          errorMessage += "Camera settings issue. Try restarting device/apps. ";
-        } else {
-          errorMessage += "Unknown error. Ensure working camera. ";
-        }
-        
-        if (currentAttemptIndexRef.current < MAX_START_ATTEMPTS && (err.name === "NotReadableError" || err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.message === "Camera startup timed out.")) {
-          console.log(`[CameraScannerDialog] Retrying camera start in ${RETRY_DELAY_MS}ms...`);
-          setTimeout(tryStartCamera, RETRY_DELAY_MS);
-        } else {
-          setScannerError(errorMessage);
-          setIsScannerLoading(false);
-          isStartingRef.current = false;
-        }
-      }
-    };
-
-    tryStartCamera();
-  }, [isOpen, manualInputMode, stopScanner, onScanSuccess, html5QrcodeConstructorConfig, html5QrcodeCameraScanConfig, clearScanner]);
-
-  const handleRetryScan = useCallback(async () => {
-    console.log("[CameraScannerDialog] Manual retry initiated.");
-    await stopScanner(); // Ensure it's stopped before retrying
-    await new Promise(resolve => setTimeout(resolve, 500)); // Give some time to release
-    startScanner();
-  }, [stopScanner, startScanner]);
+  }, [isOpen]);
 
   const handleManualInputSubmit = () => {
     if (manualInputValue.trim()) {
@@ -280,28 +56,19 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     }
   };
 
-  // Main effect to manage scanner lifecycle based on dialog state and manual input mode
-  useEffect(() => {
-    console.log(`[CameraScannerDialog] useEffect: isOpen=${isOpen}, manualInputMode=${manualInputMode}, isCameraStartedRef.current=${isCameraStartedRef.current}`);
-    if (isOpen) {
-      // Reset manual input mode when dialog opens to ensure camera attempts to start
-      setManualInputMode(false); 
-      if (!manualInputMode) {
-        startScanner();
-      }
-    } else {
-      // If dialog is closing, stop scanner if it's running
-      if (isCameraStartedRef.current) {
-        stopScanner();
-      }
-    }
+  const handleCameraFeedLoading = useCallback((loading: boolean) => {
+    setIsCameraLoading(loading);
+  }, []);
 
-    // Cleanup function for when the dialog component unmounts
-    return () => {
-      console.log("[CameraScannerDialog] Component unmounting. Performing full cleanup.");
-      clearScanner(); // Only clear when component unmounts
-    };
-  }, [isOpen, manualInputMode, startScanner, stopScanner, clearScanner]);
+  const handleCameraFeedError = useCallback((error: string | null) => {
+    setCameraError(error);
+  }, []);
+
+  const handleRetryCamera = () => {
+    setCameraFeedKey(prev => prev + 1); // Force CameraFeed to re-mount and re-initialize
+    setIsCameraLoading(true);
+    setCameraError(null);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -334,23 +101,27 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
             </div>
           ) : (
             <div className="relative w-full pb-[100%]">
-              {isScannerLoading && !scannerError && (
+              {isCameraLoading && !cameraError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white text-lg z-10">
                   Loading camera...
                 </div>
               )}
-              {scannerError && (
+              {cameraError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-900/70 text-white text-center p-4 z-10">
                   <XCircle className="h-8 w-8 mb-2" />
                   <p className="font-semibold">Camera Error:</p>
-                  <p className="text-sm">{scannerError}</p>
-                  <p className="text-xs mt-2">Please ensure a back camera is available and permissions are granted.</p>
-                  <Button onClick={handleRetryScan} className="mt-4" variant="secondary">Retry Camera</Button>
+                  <p className="text-sm">{cameraError}</p>
+                  <Button onClick={handleRetryCamera} className="mt-4" variant="secondary">Retry Camera</Button>
                 </div>
               )}
-              <div className="absolute inset-0">
-                <QrScannerDisplay divId={QR_SCANNER_DIV_ID} />
-              </div>
+              {/* Render CameraFeed only when not in manual input mode */}
+              <CameraFeed
+                key={cameraFeedKey} // Force re-mount on key change
+                isActive={isOpen && !manualInputMode}
+                onScanSuccess={onScanSuccess}
+                onLoading={handleCameraFeedLoading}
+                onError={handleCameraFeedError}
+              />
             </div>
           )}
         </div>
