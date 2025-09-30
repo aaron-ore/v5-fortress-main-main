@@ -66,6 +66,11 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     fps: 10,
     aspectRatio: 1.0,
     disableFlip: false,
+    // Explicitly request environment camera for better mobile experience
+    // This is often more reliable than device IDs or labels for selecting the back camera.
+    videoConstraints: {
+      facingMode: { exact: "environment" }
+    }
   };
 
   const stopScanner = useCallback(async () => {
@@ -126,44 +131,9 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
       html5QrCodeRef.current = new Html5Qrcode(QR_SCANNER_DIV_ID, html5QrcodeConstructorConfig);
     }
 
-    let cameraSelection: string | undefined = undefined;
-    try {
-      const cameras = await Html5Qrcode.getCameras();
-      if (cameras && cameras.length > 0) {
-        console.log("[CameraScannerDialog] Available cameras:", cameras);
-        let environmentCamera = cameras.find(camera => camera.label.toLowerCase().includes('back') || camera.label.toLowerCase().includes('rear'));
-        
-        if (!environmentCamera && cameras.length === 1) {
-          environmentCamera = cameras[0];
-        } else if (!environmentCamera && cameras.length > 1) {
-          environmentCamera = cameras[cameras.length - 1];
-        }
-
-        if (environmentCamera) {
-          cameraSelection = environmentCamera.id;
-          console.log("[CameraScannerDialog] Selected camera device ID:", cameraSelection, "Label:", environmentCamera.label);
-        } else {
-          console.warn("[CameraScannerDialog] No explicit 'environment' camera found by label. Falling back to generic 'environment' string.");
-          cameraSelection = "environment";
-        }
-      } else {
-        console.warn("[CameraScannerDialog] No cameras found by Html5Qrcode.getCameras(). Falling back to generic 'environment' string.");
-        cameraSelection = "environment";
-      }
-    } catch (err: any) {
-      console.error("[CameraScannerDialog] Error enumerating cameras:", err);
-      setScannerError("Failed to list cameras. " + err.message);
-      setIsScannerLoading(false);
-      isStartingRef.current = false;
-      return;
-    }
-
-    if (!cameraSelection) {
-      setScannerError("No camera could be selected for scanning.");
-      setIsScannerLoading(false);
-      isStartingRef.current = false;
-      return;
-    }
+    // No need to enumerate cameras if we are using facingMode constraint
+    // The `start` method will handle camera selection based on constraints.
+    const cameraSelection: string | MediaTrackConstraints = html5QrcodeCameraScanConfig.videoConstraints || "environment";
 
     const attemptStart = async () => {
       if (!isOpen || manualInputMode) {
@@ -263,7 +233,7 @@ const CameraScannerDialog: React.FC<CameraScannerDialogProps> = ({
     // Cleanup function for when the dialog component unmounts
     return () => {
       console.log("[CameraScannerDialog] Component unmounting. Performing full cleanup.");
-      clearScanner();
+      clearScanner(); // Only clear when component unmounts
       isCameraStartedRef.current = false;
       isStartingRef.current = false;
       currentAttemptsRef.current = 0;
