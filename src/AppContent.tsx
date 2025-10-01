@@ -57,6 +57,7 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const Automation = lazy(() => import("./pages/Automation"));
 const ItemHistoryPage = lazy(() => import("./pages/ItemHistoryPage"));
 const FolderContentPage = lazy(() => import("./pages/FolderContentPage"));
+const ActivityLogs = lazy(() => import("./pages/ActivityLogs")); // NEW: Import ActivityLogs
 
 // Fallback component for Suspense
 const LoadingFallback = () => (
@@ -102,6 +103,7 @@ const AuthenticatedApp = () => { // Removed profile prop
                               <Route path="vendors" element={<Vendors />} />
                               <Route path="customers" element={<Customers />} />
                               <Route path="users" element={<Users />} />
+                              <Route path="activity-logs" element={<ActivityLogs />} /> {/* NEW: Activity Logs Route */}
                               <Route path="setup-instructions" element={<SetupInstructions />} />
                               <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
                               <Route path="reset-password" element={<ResetPassword />} />

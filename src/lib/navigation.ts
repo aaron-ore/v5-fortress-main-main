@@ -25,6 +25,7 @@ import {
   BookOpen,
   Plug,
   Zap,
+  Activity, // NEW: Import Activity icon
 } from "lucide-react";
 
 export interface NavItem {
@@ -78,6 +79,7 @@ export const userAndSettingsNavItems: NavItem[] = [
   { title: "Notifications", href: "/notifications-page", icon: Bell },
   { title: "Billing & Subscriptions", href: "/billing", icon: DollarSign },
   { title: "Users", href: "/users", icon: UsersIcon, adminOnly: true },
+  { title: "Activity Logs", href: "/activity-logs", icon: Activity, adminOnly: true }, // NEW: Activity Logs
   { title: "Company Settings", href: "/settings", icon: SettingsIcon },
 ];
 
