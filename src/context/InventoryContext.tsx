@@ -273,6 +273,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         category: item.category,
         picking_bin_quantity: item.pickingBinQuantity,
         overstock_quantity: item.overstockQuantity,
+        quantity: totalQuantity, // Explicitly set total quantity
         reorder_level: item.reorderLevel,
         picking_reorder_level: item.pickingReorderLevel,
         committed_stock: 0,
@@ -342,6 +343,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
         category: updatedItem.category,
         picking_bin_quantity: updatedItem.pickingBinQuantity,
         overstock_quantity: updatedItem.overstockQuantity,
+        quantity: totalQuantity, // Explicitly set total quantity
         reorder_level: updatedItem.reorderLevel,
         picking_reorder_level: updatedItem.pickingReorderLevel,
         committed_stock: updatedItem.committedStock,
