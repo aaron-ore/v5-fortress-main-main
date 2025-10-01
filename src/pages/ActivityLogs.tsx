@@ -172,7 +172,7 @@ const ActivityLogs: React.FC = () => {
 
       <Card className="bg-card border-border rounded-lg shadow-sm p-6 flex flex-col flex-grow">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">Recent Activities ({activityLogs.length})</CardTitle>
+          <CardTitle className="text-xl font-semibold">Recent Activities</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow flex flex-col">
           {error ? (
