@@ -5,22 +5,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { InventoryItem } from "@/context/InventoryContext";
 import { OrderItem } from "@/context/OrdersContext";
 
+// Define the expected structure of the data prop
 interface DashboardSummaryReportProps {
-  totalStockValue: number;
-  totalUnitsOnHand: number;
-  lowStockItems: InventoryItem[];
-  outOfStockItems: InventoryItem[];
-  recentSalesOrders: OrderItem[];
-  recentPurchaseOrders: OrderItem[];
+  metrics: {
+    totalStockValue: number;
+    totalUnitsOnHand: number;
+    lowStockItemsCount: number;
+    outOfStockItemsCount: number;
+  };
+  lists: {
+    lowStockItems: InventoryItem[];
+    outOfStockItems: InventoryItem[];
+    recentSalesOrders: OrderItem[];
+    recentPurchaseOrders: OrderItem[];
+  };
 }
 
 const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
-  totalStockValue,
-  totalUnitsOnHand,
-  lowStockItems,
-  outOfStockItems,
-  recentSalesOrders,
-  recentPurchaseOrders,
+  metrics,
+  lists,
 }) => {
   return (
     <div className="space-y-6">
@@ -34,19 +37,19 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><DollarSign className="h-5 w-5 text-green-500" /> Inventory Value</h3>
-            <p className="text-3xl font-bold">${(totalStockValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-3xl font-bold">${(metrics.totalStockValue ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Total Units On Hand</h3>
-            <p className="text-3xl font-bold">{(totalUnitsOnHand ?? 0).toLocaleString()}</p>
+            <p className="text-3xl font-bold">{(metrics.totalUnitsOnHand ?? 0).toLocaleString()}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-yellow-500" /> Low Stock Items</h3>
-            <p className="text-3xl font-bold">{(lowStockItems ?? []).length}</p>
+            <p className="text-3xl font-bold">{(lists.lowStockItems ?? []).length}</p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold text-lg flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Out of Stock Items</h3>
-            <p className="text-3xl font-bold">{(outOfStockItems ?? []).length}</p>
+            <p className="text-3xl font-bold">{(lists.outOfStockItems ?? []).length}</p>
           </div>
         </CardContent>
       </Card>
@@ -56,7 +59,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           <CardTitle className="text-xl font-semibold flex items-center gap-2"><Receipt className="h-5 w-5 text-blue-500" /> Recent Sales Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          {(recentSalesOrders ?? []).length > 0 ? (
+          {(lists.recentSalesOrders ?? []).length > 0 ? (
             <ScrollArea className="h-40">
               <Table>
                 <TableHeader>
@@ -67,7 +70,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(recentSalesOrders ?? []).map((order: OrderItem) => (
+                  {(lists.recentSalesOrders ?? []).map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
@@ -88,7 +91,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
           <CardTitle className="text-xl font-semibold flex items-center gap-2"><Package className="h-5 w-5 text-purple-500" /> Recent Purchase Orders</CardTitle>
         </CardHeader>
         <CardContent>
-          {(recentPurchaseOrders ?? []).length > 0 ? (
+          {(lists.recentPurchaseOrders ?? []).length > 0 ? (
             <ScrollArea className="h-40">
               <Table>
                 <TableHeader>
@@ -99,7 +102,7 @@ const DashboardSummaryReport: React.FC<DashboardSummaryReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(recentPurchaseOrders ?? []).map((order: OrderItem) => (
+                  {(lists.recentPurchaseOrders ?? []).map((order: OrderItem) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.id}</TableCell>
                       <TableCell>{order.customerSupplier}</TableCell>
