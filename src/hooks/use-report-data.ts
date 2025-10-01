@@ -33,6 +33,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // NEW: State for selected item in forecast
+  void selectedForecastItemId; // Suppress TS6133: 'selectedForecastItemId' is declared but its value is never read.
 
   const refresh = useCallback(() => {
     setError(null);
@@ -49,7 +50,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     const filterFrom = (dateRange?.from && isValid(dateRange.from)) ? startOfDay(dateRange.from) : null;
     const filterTo = (dateRange?.to && isValid(dateRange.to)) ? endOfDay(dateRange.to) : ((dateRange?.from && isValid(dateRange.from)) ? endOfDay(dateRange.from) : null);
 
-    if (!filterFrom || !filterTo) return items;
+    if (!filterFrom || !filterTo) return items; // If no date range, return all items
 
     return items.filter((item: any) => { // Explicitly type item
       const itemDate = parseAndValidateDate(item[dateKey]);
@@ -128,20 +129,34 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
 
   const dashboardData = useMemo<any | null>(() => { // Changed return type to any for flexibility
+    console.log(`[useReportData - ${reportId}] Memo re-evaluating.`);
+    console.log(`[useReportData - ${reportId}] isLoadingInventory: ${isLoadingInventory}, isLoadingOrders: ${isLoadingOrders}, isLoadingStockMovements: ${isLoadingStockMovements}, isLoadingProfile: ${isLoadingProfile}, profile?.organizationId: ${profile?.organizationId}`);
+
     // If any real data is still loading, return null to show loading state
     if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingProfile || !profile?.organizationId) {
+      console.log(`[useReportData - ${reportId}] Returning null due to loading state or missing organization ID.`);
       return null;
     }
+
+    console.log(`[useReportData - ${reportId}] Inventory items count: ${inventoryItems.length}`);
+    // console.log(`[useReportData - ${reportId}] All inventory items:`, inventoryItems); // Too verbose, only log count
 
     const today = new Date();
     const todayString = format(today, "yyyy-MM-dd");
 
     const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
+    console.log(`[useReportData - ${reportId}] Filtered inventory items count (after date range): ${filteredInventory.length}`);
+    // console.log(`[useReportData - ${reportId}] Filtered inventory items:`, filteredInventory); // Too verbose
+
     const filteredOrders = filterDataByDateRange(orders, 'date');
     const filteredStockMovements = filterDataByDateRange(stockMovements, 'timestamp');
 
     const totalStockValue = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + (item.quantity * item.unitCost), 0);
     const totalUnitsOnHand = filteredInventory.reduce((sum: number, item: InventoryItem) => sum + item.quantity, 0);
+    
+    console.log(`[useReportData - ${reportId}] Calculated totalStockValue: ${totalStockValue}`);
+    console.log(`[useReportData - ${reportId}] Calculated totalUnitsOnHand: ${totalUnitsOnHand}`);
+
     const lowStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity <= item.reorderLevel).length;
     const outOfStockItemsCount = filteredInventory.filter((item: InventoryItem) => item.quantity === 0).length;
     const ordersDueTodayCount = filteredOrders.filter(
