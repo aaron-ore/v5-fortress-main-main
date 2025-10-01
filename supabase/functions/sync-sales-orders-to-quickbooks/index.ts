@@ -149,12 +149,20 @@ serve(async (req) => {
 
     const makeQuickBooksApiCall = async (url: string, options: RequestInit, retryOnAuth = true) => {
       let response = await fetch(url, options);
+      let intuitTid = response.headers.get('intuit_tid');
+      if (intuitTid) {
+        console.log(`QuickBooks API call to ${url} - intuit_tid: ${intuitTid}`);
+      }
 
       if (response.status === 401 && retryOnAuth) {
         console.log('QuickBooks API call failed with 401, attempting token refresh...');
         await refreshQuickBooksToken();
         options.headers = { ...options.headers, 'Authorization': `Bearer ${accessToken}` };
         response = await fetch(url, options);
+        intuitTid = response.headers.get('intuit_tid'); // Get new intuit_tid after retry
+        if (intuitTid) {
+          console.log(`QuickBooks API call (retried) to ${url} - intuit_tid: ${intuitTid}`);
+        }
       }
 
       if (!response.ok) {
@@ -162,18 +170,19 @@ serve(async (req) => {
         console.error(`QuickBooks API error for URL ${url}:`, errorData);
         throw new Error(`QuickBooks API error: ${errorData.Fault?.Error?.[0]?.Detail || response.statusText}`);
       }
-      return response.json();
+      return { data: await response.json(), intuit_tid: intuitTid }; // Return intuit_tid
     };
 
     const getOrCreateQuickBooksCustomer = async (customerName: string, customerEmail?: string) => {
       const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${customerName}'`)}&minorversion=69`;
-      const searchResult = await makeQuickBooksApiCall(queryUrl, {
+      const { data: searchResult, intuit_tid: searchTid } = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
         },
       });
+      console.log(`getOrCreateQuickBooksCustomer search - intuit_tid: ${searchTid}`);
 
       if (searchResult.QueryResponse.Customer && searchResult.QueryResponse.Customer.length > 0) {
         console.log(`Found existing QuickBooks customer: ${customerName} (ID: ${searchResult.QueryResponse.Customer[0].Id})`);
@@ -186,7 +195,7 @@ serve(async (req) => {
         PrimaryEmailAddr: customerEmail ? { Address: customerEmail } : undefined,
       };
       const createUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/customer?minorversion=69`;
-      const createResult = await makeQuickBooksApiCall(createUrl, {
+      const { data: createResult, intuit_tid: createTid } = await makeQuickBooksApiCall(createUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -195,34 +204,35 @@ serve(async (req) => {
         },
         body: JSON.stringify(newCustomerPayload),
       });
-      console.log(`Created new QuickBooks customer: ${customerName} (ID: ${createResult.Customer.Id})`);
+      console.log(`Created new QuickBooks customer: ${customerName} (ID: ${createResult.Customer.Id}) - intuit_tid: ${createTid}`);
       return createResult.Customer.Id;
     };
 
     const getQuickBooksIncomeAccountId = async () => {
       const querySalesAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' AND Name = 'Sales'`)}&minorversion=69`;
-      const queryServicesAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' AND Name = 'Services'`)}&minorversion=69`;
-
-      let salesAccountResult = await makeQuickBooksApiCall(querySalesAccountUrl, {
+      const { data: salesAccountResult, intuit_tid: salesTid } = await makeQuickBooksApiCall(querySalesAccountUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
         },
       });
+      console.log(`getQuickBooksIncomeAccountId sales account search - intuit_tid: ${salesTid}`);
 
       if (salesAccountResult.QueryResponse.Account && salesAccountResult.QueryResponse.Account.length > 0) {
         console.log(`Found existing QuickBooks Income Account 'Sales' (ID: ${salesAccountResult.QueryResponse.Account[0].Id})`);
         return salesAccountResult.QueryResponse.Account[0].Id;
       }
 
-      let servicesAccountResult = await makeQuickBooksApiCall(queryServicesAccountUrl, {
+      const queryServicesAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' AND Name = 'Services'`)}&minorversion=69`;
+      const { data: servicesAccountResult, intuit_tid: servicesTid } = await makeQuickBooksApiCall(queryServicesAccountUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
         },
       });
+      console.log(`getQuickBooksIncomeAccountId services account search - intuit_tid: ${servicesTid}`);
 
       if (servicesAccountResult.QueryResponse.Account && servicesAccountResult.QueryResponse.Account.length > 0) {
         console.log(`Found existing QuickBooks Income Account 'Services' (ID: ${servicesAccountResult.QueryResponse.Account[0].Id})`);
@@ -230,13 +240,14 @@ serve(async (req) => {
       }
 
       const queryAnyIncomeAccountUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Account WHERE AccountType = 'Income' MAXRESULTS 1`)}&minorversion=69`;
-      let anyIncomeAccountResult = await makeQuickBooksApiCall(queryAnyIncomeAccountUrl, {
+      const { data: anyIncomeAccountResult, intuit_tid: anyIncomeTid } = await makeQuickBooksApiCall(queryAnyIncomeAccountUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
         },
       });
+      console.log(`getQuickBooksIncomeAccountId any income account search - intuit_tid: ${anyIncomeTid}`);
 
       if (anyIncomeAccountResult.QueryResponse.Account && anyIncomeAccountResult.QueryResponse.Account.length > 0) {
         console.log(`Found generic QuickBooks Income Account '${anyIncomeAccountResult.QueryResponse.Account[0].Name}' (ID: ${anyIncomeAccountResult.QueryResponse.Account[0].Id})`);
@@ -248,13 +259,14 @@ serve(async (req) => {
 
     const getOrCreateQuickBooksItem = async (itemName: string, unitPrice: number) => {
       const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Item WHERE Name = '${itemName}'`)}&minorversion=69`;
-      const searchResult = await makeQuickBooksApiCall(queryUrl, {
+      const { data: searchResult, intuit_tid: searchTid } = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Accept': 'application/json',
         },
       });
+      console.log(`getOrCreateQuickBooksItem search - intuit_tid: ${searchTid}`);
 
       if (searchResult.QueryResponse.Item && searchResult.QueryResponse.Item.length > 0) {
         console.log(`Found existing QuickBooks item: ${itemName} (ID: ${searchResult.QueryResponse.Item[0].Id})`);
@@ -275,7 +287,7 @@ serve(async (req) => {
         },
       };
       const createUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/item?minorversion=69`;
-      const createResult = await makeQuickBooksApiCall(createUrl, {
+      const { data: createResult, intuit_tid: createTid } = await makeQuickBooksApiCall(createUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -284,7 +296,7 @@ serve(async (req) => {
         },
         body: JSON.stringify(newItemPayload),
       });
-      console.log(`Created new QuickBooks item: ${itemName} (ID: ${createResult.Item.Id})`);
+      console.log(`Created new QuickBooks item: ${itemName} (ID: ${createResult.Item.Id}) - intuit_tid: ${createTid}`);
       return createResult.Item.Id;
     };
 
@@ -347,7 +359,7 @@ serve(async (req) => {
         };
 
         console.log(`Creating SalesReceipt in QuickBooks for order ${order.id} with payload:`, JSON.stringify(salesReceipt, null, 2));
-        const qbData = await makeQuickBooksApiCall(`${QUICKBOOKS_API_BASE_URL}/${realmId}/salesreceipt?minorversion=69`, {
+        const { data: qbData, intuit_tid: salesReceiptTid } = await makeQuickBooksApiCall(`${QUICKBOOKS_API_BASE_URL}/${realmId}/salesreceipt?minorversion=69`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -357,7 +369,7 @@ serve(async (req) => {
           body: JSON.stringify(salesReceipt),
         });
         const quickbooksId = qbData.SalesReceipt.Id;
-        console.log(`SalesReceipt created in QuickBooks for order ${order.id}. QuickBooks ID: ${quickbooksId}`);
+        console.log(`SalesReceipt created in QuickBooks for order ${order.id}. QuickBooks ID: ${quickbooksId} - intuit_tid: ${salesReceiptTid}`);
 
         const { error: updateOrderError } = await supabaseAdmin
           .from('orders')

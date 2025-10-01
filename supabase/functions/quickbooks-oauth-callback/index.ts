@@ -81,6 +81,11 @@ serve(async (req) => {
       }).toString(),
     });
 
+    const tokenResponseIntuitTid = tokenResponse.headers.get('intuit_tid');
+    if (tokenResponseIntuitTid) {
+      console.log(`QuickBooks OAuth Callback: Token exchange intuit_tid: ${tokenResponseIntuitTid}`);
+    }
+
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('Error exchanging QuickBooks code for tokens:', errorData);
