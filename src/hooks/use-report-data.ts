@@ -20,8 +20,15 @@ interface UseDashboardHookResult {
   refresh: () => void;
 }
 
-export const useReportData = (reportId: string, dateRange: DateRange | undefined): UseDashboardHookResult => {
-  void reportId; // Suppress TS6133: 'reportId' is declared but its value is never read.
+export const useReportData = (
+  reportId: string,
+  dateRange: DateRange | undefined,
+  inventoryValuationGroupBy: "category" | "folder", // NEW: Add groupBy filter
+  lowStockStatusFilter: "all" | "low-stock" | "out-of-stock", // NEW: Add lowStockStatusFilter
+  purchaseOrderStatusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived", // NEW: Add purchaseOrderStatusFilter
+  discrepancyStatusFilter: "all" | "pending" | "resolved", // NEW: Add discrepancyStatusFilter
+  selectedForecastItemId: string, // NEW: Add selectedForecastItemId
+): UseDashboardHookResult => {
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
@@ -32,8 +39,6 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // NEW: State for selected item in forecast
-  void selectedForecastItemId; // Suppress TS6133: 'selectedForecastItemId' is declared but its value is never read.
 
   const refresh = useCallback(() => {
     setError(null);
@@ -62,6 +67,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   const [previousPeriodDiscrepanciesCount, setPreviousPeriodDiscrepanciesCount] = useState(0);
   const [dailyIssuesCount, setDailyIssuesCount] = useState(0);
   const [previousPeriodIssuesCount, setPreviousPeriodIssuesCount] = useState(0);
+  const [discrepancyLogs, setDiscrepancyLogs] = useState<any[]>([]); // NEW: State for discrepancy logs
 
   const fetchDiscrepancyAndIssueCounts = useCallback(async () => {
     if (!profile?.organizationId) {
@@ -69,6 +75,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       setPreviousPeriodDiscrepanciesCount(0);
       setDailyIssuesCount(0);
       setPreviousPeriodIssuesCount(0);
+      setDiscrepancyLogs([]); // Clear discrepancy logs
       return;
     }
 
@@ -85,7 +92,7 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     previousPeriodEnd = subDays(currentPeriodStart, 1);
     previousPeriodStart = new Date(previousPeriodEnd.getTime() - durationMs);
 
-    const fetchCount = async (table: string, activityType: string | null, start: Date, end: Date) => {
+    const fetchCount = async (table: string, activityType: string | null, start: Date, end: Date, statusFilter?: string) => {
       let query = supabase
         .from(table)
         .select('id', { count: 'exact' })
@@ -93,8 +100,10 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         .gte('timestamp', start.toISOString())
         .lte('timestamp', end.toISOString());
 
-      if (table === 'discrepancies') {
-        query = query.eq('status', 'pending');
+      if (table === 'discrepancies' && statusFilter) {
+        if (statusFilter !== 'all') {
+          query = query.eq('status', statusFilter);
+        }
       } else if (table === 'activity_logs' && activityType) {
         query = query.eq('activity_type', activityType);
       }
@@ -103,23 +112,45 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
 
       if (countError) {
         console.error(`Error fetching ${table} count:`, countError);
-        // showError(`Failed to load ${table} count.`); // Removed showError to prevent toast spam
         return 0;
       }
       return count || 0;
     };
 
-    const currentDiscrepancyCount = await fetchCount('discrepancies', null, currentPeriodStart, currentPeriodEnd);
-    const prevDiscrepancyCount = await fetchCount('discrepancies', null, previousPeriodStart, previousPeriodEnd);
-    setPendingDiscrepanciesCount(currentDiscrepancyCount);
-    setPreviousPeriodDiscrepanciesCount(prevDiscrepancyCount);
+    // Fetch discrepancy logs for the report
+    let discrepancyQuery = supabase
+      .from('discrepancies')
+      .select('*')
+      .eq('organization_id', profile.organizationId)
+      .order('timestamp', { ascending: false });
+
+    if (discrepancyStatusFilter !== 'all') {
+      discrepancyQuery = discrepancyQuery.eq('status', discrepancyStatusFilter);
+    }
+    if (currentPeriodStart && currentPeriodEnd) {
+      discrepancyQuery = discrepancyQuery.gte('timestamp', currentPeriodStart.toISOString()).lte('timestamp', currentPeriodEnd.toISOString());
+    }
+
+    const { data: fetchedDiscrepancyLogs, error: discrepancyLogsError } = await discrepancyQuery;
+    if (discrepancyLogsError) {
+      console.error("Error fetching discrepancy logs:", discrepancyLogsError);
+      setDiscrepancyLogs([]);
+    } else {
+      setDiscrepancyLogs(fetchedDiscrepancyLogs);
+    }
+
+
+    const currentPendingDiscrepancyCount = await fetchCount('discrepancies', null, currentPeriodStart, currentPeriodEnd, 'pending');
+    const prevPendingDiscrepancyCount = await fetchCount('discrepancies', null, previousPeriodStart, previousPeriodEnd, 'pending');
+    setPendingDiscrepanciesCount(currentPendingDiscrepancyCount);
+    setPreviousPeriodDiscrepanciesCount(prevPendingDiscrepancyCount);
 
     const currentIssueCount = await fetchCount('activity_logs', 'Issue Reported', currentPeriodStart, currentPeriodEnd);
     const prevIssueCount = await fetchCount('activity_logs', 'Issue Reported', previousPeriodStart, previousPeriodEnd);
     setDailyIssuesCount(currentIssueCount);
     setPreviousPeriodIssuesCount(prevIssueCount);
 
-  }, [profile?.organizationId, dateRange]);
+  }, [profile?.organizationId, dateRange, discrepancyStatusFilter]); // Added discrepancyStatusFilter to dependencies
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
@@ -128,25 +159,22 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
   }, [isLoadingProfile, profile?.organizationId, dateRange, fetchDiscrepancyAndIssueCounts]);
 
 
-  const dashboardData = useMemo<any | null>(() => { // Changed return type to any for flexibility
+  const reportData = useMemo<any | null>(() => {
     console.log(`[useReportData - ${reportId}] Memo re-evaluating.`);
     console.log(`[useReportData - ${reportId}] isLoadingInventory: ${isLoadingInventory}, isLoadingOrders: ${isLoadingOrders}, isLoadingStockMovements: ${isLoadingStockMovements}, isLoadingProfile: ${isLoadingProfile}, profile?.organizationId: ${profile?.organizationId}`);
 
-    // If any real data is still loading, return null to show loading state
     if (isLoadingInventory || isLoadingOrders || isLoadingStockMovements || isLoadingProfile || !profile?.organizationId) {
       console.log(`[useReportData - ${reportId}] Returning null due to loading state or missing organization ID.`);
       return null;
     }
 
     console.log(`[useReportData - ${reportId}] Inventory items count: ${inventoryItems.length}`);
-    // console.log(`[useReportData - ${reportId}] All inventory items:`, inventoryItems); // Too verbose, only log count
 
     const today = new Date();
     const todayString = format(today, "yyyy-MM-dd");
 
     const filteredInventory = filterDataByDateRange(inventoryItems, 'lastUpdated');
     console.log(`[useReportData - ${reportId}] Filtered inventory items count (after date range): ${filteredInventory.length}`);
-    // console.log(`[useReportData - ${reportId}] Filtered inventory items:`, filteredInventory); // Too verbose
 
     const filteredOrders = filterDataByDateRange(orders, 'date');
     const filteredStockMovements = filterDataByDateRange(stockMovements, 'timestamp');
@@ -382,7 +410,6 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
       const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
-      void targetItems; // Suppress TS6133: 'targetItems' is declared but its value is never read.
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -662,7 +689,116 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
       .sort((a: { name: string; unitsSold: number }, b: { name: string; unitsSold: number }) => b.unitsSold - a.unitsSold) // Explicitly type a, b
       .slice(0, 5);
 
-    const selectedItemName = selectedForecastItemId === "all-items" ? "All Items" : (inventoryItems.find(item => item.id === selectedForecastItemId)?.name || "Unknown Item");
+    const selectedForecastItemName = selectedForecastItemId === "all-items" ? "All Items" : (inventoryItems.find(item => item.id === selectedForecastItemId)?.name || "Unknown Item");
+
+    // NEW: Data for Inventory Valuation Report
+    const inventoryValuationGroupedData = (() => {
+      const grouped: { [key: string]: { totalValue: number; totalQuantity: number } } = {};
+      filteredInventory.forEach(item => {
+        const groupKey = inventoryValuationGroupBy === "category" ? item.category : (structuredLocations.find(f => f.id === item.folderId)?.name || "Unassigned");
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = { totalValue: 0, totalQuantity: 0 };
+        }
+        grouped[groupKey].totalValue += item.quantity * item.unitCost;
+        grouped[groupKey].totalQuantity += item.quantity;
+      });
+      return Object.entries(grouped).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.totalValue - a.totalValue);
+    })();
+
+    // NEW: Data for Low Stock Report
+    const lowStockReportItems = (() => {
+      let items = inventoryItems;
+      if (lowStockStatusFilter === "low-stock") {
+        items = items.filter(item => item.quantity > 0 && item.quantity <= item.reorderLevel);
+      } else if (lowStockStatusFilter === "out-of-stock") {
+        items = items.filter(item => item.quantity === 0);
+      } else { // "all"
+        items = items.filter(item => item.quantity <= item.reorderLevel);
+      }
+      return items;
+    })();
+
+    // NEW: Data for Inventory Movement Report
+    const inventoryMovementReportData = filteredStockMovements;
+
+    // NEW: Data for Sales by Customer Report
+    const salesByCustomerReportData = (() => {
+      const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string } } = {};
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        if (!customerSalesMap[order.customerSupplier]) {
+          customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: "" };
+        }
+        customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
+        customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
+        const orderDate = parseAndValidateDate(order.date);
+        if (orderDate && isValid(orderDate) && (!customerSalesMap[order.customerSupplier].lastOrderDate || orderDate > parseAndValidateDate(customerSalesMap[order.customerSupplier].lastOrderDate))) {
+          customerSalesMap[order.customerSupplier].lastOrderDate = order.date;
+        }
+      });
+      return Object.entries(customerSalesMap).map(([customerName, data]) => ({ customerName, ...data })).sort((a, b) => b.totalSales - a.totalSales);
+    })();
+
+    // NEW: Data for Sales by Product Report
+    const salesByProductReportData = (() => {
+      const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        order.items.forEach(orderItem => {
+          const itemKey = orderItem.inventoryItemId || orderItem.itemName;
+          if (!productSalesMap[itemKey]) {
+            const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+            productSalesMap[itemKey] = {
+              productName: orderItem.itemName,
+              sku: inventoryItem?.sku || "N/A",
+              category: inventoryItem?.category || "N/A",
+              unitsSold: 0,
+              totalRevenue: 0,
+            };
+          }
+          productSalesMap[itemKey].unitsSold += orderItem.quantity;
+          productSalesMap[itemKey].totalRevenue += orderItem.quantity * orderItem.unitPrice;
+        });
+      });
+      return Object.values(productSalesMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    })();
+
+    // NEW: Data for Purchase Order Status Report
+    const purchaseOrderStatusReportData = filteredOrders.filter(order => order.type === "Purchase" && (purchaseOrderStatusFilter === "all" || order.status === purchaseOrderStatusFilter));
+
+    // NEW: Data for Profitability Report
+    const profitabilityReportData = (() => {
+      let totalSalesRevenueCalc = 0;
+      let totalCostOfGoodsSold = 0;
+
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        totalSalesRevenueCalc += order.totalAmount;
+        order.items.forEach(orderItem => {
+          const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+          if (inventoryItem) {
+            totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
+          } else {
+            totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Fallback estimate
+          }
+        });
+      });
+
+      const grossProfit = totalSalesRevenueCalc - totalCostOfGoodsSold;
+      const grossProfitMargin = totalSalesRevenueCalc > 0 ? (grossProfit / totalSalesRevenueCalc) * 100 : 0;
+      const simulatedOperatingExpenses = totalSalesRevenueCalc * 0.20; // Example
+      const netProfit = grossProfit - simulatedOperatingExpenses;
+      const netProfitMargin = totalSalesRevenueCalc > 0 ? (netProfit / totalSalesRevenueCalc) * 100 : 0;
+
+      return {
+        metricsData: [
+          { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(1)), color: "#00BFD8" },
+          { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(1)), color: "#00C49F" },
+        ],
+        totalSalesRevenue: totalSalesRevenueCalc,
+        totalCostOfGoodsSold: totalCostOfGoodsSold,
+      };
+    })();
+
+    // NEW: Data for Stock Discrepancy Report
+    const discrepancyReportData = discrepancyLogs; // Use the fetched discrepancy logs
 
     return {
       metrics: {
@@ -706,32 +842,66 @@ export const useReportData = (reportId: string, dateRange: DateRange | undefined
         dailyIssuesCount,
         previousPeriodIssuesCount,
       },
-      // NEW: Add forecast-specific data
-      forecastData: demandForecastData,
-      selectedItemName: selectedItemName,
-      onSelectItem: setSelectedForecastItemId, // Pass setter for item selection
+      // NEW: Add report-specific data structures
+      inventoryValuation: {
+        groupedData: inventoryValuationGroupedData,
+        totalOverallValue: totalStockValue,
+        totalOverallQuantity: totalUnitsOnHand,
+      },
+      lowStock: {
+        items: lowStockReportItems,
+      },
+      inventoryMovement: {
+        movements: inventoryMovementReportData,
+      },
+      salesByCustomer: {
+        customerSales: salesByCustomerReportData,
+      },
+      salesByProduct: {
+        productSales: salesByProductReportData,
+      },
+      purchaseOrderStatus: {
+        orders: purchaseOrderStatusReportData,
+      },
+      profitability: profitabilityReportData,
+      stockDiscrepancy: {
+        discrepancies: discrepancyReportData,
+      },
+      advancedDemandForecast: {
+        forecastData: demandForecastData,
+        selectedItemName: selectedForecastItemName,
+        onSelectItem: setSelectedForecastItemId,
+      },
+      // Pass filter states directly for display in report components
+      inventoryValuationGroupBy,
+      lowStockStatusFilter,
+      purchaseOrderStatusFilter,
+      discrepancyStatusFilter,
+      selectedForecastItemId,
     };
   }, [
     isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingProfile,
     inventoryItems, orders, stockMovements, profile, structuredLocations, dateRange,
     pendingDiscrepanciesCount, previousPeriodDiscrepanciesCount, dailyIssuesCount, previousPeriodIssuesCount,
-    filterDataByDateRange, refreshTrigger, selectedForecastItemId
+    filterDataByDateRange, refreshTrigger,
+    inventoryValuationGroupBy, lowStockStatusFilter, purchaseOrderStatusFilter, discrepancyStatusFilter, selectedForecastItemId,
+    discrepancyLogs, // Added discrepancyLogs to dependencies
   ]);
 
   useEffect(() => {
-    if (dashboardData) {
+    if (reportData) {
       setIsLoading(false);
     } else if (
       !isLoadingInventory && !isLoadingOrders && !isLoadingStockMovements && !isLoadingProfile
     ) {
-      setError("Failed to load dashboard data.");
+      setError("Failed to load report data.");
       setIsLoading(false);
     }
-  }, [dashboardData, isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingProfile]);
+  }, [reportData, isLoadingInventory, isLoadingOrders, isLoadingStockMovements, isLoadingProfile]);
 
   return {
-    data: dashboardData,
-    pdfProps: dashboardData, // Pass the entire dashboardData as pdfProps for now, individual reports will extract what they need
+    data: reportData,
+    pdfProps: reportData, // Pass the entire reportData as pdfProps
     isLoading,
     error,
     refresh,

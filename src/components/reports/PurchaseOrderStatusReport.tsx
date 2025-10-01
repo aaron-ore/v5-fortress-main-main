@@ -8,13 +8,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 
 interface PurchaseOrderStatusReportProps {
-  orders: OrderItem[];
-  statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
+  purchaseOrderStatus: {
+    orders: OrderItem[];
+  };
+  statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived"; // Passed directly from Reports.tsx
 }
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
-  orders: ordersToDisplay,
+  purchaseOrderStatus,
+  statusFilter: currentStatusFilter,
 }) => {
+  const { orders: ordersToDisplay } = purchaseOrderStatus;
+
   const totalOrders = (ordersToDisplay ?? []).length;
   const totalAmount = (ordersToDisplay ?? []).reduce((sum: number, order: OrderItem) => sum + order.totalAmount, 0);
 

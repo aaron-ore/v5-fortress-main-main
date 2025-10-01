@@ -7,17 +7,20 @@ import { useProfile } from "@/context/ProfileContext";
 
 interface PurchaseOrderStatusPdfContentProps {
   reportDate: string;
-  orders: OrderItem[];
+  purchaseOrderStatus: {
+    orders: OrderItem[];
+  };
   statusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived";
   dateRange?: DateRange;
 }
 
 const PurchaseOrderStatusPdfContent: React.FC<PurchaseOrderStatusPdfContentProps> = ({
   reportDate,
-  orders,
+  purchaseOrderStatus,
   statusFilter,
   dateRange,
 }) => {
+  const { orders } = purchaseOrderStatus;
   const { profile } = useProfile();
 
   if (!profile || !profile.companyProfile) {

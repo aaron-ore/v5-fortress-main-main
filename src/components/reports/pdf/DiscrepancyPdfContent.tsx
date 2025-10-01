@@ -5,6 +5,7 @@ import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext"; // Corrected import
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface DiscrepancyLog {
   id: string;
@@ -24,22 +25,24 @@ interface DiscrepancyLog {
 
 interface DiscrepancyPdfContentProps {
   reportDate: string;
-  discrepancies: DiscrepancyLog[];
+  stockDiscrepancy: {
+    discrepancies: DiscrepancyLog[];
+  };
   statusFilter: "all" | "pending" | "resolved";
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[];
 }
 
 const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
   reportDate,
-  discrepancies,
+  stockDiscrepancy,
   statusFilter,
   dateRange,
   allProfiles,
-  structuredLocations,
 }) => {
+  const { discrepancies } = stockDiscrepancy;
   const { profile } = useProfile();
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
 
   if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;
@@ -85,7 +88,7 @@ const DiscrepancyPdfContent: React.FC<DiscrepancyPdfContentProps> = ({
       </div>
 
       <div className="mb-8">
-        <p className="font-bold mb-2">SUMMARY:</p>
+        <p className="font-bold mb-2">REPORT FOR:</p>
         <div className="bg-gray-50 p-3 border border-gray-200 rounded">
           <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
           <p>{profile.companyProfile.companyCurrency || "N/A"}</p>

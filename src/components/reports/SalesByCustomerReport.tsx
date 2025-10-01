@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { parseAndValidateDate } from "@/utils/dateUtils";
+import { format } from "date-fns";
 
 interface CustomerSalesData {
   customerName: string;
@@ -12,12 +14,16 @@ interface CustomerSalesData {
 }
 
 interface SalesByCustomerReportProps {
-  customerSales: CustomerSalesData[];
+  salesByCustomer: {
+    customerSales: CustomerSalesData[];
+  };
 }
 
 const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
-  customerSales,
+  salesByCustomer,
 }) => {
+  const { customerSales } = salesByCustomer;
+
   const totalOverallSales = (customerSales ?? []).reduce((sum: number, data: CustomerSalesData) => sum + data.totalSales, 0);
   const totalOverallItems = (customerSales ?? []).reduce((sum: number, data: CustomerSalesData) => sum + data.totalItems, 0);
 
@@ -62,7 +68,7 @@ const SalesByCustomerReport: React.FC<SalesByCustomerReportProps> = ({
                       <TableCell className="font-medium">{data.customerName}</TableCell>
                       <TableCell className="text-right">${(data.totalSales ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       <TableCell className="text-right">{(data.totalItems ?? 0).toLocaleString()}</TableCell>
-                      <TableCell>{data.lastOrderDate}</TableCell>
+                      <TableCell>{parseAndValidateDate(data.lastOrderDate) ? format(parseAndValidateDate(data.lastOrderDate)!, "MMM dd, yyyy") : "N/A"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

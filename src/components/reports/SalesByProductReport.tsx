@@ -13,12 +13,16 @@ interface ProductSalesData {
 }
 
 interface SalesByProductReportProps {
-  productSales: ProductSalesData[];
+  salesByProduct: {
+    productSales: ProductSalesData[];
+  };
 }
 
 const SalesByProductReport: React.FC<SalesByProductReportProps> = ({
-  productSales,
+  salesByProduct,
 }) => {
+  const { productSales } = salesByProduct;
+
   const totalOverallRevenue = (productSales ?? []).reduce((sum: number, data: ProductSalesData) => sum + data.totalRevenue, 0);
   const totalOverallUnits = (productSales ?? []).reduce((sum: number, data: ProductSalesData) => sum + data.unitsSold, 0);
 

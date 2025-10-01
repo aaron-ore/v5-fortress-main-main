@@ -23,16 +23,18 @@ interface ForecastDataPoint {
 }
 
 interface AdvancedDemandForecastReportProps {
-  forecastData: ForecastDataPoint[];
-  selectedItemName: string;
-  onSelectItem: (itemId: string) => void;
+  advancedDemandForecast: {
+    forecastData: ForecastDataPoint[];
+    selectedItemName: string;
+  };
+  onSelectItem: (itemId: string) => void; // Passed directly from Reports.tsx
 }
 
 const AdvancedDemandForecastReport: React.FC<AdvancedDemandForecastReportProps> = ({
-  forecastData,
-  selectedItemName,
+  advancedDemandForecast,
   onSelectItem,
 }) => {
+  const { forecastData, selectedItemName } = advancedDemandForecast;
   const { inventoryItems } = useInventory();
   const { profile } = useProfile();
   const navigate = useNavigate();

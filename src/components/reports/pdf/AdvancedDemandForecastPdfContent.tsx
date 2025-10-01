@@ -14,15 +14,17 @@ interface ForecastDataPoint {
 
 interface AdvancedDemandForecastPdfContentProps {
   reportDate: string;
-  forecastData: ForecastDataPoint[];
-  selectedItemName: string;
+  advancedDemandForecast: {
+    forecastData: ForecastDataPoint[];
+    selectedItemName: string;
+  };
 }
 
 const AdvancedDemandForecastPdfContent: React.FC<AdvancedDemandForecastPdfContentProps> = ({
   reportDate,
-  forecastData,
-  selectedItemName,
+  advancedDemandForecast,
 }) => {
+  const { forecastData, selectedItemName } = advancedDemandForecast;
   const { profile } = useProfile();
 
   if (!profile || !profile.companyProfile) {

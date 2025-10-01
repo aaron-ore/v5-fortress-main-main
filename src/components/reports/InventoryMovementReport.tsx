@@ -8,18 +8,22 @@ import { InventoryFolder } from "@/context/OnboardingContext";
 import { Scale } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface InventoryMovementReportProps {
-  movements: StockMovement[];
-  allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[];
+  inventoryMovement: {
+    movements: StockMovement[];
+  };
 }
 
 const InventoryMovementReport: React.FC<InventoryMovementReportProps> = ({
-  movements: movementsToDisplay,
-  allProfiles,
-  structuredLocations,
+  inventoryMovement,
 }) => {
+  const { movements: movementsToDisplay } = inventoryMovement;
+  const { allProfiles } = useProfile(); // NEW: Get allProfiles from context
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
+
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";

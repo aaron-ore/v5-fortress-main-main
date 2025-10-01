@@ -12,21 +12,22 @@ interface GroupedDataItem {
 
 interface InventoryValuationPdfContentProps {
   reportDate: string;
-  groupedData: GroupedDataItem[];
+  inventoryValuation: {
+    groupedData: GroupedDataItem[];
+    totalOverallValue: number;
+    totalOverallQuantity: number;
+  };
   groupBy: "category" | "folder";
-  totalOverallValue: number;
-  totalOverallQuantity: number;
   dateRange?: DateRange;
 }
 
 const InventoryValuationPdfContent: React.FC<InventoryValuationPdfContentProps> = ({
   reportDate,
-  groupedData,
+  inventoryValuation,
   groupBy,
-  totalOverallValue,
-  totalOverallQuantity,
   dateRange,
 }) => {
+  const { groupedData, totalOverallValue, totalOverallQuantity } = inventoryValuation;
   const { profile } = useProfile();
 
   if (!profile || !profile.companyProfile) {

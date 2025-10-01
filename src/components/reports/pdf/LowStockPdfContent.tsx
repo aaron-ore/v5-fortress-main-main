@@ -5,23 +5,26 @@ import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface LowStockPdfContentProps {
   reportDate: string;
-  items: InventoryItem[];
+  lowStock: {
+    items: InventoryItem[];
+  };
   statusFilter: "all" | "low-stock" | "out-of-stock";
   dateRange?: DateRange;
-  structuredLocations: InventoryFolder[];
 }
 
 const LowStockPdfContent: React.FC<LowStockPdfContentProps> = ({
   reportDate,
-  items,
+  lowStock,
   statusFilter,
   dateRange,
-  structuredLocations,
 }) => {
+  const { items } = lowStock;
   const { profile } = useProfile();
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
 
   if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;

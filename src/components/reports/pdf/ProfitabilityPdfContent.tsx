@@ -12,19 +12,20 @@ interface ProfitabilityMetricsData {
 
 interface ProfitabilityPdfContentProps {
   reportDate: string;
-  metricsData: ProfitabilityMetricsData[];
-  totalSalesRevenue: number;
-  totalCostOfGoodsSold: number;
+  profitability: {
+    metricsData: ProfitabilityMetricsData[];
+    totalSalesRevenue: number;
+    totalCostOfGoodsSold: number;
+  };
   dateRange?: DateRange;
 }
 
 const ProfitabilityPdfContent: React.FC<ProfitabilityPdfContentProps> = ({
   reportDate,
-  metricsData,
-  totalSalesRevenue,
-  totalCostOfGoodsSold,
+  profitability,
   dateRange,
 }) => {
+  const { metricsData, totalSalesRevenue, totalCostOfGoodsSold } = profitability;
   const { profile } = useProfile();
 
   if (!profile || !profile.companyProfile) {

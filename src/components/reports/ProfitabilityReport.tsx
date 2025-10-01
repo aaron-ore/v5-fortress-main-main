@@ -11,16 +11,18 @@ interface ProfitabilityMetricsData {
 }
 
 interface ProfitabilityReportProps {
-  metricsData: ProfitabilityMetricsData[];
-  totalSalesRevenue: number;
-  totalCostOfGoodsSold: number;
+  profitability: {
+    metricsData: ProfitabilityMetricsData[];
+    totalSalesRevenue: number;
+    totalCostOfGoodsSold: number;
+  };
 }
 
 const ProfitabilityReport: React.FC<ProfitabilityReportProps> = ({
-  metricsData,
-  totalSalesRevenue,
-  totalCostOfGoodsSold,
+  profitability,
 }) => {
+  const { metricsData, totalSalesRevenue, totalCostOfGoodsSold } = profitability;
+
   const grossProfit = (totalSalesRevenue ?? 0) - (totalCostOfGoodsSold ?? 0);
 
   return (

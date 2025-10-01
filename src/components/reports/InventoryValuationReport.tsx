@@ -11,18 +11,20 @@ interface GroupedDataItem {
 }
 
 interface InventoryValuationReportProps {
-  groupedData: GroupedDataItem[];
-  groupBy: "category" | "folder";
-  totalOverallValue: number;
-  totalOverallQuantity: number;
+  inventoryValuation: {
+    groupedData: GroupedDataItem[];
+    totalOverallValue: number;
+    totalOverallQuantity: number;
+  };
+  groupBy: "category" | "folder"; // Passed directly from Reports.tsx
 }
 
 const InventoryValuationReport: React.FC<InventoryValuationReportProps> = ({
-  groupedData,
+  inventoryValuation,
   groupBy,
-  totalOverallValue,
-  totalOverallQuantity,
 }) => {
+  const { groupedData, totalOverallValue, totalOverallQuantity } = inventoryValuation;
+
   return (
     <div className="space-y-6">
       <Card className="bg-card border-border shadow-sm">

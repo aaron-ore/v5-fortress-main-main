@@ -13,6 +13,7 @@ import { showError, showSuccess } from "@/utils/toast";
 import { useReportData } from "@/hooks/use-report-data";
 import { supabase } from "@/lib/supabaseClient";
 import { hasRequiredPlan } from "@/utils/planUtils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // NEW: Import Select components
 
 import ReportSidebar from "@/components/reports/ReportSidebar";
 import AiSummarySidebar from "@/components/reports/AiSummarySidebar";
@@ -32,8 +33,14 @@ const Reports: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false);
-  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // NEW: State for selected item in forecast
-  void selectedForecastItemId; // Suppress TS6133: 'selectedForecastItemId' is declared but its value is never read.
+  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // State for selected item in forecast
+
+  // NEW: Report-specific filter states
+  const [inventoryValuationGroupBy, setInventoryValuationGroupBy] = useState<"category" | "folder">("category");
+  const [lowStockStatusFilter, setLowStockStatusFilter] = useState<"all" | "low-stock" | "out-of-stock">("all");
+  const [purchaseOrderStatusFilter, setPurchaseOrderStatusFilter] = useState<"all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived">("all");
+  const [discrepancyStatusFilter, setDiscrepancyStatusFilter] = useState<"all" | "pending" | "resolved">("all");
+
 
   const reportContentRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +80,16 @@ const Reports: React.FC = () => {
   const CurrentReportComponent = reportContentComponents[activeReportId];
   const CurrentPdfComponent = pdfContentComponents[activeReportId];
 
-  const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(activeReportId, dateRange);
+  // Pass filter states to useReportData
+  const { data: reportData, pdfProps, isLoading: isLoadingReportData, error: reportError, refresh: refreshReportData } = useReportData(
+    activeReportId,
+    dateRange,
+    inventoryValuationGroupBy,
+    lowStockStatusFilter,
+    purchaseOrderStatusFilter,
+    discrepancyStatusFilter,
+    selectedForecastItemId, // Pass selectedForecastItemId
+  );
 
   const handlePrintReport = useCallback(() => {
     if (!reportData || !pdfProps || !CurrentPdfComponent) {
@@ -93,11 +109,16 @@ const Reports: React.FC = () => {
         forecastData: reportData.forecastData,
         selectedItemName: reportData.selectedItemName,
       }),
+      // NEW: Pass report-specific filters to PDF content
+      ...(activeReportId === "inventory-valuation" && { groupBy: inventoryValuationGroupBy }),
+      ...(activeReportId === "low-stock-out-of-stock" && { statusFilter: lowStockStatusFilter }),
+      ...(activeReportId === "purchase-order-status" && { statusFilter: purchaseOrderStatusFilter }),
+      ...(activeReportId === "stock-discrepancy" && { statusFilter: discrepancyStatusFilter }),
     };
 
     initiatePrint({ type: activeReportId as PrintContentData['type'], props: finalPdfProps });
     showSuccess("Report sent to printer!");
-  }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations]);
+  }, [reportData, pdfProps, CurrentPdfComponent, profile, initiatePrint, activeReportId, structuredLocations, inventoryValuationGroupBy, lowStockStatusFilter, purchaseOrderStatusFilter, discrepancyStatusFilter]);
 
   const canAccessAiSummary = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
@@ -202,6 +223,85 @@ const Reports: React.FC = () => {
               )}
             </div>
           </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            {activeReportId === "inventory-valuation" && (
+              <div className="space-y-2">
+                <Label htmlFor="groupBy">Group By</Label>
+                <Select value={inventoryValuationGroupBy} onValueChange={(value: "category" | "folder") => setInventoryValuationGroupBy(value)}>
+                  <SelectTrigger id="groupBy" className="w-[180px]">
+                    <SelectValue placeholder="Group by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="category">Category</SelectItem>
+                    <SelectItem value="folder">Folder</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {activeReportId === "low-stock-out-of-stock" && (
+              <div className="space-y-2">
+                <Label htmlFor="lowStockStatusFilter">Status Filter</Label>
+                <Select value={lowStockStatusFilter} onValueChange={(value: "all" | "low-stock" | "out-of-stock") => setLowStockStatusFilter(value)}>
+                  <SelectTrigger id="lowStockStatusFilter" className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Low/Out of Stock</SelectItem>
+                    <SelectItem value="low-stock">Low Stock Only</SelectItem>
+                    <SelectItem value="out-of-stock">Out of Stock Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {activeReportId === "purchase-order-status" && (
+              <div className="space-y-2">
+                <Label htmlFor="purchaseOrderStatusFilter">Status Filter</Label>
+                <Select value={purchaseOrderStatusFilter} onValueChange={(value: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived") => setPurchaseOrderStatusFilter(value)}>
+                  <SelectTrigger id="purchaseOrderStatusFilter" className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="new-order">New Order</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="packed">Packed</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="on-hold-problem">On Hold / Problem</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {activeReportId === "stock-discrepancy" && (
+              <div className="space-y-2">
+                <Label htmlFor="discrepancyStatusFilter">Status Filter</Label>
+                <Select value={discrepancyStatusFilter} onValueChange={(value: "all" | "pending" | "resolved") => setDiscrepancyStatusFilter(value)}>
+                  <SelectTrigger id="discrepancyStatusFilter" className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Discrepancies</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {activeReportId === "advanced-demand-forecast" && (
+              <div className="space-y-2">
+                <Label htmlFor="forecastItemSelect">Select Item</Label>
+                <Select value={selectedForecastItemId} onValueChange={setSelectedForecastItemId}>
+                  <SelectTrigger id="forecastItemSelect" className="w-[240px]">
+                    <SelectValue placeholder="Select an item or 'All Items'" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all-items">All Items (Overall Demand)</SelectItem>
+                    {/* Inventory items will be populated by the component itself */}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
         </Card>
 
         <Card className="flex-grow rounded-lg border flex flex-col">
@@ -249,11 +349,11 @@ const Reports: React.FC = () => {
               <div ref={reportContentRef} className="space-y-6">
                 {CurrentReportComponent && (
                   <CurrentReportComponent
-                    {...reportData}
-                    // NEW: Pass item selection handler for forecast report
-                    {...(activeReportId === "advanced-demand-forecast" && {
-                      onSelectItem: (itemId: string) => setSelectedForecastItemId(itemId),
-                    })}
+                    {...reportData} // Pass all reportData
+                    // Pass filter states directly to the component if needed for display logic
+                    groupBy={inventoryValuationGroupBy}
+                    statusFilter={activeReportId === "low-stock-out-of-stock" ? lowStockStatusFilter : (activeReportId === "purchase-order-status" ? purchaseOrderStatusFilter : discrepancyStatusFilter)}
+                    onSelectItem={setSelectedForecastItemId} // Pass item selection handler for forecast report
                   />
                 )}
               </div>

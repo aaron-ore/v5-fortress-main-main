@@ -13,15 +13,18 @@ interface CustomerSalesData {
 
 interface SalesByCustomerPdfContentProps {
   reportDate: string;
-  customerSales: CustomerSalesData[];
+  salesByCustomer: {
+    customerSales: CustomerSalesData[];
+  };
   dateRange?: DateRange;
 }
 
 const SalesByCustomerPdfContent: React.FC<SalesByCustomerPdfContentProps> = ({
   reportDate,
-  customerSales,
+  salesByCustomer,
   dateRange,
 }) => {
+  const { customerSales } = salesByCustomer;
   const { profile } = useProfile();
 
   if (!profile || !profile.companyProfile) {

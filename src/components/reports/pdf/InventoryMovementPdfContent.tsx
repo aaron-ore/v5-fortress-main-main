@@ -5,23 +5,26 @@ import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext"; // Corrected import
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface InventoryMovementPdfContentProps {
   reportDate: string;
-  movements: StockMovement[];
+  inventoryMovement: {
+    movements: StockMovement[];
+  };
   dateRange?: DateRange;
   allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[];
 }
 
 const InventoryMovementPdfContent: React.FC<InventoryMovementPdfContentProps> = ({
   reportDate,
-  movements,
+  inventoryMovement,
   dateRange,
   allProfiles,
-  structuredLocations,
 }) => {
+  const { movements } = inventoryMovement;
   const { profile } = useProfile();
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
 
   if (!profile || !profile.companyProfile) {
     return <div className="text-center text-red-500">Error: Company profile not loaded.</div>;

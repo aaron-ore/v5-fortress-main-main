@@ -4,18 +4,21 @@ import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InventoryFolder } from "@/context/OnboardingContext";
 import { InventoryItem } from "@/context/InventoryContext";
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface LowStockReportProps {
-  items: InventoryItem[];
-  statusFilter: "all" | "low-stock" | "out-of-stock";
-  structuredLocations: InventoryFolder[];
+  lowStock: {
+    items: InventoryItem[];
+  };
+  statusFilter: "all" | "low-stock" | "out-of-stock"; // Passed directly from Reports.tsx
 }
 
 const LowStockReport: React.FC<LowStockReportProps> = ({
-  items,
+  lowStock,
   statusFilter: currentStatusFilter,
-  structuredLocations,
 }) => {
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
+
   const getFolderDisplayName = (folderId: string) => {
     const foundLoc = structuredLocations.find(loc => loc.id === folderId);
     return foundLoc?.name || "Unassigned";
@@ -36,9 +39,9 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
           <h3 className="font-semibold text-xl mt-6">
             {currentStatusFilter === "low-stock" ? "Low Stock Items" :
              currentStatusFilter === "out-of-stock" ? "Out of Stock Items" :
-             "Low & Out of Stock Items"} ({(items ?? []).length})
+             "Low & Out of Stock Items"} ({(lowStock.items ?? []).length})
           </h3>
-          {(items ?? []).length > 0 ? (
+          {(lowStock.items ?? []).length > 0 ? (
             <ScrollArea className="h-[400px] border rounded-md">
               <Table>
                 <TableHeader>
@@ -51,7 +54,7 @@ const LowStockReport: React.FC<LowStockReportProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(items ?? []).map((item: InventoryItem) => (
+                  {(lowStock.items ?? []).map((item: InventoryItem) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{item.sku}</TableCell>

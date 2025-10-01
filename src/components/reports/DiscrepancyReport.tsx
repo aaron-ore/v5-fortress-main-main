@@ -7,6 +7,8 @@ import { InventoryFolder } from "@/context/OnboardingContext";
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";
+import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 
 interface DiscrepancyLog {
   id: string;
@@ -25,18 +27,20 @@ interface DiscrepancyLog {
 }
 
 interface DiscrepancyReportProps {
-  discrepancies: DiscrepancyLog[];
-  statusFilter: "all" | "pending" | "resolved";
-  allProfiles: UserProfile[];
-  structuredLocations: InventoryFolder[];
+  stockDiscrepancy: {
+    discrepancies: DiscrepancyLog[];
+  };
+  statusFilter: "all" | "pending" | "resolved"; // Passed directly from Reports.tsx
 }
 
 const DiscrepancyReport: React.FC<DiscrepancyReportProps> = ({
-  discrepancies: itemsToDisplay,
+  stockDiscrepancy,
   statusFilter: currentStatusFilter,
-  allProfiles,
-  structuredLocations,
 }) => {
+  const { discrepancies: itemsToDisplay } = stockDiscrepancy;
+  const { allProfiles } = useProfile(); // NEW: Get allProfiles from context
+  const { inventoryFolders: structuredLocations } = useOnboarding(); // NEW: Get structuredLocations from context
+
   const getUserName = (userId: string) => {
     const user = allProfiles.find(p => p.id === userId);
     return user?.fullName || user?.email || "Unknown User";
