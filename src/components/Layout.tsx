@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 // REMOVED: import { MadeWithDyad } from "./made-with-dyad";
-import AnnouncementBar from "./AnnouncementBar";
+// REMOVED: import AnnouncementBar from "./AnnouncementBar";
 import Sidebar from "./Sidebar"; // Import the new Sidebar
 import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationSheet from "./NotificationSheet";
@@ -32,11 +32,11 @@ const Layout: React.FC = () => {
             setIsFeedbackDialogOpen={setIsFeedbackDialogOpen} // NEW: Pass setIsFeedbackDialogOpen
             className="shadow-theme-glow" // NEW: Apply shadow-theme-glow
           />
-          <AnnouncementBar
+          {/* REMOVED: <AnnouncementBar
             message="Welcome to Fortress. Let's Get You Set Up."
             linkTo="/setup-instructions"
             linkText="Click here"
-          />
+          /> */}
           <main className="flex-grow p-4 container mx-auto">
             <BackButton /> {/* NEW: Add BackButton */}
             <Outlet />
@@ -64,11 +64,11 @@ const Layout: React.FC = () => {
               setIsFeedbackDialogOpen={setIsFeedbackDialogOpen} // NEW: Pass setIsFeedbackDialogOpen
               className="shadow-theme-glow" // NEW: Apply shadow-theme-glow
             />
-            <AnnouncementBar
+            {/* REMOVED: <AnnouncementBar
               message="Welcome to Fortress. Let's Get You Set Up."
               linkTo="/setup-instructions"
               linkText="Click here"
-            />
+            /> */}
             <main className="flex-grow bg-card rounded-lg shadow-sm p-6">
               <BackButton /> {/* NEW: Add BackButton */}
               <Outlet />
