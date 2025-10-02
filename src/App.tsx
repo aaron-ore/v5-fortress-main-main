@@ -6,7 +6,7 @@ import { ProfileProvider } from "./context/ProfileContext";
 import { PrintProvider } from "./context/PrintContext";
 import ThemedAppContent from "./components/ThemedAppContent";
 import { AuthProvider } from "./context/AuthContext";
-import { TutorialProvider } from "./context/TutorialContext"; // NEW: Import TutorialProvider
+// Removed: import { TutorialProvider } from "./context/TutorialContext"; // NEW: Import TutorialProvider
 
 const App = () => {
   return (
@@ -28,9 +28,9 @@ const App = () => {
               <OnboardingProvider>
                 <PrintProvider>
                   <TooltipProvider>
-                    <TutorialProvider> {/* NEW: Wrap with TutorialProvider */}
+                    {/* Removed: <TutorialProvider> */}
                       <ThemedAppContent />
-                    </TutorialProvider>
+                    {/* Removed: </TutorialProvider> */}
                   </TooltipProvider>
                 </PrintProvider>
               </OnboardingProvider>

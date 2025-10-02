@@ -22,8 +22,8 @@ import { AutomationProvider } from "./context/AutomationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
-import { useTutorial } from "./context/TutorialContext";
-import TutorialTooltip from "./components/TutorialTooltip";
+// Removed: import { useTutorial } from "./context/TutorialContext";
+// Removed: import TutorialTooltip from "./components/TutorialTooltip";
 import UpgradePromptDialog from "./components/UpgradePromptDialog";
 import LiveChatWidget from "./components/LiveChatWidget";
 
@@ -132,7 +132,7 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { isTutorialActive, currentStep } = useTutorial();
+  // Removed: const { isTutorialActive, currentStep } = useTutorial();
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
@@ -293,9 +293,9 @@ const AppContent = () => {
         </PrintWrapper>
       )}
 
-      {isTutorialActive && currentStep && (
+      {/* Removed: {isTutorialActive && currentStep && (
         <TutorialTooltip step={currentStep} />
-      )}
+      )} */}
 
       <UpgradePromptDialog
         isOpen={isUpgradePromptDialogOpen}

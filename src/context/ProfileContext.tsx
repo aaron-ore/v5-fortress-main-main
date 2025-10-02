@@ -45,7 +45,7 @@ export interface UserProfile {
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
-  hasUiTutorialShown: boolean;
+  // Removed: hasUiTutorialShown: boolean;
   hasSeenUpgradePrompt: boolean;
 }
 
@@ -56,12 +56,12 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
   markOnboardingWizardCompleted: () => Promise<void>;
-  markTutorialAsShown: () => Promise<void>;
+  // Removed: markTutorialAsShown: () => Promise<void>;
   markUpgradePromptSeen: () => Promise<void>;
   updateProfileLocally: (updates: Partial<UserProfile>) => void; // NEW: Added local update function
 }
@@ -122,7 +122,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
-      hasUiTutorialShown: data.has_ui_tutorial_shown ?? false,
+      // Removed: hasUiTutorialShown: data.has_ui_tutorial_shown ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
     };
   };
@@ -233,7 +233,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown' | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -288,7 +288,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await fetchAllProfiles();
     } catch (error: any) {
       console.error('Error updating user role:', error);
-      await logActivity("Update User Role Failed", `Failed to update user role for ${userId}.`, profile, { error_message: error.message, target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
+      await logActivity("Update User Role Failed", `Failed to update user role: ${error.message}.`, profile, { error_message: error.message, target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
       showError(`Failed to update user role: ${error.message}`);
       throw error;
     }
@@ -392,30 +392,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const markTutorialAsShown = async () => {
-    if (!profile) {
-      console.warn("[ProfileContext] Cannot mark UI tutorial as shown: User profile not loaded.");
-      return;
-    }
-    if (profile.hasUiTutorialShown) {
-      console.log("[ProfileContext] UI tutorial already marked as shown for this user.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ has_ui_tutorial_shown: true })
-      .eq('id', profile.id);
-
-    if (error) {
-      console.error("[ProfileContext] Error marking UI tutorial as shown:", error);
-      await logActivity("Mark UI Tutorial Shown Failed", `Failed to mark UI tutorial as shown for user ${profile.id}.`, profile, { error_message: error.message }, true);
-    } else {
-      console.log("[ProfileContext] UI tutorial marked as shown for user:", profile.id);
-      await logActivity("Mark UI Tutorial Shown Success", `UI tutorial marked as shown for user ${profile.id}.`, profile);
-      setProfile(prev => prev ? { ...prev, hasUiTutorialShown: true } : null);
-    }
-  };
+  // Removed: const markTutorialAsShown = async () => { ... }
 
   const markUpgradePromptSeen = async () => {
     if (!profile) {
@@ -456,7 +433,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateCompanyProfile,
         updateOrganizationTheme,
         markOnboardingWizardCompleted,
-        markTutorialAsShown,
+        // Removed: markTutorialAsShown,
         markUpgradePromptSeen,
         updateProfileLocally, // NEW: Expose local update function
       }}
