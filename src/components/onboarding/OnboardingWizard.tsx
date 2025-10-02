@@ -1,6 +1,4 @@
-"use client";
-
-import React from "react";
+import React, { useState, useEffect, startTransition } from "react"; // Import startTransition
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
 import { CompanyProfileStepProps } from "./CompanyProfileStep";
@@ -32,8 +30,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose
   ];
 
   const handleNext = () => {
+    console.log("[OnboardingWizard] handleNext called. Current step before update:", currentStep);
     if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
+      startTransition(() => { // Wrap setCurrentStep in startTransition
+        setCurrentStep((prev) => {
+          console.log("[OnboardingWizard] setCurrentStep callback. prev:", prev, "new:", prev + 1);
+          return prev + 1;
+        });
+      });
     } else {
       // This is the last step, call onComplete from parent
       onComplete();
@@ -42,7 +46,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose
 
   const handleBack = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
+      startTransition(() => { // Wrap setCurrentStep in startTransition
+        setCurrentStep((prev) => prev - 1);
+      });
     }
   };
 
