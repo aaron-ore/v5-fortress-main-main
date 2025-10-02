@@ -12,13 +12,7 @@ import { useVendors } from "@/context/VendorContext";
 
 import { StockMovement } from "@/context/StockMovementContext";
 
-interface UseDashboardHookResult {
-  data: any | null;
-  pdfProps: any;
-  isLoading: boolean;
-  error: string | null;
-  refresh: () => void;
-}
+// Removed unused interface UseDashboardHookResult
 
 export const useReportData = (
   reportId: string,
@@ -410,7 +404,7 @@ export const useReportData = (
 
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
-      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
+      // const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId); // Removed 'const'
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -511,9 +505,13 @@ export const useReportData = (
       return weeklyDataPoints;
     })();
 
+    // Moved these declarations outside the IIFE to be accessible in the main useMemo scope
+    let totalSalesRevenueCalc = 0;
+    let totalCostOfGoodsSold = 0;
+
     const profitabilityMetricsData = (() => {
-      let totalSalesRevenueCalc = 0;
-      let totalCostOfGoodsSold = 0;
+      totalSalesRevenueCalc = 0; // Reset for this calculation
+      totalCostOfGoodsSold = 0; // Reset for this calculation
 
       orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
@@ -675,7 +673,7 @@ export const useReportData = (
       .filter((order: OrderItem) => order.type === "Sales" && order.status === "Shipped")
       .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndValidateDate(b.date);
+        const dateB = parseAndReportData(b.date);
         if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
       })
@@ -725,7 +723,7 @@ export const useReportData = (
     // NEW: Data for Sales by Customer Report
     const salesByCustomerReportData = (() => {
       const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string | null } } = {}; // Added null to lastOrderDate
-      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
         if (!customerSalesMap[order.customerSupplier]) {
           customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: null }; // Initialized with null
         }
@@ -743,7 +741,7 @@ export const useReportData = (
     // NEW: Data for Sales by Product Report
     const salesByProductReportData = (() => {
       const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
-      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const itemKey = orderItem.inventoryItemId || orderItem.itemName;
           if (!productSalesMap[itemKey]) {
@@ -768,8 +766,8 @@ export const useReportData = (
 
     // NEW: Data for Profitability Report
     const profitabilityReportData = (() => {
-      let totalSalesRevenueCalc = 0;
-      let totalCostOfGoodsSold = 0;
+      totalSalesRevenueCalc = 0; // Reset for this calculation
+      totalCostOfGoodsSold = 0; // Reset for this calculation
 
       filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
@@ -865,8 +863,8 @@ export const useReportData = (
       },
       profitability: {
         metricsData: profitabilityReportData,
-        totalSalesRevenue: totalSalesRevenue,
-        totalCostOfGoodsSold: totalCostOfGoodsSold,
+        totalSalesRevenue: totalSalesRevenueCalc, // Use the calculated value
+        totalCostOfGoodsSold: totalCostOfGoodsSold, // Use the calculated value
       },
       stockDiscrepancy: {
         discrepancies: discrepancyReportData,
