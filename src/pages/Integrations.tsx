@@ -219,7 +219,6 @@ const Integrations: React.FC = () => {
     }
   };
 
-  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isAdmin = profile?.role === 'admin';
 
   // NEW: Function to initiate Shopify OAuth after getting store URL
