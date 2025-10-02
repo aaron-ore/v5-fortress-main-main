@@ -12,11 +12,43 @@ serve(async (req) => {
   }
 
   try {
-    const { targetUserId } = await req.json();
-    console.log('Edge Function: Received request to delete user:', targetUserId);
+    const contentType = req.headers.get('content-type');
+    let requestBody;
+
+    if (contentType && contentType.includes('application/json')) {
+      const rawBody = await req.text();
+      console.log('Edge Function: Raw request body length:', rawBody.length);
+      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+
+      if (!rawBody) {
+        console.error('Edge Function: Received empty JSON body.');
+        return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure user ID is provided.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+      try {
+        requestBody = JSON.parse(rawBody);
+      } catch (parseError: any) {
+        console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body:', rawBody);
+        return new Response(JSON.stringify({ error: `Failed to parse request data. Please try again.` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+    } else {
+      console.error('Edge Function: Unsupported Content-Type:', contentType);
+      return new Response(JSON.stringify({ error: `Unsupported request format. Expected JSON.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const { targetUserId } = requestBody;
+    console.log('Edge Function: Extracted targetUserId:', targetUserId);
 
     if (!targetUserId) {
-      console.error('Edge Function: Missing required parameter: targetUserId.');
+      console.error('Edge Function: Missing required parameter: targetUserId after parsing.');
       return new Response(JSON.stringify({ error: 'User ID to delete is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -54,7 +86,7 @@ serve(async (req) => {
 
     if (userError || !adminUser) {
       console.error('Edge Function: JWT verification failed or admin user not found:', userError?.message);
-      return new Response(JSON.stringify({ error: 'Invalid authentication. Please log in again.' }), {
+      return new Response(JSON.stringify({ error: 'Invalid authentication token.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
