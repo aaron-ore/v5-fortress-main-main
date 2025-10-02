@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -23,6 +23,14 @@ interface AiSummarySidebarProps {
   activeReportId: string;
 }
 
+const loadingMessages = [
+  "Getting those report insights for you!",
+  "Crunching numbers, AI style!",
+  "Almost there, just a moment!",
+  "Brewing up some brilliant bullet points!",
+  "Making sense of the data chaos!",
+];
+
 const AiSummarySidebar: React.FC<AiSummarySidebarProps> = ({
   isOpen,
   onClose,
@@ -37,6 +45,20 @@ const AiSummarySidebar: React.FC<AiSummarySidebarProps> = ({
 
   const { initiatePrint } = usePrint();
   const { profile } = useProfile();
+
+  const [currentLoadingMessageIndex, setCurrentLoadingMessageIndex] = useState(0);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isSummarizing) {
+      interval = setInterval(() => {
+        setCurrentLoadingMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
+      }, 3000); // Change message every 3 seconds
+    } else {
+      setCurrentLoadingMessageIndex(0); // Reset when not summarizing
+    }
+    return () => clearInterval(interval);
+  }, [isSummarizing]);
 
   const handleCopySummary = () => {
     if (summaryText) {
@@ -80,16 +102,16 @@ const AiSummarySidebar: React.FC<AiSummarySidebarProps> = ({
         </SheetHeader>
         <div className="flex-grow flex flex-col gap-4 py-4 overflow-hidden">
           {isSummarizing ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-              <span>Generating summary...</span>
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-lg font-semibold">{loadingMessages[currentLoadingMessageIndex]}</p>
             </div>
           ) : summaryText ? (
             <ScrollArea className="flex-grow border border-border rounded-md p-4 bg-muted/20">
               <p className="whitespace-pre-wrap text-foreground">{summaryText}</p>
             </ScrollArea>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-center">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
               <Brain className="h-12 w-12 mb-4" />
               <p>Click "Generate AI Summary" to get insights for this report.</p>
             </div>
