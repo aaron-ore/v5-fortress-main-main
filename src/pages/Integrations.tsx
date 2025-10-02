@@ -484,7 +484,17 @@ const Integrations: React.FC = () => {
     return folder ? (folder.name) : "Unknown Folder";
   };
 
+  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isShopifyConnected = profile?.shopifyAccessToken && profile?.shopifyStoreName;
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading integrations...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col space-y-6 p-6">
@@ -676,10 +686,10 @@ const Integrations: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!profile?.role || profile.role !== 'admin' || !canAccessShopify}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!isAdmin || !canAccessShopify}>
                               <Edit className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !profile?.role || profile.role !== 'admin' || !canAccessShopify}>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !isAdmin || !canAccessShopify}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
