@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense, useState } from "react";
+import { useEffect, useRef, lazy, Suspense, useState, startTransition } from "react"; // NEW: Import startTransition
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 // Import pdfContentComponents from the centralized config file
@@ -22,7 +22,7 @@ import { AutomationProvider } from "./context/AutomationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
-import { useTutorial } from "./context/TutorialContext"; // NEW: Import TutorialProvider and useTutorial
+import { useTutorial } from "./context/TutorialContext"; // NEW: Use tutorial context
 import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
 import UpgradePromptDialog from "./components/UpgradePromptDialog"; // NEW: Import UpgradePromptDialog
 import LiveChatWidget from "./components/LiveChatWidget"; // NEW: Import LiveChatWidget
@@ -208,7 +208,9 @@ const AppContent = () => {
       // If user is authenticated but has no organization yet (e.g., just signed up without company code)
       if (!profile.organizationId && location.pathname !== '/onboarding') {
         console.log("[AppContent] User authenticated but no organization. Redirecting to onboarding to create/join org.");
-        navigate('/onboarding', { replace: true });
+        startTransition(() => { // Wrap navigation in startTransition
+          navigate('/onboarding', { replace: true });
+        });
       } 
       // If user has an organization but hasn't completed the onboarding wizard AND is on the onboarding page
       else if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
@@ -218,12 +220,16 @@ const AppContent = () => {
       // If user has an organization and has completed the onboarding wizard AND is on the onboarding page
       else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
         console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
-        navigate('/', { replace: true });
+        startTransition(() => { // Wrap navigation in startTransition
+          navigate('/', { replace: true });
+        });
       }
       // If user has an organization and has completed the onboarding wizard AND is NOT on the onboarding page
       else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/auth') {
         console.log("[AppContent] User authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
-        navigate('/', { replace: true });
+        startTransition(() => { // Wrap navigation in startTransition
+          navigate('/', { replace: true });
+        });
       }
 
       // NEW: Logic for showing upgrade prompt
