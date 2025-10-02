@@ -56,17 +56,34 @@ const Users: React.FC = () => {
       }
 
       const payload = JSON.stringify({ targetUserId: userToDelete.id });
-      console.log("[Users.tsx] Sending payload to delete-user Edge Function:", payload); // NEW: Log the payload
+      console.log("[Users.tsx] Sending payload to delete-user Edge Function:", payload); // Log the payload
 
-      const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: payload,
+      // --- START: Changed to direct fetch call ---
+      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/delete-user`;
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.session.access_token}`,
         },
+        body: payload,
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        let errorDetail = `Edge Function failed with status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorDetail = errorData.error || JSON.stringify(errorData);
+        } catch (jsonError) {
+          console.error("Failed to parse error response JSON from Edge Function:", jsonError);
+          errorDetail = `Edge Function failed with status: ${response.status}. Response was not valid JSON. Raw response: ${await response.text()}`;
+        }
+        throw new Error(errorDetail);
+      }
+
+      const data = await response.json();
+      // --- END: Changed to direct fetch call ---
+
       if (data.error) throw new Error(data.error);
 
       showSuccess(`User ${userToDelete.fullName || userToDelete.email} deleted.`);
