@@ -1,5 +1,5 @@
 import { useEffect, useRef, lazy, Suspense, useState, startTransition } from "react"; // NEW: Import startTransition
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } = from "react-router-dom";
 import Layout from "./components/Layout";
 // Import pdfContentComponents from the centralized config file
 import { pdfContentComponents } from "./lib/reportConfig";
@@ -68,8 +68,6 @@ const LoadingFallback = () => (
 );
 
 const AuthenticatedApp = () => { // Removed profile prop
-  const {  } = useOnboarding();
-
   return (
     <SidebarProvider>
       <OrdersProvider>
@@ -82,6 +80,7 @@ const AuthenticatedApp = () => { // Removed profile prop
                     <InventoryProvider>
                       <AutomationProvider>
                         <Suspense fallback={<LoadingFallback />}>
+                          {/* This is the main layout for authenticated users */}
                           <Routes>
                             <Route path="/" element={<Layout />}>
                               <Route index element={<Dashboard />} />
