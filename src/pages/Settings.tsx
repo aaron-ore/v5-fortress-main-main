@@ -213,7 +213,7 @@ const Settings: React.FC = () => {
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
   const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
 
-  const availableThemes = ['dark', 'emerald', 'deep-forest', 'tropical-indigo', 'light-grey-indigo'];
+  const availableThemes = ['dark', 'emerald', 'deep-forest', 'tropical-indigo'];
 
   return (
     <div className="space-y-6">
