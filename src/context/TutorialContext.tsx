@@ -117,8 +117,15 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [profile, navigate, location.pathname]); // Add location.pathname to dependencies
 
   useEffect(() => {
-    console.log("[TutorialContext] Effect for starting tutorial. isLoadingProfile:", isLoadingProfile, "profile:", profile?.id, "orgId:", profile?.organizationId, "wizardCompleted:", profile?.hasOnboardingWizardCompleted, "uiTutorialShown:", profile?.hasUiTutorialShown);
-    if (!isLoadingProfile && profile && profile.organizationId && profile.hasOnboardingWizardCompleted && !profile.hasUiTutorialShown) { // Only start tutorial if wizard is completed and UI tutorial not shown
+    console.log("[TutorialContext] Effect for starting tutorial. isLoadingProfile:", isLoadingProfile, "profile:", profile?.id, "orgId:", profile?.organizationId, "wizardCompleted:", profile?.hasOnboardingWizardCompleted, "uiTutorialShown:", profile?.hasUiTutorialShown, "currentPath:", location.pathname);
+    if (
+      !isLoadingProfile &&
+      profile &&
+      profile.organizationId &&
+      profile.hasOnboardingWizardCompleted &&
+      !profile.hasUiTutorialShown &&
+      location.pathname === '/' // NEW: Only start if on the dashboard
+    ) {
       // Delay slightly to ensure UI is rendered before trying to find targets
       const timer = setTimeout(() => {
         console.log("[TutorialContext] Delay finished, attempting to start tutorial.");
@@ -126,7 +133,7 @@ export const TutorialProvider: React.FC<{ children: ReactNode }> = ({ children }
       }, 1000); // 1 second delay
       return () => clearTimeout(timer);
     }
-  }, [isLoadingProfile, profile, startTutorial]);
+  }, [isLoadingProfile, profile, startTutorial, location.pathname]); // Add location.pathname to dependencies
 
   return (
     <TutorialContext.Provider value={{ isTutorialActive, currentStep, startTutorial, nextStep, dismissTutorial }}>
