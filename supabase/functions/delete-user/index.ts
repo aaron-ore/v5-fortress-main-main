@@ -13,15 +13,17 @@ serve(async (req) => {
 
   try {
     const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Received Content-Type header:', contentType);
     let requestBody;
+    let rawBody = ''; // Initialize rawBody here
 
     if (contentType && contentType.includes('application/json')) {
-      const rawBody = await req.text();
+      rawBody = await req.text(); // Read the raw body as text
       console.log('Edge Function: Raw request body length:', rawBody.length);
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
 
-      if (!rawBody) {
-        console.error('Edge Function: Received empty JSON body.');
+      if (!rawBody.trim()) { // Check if rawBody is empty or just whitespace
+        console.error('Edge Function: Received empty or whitespace-only JSON body.');
         return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure user ID is provided.' }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
@@ -29,8 +31,9 @@ serve(async (req) => {
       }
       try {
         requestBody = JSON.parse(rawBody);
+        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
       } catch (parseError: any) {
-        console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body:', rawBody);
+        console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
         return new Response(JSON.stringify({ error: `Failed to parse request data. Please try again.` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
