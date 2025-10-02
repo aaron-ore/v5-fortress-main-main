@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, startTransition } from 'react'; // Import startTransition
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
@@ -167,11 +167,13 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
-      setProfile(prevProfile => {
-        if (deepEqual(prevProfile, newProfileData)) {
-          return prevProfile;
-        }
-        return newProfileData;
+      startTransition(() => { // Wrap the state update in startTransition
+        setProfile(prevProfile => {
+          if (deepEqual(prevProfile, newProfileData)) {
+            return prevProfile;
+          }
+          return newProfileData;
+        });
       });
     }
     setIsLoadingProfile(false);
@@ -280,6 +282,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCompanyProfile = async (updates: Partial<CompanyProfile>, uniqueCode?: string) => {
+    console.log("[ProfileContext] updateCompanyProfile called with updates:", updates, "uniqueCode:", uniqueCode);
     if (!profile || !profile.organizationId) {
       const errorMessage = 'Organization not found. Cannot update profile.';
       await logActivity("Update Company Profile Failed", errorMessage, profile, { updated_fields: updates, unique_code: uniqueCode }, true);
