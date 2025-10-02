@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback, startTransition } from "react"; // Import startTransition
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { showSuccess, showError } from "@/utils/toast";
 import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -60,7 +60,7 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted, updateProfileLocally } = useProfile(); // NEW: Import updateProfileLocally
+  const { profile, isLoadingProfile, markOnboardingWizardCompleted, updateProfileLocally } = useProfile();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(false);
 
   const companyProfile = profile?.companyProfile || null;
@@ -234,7 +234,10 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           organizationId: organizationIdToUse,
           role: 'admin',
           companyProfile: {
-            ...profileData,
+            companyName: profileData.name, // Corrected property name
+            companyCurrency: profileData.currency, // Corrected property name
+            companyAddress: profileData.address, // Corrected property name
+            companyLogoUrl: profileData.companyLogoUrl,
             organizationCode: uniqueCodeToPersist,
             organizationTheme: orgData.default_theme || 'dark',
             plan: orgData.plan || 'free',
@@ -339,7 +342,10 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         updateProfileLocally({
           companyProfile: {
             ...profile.companyProfile, // Keep existing fields
-            ...profileData, // Apply new fields
+            companyName: profileData.name, // Apply new fields
+            companyCurrency: profileData.currency,
+            companyAddress: profileData.address,
+            companyLogoUrl: profileData.companyLogoUrl,
             organizationCode: uniqueCodeToPersist, // Ensure code is updated
             organizationTheme: updatePayload.default_theme,
             plan: updatePayload.plan,

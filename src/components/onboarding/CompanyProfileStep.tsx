@@ -24,7 +24,6 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext, onBack 
   const [address, setAddress] = useState(profile?.companyProfile?.companyAddress || "");
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
   const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl || undefined);
-  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // New state for overall saving process
 
   useEffect(() => {
@@ -85,18 +84,15 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext, onBack 
     let finalCompanyLogoUrl: string | undefined = companyLogoUrlPreview;
 
     if (companyLogoFile) {
-      setIsUploadingLogo(true);
+      // isUploadingLogo is not used here, but the logic for uploading is still valid
       try {
         finalCompanyLogoUrl = await uploadFileToSupabase(companyLogoFile, 'company-logos', 'logos/');
         showSuccess("Company logo uploaded successfully!");
       } catch (error: any) {
         console.error("Error uploading company logo:", error);
         showError(`Failed to upload company logo: ${error.message}`);
-        setIsUploadingLogo(false);
         setIsSaving(false);
         return;
-      } finally {
-        setIsUploadingLogo(false);
       }
     } else if (companyLogoUrlPreview === undefined || companyLogoUrlPreview === "") {
       finalCompanyLogoUrl = undefined;
