@@ -1,10 +1,10 @@
 import { useEffect, useRef, lazy, Suspense, useState, startTransition } from "react"; // NEW: Import startTransition
-import { Routes, Route, useNavigate, useLocation } = from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 // Import pdfContentComponents from the centralized config file
 import { pdfContentComponents } from "./lib/reportConfig";
 
-import { useOnboarding } from "./context/OnboardingContext";
+// Removed: import { useOnboarding } from "./context/OnboardingContext";
 import { useProfile } from "./context/ProfileContext"; // Removed UserProfile import as it's not directly used here
 import { usePrint } from "./context/PrintContext";
 import { showSuccess, showError } from "./utils/toast";
