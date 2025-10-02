@@ -13,9 +13,11 @@ serve(async (req) => {
 
   try {
     const { targetUserId } = await req.json();
+    console.log('Edge Function: Received request to delete user:', targetUserId);
 
     if (!targetUserId) {
-      return new Response(JSON.stringify({ error: 'Missing required parameter: targetUserId.' }), {
+      console.error('Edge Function: Missing required parameter: targetUserId.');
+      return new Response(JSON.stringify({ error: 'User ID to delete is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -28,7 +30,8 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
+      console.error('Edge Function: Authorization header missing.');
+      return new Response(JSON.stringify({ error: 'Authentication required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
@@ -51,7 +54,7 @@ serve(async (req) => {
 
     if (userError || !adminUser) {
       console.error('Edge Function: JWT verification failed or admin user not found:', userError?.message);
-      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or mismatched admin user token.' }), {
+      return new Response(JSON.stringify({ error: 'Invalid authentication token.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
@@ -65,7 +68,7 @@ serve(async (req) => {
 
     if (adminProfileError || adminProfile?.role !== 'admin' || !adminProfile?.organization_id) {
       console.error('Admin profile error or not an admin:', adminProfileError);
-      return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can delete users.' }), {
+      return new Response(JSON.stringify({ error: 'Permission denied: Only administrators can delete users.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
       });
@@ -79,40 +82,45 @@ serve(async (req) => {
 
     if (targetProfileError) {
       console.error('Target profile error:', targetProfileError);
-      return new Response(JSON.stringify({ error: 'Target user profile not found.' }), {
+      return new Response(JSON.stringify({ error: 'User to delete not found.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
     }
 
     if (targetProfile.organization_id !== adminProfile.organization_id) {
-      return new Response(JSON.stringify({ error: 'Forbidden: Cannot delete users outside your organization.' }), {
+      console.error('Edge Function: Admin user trying to delete user from different organization.');
+      return new Response(JSON.stringify({ error: 'Permission denied: Cannot delete users outside your organization.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
       });
     }
 
-    // Delete the user from Supabase Auth. This will cascade delete their profile.
+    // --- Add logging before deleteUser call ---
+    console.log(`Edge Function: Attempting to delete user ${targetUserId} from auth.users...`);
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
+    // --- Add logging after deleteUser call ---
+    console.log(`Edge Function: supabaseAdmin.auth.admin.deleteUser call completed.`);
 
     if (deleteUserError) {
-      console.error('Error deleting user from auth:', deleteUserError);
-      return new Response(JSON.stringify({ error: deleteUserError.message }), {
+      console.error('Edge Function: Error deleting user from auth:', deleteUserError);
+      return new Response(JSON.stringify({ error: `Failed to delete user: ${deleteUserError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 500, // Changed to 500 as it's a server-side operation failure
       });
     }
 
-    return new Response(JSON.stringify({ message: `User ${targetUserId} and their profile deleted successfully.` }), {
+    console.log(`Edge Function: User ${targetUserId} and their profile deleted successfully.`);
+    return new Response(JSON.stringify({ message: `User deleted successfully.` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error: any) {
-    console.error('Edge Function error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Edge Function error (caught at top level):', error);
+    return new Response(JSON.stringify({ error: `An unexpected error occurred: ${error.message}` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 500, // Changed to 500 for unexpected server errors
     });
   }
 });

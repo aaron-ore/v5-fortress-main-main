@@ -83,7 +83,7 @@ const Users: React.FC = () => {
       return;
     }
     if (!profile?.organizationId) {
-      showError("Org ID not found for role update.");
+      showError("Organization ID not found for role update.");
       return;
     }
     try {
@@ -96,9 +96,9 @@ const Users: React.FC = () => {
   const handleCopyOrganizationCode = () => {
     if (profile?.companyProfile?.organizationCode) {
       navigator.clipboard.writeText(profile.companyProfile.organizationCode);
-      showSuccess("Org Code copied!");
+      showSuccess("Organization Code copied!");
     } else {
-      showError("No Org Code available.");
+      showError("No Organization Code available.");
     }
   };
 
@@ -234,7 +234,7 @@ const Users: React.FC = () => {
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteUser}
           title="Confirm User Deletion"
-          description={`Are you sure you want to delete the user "${userToDelete.fullName || userToDelete.email}"? This will permanently delete the user from Supabase Authentication and all their associated profile data.`}
+          description={`Are you sure you want to delete the user "${userToDelete.fullName || userToDelete.email}"? This will permanently delete the user and all their associated data.`}
           confirmText="Delete User"
           cancelText="Cancel"
         />
