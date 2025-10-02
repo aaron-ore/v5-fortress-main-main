@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useOnboarding } from "@/context/OnboardingContext";
+import { useOnboarding, OnboardingCompanyProfileData } from "@/context/OnboardingContext"; // Updated type
 import { showError, showSuccess } from "@/utils/toast";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";

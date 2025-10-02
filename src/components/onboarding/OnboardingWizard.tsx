@@ -1,4 +1,4 @@
-import React, { startTransition } from "react"; // Import startTransition
+import React, { startTransition } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
 import { CompanyProfileStepProps } from "./CompanyProfileStep";

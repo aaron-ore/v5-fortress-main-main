@@ -8,7 +8,7 @@ import { generateUniqueCode } from "@/utils/numberGenerator";
 import { logActivity } from "@/utils/logActivity";
 import { getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
-export interface CompanyProfile {
+export interface OnboardingCompanyProfileData { // Renamed from CompanyProfile
   name: string;
   currency: string;
   address: string;
@@ -46,7 +46,7 @@ interface OnboardingContextType {
   customRoles: CustomRole[];
   isLoadingCustomRoles: boolean;
   markOnboardingComplete: () => void;
-  setCompanyProfile: (profile: CompanyProfile, uniqueCode?: string) => Promise<void>;
+  setCompanyProfile: (profileData: OnboardingCompanyProfileData, uniqueCode?: string) => Promise<void>; // Updated type
   addInventoryFolder: (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">) => Promise<InventoryFolder | null>;
   updateInventoryFolder: (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => Promise<void>;
   removeInventoryFolder: (folderId: string) => Promise<void>;
@@ -187,7 +187,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
-  const setCompanyProfile = async (profileData: CompanyProfile, newUniqueCode?: string) => {
+  const setCompanyProfile = async (profileData: OnboardingCompanyProfileData, newUniqueCode?: string) => { // Updated type
     console.log("[OnboardingContext] setCompanyProfile called with profileData:", profileData, "newUniqueCode:", newUniqueCode);
 
     if (!profile) {
@@ -241,7 +241,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             organizationCode: uniqueCodeToPersist,
             organizationTheme: orgData.default_theme || 'dark',
             plan: orgData.plan || 'free',
-            // Add other default fields from new organization if necessary
+            stripeCustomerId: undefined, // Explicitly set to undefined for new org
+            stripeSubscriptionId: undefined, // Explicitly set to undefined for new org
+            trialEndsAt: undefined, // Explicitly set to undefined for new org
+            defaultReorderLevel: 0, // Default for new org
+            enableAutoReorderNotifications: false, // Default for new org
+            enableAutoReorder: false, // Default for new org
           }
         });
 
@@ -359,7 +364,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         });
       }
       
-      // Removed: await fetchProfile(); // No longer needed here due to local updates
       console.log("[OnboardingContext] Profile update flow completed.");
 
     } catch (error: any) {
@@ -577,9 +581,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       showSuccess(`Rule "${roleToDelete?.name || roleId}" deleted.`);
     }
   };
-
-  // Removed duplicate fetchCustomRoles declaration
-  // const fetchCustomRoles = async () => { ... };
 
   return (
     <OnboardingContext.Provider
