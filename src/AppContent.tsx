@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense, useState, startTransition } from "react"; // NEW: Import startTransition
+import { useEffect, useRef, lazy, Suspense, useState, startTransition } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 // Import pdfContentComponents from the centralized config file
@@ -22,10 +22,10 @@ import { AutomationProvider } from "./context/AutomationContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
-import { useTutorial } from "./context/TutorialContext"; // NEW: Use tutorial context
-import TutorialTooltip from "./components/TutorialTooltip"; // NEW: Import TutorialTooltip
-import UpgradePromptDialog from "./components/UpgradePromptDialog"; // NEW: Import UpgradePromptDialog
-import LiveChatWidget from "./components/LiveChatWidget"; // NEW: Import LiveChatWidget
+import { useTutorial } from "./context/TutorialContext";
+import TutorialTooltip from "./components/TutorialTooltip";
+import UpgradePromptDialog from "./components/UpgradePromptDialog";
+import LiveChatWidget from "./components/LiveChatWidget";
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -57,7 +57,7 @@ const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 const Automation = lazy(() => import("./pages/Automation"));
 const ItemHistoryPage = lazy(() => import("./pages/ItemHistoryPage"));
 const FolderContentPage = lazy(() => import("./pages/FolderContentPage"));
-const ActivityLogs = lazy(() => import("./pages/ActivityLogs")); // NEW: Import ActivityLogs
+const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
 
 // Fallback component for Suspense
 const LoadingFallback = () => (
@@ -67,7 +67,7 @@ const LoadingFallback = () => (
   </div>
 );
 
-const AuthenticatedApp = () => { // Removed profile prop
+const AuthenticatedApp = () => {
   return (
     <SidebarProvider>
       <OrdersProvider>
@@ -102,7 +102,7 @@ const AuthenticatedApp = () => { // Removed profile prop
                               <Route path="vendors" element={<Vendors />} />
                               <Route path="customers" element={<Customers />} />
                               <Route path="users" element={<Users />} />
-                              <Route path="activity-logs" element={<ActivityLogs />} /> {/* NEW: Activity Logs Route */}
+                              <Route path="activity-logs" element={<ActivityLogs />} />
                               <Route path="setup-instructions" element={<SetupInstructions />} />
                               <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
                               <Route path="reset-password" element={<ResetPassword />} />
@@ -132,12 +132,11 @@ const AppContent = () => {
   const location = useLocation();
   const { isLoadingProfile, profile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  const { isTutorialActive, currentStep } = useTutorial(); // NEW: Use tutorial context
+  const { isTutorialActive, currentStep } = useTutorial();
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
 
-  // NEW: State for UpgradePromptDialog
   const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -146,15 +145,15 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const stripeSuccess = params.get('stripe_success'); // NEW: Handle Stripe success
-    const stripeCancel = params.get('stripe_cancel'); // NEW: Handle Stripe cancel
+    const stripeSuccess = params.get('stripe_success');
+    const stripeCancel = params.get('stripe_cancel');
 
     console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
     console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
     console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
     console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
-    console.log('Integrations.tsx: stripe_success from URL parameters:', stripeSuccess); // NEW: Log Stripe params
-    console.log('Integrations.tsx: stripe_cancel from URL parameters:', stripeCancel); // NEW: Log Stripe params
+    console.log('Integrations.tsx: stripe_success from URL parameters:', stripeSuccess);
+    console.log('Integrations.tsx: stripe_cancel from URL parameters:', stripeCancel);
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
@@ -166,7 +165,6 @@ const AppContent = () => {
       navigate('/integrations', { replace: true });
     }
 
-    // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected!");
@@ -177,14 +175,12 @@ const AppContent = () => {
       navigate(location.pathname, { replace: true });
     }
 
-    // NEW: Handle Stripe callback
     if (stripeSuccess || stripeCancel) {
       if (stripeSuccess) {
         showSuccess("Subscription complete!");
       } else if (stripeCancel) {
         showError("Subscription cancelled.");
       }
-      // Clear Stripe parameters from URL
       const newSearchParams = new URLSearchParams(params);
       newSearchParams.delete('stripe_success');
       newSearchParams.delete('stripe_cancel');
@@ -200,49 +196,41 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
-  // NEW: Routing logic for onboarding wizard and upgrade prompt
   useEffect(() => {
     console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
-      // If user is authenticated but has no organization yet (e.g., just signed up without company code)
       if (!profile.organizationId && location.pathname !== '/onboarding') {
         console.log("[AppContent] User authenticated but no organization. Redirecting to onboarding to create/join org.");
-        startTransition(() => { // Wrap navigation in startTransition
+        startTransition(() => {
           navigate('/onboarding', { replace: true });
         });
-      } 
-      // If user has an organization but hasn't completed the onboarding wizard AND is on the onboarding page
+      }
       else if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
         console.log("[AppContent] User has organization but wizard not completed, and is on /onboarding. Allowing to stay.");
-        // Do nothing, let them complete onboarding
       }
-      // If user has an organization and has completed the onboarding wizard AND is on the onboarding page
       else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
         console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
-        startTransition(() => { // Wrap navigation in startTransition
+        startTransition(() => {
           navigate('/', { replace: true });
         });
       }
-      // If user has an organization and has completed the onboarding wizard AND is NOT on the onboarding page
       else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/auth') {
         console.log("[AppContent] User authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
-        startTransition(() => { // Wrap navigation in startTransition
+        startTransition(() => {
           navigate('/', { replace: true });
         });
       }
 
-      // NEW: Logic for showing upgrade prompt
       if (
         profile.organizationId &&
         profile.hasOnboardingWizardCompleted &&
         !profile.hasSeenUpgradePrompt &&
         profile.companyProfile?.plan === 'free' &&
-        location.pathname === '/' // Only show on dashboard
+        location.pathname === '/'
       ) {
         console.log("[AppContent] Showing upgrade prompt.");
         setIsUpgradePromptDialogOpen(true);
       } else if (isUpgradePromptDialogOpen) {
-        // Close the dialog if conditions are no longer met (e.g., user navigated away, upgraded, or dismissed)
         setIsUpgradePromptDialogOpen(false);
       }
     }
@@ -259,10 +247,14 @@ const AppContent = () => {
   }
 
   const mainAppRoutes = profile ? (
-    <ErrorBoundary> {/* Removed profile prop */}
+    <ErrorBoundary>
       <Routes>
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/*" element={<AuthenticatedApp />} /> {/* Removed profile prop */}
+        <Route path="/onboarding" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <OnboardingPage />
+          </Suspense>
+        } />
+        <Route path="/*" element={<AuthenticatedApp />} />
       </Routes>
     </ErrorBoundary>
   ) : (
@@ -301,17 +293,15 @@ const AppContent = () => {
         </PrintWrapper>
       )}
 
-      {isTutorialActive && currentStep && ( // NEW: Render tutorial tooltip
+      {isTutorialActive && currentStep && (
         <TutorialTooltip step={currentStep} />
       )}
 
-      {/* NEW: Render Upgrade Prompt Dialog */}
       <UpgradePromptDialog
         isOpen={isUpgradePromptDialogOpen}
         onClose={() => setIsUpgradePromptDialogOpen(false)}
       />
 
-      {/* NEW: Conditionally render LiveChatWidget */}
       {!isLoadingProfile && profile && <LiveChatWidget />}
     </>
   );
