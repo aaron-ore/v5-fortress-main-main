@@ -31,7 +31,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('Edge Function: Authorization header missing.');
-      return new Response(JSON.stringify({ error: 'Authentication required.' }), {
+      return new Response(JSON.stringify({ error: 'Authentication required to perform this action.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
@@ -54,7 +54,7 @@ serve(async (req) => {
 
     if (userError || !adminUser) {
       console.error('Edge Function: JWT verification failed or admin user not found:', userError?.message);
-      return new Response(JSON.stringify({ error: 'Invalid authentication token.' }), {
+      return new Response(JSON.stringify({ error: 'Invalid authentication. Please log in again.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       });
@@ -82,7 +82,7 @@ serve(async (req) => {
 
     if (targetProfileError) {
       console.error('Target profile error:', targetProfileError);
-      return new Response(JSON.stringify({ error: 'User to delete not found.' }), {
+      return new Response(JSON.stringify({ error: 'The user you are trying to delete was not found.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
@@ -96,17 +96,15 @@ serve(async (req) => {
       });
     }
 
-    // --- Add logging before deleteUser call ---
-    console.log(`Edge Function: Attempting to delete user ${targetUserId} from auth.users...`);
+    console.log(`Edge Function: Attempting to delete user ${targetUserId} from authentication system...`);
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
-    // --- Add logging after deleteUser call ---
-    console.log(`Edge Function: supabaseAdmin.auth.admin.deleteUser call completed.`);
+    console.log(`Edge Function: Authentication system delete user call completed.`);
 
     if (deleteUserError) {
-      console.error('Edge Function: Error deleting user from auth:', deleteUserError);
-      return new Response(JSON.stringify({ error: `Failed to delete user: ${deleteUserError.message}` }), {
+      console.error('Edge Function: Error deleting user from authentication system:', deleteUserError);
+      return new Response(JSON.stringify({ error: `Failed to delete user due to an internal issue. Please try again.` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500, // Changed to 500 as it's a server-side operation failure
+        status: 500,
       });
     }
 
@@ -118,9 +116,9 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Edge Function error (caught at top level):', error);
-    return new Response(JSON.stringify({ error: `An unexpected error occurred: ${error.message}` }), {
+    return new Response(JSON.stringify({ error: `An unexpected error occurred during user deletion. Please contact support if the issue persists.` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500, // Changed to 500 for unexpected server errors
+      status: 500,
     });
   }
 });
