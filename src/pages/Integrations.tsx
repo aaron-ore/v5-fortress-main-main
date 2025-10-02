@@ -484,17 +484,7 @@ const Integrations: React.FC = () => {
     return folder ? (folder.name) : "Unknown Folder";
   };
 
-  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isShopifyConnected = profile?.shopifyAccessToken && profile?.shopifyStoreName;
-
-  if (isLoadingProfile) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Loading integrations...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col space-y-6 p-6">
