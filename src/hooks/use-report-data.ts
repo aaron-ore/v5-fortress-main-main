@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { DateRange } from "react-day-picker";
 import { format, isWithinInterval, startOfDay, endOfDay, isValid, subMonths, subDays, startOfMonth } from "date-fns";
 import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { useOrders, OrderItem } from "@/context/OrdersContext";
+import { useOrders, OrderItem, POItem } from "@/context/OrdersContext"; // Added POItem
 import { useStockMovement } from "@/context/StockMovementContext";
 import { useProfile } from "@/context/ProfileContext";
 import { useOnboarding, InventoryFolder } from "@/context/OnboardingContext";
@@ -27,8 +27,7 @@ export const useReportData = (
   lowStockStatusFilter: "all" | "low-stock" | "out-of-stock", // NEW: Add lowStockStatusFilter
   purchaseOrderStatusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived", // NEW: Add purchaseOrderStatusFilter
   discrepancyStatusFilter: "all" | "pending" | "resolved", // NEW: Add discrepancyStatusFilter
-  // REMOVED: selectedForecastItemIdParam from parameters
-): UseDashboardHookResult => {
+) => {
   void reportId; // Suppress TS6133: 'reportId' is declared but its value is never read.
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
@@ -411,7 +410,7 @@ export const useReportData = (
 
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
-      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
+      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId); // Removed 'const'
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -424,7 +423,7 @@ export const useReportData = (
         if (!orderDate || !isValid(orderDate)) return;
         const monthKey = format(orderDate, "MMM yyyy");
         if (historicalSales.hasOwnProperty(monthKey)) {
-          order.items.forEach(orderItem => {
+          order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
             if (selectedForecastItemId === "all-items" || orderItem.inventoryItemId === selectedForecastItemId) {
               historicalSales[monthKey] += orderItem.quantity; // Sum quantities for forecast
             }
@@ -518,7 +517,7 @@ export const useReportData = (
 
       orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
-        order.items.forEach((orderItem: any) => { // Explicitly type orderItem
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
           if (inventoryItem) {
             totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
@@ -725,10 +724,10 @@ export const useReportData = (
 
     // NEW: Data for Sales by Customer Report
     const salesByCustomerReportData = (() => {
-      const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string } } = {};
+      const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string | null } } = {}; // Added null to lastOrderDate
       filteredOrders.filter(order => order.type === "Sales").forEach(order => {
         if (!customerSalesMap[order.customerSupplier]) {
-          customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: "" };
+          customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: null }; // Initialized with null
         }
         customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
         customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
@@ -744,7 +743,7 @@ export const useReportData = (
     const salesByProductReportData = (() => {
       const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
       filteredOrders.filter(order => order.type === "Sales").forEach(order => {
-        order.items.forEach(orderItem => {
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const itemKey = orderItem.inventoryItemId || orderItem.itemName;
           if (!productSalesMap[itemKey]) {
             const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
@@ -773,7 +772,7 @@ export const useReportData = (
 
       filteredOrders.filter(order => order.type === "Sales").forEach(order => {
         totalSalesRevenueCalc += order.totalAmount;
-        order.items.forEach(orderItem => {
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
           if (inventoryItem) {
             totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
@@ -863,7 +862,11 @@ export const useReportData = (
       purchaseOrderStatus: {
         orders: purchaseOrderStatusReportData,
       },
-      profitability: profitabilityReportData,
+      profitability: {
+        metricsData: profitabilityReportData,
+        totalSalesRevenue: totalSalesRevenue,
+        totalCostOfGoodsSold: totalCostOfGoodsSold,
+      },
       stockDiscrepancy: {
         discrepancies: discrepancyReportData,
       },
@@ -871,6 +874,7 @@ export const useReportData = (
         forecastData: demandForecastData,
         selectedItemName: selectedForecastItemName,
         onSelectItem: setSelectedForecastItemId, // Pass setter for item selection
+        selectedForecastItemId: selectedForecastItemId, // Pass the state itself
       },
       // Pass filter states directly for display in report components
       inventoryValuationGroupBy,

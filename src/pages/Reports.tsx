@@ -14,6 +14,7 @@ import { useReportData } from "@/hooks/use-report-data";
 import { supabase } from "@/lib/supabaseClient";
 import { hasRequiredPlan } from "@/utils/planUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // NEW: Import Select components
+import { Label } from "@/components/ui/label"; // NEW: Import Label component
 
 import ReportSidebar from "@/components/reports/ReportSidebar";
 import AiSummarySidebar from "@/components/reports/AiSummarySidebar";
@@ -83,7 +84,6 @@ const Reports: React.FC = () => {
     lowStockStatusFilter,
     purchaseOrderStatusFilter,
     discrepancyStatusFilter,
-    // REMOVED: reportData?.advancedDemandForecast?.selectedForecastItemId || "all-items", // This caused the circular dependency
   );
 
   const handlePrintReport = useCallback(() => {
@@ -92,7 +92,7 @@ const Reports: React.FC = () => {
       return;
     }
     if (!profile?.companyProfile) {
-      showError("Company profile not set up.");
+      showError("Company profile not set up. Complete onboarding/settings.");
       return;
     }
 

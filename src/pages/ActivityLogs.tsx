@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, Loader2, AlertTriangle, FilterX } from "lucide-react";
+import { Loader2, AlertTriangle, FilterX } from "lucide-react";
 import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
 import { showError } from "@/utils/toast";

@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { StockMovement } from "@/context/StockMovementContext";
-import { UserProfile } from "@/context/ProfileContext";
-import { InventoryFolder } from "@/context/OnboardingContext";
 import { Scale } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";

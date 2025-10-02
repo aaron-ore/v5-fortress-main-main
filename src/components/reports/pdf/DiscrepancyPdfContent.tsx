@@ -3,7 +3,6 @@ import { format, isValid } from "date-fns";
 import { type UserProfile } from "@/context/ProfileContext"; // Corrected import
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { DateRange } from "react-day-picker";
-import { InventoryFolder } from "@/context/OnboardingContext";
 import { useProfile } from "@/context/ProfileContext"; // Corrected import
 import { useOnboarding } from "@/context/OnboardingContext"; // NEW: Import useOnboarding
 

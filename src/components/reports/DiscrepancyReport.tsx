@@ -2,8 +2,6 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
-import { UserProfile } from "@/context/ProfileContext";
-import { InventoryFolder } from "@/context/OnboardingContext";
 import { AlertTriangle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { parseAndValidateDate } from "@/utils/dateUtils";

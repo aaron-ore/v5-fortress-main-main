@@ -16,7 +16,7 @@ interface PurchaseOrderStatusReportProps {
 
 const PurchaseOrderStatusReport: React.FC<PurchaseOrderStatusReportProps> = ({
   purchaseOrderStatus,
-  statusFilter: currentStatusFilter,
+  statusFilter: _currentStatusFilter, // Prefix with underscore
 }) => {
   const { orders: ordersToDisplay } = purchaseOrderStatus;
 
