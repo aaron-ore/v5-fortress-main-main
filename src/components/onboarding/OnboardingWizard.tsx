@@ -1,22 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyProfileStep from "./CompanyProfileStep";
 import { CompanyProfileStepProps } from "./CompanyProfileStep";
 import FolderSetupStep from "./LocationSetupStep"; // Renamed import
 import { FolderSetupStepProps } from "./LocationSetupStep"; // Renamed import
 // import ProductImportStep from "./ProductImportStep"; // Removed
-import { useOnboarding } from "@/context/OnboardingContext";
+// Removed useOnboarding import as markOnboardingComplete is now handled by OnboardingPage
 
 interface OnboardingWizardProps {
-  onComplete: () => void; // NEW: Callback for when onboarding is complete
-  onClose: () => void; // NEW: Callback to close the dialog
+  onComplete: () => void;
+  onClose: () => void;
+  currentStep: number; // NEW: Prop for current step
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>; // NEW: Prop for setting step
 }
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose }) => { // NEW: Accept onClose prop
-  const { markOnboardingComplete } = useOnboarding(); // Keep markOnboardingComplete for internal state update
-  const [currentStep, setCurrentStep] = useState(0);
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose, currentStep, setCurrentStep }) => { // NEW: Accept currentStep and setCurrentStep
+  // Removed internal currentStep state
 
   const steps = [
     {
@@ -34,8 +35,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose
     if (currentStep < steps.length - 1) {
       setCurrentStep((prev) => prev + 1);
     } else {
-      markOnboardingComplete(); // Update internal context state
-      onComplete(); // Call the external onComplete callback
+      // This is the last step, call onComplete from parent
+      onComplete();
     }
   };
 
@@ -48,7 +49,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onClose
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
-    <Dialog open={true} onOpenChange={onClose}> {/* Changed onOpenChange to onClose */}
+    <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">

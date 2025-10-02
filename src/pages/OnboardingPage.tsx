@@ -1,31 +1,38 @@
-"use client";
-
-import React from "react";
+import React, { useState, useEffect } from "react"; // Import useEffect
 import { useNavigate } from "react-router-dom";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext"; // NEW: Import useProfile
+import { useProfile } from "@/context/ProfileContext";
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const {  } = useOnboarding(); // Removed isOnboardingComplete
-  const { profile } = useProfile(); // NEW: Get profile
+  const { markOnboardingComplete } = useOnboarding(); // Keep markOnboardingComplete for the final step
+  const { profile, isLoadingProfile } = useProfile();
 
-  const handleOnboardingComplete = () => {
-    navigate("/"); // Redirect to dashboard after onboarding
+  const [currentStep, setCurrentStep] = useState(0); // State for the current step
+
+  // Effect to handle redirection if onboarding is already complete
+  useEffect(() => {
+    if (!isLoadingProfile && profile?.hasOnboardingWizardCompleted) {
+      navigate("/", { replace: true });
+    }
+  }, [isLoadingProfile, profile?.hasOnboardingWizardCompleted, navigate]);
+
+  const handleOnboardingComplete = async () => {
+    // This is called when the *last* step of the wizard is completed
+    await markOnboardingComplete(); // Mark the wizard as completed in DB via context
+    navigate("/", { replace: true }); // Redirect to dashboard after onboarding
   };
 
   const handleOnboardingClose = () => {
     // If the user closes the onboarding wizard, redirect them to the dashboard
-    // They can always access it again via the announcement bar.
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
-  // The OnboardingPage should only render if the wizard is NOT completed.
-  // The routing in AppContent.tsx now handles redirecting to this page if needed.
-  if (profile?.hasOnboardingWizardCompleted) {
+  if (isLoadingProfile || profile?.hasOnboardingWizardCompleted) {
+    // Show loading or redirect if profile is loading or onboarding is already complete
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
         <Card className="w-full max-w-md text-center">
@@ -47,7 +54,12 @@ const OnboardingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
-      <OnboardingWizard onComplete={handleOnboardingComplete} onClose={handleOnboardingClose} />
+      <OnboardingWizard
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        onComplete={handleOnboardingComplete}
+        onClose={handleOnboardingClose}
+      />
     </div>
   );
 };
