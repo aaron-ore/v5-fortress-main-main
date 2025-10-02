@@ -12,7 +12,13 @@ import { useVendors } from "@/context/VendorContext";
 
 import { StockMovement } from "@/context/StockMovementContext";
 
-// Removed unused interface UseDashboardHookResult
+interface UseDashboardHookResult {
+  data: any | null;
+  pdfProps: any;
+  isLoading: boolean;
+  error: string | null;
+  refresh: () => void;
+}
 
 export const useReportData = (
   reportId: string,
@@ -404,7 +410,7 @@ export const useReportData = (
 
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
-      // const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId); // Removed 'const'
+      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -513,7 +519,7 @@ export const useReportData = (
       totalSalesRevenueCalc = 0; // Reset for this calculation
       totalCostOfGoodsSold = 0; // Reset for this calculation
 
-      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
+      filteredOrders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
@@ -673,7 +679,7 @@ export const useReportData = (
       .filter((order: OrderItem) => order.type === "Sales" && order.status === "Shipped")
       .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
         const dateA = parseAndValidateDate(a.date);
-        const dateB = parseAndReportData(b.date);
+        const dateB = parseAndValidateDate(b.date);
         if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
       })
@@ -766,10 +772,10 @@ export const useReportData = (
 
     // NEW: Data for Profitability Report
     const profitabilityReportData = (() => {
-      totalSalesRevenueCalc = 0; // Reset for this calculation
-      totalCostOfGoodsSold = 0; // Reset for this calculation
+      let totalSalesRevenueCalc = 0;
+      let totalCostOfGoodsSold = 0;
 
-      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
+      filteredOrders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
@@ -862,7 +868,7 @@ export const useReportData = (
         orders: purchaseOrderStatusReportData,
       },
       profitability: {
-        metricsData: profitabilityReportData,
+        metricsData: profitabilityMetricsData,
         totalSalesRevenue: totalSalesRevenueCalc, // Use the calculated value
         totalCostOfGoodsSold: totalCostOfGoodsSold, // Use the calculated value
       },
