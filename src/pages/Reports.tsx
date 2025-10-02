@@ -33,7 +33,6 @@ const Reports: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false);
-  // REMOVED: const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // State for selected item in forecast
 
   // NEW: Report-specific filter states
   const [inventoryValuationGroupBy, setInventoryValuationGroupBy] = useState<"category" | "folder">("category");
@@ -62,8 +61,6 @@ const Reports: React.FC = () => {
   useEffect(() => {
     setAiSummary(null);
     setIsAiSummarySidebarOpen(false);
-    // Reset selected forecast item when changing reports
-    // The internal state of useReportData will handle resetting selectedForecastItemId
   }, [activeReportId, dateRange]);
 
   const handleClearDateFilter = () => {
@@ -86,7 +83,7 @@ const Reports: React.FC = () => {
     lowStockStatusFilter,
     purchaseOrderStatusFilter,
     discrepancyStatusFilter,
-    reportData?.advancedDemandForecast?.selectedForecastItemId || "all-items", // Pass the current selected item ID from the hook's internal state
+    // REMOVED: reportData?.advancedDemandForecast?.selectedForecastItemId || "all-items", // This caused the circular dependency
   );
 
   const handlePrintReport = useCallback(() => {
@@ -289,8 +286,8 @@ const Reports: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="forecastItemSelect">Select Item</Label>
                 <Select
-                  value={reportData.advancedDemandForecast.selectedItemName === "All Items" ? "all-items" : (reportData.advancedDemandForecast.selectedForecastItemId || "all-items")}
-                  onValueChange={reportData.advancedDemandForecast.onSelectItem}
+                  value={reportData.advancedDemandForecast.selectedForecastItemId || "all-items"} // Use internal state from hook
+                  onValueChange={reportData.advancedDemandForecast.onSelectItem} // Use setter from hook
                 >
                   <SelectTrigger id="forecastItemSelect" className="w-[240px]">
                     <SelectValue placeholder="Select an item or 'All Items'" />

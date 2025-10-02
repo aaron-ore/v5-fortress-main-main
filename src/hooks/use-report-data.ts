@@ -27,7 +27,7 @@ export const useReportData = (
   lowStockStatusFilter: "all" | "low-stock" | "out-of-stock", // NEW: Add lowStockStatusFilter
   purchaseOrderStatusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived", // NEW: Add purchaseOrderStatusFilter
   discrepancyStatusFilter: "all" | "pending" | "resolved", // NEW: Add discrepancyStatusFilter
-  // REMOVED: selectedForecastItemId from parameters
+  // REMOVED: selectedForecastItemIdParam from parameters
 ): UseDashboardHookResult => {
   void reportId; // Suppress TS6133: 'reportId' is declared but its value is never read.
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
@@ -536,9 +536,9 @@ export const useReportData = (
       const simulatedLossesPercentage = totalSalesRevenueCalc > 0 ? (totalSalesRevenueCalc * 0.05 / totalSalesRevenueCalc) * 100 : 0;
 
       return [
-        { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(0)), color: "#00BFD8" },
-        { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(0)), color: "#00C49F" },
-        { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(0)), color: "#0088FE" },
+        { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(1)), color: "#00BFD8" },
+        { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(1)), color: "#00C49F" },
+        { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(1)), color: "#0088FE" },
       ];
     })();
 
