@@ -8,14 +8,14 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { uploadFileToSupabase } from "@/integrations/supabase/storage";
 import { Image as ImageIcon, Loader2, X } from "lucide-react";
-import { useProfile } from "@/context/ProfileContext"; // <-- TypeScript compiler error here
+import { useProfile } from "@/context/ProfileContext";
 
 export interface CompanyProfileStepProps {
   onNext: () => void;
   onBack?: () => void;
 }
 
-const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
+const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext, onBack }) => {
   const { setCompanyProfile } = useOnboarding();
   const { profile } = useProfile();
 
@@ -25,6 +25,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
   const [companyLogoFile, setCompanyLogoFile] = useState<File | null>(null);
   const [companyLogoUrlPreview, setCompanyLogoUrlPreview] = useState<string | undefined>(profile?.companyProfile?.companyLogoUrl || undefined);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // New state for overall saving process
 
   useEffect(() => {
     if (profile?.companyProfile) {
@@ -63,8 +64,21 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
   };
 
   const handleSave = async () => {
-    if (!companyName || !currency || !address) {
-      showError("Please fill in all company profile fields.");
+    setIsSaving(true); // Start saving process
+
+    if (!companyName.trim()) {
+      showError("Company Name is required.");
+      setIsSaving(false);
+      return;
+    }
+    if (!currency.trim()) {
+      showError("Default Currency is required.");
+      setIsSaving(false);
+      return;
+    }
+    if (!address.trim()) {
+      showError("Company Address is required.");
+      setIsSaving(false);
       return;
     }
 
@@ -79,6 +93,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
         console.error("Error uploading company logo:", error);
         showError(`Failed to upload company logo: ${error.message}`);
         setIsUploadingLogo(false);
+        setIsSaving(false);
         return;
       } finally {
         setIsUploadingLogo(false);
@@ -89,9 +104,11 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
 
     try {
       await setCompanyProfile({ name: companyName, currency, address, companyLogoUrl: finalCompanyLogoUrl });
-      onNext();
+      onNext(); // Call onNext only after successful profile update
     } catch (error: any) {
       showError(`Failed to set up/update organization: ${error.message}`);
+    } finally {
+      setIsSaving(false); // End saving process
     }
   };
 
@@ -108,11 +125,12 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             placeholder="e.g., Acme Corp"
+            disabled={isSaving}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="currency">Default Currency <span className="text-red-500">*</span></Label>
-          <Select value={currency} onValueChange={setCurrency}>
+          <Select value={currency} onValueChange={setCurrency} disabled={isSaving}>
             <SelectTrigger>
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
@@ -133,6 +151,7 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
             onChange={(e) => setAddress(e.target.value)}
             placeholder="123 Business Rd, Suite 100, City, State, Zip"
             rows={3}
+            disabled={isSaving}
           />
         </div>
         <div className="space-y-2">
@@ -142,11 +161,12 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
             type="file"
             accept="image/*"
             onChange={handleFileChange}
+            disabled={isSaving}
           />
           {companyLogoUrlPreview ? (
             <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-between bg-muted/20">
               <img src={companyLogoUrlPreview} alt="Company Logo Preview" className="max-h-24 object-contain" />
-              <Button variant="ghost" size="icon" onClick={handleClearLogo} aria-label="Clear logo">
+              <Button variant="ghost" size="icon" onClick={handleClearLogo} aria-label="Clear logo" disabled={isSaving}>
                 <X className="h-4 w-4 text-muted-foreground" />
               </Button>
             </div>
@@ -157,11 +177,12 @@ const CompanyProfileStep: React.FC<CompanyProfileStepProps> = ({ onNext }) => {
           )}
         </div>
       </div>
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isUploadingLogo}>
-          {isUploadingLogo ? (
+      <div className="flex justify-between">
+        {onBack && <Button variant="outline" onClick={onBack} disabled={isSaving}>Back</Button>}
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
             </>
           ) : (
             "Next"
