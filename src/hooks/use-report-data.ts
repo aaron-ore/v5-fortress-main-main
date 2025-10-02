@@ -410,7 +410,7 @@ export const useReportData = (
 
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
-      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId); // Removed 'const'
+      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -732,7 +732,8 @@ export const useReportData = (
         customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
         customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
         const orderDate = parseAndValidateDate(order.date);
-        if (orderDate && isValid(orderDate) && (!customerSalesMap[order.customerSupplier].lastOrderDate || orderDate > parseAndValidateDate(customerSalesMap[order.customerSupplier].lastOrderDate))) {
+        const lastOrderDateInMap = customerSalesMap[order.customerSupplier].lastOrderDate ? parseAndValidateDate(customerSalesMap[order.customerSupplier].lastOrderDate) : null;
+        if (orderDate && isValid(orderDate) && (!lastOrderDateInMap || orderDate > lastOrderDateInMap)) {
           customerSalesMap[order.customerSupplier].lastOrderDate = order.date;
         }
       });
@@ -770,10 +771,10 @@ export const useReportData = (
       let totalSalesRevenueCalc = 0;
       let totalCostOfGoodsSold = 0;
 
-      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
-          const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+          const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
           if (inventoryItem) {
             totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
           } else {
