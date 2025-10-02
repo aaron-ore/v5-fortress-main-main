@@ -27,8 +27,9 @@ export const useReportData = (
   lowStockStatusFilter: "all" | "low-stock" | "out-of-stock", // NEW: Add lowStockStatusFilter
   purchaseOrderStatusFilter: "all" | "new-order" | "processing" | "packed" | "shipped" | "on-hold-problem" | "archived", // NEW: Add purchaseOrderStatusFilter
   discrepancyStatusFilter: "all" | "pending" | "resolved", // NEW: Add discrepancyStatusFilter
-  selectedForecastItemId: string, // NEW: Add selectedForecastItemId
+  // REMOVED: selectedForecastItemId from parameters
 ): UseDashboardHookResult => {
+  void reportId; // Suppress TS6133: 'reportId' is declared but its value is never read.
   const { inventoryItems, isLoadingInventory, refreshInventory } = useInventory();
   const { orders, isLoadingOrders, fetchOrders } = useOrders();
   const { stockMovements, isLoadingStockMovements, fetchStockMovements } = useStockMovement();
@@ -39,6 +40,7 @@ export const useReportData = (
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // MOVED: Declared as internal state
 
   const refresh = useCallback(() => {
     setError(null);
@@ -869,8 +871,8 @@ export const useReportData = (
       },
       advancedDemandForecast: {
         forecastData: demandForecastData,
-        selectedItemName: selectedForecastItemName,
-        onSelectItem: setSelectedForecastItemId,
+        selectedItemName: selectedItemName,
+        onSelectItem: setSelectedForecastItemId, // Pass setter for item selection
       },
       // Pass filter states directly for display in report components
       inventoryValuationGroupBy,
