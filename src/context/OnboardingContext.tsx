@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback, startTransition } from "react"; // Import startTransition
 import { showSuccess, showError } from "@/utils/toast";
 import { useProfile, CompanyProfile as ProfileCompanyProfile } from "./ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
@@ -60,7 +60,7 @@ interface OnboardingContextType {
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
 export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted } = useProfile();
+  const { profile, isLoadingProfile, fetchProfile, markOnboardingWizardCompleted, updateProfileLocally } = useProfile(); // NEW: Import updateProfileLocally
   const [isOnboardingComplete, setIsOnboardingComplete] = useState<boolean>(false);
 
   const companyProfile = profile?.companyProfile || null;
@@ -229,6 +229,19 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         showSuccess(`Organization "${profileData.name}" created! Code: ${uniqueCodeToPersist}`);
         await logActivity("Organization Created", `New organization "${profileData.name}" created with code: ${uniqueCodeToPersist}.`, profile, { organization_id: organizationIdToUse, organization_name: profileData.name, unique_code: uniqueCodeToPersist });
 
+        // NEW: Update profile locally after creating new organization
+        updateProfileLocally({
+          organizationId: organizationIdToUse,
+          role: 'admin',
+          companyProfile: {
+            ...profileData,
+            organizationCode: uniqueCodeToPersist,
+            organizationTheme: orgData.default_theme || 'dark',
+            plan: orgData.plan || 'free',
+            // Add other default fields from new organization if necessary
+          }
+        });
+
       } else {
         console.log("[OnboardingContext] User already has organization_id:", profile.organizationId);
 
@@ -249,7 +262,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan')
+          .select('unique_code, company_logo_url, default_theme, plan, stripe_customer_id, stripe_subscription_id, trial_ends_at, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder')
           .eq('id', profile.organizationId)
           .single();
 
@@ -298,6 +311,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           default_theme: existingOrg?.default_theme || 'dark',
           plan: existingOrg?.plan || 'free',
           company_logo_url: profileData.companyLogoUrl,
+          stripe_customer_id: existingOrg?.stripe_customer_id,
+          stripe_subscription_id: existingOrg?.stripe_subscription_id,
+          trial_ends_at: existingOrg?.trial_ends_at,
+          default_reorder_level: existingOrg?.default_reorder_level || 0,
+          enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
+          enable_auto_reorder: existingOrg?.enable_auto_reorder || false,
         };
         console.log("[OnboardingContext] Update payload for organizations table:", updatePayload);
 
@@ -314,12 +333,28 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         }
         console.log("[OnboardingContext] Organization updated successfully.");
         showSuccess(`Company profile for "${profileData.name}" updated!`);
-        await logActivity("Company Profile Update Success", `Company profile for "${profileData.name}" updated.`, profile, { organization_id: organizationIdToUse, updated_fields: updatePayload });
+        await logActivity("Company Profile Update Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { organization_id: organizationIdToUse, updated_fields: updatePayload });
+        
+        // NEW: Update profile locally after updating existing organization
+        updateProfileLocally({
+          companyProfile: {
+            ...profile.companyProfile, // Keep existing fields
+            ...profileData, // Apply new fields
+            organizationCode: uniqueCodeToPersist, // Ensure code is updated
+            organizationTheme: updatePayload.default_theme,
+            plan: updatePayload.plan,
+            stripeCustomerId: updatePayload.stripe_customer_id,
+            stripeSubscriptionId: updatePayload.stripe_subscription_id,
+            trialEndsAt: updatePayload.trial_ends_at,
+            defaultReorderLevel: updatePayload.default_reorder_level,
+            enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
+            enableAutoReorder: updatePayload.enable_auto_reorder,
+          }
+        });
       }
       
-      console.log("[OnboardingContext] Calling fetchProfile to refresh user data.");
-      await fetchProfile();
-      console.log("[OnboardingContext] fetchProfile completed after organization update.");
+      // Removed: await fetchProfile(); // No longer needed here due to local updates
+      console.log("[OnboardingContext] Profile update flow completed.");
 
     } catch (error: any) {
       console.error("[OnboardingContext] Error during organization setup/update:", error);

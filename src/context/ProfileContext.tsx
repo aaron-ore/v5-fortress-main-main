@@ -63,6 +63,7 @@ interface ProfileContextType {
   markOnboardingWizardCompleted: () => Promise<void>;
   markTutorialAsShown: () => Promise<void>;
   markUpgradePromptSeen: () => Promise<void>;
+  updateProfileLocally: (updates: Partial<UserProfile>) => void; // NEW: Added local update function
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -219,6 +220,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsLoadingAllProfiles(false);
     }
   }, [isLoadingProfile, profile?.organizationId, fetchAllProfiles]);
+
+  const updateProfileLocally = useCallback((updates: Partial<UserProfile>) => {
+    setProfile(prev => {
+      if (!prev) return null;
+      const newProfile = { ...prev, ...updates };
+      // Deep compare to prevent unnecessary re-renders if the content is effectively the same
+      if (deepEqual(prev, newProfile)) {
+        return prev;
+      }
+      return newProfile;
+    });
+  }, []);
 
   const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasUiTutorialShown' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
@@ -445,6 +458,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         markOnboardingWizardCompleted,
         markTutorialAsShown,
         markUpgradePromptSeen,
+        updateProfileLocally, // NEW: Expose local update function
       }}
     >
       {children}
