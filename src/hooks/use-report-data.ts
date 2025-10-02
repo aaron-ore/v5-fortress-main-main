@@ -12,14 +12,6 @@ import { useVendors } from "@/context/VendorContext";
 
 import { StockMovement } from "@/context/StockMovementContext";
 
-interface UseDashboardHookResult {
-  data: any | null;
-  pdfProps: any;
-  isLoading: boolean;
-  error: string | null;
-  refresh: () => void;
-}
-
 export const useReportData = (
   reportId: string,
   dateRange: DateRange | undefined,
@@ -410,7 +402,7 @@ export const useReportData = (
 
     const demandForecastData = (() => {
       const historicalSales: { [key: string]: number } = {};
-      const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId);
+      // const targetItems = selectedForecastItemId === "all-items" ? inventoryItems : inventoryItems.filter(item => item.id === selectedForecastItemId); // Removed 'const'
 
       for (let i = 5; i >= 0; i--) {
         const month = subMonths(today, i);
@@ -519,7 +511,7 @@ export const useReportData = (
       totalSalesRevenueCalc = 0; // Reset for this calculation
       totalCostOfGoodsSold = 0; // Reset for this calculation
 
-      filteredOrders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
+      orders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
@@ -729,7 +721,7 @@ export const useReportData = (
     // NEW: Data for Sales by Customer Report
     const salesByCustomerReportData = (() => {
       const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string | null } } = {}; // Added null to lastOrderDate
-      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
         if (!customerSalesMap[order.customerSupplier]) {
           customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: null }; // Initialized with null
         }
@@ -747,7 +739,527 @@ export const useReportData = (
     // NEW: Data for Sales by Product Report
     const salesByProductReportData = (() => {
       const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
+          const itemKey = orderItem.inventoryItemId || orderItem.itemName;
+          if (!productSalesMap[itemKey]) {
+            const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+            productSalesMap[itemKey] = {
+              productName: orderItem.itemName,
+              sku: inventoryItem?.sku || "N/A",
+              category: inventoryItem?.category || "N/A",
+              unitsSold: 0,
+              totalRevenue: 0,
+            };
+          }
+          productSalesMap[itemKey].unitsSold += orderItem.quantity;
+          productSalesMap[itemKey].totalRevenue += orderItem.quantity * orderItem.unitPrice;
+        });
+      });
+      return Object.values(productSalesMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    })();
+
+    // NEW: Data for Purchase Order Status Report
+    const purchaseOrderStatusReportData = filteredOrders.filter(order => order.type === "Purchase" && (purchaseOrderStatusFilter === "all" || order.status === purchaseOrderStatusFilter));
+
+    // Moved these declarations outside the IIFE to be accessible in the main useMemo scope
+    let totalSalesRevenueCalc = 0;
+    let totalCostOfGoodsSold = 0;
+
+    // NEW: Data for Profitability Report
+    const profitabilityReportData = (() => {
+      totalSalesRevenueCalc = 0; // Reset for this calculation
+      totalCostOfGoodsSold = 0; // Reset for this calculation
+
       filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
+        totalSalesRevenueCalc += order.totalAmount;
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
+          const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
+          if (inventoryItem) {
+            totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
+          } else {
+            totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Fallback estimate
+          }
+        });
+      });
+
+      const grossProfit = totalSalesRevenueCalc - totalCostOfGoodsSold;
+      const grossProfitMargin = totalSalesRevenueCalc > 0 ? (grossProfit / totalSalesRevenueCalc) * 100 : 0;
+      const simulatedOperatingExpenses = totalSalesRevenueCalc * 0.20;
+      const netProfit = grossProfit - simulatedOperatingExpenses;
+      const netProfitMargin = totalSalesRevenueCalc > 0 ? (netProfit / totalSalesRevenueCalc) * 100 : 0;
+      const simulatedLossesPercentage = totalSalesRevenueCalc > 0 ? (totalSalesRevenueCalc * 0.05 / totalSalesRevenueCalc) * 100 : 0;
+
+      return [
+        { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(1)), color: "#00BFD8" },
+        { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(1)), color: "#00C49F" },
+        { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(1)), color: "#0088FE" },
+      ];
+    })();
+
+    const topStockBulletGraphData = (() => {
+      return inventoryItems
+        .sort((a: InventoryItem, b: InventoryItem) => b.quantity - a.quantity) // Explicitly type a, b
+        .slice(0, 4)
+        .map((item: InventoryItem) => ({ // Explicitly type item
+          name: item.name,
+          quantity: item.quantity,
+          reorderLevel: item.reorderLevel,
+        }));
+    })();
+
+    const locationStockHealthData = (() => {
+      const locationMetrics: {
+        [key: string]: {
+          totalMovements: number;
+          currentStock: number;
+          netChange: number;
+          displayName: string;
+        };
+      } = {};
+
+      structuredLocations.forEach((loc: InventoryFolder) => { // Explicitly type loc
+        locationMetrics[loc.id] = {
+          totalMovements: 0,
+          currentStock: 0,
+          netChange: 0,
+          displayName: loc.name,
+        };
+      });
+
+      stockMovements.forEach((movement: StockMovement) => { // Explicitly type movement
+        const item = inventoryItems.find((inv: InventoryItem) => inv.id === movement.itemId); // Explicitly type inv
+        if (item) {
+          const movementFolderId = item.folderId;
+          if (locationMetrics[movementFolderId]) {
+            locationMetrics[movementFolderId].totalMovements += movement.amount;
+            if (movement.type === "add") {
+              locationMetrics[movementFolderId].netChange += movement.amount;
+            } else {
+              locationMetrics[movementFolderId].netChange -= movement.amount;
+            }
+          }
+        }
+      });
+
+      inventoryItems.forEach((item: InventoryItem) => { // Explicitly type item
+        if (locationMetrics[item.folderId]) {
+          locationMetrics[item.folderId].currentStock += item.quantity;
+        }
+        if (item.pickingBinFolderId && item.pickingBinFolderId !== item.folderId && locationMetrics[item.pickingBinFolderId]) {
+          locationMetrics[item.pickingBinFolderId].currentStock += item.pickingBinQuantity;
+        }
+      });
+
+      const healthData = Object.entries(locationMetrics).map(([_locationString, metrics]) => {
+        const totalActivity = metrics.totalMovements;
+        const currentStock = metrics.currentStock;
+        const netChange = metrics.netChange;
+
+        const percentage = totalActivity + currentStock > 0
+          ? Math.min(100, Math.round((totalActivity / (totalActivity + currentStock)) * 100))
+          : 0;
+
+        const isPositive = netChange >= 0 || percentage > 50;
+
+        return {
+          label: metrics.displayName,
+          percentage,
+          isPositive,
+          movementScore: totalActivity,
+        };
+      });
+
+      return healthData.sort((a: any, b: any) => b.movementScore - a.movementScore).slice(0, 4); // Explicitly type a, b
+    })();
+
+
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
+    const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
+
+    const recentSalesOrders = filteredOrders
+      .filter((order: OrderItem) => order.type === "Sales")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date);
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 5);
+
+    const recentPurchaseOrders = filteredOrders
+      .filter((order: OrderItem) => order.type === "Purchase")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date);
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
+        return dateB.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const openPurchaseOrders = orders
+      .filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.dueDate);
+        const dateB = parseAndValidateDate(b.dueDate);
+        if (!dateA || !dateB) return 0;
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const pendingInvoices = orders
+      .filter((order: OrderItem) => { // Explicitly type order
+        const orderDueDate = parseAndValidateDate(order.dueDate);
+        const thirtyDaysAgo = subDays(new Date(), 30);
+        return (
+          order.type === "Sales" &&
+          order.status !== "Shipped" &&
+          order.status !== "Archived" &&
+          order.status !== "Packed" &&
+          orderDueDate && isValid(orderDueDate) && isWithinInterval(orderDueDate, { start: new Date(0), end: thirtyDaysAgo })
+        );
+      })
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.dueDate);
+        const dateB = parseAndValidateDate(b.dueDate);
+        if (!dateA || !dateB) return 0;
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const recentShipments = orders
+      .filter((order: OrderItem) => order.type === "Sales" && order.status === "Shipped")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date); // Corrected typo here
+        if (!dateA || !dateB) return 0;
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 5);
+
+    const topSellingProducts = inventoryItems
+      .map((item: InventoryItem) => ({ // Explicitly type item
+        name: item.name,
+        unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
+      }))
+      .filter((product: { name: string; unitsSold: number }) => product.unitsSold > 0) // Explicitly type product
+      .sort((a: { name: string; unitsSold: number }, b: { name: string; unitsSold: number }) => b.unitsSold - a.unitsSold) // Explicitly type a, b
+      .slice(0, 5);
+
+    const selectedForecastItemName = selectedForecastItemId === "all-items" ? "All Items" : (inventoryItems.find(item => item.id === selectedForecastItemId)?.name || "Unknown Item");
+
+    // NEW: Data for Inventory Valuation Report
+    const inventoryValuationGroupedData = (() => {
+      const grouped: { [key: string]: { totalValue: number; totalQuantity: number } } = {};
+      filteredInventory.forEach(item => {
+        const groupKey = inventoryValuationGroupBy === "category" ? item.category : (structuredLocations.find(f => f.id === item.folderId)?.name || "Unassigned");
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = { totalValue: 0, totalQuantity: 0 };
+        }
+        grouped[groupKey].totalValue += item.quantity * item.unitCost;
+        grouped[groupKey].totalQuantity += item.quantity;
+      });
+      return Object.entries(grouped).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.totalValue - a.totalValue);
+    })();
+
+    // NEW: Data for Low Stock Report
+    const lowStockReportItems = (() => {
+      let items = inventoryItems;
+      if (lowStockStatusFilter === "low-stock") {
+        items = items.filter(item => item.quantity > 0 && item.quantity <= item.reorderLevel);
+      } else if (lowStockStatusFilter === "out-of-stock") {
+        items = items.filter(item => item.quantity === 0);
+      } else { // "all"
+        items = items.filter(item => item.quantity <= item.reorderLevel);
+      }
+      return items;
+    })();
+
+    // NEW: Data for Inventory Movement Report
+    const inventoryMovementReportData = filteredStockMovements;
+
+    // NEW: Data for Sales by Customer Report
+    const salesByCustomerReportData = (() => {
+      const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string | null } } = {}; // Added null to lastOrderDate
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        if (!customerSalesMap[order.customerSupplier]) {
+          customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: null }; // Initialized with null
+        }
+        customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
+        customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
+        const orderDate = parseAndValidateDate(order.date);
+        const lastOrderDateInMap = customerSalesMap[order.customerSupplier].lastOrderDate ? parseAndValidateDate(customerSalesMap[order.customerSupplier].lastOrderDate) : null;
+        if (orderDate && isValid(orderDate) && (!lastOrderDateInMap || orderDate > lastOrderDateInMap)) {
+          customerSalesMap[order.customerSupplier].lastOrderDate = order.date;
+        }
+      });
+      return Object.entries(customerSalesMap).map(([customerName, data]) => ({ customerName, ...data })).sort((a, b) => b.totalSales - a.totalSales);
+    })();
+
+    // NEW: Data for Sales by Product Report
+    const salesByProductReportData = (() => {
+      const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
+          const itemKey = orderItem.inventoryItemId || orderItem.itemName;
+          if (!productSalesMap[itemKey]) {
+            const inventoryItem = inventoryItems.find(inv => inv.id === orderItem.inventoryItemId);
+            productSalesMap[itemKey] = {
+              productName: orderItem.itemName,
+              sku: inventoryItem?.sku || "N/A",
+              category: inventoryItem?.category || "N/A",
+              unitsSold: 0,
+              totalRevenue: 0,
+            };
+          }
+          productSalesMap[itemKey].unitsSold += orderItem.quantity;
+          productSalesMap[itemKey].totalRevenue += orderItem.quantity * orderItem.unitPrice;
+        });
+      });
+      return Object.values(productSalesMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    })();
+
+    // NEW: Data for Purchase Order Status Report
+    const purchaseOrderStatusReportData = filteredOrders.filter(order => order.type === "Purchase" && (purchaseOrderStatusFilter === "all" || order.status === purchaseOrderStatusFilter));
+
+    // Moved these declarations outside the IIFE to be accessible in the main useMemo scope
+    // let totalSalesRevenueCalc = 0; // Already declared above
+    // let totalCostOfGoodsSold = 0; // Already declared above
+
+    // NEW: Data for Profitability Report
+    const profitabilityReportData = (() => {
+      totalSalesRevenueCalc = 0; // Reset for this calculation
+      totalCostOfGoodsSold = 0; // Reset for this calculation
+
+      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
+        totalSalesRevenueCalc += order.totalAmount;
+        order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
+          const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
+          if (inventoryItem) {
+            totalCostOfGoodsSold += orderItem.quantity * inventoryItem.unitCost;
+          } else {
+            totalCostOfGoodsSold += orderItem.quantity * orderItem.unitPrice * 0.7; // Fallback estimate
+          }
+        });
+      });
+
+      const grossProfit = totalSalesRevenueCalc - totalCostOfGoodsSold;
+      const grossProfitMargin = totalSalesRevenueCalc > 0 ? (grossProfit / totalSalesRevenueCalc) * 100 : 0;
+      const simulatedOperatingExpenses = totalSalesRevenueCalc * 0.20;
+      const netProfit = grossProfit - simulatedOperatingExpenses;
+      const netProfitMargin = totalSalesRevenueCalc > 0 ? (netProfit / totalSalesRevenueCalc) * 100 : 0;
+      const simulatedLossesPercentage = totalSalesRevenueCalc > 0 ? (totalSalesRevenueCalc * 0.05 / totalSalesRevenueCalc) * 100 : 0;
+
+      return [
+        { name: "Gross Margin", value: parseFloat(grossProfitMargin.toFixed(1)), color: "#00BFD8" },
+        { name: "Net Margin", value: parseFloat(netProfitMargin.toFixed(1)), color: "#00C49F" },
+        { name: "Simulated Losses", value: parseFloat(simulatedLossesPercentage.toFixed(1)), color: "#0088FE" },
+      ];
+    })();
+
+    const topStockBulletGraphData = (() => {
+      return inventoryItems
+        .sort((a: InventoryItem, b: InventoryItem) => b.quantity - a.quantity) // Explicitly type a, b
+        .slice(0, 4)
+        .map((item: InventoryItem) => ({ // Explicitly type item
+          name: item.name,
+          quantity: item.quantity,
+          reorderLevel: item.reorderLevel,
+        }));
+    })();
+
+    const locationStockHealthData = (() => {
+      const locationMetrics: {
+        [key: string]: {
+          totalMovements: number;
+          currentStock: number;
+          netChange: number;
+          displayName: string;
+        };
+      } = {};
+
+      structuredLocations.forEach((loc: InventoryFolder) => { // Explicitly type loc
+        locationMetrics[loc.id] = {
+          totalMovements: 0,
+          currentStock: 0,
+          netChange: 0,
+          displayName: loc.name,
+        };
+      });
+
+      stockMovements.forEach((movement: StockMovement) => { // Explicitly type movement
+        const item = inventoryItems.find((inv: InventoryItem) => inv.id === movement.itemId); // Explicitly type inv
+        if (item) {
+          const movementFolderId = item.folderId;
+          if (locationMetrics[movementFolderId]) {
+            locationMetrics[movementFolderId].totalMovements += movement.amount;
+            if (movement.type === "add") {
+              locationMetrics[movementFolderId].netChange += movement.amount;
+            } else {
+              locationMetrics[movementFolderId].netChange -= movement.amount;
+            }
+          }
+        }
+      });
+
+      inventoryItems.forEach((item: InventoryItem) => { // Explicitly type item
+        if (locationMetrics[item.folderId]) {
+          locationMetrics[item.folderId].currentStock += item.quantity;
+        }
+        if (item.pickingBinFolderId && item.pickingBinFolderId !== item.folderId && locationMetrics[item.pickingBinFolderId]) {
+          locationMetrics[item.pickingBinFolderId].currentStock += item.pickingBinQuantity;
+        }
+      });
+
+      const healthData = Object.entries(locationMetrics).map(([_locationString, metrics]) => {
+        const totalActivity = metrics.totalMovements;
+        const currentStock = metrics.currentStock;
+        const netChange = metrics.netChange;
+
+        const percentage = totalActivity + currentStock > 0
+          ? Math.min(100, Math.round((totalActivity / (totalActivity + currentStock)) * 100))
+          : 0;
+
+        const isPositive = netChange >= 0 || percentage > 50;
+
+        return {
+          label: metrics.displayName,
+          percentage,
+          isPositive,
+          movementScore: totalActivity,
+        };
+      });
+
+      return healthData.sort((a: any, b: any) => b.movementScore - a.movementScore).slice(0, 4); // Explicitly type a, b
+    })();
+
+
+    const lowStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity > 0 && item.quantity <= item.reorderLevel);
+    const outOfStockItems = filteredInventory.filter((item: InventoryItem) => item.quantity === 0);
+
+    const recentSalesOrders = filteredOrders
+      .filter((order: OrderItem) => order.type === "Sales")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date);
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 5);
+
+    const recentPurchaseOrders = filteredOrders
+      .filter((order: OrderItem) => order.type === "Purchase")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date);
+        if (!dateA || !dateB || !isValid(dateA) || !isValid(dateB)) return 0;
+        return dateB.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const openPurchaseOrders = orders
+      .filter((order: OrderItem) => order.type === "Purchase" && order.status !== "Shipped" && order.status !== "Archived")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.dueDate);
+        const dateB = parseAndValidateDate(b.dueDate);
+        if (!dateA || !dateB) return 0;
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const pendingInvoices = orders
+      .filter((order: OrderItem) => { // Explicitly type order
+        const orderDueDate = parseAndValidateDate(order.dueDate);
+        const thirtyDaysAgo = subDays(new Date(), 30);
+        return (
+          order.type === "Sales" &&
+          order.status !== "Shipped" &&
+          order.status !== "Archived" &&
+          order.status !== "Packed" &&
+          orderDueDate && isValid(orderDueDate) && isWithinInterval(orderDueDate, { start: new Date(0), end: thirtyDaysAgo })
+        );
+      })
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.dueDate);
+        const dateB = parseAndValidateDate(b.dueDate);
+        if (!dateA || !dateB) return 0;
+        return dateA.getTime() - dateB.getTime();
+      })
+      .slice(0, 5);
+
+    const recentShipments = orders
+      .filter((order: OrderItem) => order.type === "Sales" && order.status === "Shipped")
+      .sort((a: OrderItem, b: OrderItem) => { // Explicitly type a, b
+        const dateA = parseAndValidateDate(a.date);
+        const dateB = parseAndValidateDate(b.date); // Corrected typo here
+        if (!dateA || !dateB) return 0;
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 5);
+
+    const topSellingProducts = inventoryItems
+      .map((item: InventoryItem) => ({ // Explicitly type item
+        name: item.name,
+        unitsSold: item.quantity > 0 ? Math.floor(item.quantity * (0.1 + Math.random() * 0.4)) + 1 : 0,
+      }))
+      .filter((product: { name: string; unitsSold: number }) => product.unitsSold > 0) // Explicitly type product
+      .sort((a: { name: string; unitsSold: number }, b: { name: string; unitsSold: number }) => b.unitsSold - a.unitsSold) // Explicitly type a, b
+      .slice(0, 5);
+
+    const selectedForecastItemName = selectedForecastItemId === "all-items" ? "All Items" : (inventoryItems.find(item => item.id === selectedForecastItemId)?.name || "Unknown Item");
+
+    // NEW: Data for Inventory Valuation Report
+    const inventoryValuationGroupedData = (() => {
+      const grouped: { [key: string]: { totalValue: number; totalQuantity: number } } = {};
+      filteredInventory.forEach(item => {
+        const groupKey = inventoryValuationGroupBy === "category" ? item.category : (structuredLocations.find(f => f.id === item.folderId)?.name || "Unassigned");
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = { totalValue: 0, totalQuantity: 0 };
+        }
+        grouped[groupKey].totalValue += item.quantity * item.unitCost;
+        grouped[groupKey].totalQuantity += item.quantity;
+      });
+      return Object.entries(grouped).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.totalValue - a.totalValue);
+    })();
+
+    // NEW: Data for Low Stock Report
+    const lowStockReportItems = (() => {
+      let items = inventoryItems;
+      if (lowStockStatusFilter === "low-stock") {
+        items = items.filter(item => item.quantity > 0 && item.quantity <= item.reorderLevel);
+      } else if (lowStockStatusFilter === "out-of-stock") {
+        items = items.filter(item => item.quantity === 0);
+      } else { // "all"
+        items = items.filter(item => item.quantity <= item.reorderLevel);
+      }
+      return items;
+    })();
+
+    // NEW: Data for Inventory Movement Report
+    const inventoryMovementReportData = filteredStockMovements;
+
+    // NEW: Data for Sales by Customer Report
+    const salesByCustomerReportData = (() => {
+      const customerSalesMap: { [key: string]: { totalSales: number; totalItems: number; lastOrderDate: string | null } } = {}; // Added null to lastOrderDate
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
+        if (!customerSalesMap[order.customerSupplier]) {
+          customerSalesMap[order.customerSupplier] = { totalSales: 0, totalItems: 0, lastOrderDate: null }; // Initialized with null
+        }
+        customerSalesMap[order.customerSupplier].totalSales += order.totalAmount;
+        customerSalesMap[order.customerSupplier].totalItems += order.itemCount;
+        const orderDate = parseAndValidateDate(order.date);
+        const lastOrderDateInMap = customerSalesMap[order.customerSupplier].lastOrderDate ? parseAndValidateDate(customerSalesMap[order.customerSupplier].lastOrderDate) : null;
+        if (orderDate && isValid(orderDate) && (!lastOrderDateInMap || orderDate > lastOrderDateInMap)) {
+          customerSalesMap[order.customerSupplier].lastOrderDate = order.date;
+        }
+      });
+      return Object.entries(customerSalesMap).map(([customerName, data]) => ({ customerName, ...data })).sort((a, b) => b.totalSales - a.totalSales);
+    })();
+
+    // NEW: Data for Sales by Product Report
+    const salesByProductReportData = (() => {
+      const productSalesMap: { [key: string]: { productName: string; sku: string; category: string; unitsSold: number; totalRevenue: number } } = {};
+      filteredOrders.filter(order => order.type === "Sales").forEach(order => {
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const itemKey = orderItem.inventoryItemId || orderItem.itemName;
           if (!productSalesMap[itemKey]) {
@@ -772,10 +1284,10 @@ export const useReportData = (
 
     // NEW: Data for Profitability Report
     const profitabilityReportData = (() => {
-      let totalSalesRevenueCalc = 0;
-      let totalCostOfGoodsSold = 0;
+      totalSalesRevenueCalc = 0; // Reset for this calculation
+      totalCostOfGoodsSold = 0; // Reset for this calculation
 
-      filteredOrders.filter((order: OrderItem) => order.type === "Sales").forEach((order: OrderItem) => {
+      filteredOrders.filter(order => order.type === "Sales").forEach((order: OrderItem) => {
         totalSalesRevenueCalc += order.totalAmount;
         order.items.forEach((orderItem: POItem) => { // Explicitly typed orderItem
           const inventoryItem = inventoryItems.find((inv: InventoryItem) => inv.id === orderItem.inventoryItemId); // Explicitly type inv
@@ -868,7 +1380,7 @@ export const useReportData = (
         orders: purchaseOrderStatusReportData,
       },
       profitability: {
-        metricsData: profitabilityMetricsData,
+        metricsData: profitabilityReportData,
         totalSalesRevenue: totalSalesRevenueCalc, // Use the calculated value
         totalCostOfGoodsSold: totalCostOfGoodsSold, // Use the calculated value
       },
