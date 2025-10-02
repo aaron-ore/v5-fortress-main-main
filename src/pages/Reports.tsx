@@ -132,6 +132,108 @@ const Reports: React.FC = () => {
     setIsAiSummarySidebarOpen(true); // NEW: Open the sidebar when summarizing starts
 
     try {
+      let summaryReportData: any = {};
+
+      // Construct a concise summaryReportData based on activeReportId
+      switch (activeReportId) {
+        case "dashboard-summary":
+          summaryReportData = {
+            metrics: reportData.metrics,
+            lists: {
+              lowStockItemsCount: reportData.lists.lowStockItems.length,
+              outOfStockItemsCount: reportData.lists.outOfStockItems.length,
+              recentSalesOrdersCount: reportData.lists.recentSalesOrders.length,
+              recentPurchaseOrdersCount: reportData.lists.recentPurchaseOrders.length,
+            },
+          };
+          break;
+        case "inventory-valuation":
+          summaryReportData = {
+            totalOverallValue: reportData.inventoryValuation.totalOverallValue,
+            totalOverallQuantity: reportData.inventoryValuation.totalOverallQuantity,
+            groupedData: reportData.inventoryValuation.groupedData.slice(0, 5), // Top 5
+            groupBy: reportData.inventoryValuationGroupBy,
+          };
+          break;
+        case "low-stock-out-of-stock":
+          summaryReportData = {
+            itemsCount: reportData.lowStock.items.length,
+            topItems: reportData.lowStock.items.slice(0, 5).map((item: any) => ({ name: item.name, sku: item.sku, quantity: item.quantity })),
+            statusFilter: reportData.lowStockStatusFilter,
+          };
+          break;
+        case "inventory-movement":
+          const totalAdditions = reportData.inventoryMovement.movements.filter((m: any) => m.type === 'add').reduce((sum: number, m: any) => sum + m.amount, 0);
+          const totalSubtractions = reportData.inventoryMovement.movements.filter((m: any) => m.type === 'subtract').reduce((sum: number, m: any) => sum + m.amount, 0);
+          summaryReportData = {
+            movementsCount: reportData.inventoryMovement.movements.length,
+            totalAdditions,
+            totalSubtractions,
+          };
+          break;
+        case "sales-by-customer":
+          summaryReportData = {
+            customerSalesCount: reportData.salesByCustomer.customerSales.length,
+            totalSalesRevenue: reportData.profitability.totalSalesRevenue, // Reusing from profitability
+            topCustomers: reportData.salesByCustomer.customerSales.slice(0, 5).map((c: any) => ({ name: c.customerName, totalSales: c.totalSales })),
+          };
+          break;
+        case "sales-by-product":
+          summaryReportData = {
+            productSalesCount: reportData.salesByProduct.productSales.length,
+            totalSalesRevenue: reportData.profitability.totalSalesRevenue, // Reusing from profitability
+            topProducts: reportData.salesByProduct.productSales.slice(0, 5).map((p: any) => ({ name: p.productName, unitsSold: p.unitsSold, totalRevenue: p.totalRevenue })),
+          };
+          break;
+        case "purchase-order-status":
+          const statusCounts: { [key: string]: number } = {};
+          reportData.purchaseOrderStatus.orders.forEach((order: any) => {
+            statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+          });
+          summaryReportData = {
+            ordersCount: reportData.purchaseOrderStatus.orders.length,
+            totalValue: reportData.purchaseOrderStatus.orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0),
+            statusCounts,
+            statusFilter: reportData.purchaseOrderStatusFilter,
+          };
+          break;
+        case "profitability":
+          summaryReportData = {
+            totalSalesRevenue: reportData.profitability.totalSalesRevenue,
+            totalCostOfGoodsSold: reportData.profitability.totalCostOfGoodsSold,
+            metricsData: reportData.profitability.metricsData,
+          };
+          break;
+        case "stock-discrepancy":
+          const totalDifference = reportData.stockDiscrepancy.discrepancies.reduce((sum: number, d: any) => sum + d.difference, 0);
+          summaryReportData = {
+            discrepanciesCount: reportData.stockDiscrepancy.discrepancies.length,
+            totalDifference,
+            statusFilter: reportData.discrepancyStatusFilter,
+            topDiscrepancyItems: reportData.stockDiscrepancy.discrepancies.slice(0, 5).map((d: any) => ({ itemName: d.itemName, difference: d.difference })),
+          };
+          break;
+        case "advanced-demand-forecast":
+          summaryReportData = {
+            selectedItemName: reportData.advancedDemandForecast.selectedItemName,
+            forecastSummary: reportData.advancedDemandForecast.forecastData.map((dp: any) => ({
+              month: dp.name,
+              historical: dp["Historical Demand"],
+              forecasted: dp["Forecasted Demand"],
+            })),
+          };
+          break;
+        default:
+          summaryReportData = {
+            message: "No specific summary logic for this report type. Providing generic data.",
+            reportId: activeReportId,
+            // Fallback to a very minimal set of data to avoid large payloads
+            metrics: reportData.metrics,
+            // Add other minimal data if absolutely necessary for a generic summary
+          };
+          break;
+      }
+
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session) {
         throw new Error("Session expired. Log in again.");
@@ -139,7 +241,7 @@ const Reports: React.FC = () => {
 
       const payload = {
         reportId: activeReportId,
-        reportData: reportData,
+        reportData: summaryReportData, // Use the concise summaryReportData
       };
 
       const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/generate-ai-summary`;
@@ -152,6 +254,7 @@ const Reports: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -177,7 +280,7 @@ const Reports: React.FC = () => {
     } catch (error: any) {
       console.error("Error generating AI summary:", error);
       showError(`Failed to generate AI summary: ${error.message}`);
-      setAiSummary(null); // Ensure summary is cleared on error
+      setAiSummary(null);
     } finally {
       setIsSummarizing(false);
     }
