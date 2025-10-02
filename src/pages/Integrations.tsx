@@ -219,6 +219,9 @@ const Integrations: React.FC = () => {
     }
   };
 
+  const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
+  const isAdmin = profile?.role === 'admin';
+
   // NEW: Function to initiate Shopify OAuth after getting store URL
   const initiateShopifyOAuth = (shopifyStoreName: string) => {
     if (!profile?.id) {
@@ -501,7 +504,7 @@ const Integrations: React.FC = () => {
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <img src="/Intuit_QuickBooks_logo.png" alt="QuickBooks Logo" className="h-10 object-contain" />
-          <CardTitle className="text-xl font-semibold">QuickBooks</CardTitle>
+          {/* Removed CardTitle text for QuickBooks */}
         </CardHeader>
         <CardContent className="space-y-4">
           {isQuickBooksConnected ? (
@@ -553,7 +556,7 @@ const Integrations: React.FC = () => {
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
           <img src={shopifyLogoSrc} alt="Shopify Logo" className="h-10 object-contain" />
-          <CardTitle className="text-xl font-semibold">Shopify</CardTitle>
+          {/* Removed CardTitle text for Shopify */}
         </CardHeader>
         <CardContent className="space-y-4">
           {isShopifyConnected ? (
