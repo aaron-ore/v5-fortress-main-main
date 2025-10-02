@@ -41,22 +41,40 @@ const Users: React.FC = () => {
   };
 
   const confirmDeleteUser = async () => {
-    if (!userToDelete || !profile?.organizationId || profile?.role !== 'admin') return;
-
-    const { error } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", userToDelete.id)
-      .eq("organization_id", profile.organizationId);
-
-    if (error) {
-      showError(`Failed to delete profile: ${error.message}`);
-    } else {
-      showSuccess(`Profile for ${userToDelete.fullName || userToDelete.email} deleted.`);
-      fetchAllProfiles();
+    if (!userToDelete || !profile?.organizationId || profile?.role !== 'admin') {
+      showError("Cannot delete user: Missing permissions or user data.");
+      setIsConfirmDeleteDialogOpen(false);
+      setUserToDelete(null);
+      return;
     }
-    setIsConfirmDeleteDialogOpen(false);
-    setUserToDelete(null);
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        showError("Authentication session expired. Please log in again.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: JSON.stringify({ targetUserId: userToDelete.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      showSuccess(`User ${userToDelete.fullName || userToDelete.email} deleted.`);
+      fetchAllProfiles(); // Refresh the list of users
+    } catch (error: any) {
+      console.error("Error deleting user via Edge Function:", error);
+      showError(`Failed to delete user: ${error.message}`);
+    } finally {
+      setIsConfirmDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
@@ -215,9 +233,9 @@ const Users: React.FC = () => {
           isOpen={isConfirmDeleteDialogOpen}
           onClose={() => setIsConfirmDeleteDialogOpen(false)}
           onConfirm={confirmDeleteUser}
-          title="Confirm User Dletion"
-          description={`Are you sure you want to delete the profile for "${userToDelete.fullName || userToDelete.email}"? This will NOT delete the user from Supabase Authentication, only their profile data. Full user deletion requires Supabase dashboard or a server-side function.`}
-          confirmText="Delete Profile"
+          title="Confirm User Deletion"
+          description={`Are you sure you want to delete the user "${userToDelete.fullName || userToDelete.email}"? This will permanently delete the user from Supabase Authentication and all their associated profile data.`}
+          confirmText="Delete User"
           cancelText="Cancel"
         />
       )}
