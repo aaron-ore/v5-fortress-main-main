@@ -55,8 +55,11 @@ const Users: React.FC = () => {
         return;
       }
 
+      const payload = JSON.stringify({ targetUserId: userToDelete.id });
+      console.log("[Users.tsx] Sending payload to delete-user Edge Function:", payload); // NEW: Log the payload
+
       const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: JSON.stringify({ targetUserId: userToDelete.id }),
+        body: payload,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.session.access_token}`,
