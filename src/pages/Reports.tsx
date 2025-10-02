@@ -33,7 +33,7 @@ const Reports: React.FC = () => {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isAiSummarySidebarOpen, setIsAiSummarySidebarOpen] = useState(false);
-  const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // State for selected item in forecast
+  // REMOVED: const [selectedForecastItemId, setSelectedForecastItemId] = useState<string>("all-items"); // State for selected item in forecast
 
   // NEW: Report-specific filter states
   const [inventoryValuationGroupBy, setInventoryValuationGroupBy] = useState<"category" | "folder">("category");
@@ -63,9 +63,7 @@ const Reports: React.FC = () => {
     setAiSummary(null);
     setIsAiSummarySidebarOpen(false);
     // Reset selected forecast item when changing reports
-    if (activeReportId !== "advanced-demand-forecast") {
-      setSelectedForecastItemId("all-items");
-    }
+    // The internal state of useReportData will handle resetting selectedForecastItemId
   }, [activeReportId, dateRange]);
 
   const handleClearDateFilter = () => {
@@ -88,7 +86,7 @@ const Reports: React.FC = () => {
     lowStockStatusFilter,
     purchaseOrderStatusFilter,
     discrepancyStatusFilter,
-    selectedForecastItemId, // Pass selectedForecastItemId
+    reportData?.advancedDemandForecast?.selectedForecastItemId || "all-items", // Pass the current selected item ID from the hook's internal state
   );
 
   const handlePrintReport = useCallback(() => {
@@ -106,8 +104,8 @@ const Reports: React.FC = () => {
       structuredLocations: structuredLocations,
       // NEW: Pass forecast-specific props if it's the forecast report
       ...(activeReportId === "advanced-demand-forecast" && {
-        forecastData: reportData.forecastData,
-        selectedItemName: reportData.selectedItemName,
+        forecastData: reportData.advancedDemandForecast.forecastData,
+        selectedItemName: reportData.advancedDemandForecast.selectedItemName,
       }),
       // NEW: Pass report-specific filters to PDF content
       ...(activeReportId === "inventory-valuation" && { groupBy: inventoryValuationGroupBy }),
@@ -287,10 +285,13 @@ const Reports: React.FC = () => {
                 </Select>
               </div>
             )}
-            {activeReportId === "advanced-demand-forecast" && (
+            {activeReportId === "advanced-demand-forecast" && reportData?.advancedDemandForecast && (
               <div className="space-y-2">
                 <Label htmlFor="forecastItemSelect">Select Item</Label>
-                <Select value={selectedForecastItemId} onValueChange={setSelectedForecastItemId}>
+                <Select
+                  value={reportData.advancedDemandForecast.selectedItemName === "All Items" ? "all-items" : (reportData.advancedDemandForecast.selectedForecastItemId || "all-items")}
+                  onValueChange={reportData.advancedDemandForecast.onSelectItem}
+                >
                   <SelectTrigger id="forecastItemSelect" className="w-[240px]">
                     <SelectValue placeholder="Select an item or 'All Items'" />
                   </SelectTrigger>
@@ -353,7 +354,7 @@ const Reports: React.FC = () => {
                     // Pass filter states directly to the component if needed for display logic
                     groupBy={inventoryValuationGroupBy}
                     statusFilter={activeReportId === "low-stock-out-of-stock" ? lowStockStatusFilter : (activeReportId === "purchase-order-status" ? purchaseOrderStatusFilter : discrepancyStatusFilter)}
-                    onSelectItem={setSelectedForecastItemId} // Pass item selection handler for forecast report
+                    // onSelectItem is now part of reportData.advancedDemandForecast
                   />
                 )}
               </div>
