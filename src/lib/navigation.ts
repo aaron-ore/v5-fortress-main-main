@@ -54,7 +54,6 @@ export const mainNavItems: NavItem[] = [
 
 export const userAndSettingsNavItems: NavItem[] = [
   { title: "My Profile", href: "/profile", icon: User },
-  { title: "Account Settings", href: "/account-settings", icon: SettingsIcon },
   { title: "Notifications", href: "/notifications-page", icon: Bell },
   { title: "Billing & Subscriptions", href: "/billing", icon: DollarSign },
   {
@@ -64,6 +63,7 @@ export const userAndSettingsNavItems: NavItem[] = [
     isParent: true,
     children: [
       { title: "Company Settings", href: "/settings", icon: SettingsIcon },
+      { title: "Account Settings", href: "/account-settings", icon: SettingsIcon }, // Moved here
       { title: "User Management", href: "/users", icon: UsersIcon, adminOnly: true },
       { title: "Activity Logs", href: "/activity-logs", icon: Activity, adminOnly: true },
     ],
