@@ -12,18 +12,20 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon, Loader2 } from "lucide-react";
-import { useProfile, UserProfile } from "@/context/ProfileContext"; // Corrected import
+import { Users as UsersIcon, Trash2, Copy, Settings as SettingsIcon, Loader2, ArrowRightLeft } from "lucide-react"; // Added ArrowRightLeft
+import { useProfile, UserProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import ManageCustomRolesDialog from "@/components/ManageCustomRolesDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import TransferAdminDialog from "@/components/TransferAdminDialog"; // NEW: Import TransferAdminDialog
 
 const Users: React.FC = () => {
   const { profile, allProfiles, updateUserRole, fetchAllProfiles, isLoadingProfile } = useProfile();
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const [isManageCustomRolesDialogOpen, setIsManageCustomRolesDialogOpen] = useState(false);
+  const [isTransferAdminDialogOpen, setIsTransferAdminDialogOpen] = useState(false); // NEW: State for TransferAdminDialog
 
   useEffect(() => {
     if (profile?.role === 'admin') {
@@ -33,7 +35,7 @@ const Users: React.FC = () => {
 
   const handleDeleteUserClick = (user: UserProfile) => {
     if (profile?.role !== 'admin') {
-      showError("No permission to delete users.");
+      showError("You do not have permission to delete users.");
       return;
     }
     setUserToDelete(user);
@@ -56,9 +58,8 @@ const Users: React.FC = () => {
       }
 
       const payload = JSON.stringify({ targetUserId: userToDelete.id });
-      console.log("[Users.tsx] Sending payload to delete-user Edge Function:", payload); // Log the payload
+      console.log("[Users.tsx] Sending payload to delete-user Edge Function:", payload);
 
-      // --- START: Changed to direct fetch call ---
       const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/delete-user`;
       const response = await fetch(edgeFunctionUrl, {
         method: 'POST',
@@ -82,12 +83,11 @@ const Users: React.FC = () => {
       }
 
       const data = await response.json();
-      // --- END: Changed to direct fetch call ---
 
       if (data.error) throw new Error(data.error);
 
       showSuccess(`User ${userToDelete.fullName || userToDelete.email} deleted.`);
-      fetchAllProfiles(); // Refresh the list of users
+      fetchAllProfiles();
     } catch (error: any) {
       console.error("Error deleting user via Edge Function:", error);
       showError(`Failed to delete user: ${error.message}`);
@@ -99,13 +99,23 @@ const Users: React.FC = () => {
 
   const handleUpdateUserRole = async (userId: string, newRole: string) => {
     if (profile?.role !== 'admin') {
-      showError("No permission to update roles.");
+      showError("You do not have permission to update roles.");
       return;
     }
     if (!profile?.organizationId) {
       showError("Organization ID not found for role update.");
       return;
     }
+
+    // Prevent an admin from demoting themselves if they are the only admin
+    if (userId === profile.id && newRole !== 'admin') {
+      const otherAdminsCount = allProfiles.filter(u => u.role === 'admin' && u.id !== profile.id).length;
+      if (otherAdminsCount === 0) {
+        showError("You are the only administrator. Please transfer your role to another user before changing your own role.");
+        return;
+      }
+    }
+
     try {
       await updateUserRole(userId, newRole, profile.organizationId);
     } catch (error: any) {
@@ -122,7 +132,7 @@ const Users: React.FC = () => {
     }
   };
 
-  if (isLoadingProfile) { // Use isLoadingProfile directly
+  if (isLoadingProfile) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="p-6 text-center bg-card border-border">
@@ -135,7 +145,7 @@ const Users: React.FC = () => {
     );
   }
 
-  const isAdmin = profile?.role === 'admin'; // Define isAdmin here
+  const isAdmin = profile?.role === 'admin';
 
   if (!isAdmin) {
     return (
@@ -176,9 +186,12 @@ const Users: React.FC = () => {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
         <Button onClick={() => setIsManageCustomRolesDialogOpen(true)} disabled={!isAdmin}>
           <SettingsIcon className="h-4 w-4 mr-2" /> Manage Custom Roles
+        </Button>
+        <Button onClick={() => setIsTransferAdminDialogOpen(true)} disabled={!isAdmin || allProfiles.filter(u => u.role !== 'admin').length === 0}>
+          <ArrowRightLeft className="h-4 w-4 mr-2" /> Transfer Admin Role
         </Button>
       </div>
 
@@ -263,6 +276,11 @@ const Users: React.FC = () => {
       <ManageCustomRolesDialog
         isOpen={isManageCustomRolesDialogOpen}
         onClose={() => setIsManageCustomRolesDialogOpen(false)}
+      />
+
+      <TransferAdminDialog
+        isOpen={isTransferAdminDialogOpen}
+        onClose={() => setIsTransferAdminDialogOpen(false)}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, startTransition } from 'react'; // Import startTransition
+import React, { createContext, useContext, useState, useEffect, useCallback, startTransition } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { showError, showSuccess } from '@/utils/toast';
 import { logActivity } from '@/utils/logActivity';
@@ -63,7 +63,8 @@ interface ProfileContextType {
   markOnboardingWizardCompleted: () => Promise<void>;
   // Removed: markTutorialAsShown: () => Promise<void>;
   markUpgradePromptSeen: () => Promise<void>;
-  updateProfileLocally: (updates: Partial<UserProfile>) => void; // NEW: Added local update function
+  updateProfileLocally: (updates: Partial<UserProfile>) => void;
+  transferAdminRole: (newAdminUserId: string) => Promise<void>; // NEW: Added transferAdminRole
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -265,10 +266,19 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateUserRole = async (userId: string, newRole: string, organizationId: string) => {
     if (!profile || profile.role !== 'admin' || profile.organizationId !== organizationId) {
-      const errorMessage = 'No permission to update roles.';
+      const errorMessage = 'You do not have permission to update roles.';
       await logActivity("Update User Role Failed", errorMessage, profile, { target_user_id: userId, new_role: newRole, organization_id: organizationId }, true);
       showError(errorMessage);
       return;
+    }
+
+    // Prevent an admin from demoting themselves if they are the only admin
+    if (userId === profile.id && newRole !== 'admin') {
+      const otherAdminsCount = allProfiles.filter(u => u.role === 'admin' && u.id !== profile.id).length;
+      if (otherAdminsCount === 0) {
+        showError("You are the only administrator. Please transfer your role to another user before changing your own role.");
+        return;
+      }
     }
 
     try {
@@ -304,7 +314,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     // updates.companyLogoUrl is expected to be the INTERNAL PATH or null
-    const companyLogoUrlForDb = updates.companyLogoUrl === null ? null : updates.companyLogoUrl; // Changed to null
+    const companyLogoUrlForDb = updates.companyLogoUrl === null ? null : updates.companyLogoUrl;
     console.log("[ProfileContext] updateCompanyProfile: Final companyLogoUrlForDb before DB update (internal path):", companyLogoUrlForDb);
 
     const payload: any = {
@@ -344,7 +354,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateOrganizationTheme = async (newTheme: string) => {
     if (!profile || profile.role !== 'admin' || !profile.organizationId) {
-      const errorMessage = 'No permission to update theme.';
+      const errorMessage = 'You do not have permission to update theme.';
       await logActivity("Update Organization Theme Failed", errorMessage, profile, { new_theme: newTheme }, true);
       showError(errorMessage);
       return;
@@ -392,8 +402,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Removed: const markTutorialAsShown = async () => { ... }
-
   const markUpgradePromptSeen = async () => {
     if (!profile) {
       console.warn("[ProfileContext] Cannot mark upgrade prompt as seen: User profile not loaded.");
@@ -419,6 +427,42 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const transferAdminRole = async (newAdminUserId: string) => {
+    if (!profile || profile.role !== 'admin' || !profile.organizationId) {
+      const errorMessage = 'You do not have permission to transfer admin roles.';
+      await logActivity("Transfer Admin Role Failed", errorMessage, profile, { new_admin_user_id: newAdminUserId }, true);
+      showError(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error("Authentication session expired. Please log in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('transfer-admin-role', {
+        body: JSON.stringify({ newAdminUserId }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      showSuccess(data.message || "Admin role transferred successfully!");
+      await logActivity("Transfer Admin Role Success", `Admin role transferred from ${profile.id} to ${newAdminUserId}.`, profile, { new_admin_user_id: newAdminUserId });
+      await fetchProfile(); // Fetch current user's updated profile (now non-admin)
+      await fetchAllProfiles(); // Refresh all users to show new admin
+    } catch (error: any) {
+      console.error('Error transferring admin role:', error);
+      await logActivity("Transfer Admin Role Failed", `Failed to transfer admin role: ${error.message}.`, profile, { error_message: error.message, new_admin_user_id: newAdminUserId }, true);
+      throw error;
+    }
+  };
+
   return (
     <ProfileContext.Provider
       value={{
@@ -433,9 +477,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateCompanyProfile,
         updateOrganizationTheme,
         markOnboardingWizardCompleted,
-        // Removed: markTutorialAsShown,
         markUpgradePromptSeen,
-        updateProfileLocally, // NEW: Expose local update function
+        updateProfileLocally,
+        transferAdminRole, // NEW: Provide transferAdminRole
       }}
     >
       {children}
