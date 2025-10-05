@@ -5,15 +5,6 @@ import {
   Truck,
   BarChart,
   Warehouse,
-  Search,
-  PackagePlus,
-  ShoppingCart,
-  ListOrdered,
-  Repeat,
-  CheckCircle,
-  Undo2,
-  Scan,
-  AlertTriangle,
   MapPin,
   User,
   Settings as SettingsIcon,
@@ -27,15 +18,6 @@ import {
   Zap,
   Activity,
 } from "lucide-react";
-
-// Explicitly reference all imported icons to satisfy TypeScript's 'value is never read' check (TS6133)
-// These icons are used as values in the NavItem objects below.
-const _ = [
-  LayoutDashboard, Package, Receipt, Truck, BarChart, Warehouse, Search, PackagePlus,
-  ShoppingCart, ListOrdered, Repeat, CheckCircle, Undo2, Scan, AlertTriangle, MapPin,
-  User, SettingsIcon, Bell, DollarSign, UsersIcon, HelpCircle, Sparkles, BookOpen,
-  Plug, Zap, Activity
-];
 
 export interface NavItem {
   title: string;
