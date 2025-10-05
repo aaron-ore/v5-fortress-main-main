@@ -25,7 +25,7 @@ import {
   BookOpen,
   Plug,
   Zap,
-  Activity, // NEW: Import Activity icon
+  Activity,
 } from "lucide-react";
 
 export interface NavItem {
@@ -37,7 +37,7 @@ export interface NavItem {
   adminOnly?: boolean;
   mobileOnly?: boolean;
   action?: () => void;
-  tag?: string; // NEW: Optional tag for items
+  tag?: string;
 }
 
 export const mainNavItems: NavItem[] = [
@@ -48,29 +48,9 @@ export const mainNavItems: NavItem[] = [
   { title: "Customers", href: "/customers", icon: User },
   { title: "Vendors", href: "/vendors", icon: Truck },
   { title: "Folders", href: "/folders", icon: MapPin },
-  { title: "Integrations", href: "/integrations", icon: Plug, tag: "Coming Soon" }, // NEW: Added 'Coming Soon' tag
+  { title: "Integrations", href: "/integrations", icon: Plug, tag: "Coming Soon" },
   { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
-  {
-    title: "Warehouse Operations",
-    href: "/warehouse-operations",
-    icon: Warehouse,
-    isParent: true,
-    children: [
-      { title: "Dashboard", href: "/warehouse-operations#dashboard", icon: LayoutDashboard },
-      { title: "Item Lookup", href: "/warehouse-operations#item-lookup", icon: Search },
-      { title: "Receive Inventory", href: "/warehouse-operations#receive-inventory", icon: PackagePlus },
-      { title: "Putaway", href: "/warehouse-operations#putaway", icon: MapPin },
-      { title: "Fulfill Order", href: "/warehouse-operations#fulfill-order", icon: ShoppingCart },
-      { title: "Ship Order", href: "/warehouse-operations#ship-order", icon: Truck },
-      { title: "Picking Wave", href: "/warehouse-operations#picking-wave", icon: ListOrdered },
-      { title: "Replenishment", href: "/warehouse-operations#replenishment", icon: Repeat },
-      { title: "Shipping Verify", href: "/warehouse-operations#shipping-verify", icon: CheckCircle },
-      { title: "Returns Process", href: "/warehouse-operations#returns-process", icon: Undo2 },
-      { title: "Stock Transfer", href: "/warehouse-operations#stock-transfer", icon: Scan },
-      { title: "Cycle Count", href: "/warehouse-operations#cycle-count", icon: CheckCircle },
-      { title: "Issue Report", href: "/warehouse-operations#issue-report", icon: AlertTriangle },
-    ],
-  },
+  { title: "Warehouse Operations", href: "/warehouse-operations", icon: Warehouse }, // Consolidated into a single entry
 ];
 
 export const userAndSettingsNavItems: NavItem[] = [
@@ -79,7 +59,7 @@ export const userAndSettingsNavItems: NavItem[] = [
   { title: "Notifications", href: "/notifications-page", icon: Bell },
   { title: "Billing & Subscriptions", href: "/billing", icon: DollarSign },
   { title: "Users", href: "/users", icon: UsersIcon, adminOnly: true },
-  { title: "Activity Logs", href: "/activity-logs", icon: Activity, adminOnly: true }, // NEW: Activity Logs
+  { title: "Activity Logs", href: "/activity-logs", icon: Activity, adminOnly: true },
   { title: "Company Settings", href: "/settings", icon: SettingsIcon },
 ];
 
