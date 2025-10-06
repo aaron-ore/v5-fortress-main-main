@@ -99,6 +99,26 @@ const Auth: React.FC = () => {
     setLoading(false);
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/auth', // Redirect back to your auth page
+      },
+    });
+
+    if (error) {
+      showError(error.message);
+      await logActivity("Google Sign-in Failed", `User failed to sign in with Google.`, profile, { error_message: error.message }, true);
+    } else {
+      // Supabase will redirect the user to Google for authentication,
+      // then back to your redirectTo URL. The AuthContext's onAuthStateChange
+      // listener will handle the session and subsequent navigation.
+    }
+    setLoading(false); // This might be reset prematurely if redirect happens quickly
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
@@ -227,27 +247,42 @@ const Auth: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="mt-6 text-center text-sm">
-            {isLogin ? (
-              <>
-                <span className="text-white/80">Don't have an account?{" "}</span>
-                <Button variant="link" onClick={() => setIsLogin(false)} className="p-0 h-auto text-primary hover:text-primary/80">
-                  Sign Up
-                </Button>
-                <div className="mt-2">
-                  <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto text-white/80 hover:text-primary" disabled={loading}>
-                    Forgot Password?
+          <div className="mt-6 space-y-4">
+            <Button
+              onClick={handleGoogleSignIn}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+              disabled={loading}
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.24 10.285V14.4h6.83c-.25 1.48-1.08 2.42-2.08 3.16v3.18h2.45c1.78-1.64 2.82-3.9 2.82-6.72 0-.65-.07-1.3-.18-1.95H12.24z" fill="#4285F4"/>
+                <path d="M12.24 21.6c3.24 0 5.93-1.08 7.91-2.96l-2.45-3.18c-.67.48-1.8.96-3.46.96-2.62 0-4.83-1.72-5.67-4.05H3.6v3.23c1.12 2.2 3.3 3.78 6.04 3.78h2.6z" fill="#34A853"/>
+                <path d="M6.57 12.28c-.24-.6-.38-1.24-.38-1.92s.14-1.32.38-1.92V6.16H3.6c-.78 1.56-1.2 3.24-1.2 4.92s.42 3.36 1.2 4.92l2.97-2.6z" fill="#FBBC05"/>
+                <path d="M12.24 5.8c1.48 0 2.76.48 3.78 1.3l2.1-2.08c-1.24-1.16-2.88-1.88-4.88-1.88-2.74 0-4.92 1.58-6.04 3.78l2.97 2.62c.84-2.32 3.05-4.04 5.67-4.04z" fill="#EA4335"/>
+              </svg>
+              Sign {isLogin ? "In" : "Up"} with Google
+            </Button>
+            <div className="text-center text-sm">
+              {isLogin ? (
+                <>
+                  <span className="text-white/80">Don't have an account?{" "}</span>
+                  <Button variant="link" onClick={() => setIsLogin(false)} className="p-0 h-auto text-primary hover:text-primary/80">
+                    Sign Up
                   </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="text-white/80">Already have an account?{" "}</span>
-                <Button variant="link" onClick={() => setIsLogin(true)} className="p-0 h-auto text-primary hover:text-primary/80">
-                  Sign In
-                </Button>
-              </>
-            )}
+                  <div className="mt-2">
+                    <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto text-white/80 hover:text-primary" disabled={loading}>
+                      Forgot Password?
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span className="text-white/80">Already have an account?{" "}</span>
+                  <Button variant="link" onClick={() => setIsLogin(true)} className="p-0 h-auto text-primary hover:text-primary/80">
+                    Sign In
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
