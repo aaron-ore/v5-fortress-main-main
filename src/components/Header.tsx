@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -101,12 +103,14 @@ const Header: React.FC<HeaderProps> = ({ setIsNotificationSheetOpen, setIsGlobal
                 />
               </svg>
             )}
-            <span className="text-xl font-semibold text-sidebar-foreground">{profile?.companyProfile?.companyName || "Fortress"}</span>
+            <span className="text-xl font-semibold text-sidebar-foreground">
+              {profile?.companyProfile?.companyName || "Fortress"}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <CurrentDateTime className="text-sidebar-foreground" />
+        <div className="flex items-center space-x-2 flex-shrink-0 min-w-0">
+          <CurrentDateTime className="text-sidebar-foreground text-xs" />
           <Button variant="ghost" size="icon" onClick={() => setIsGlobalSearchDialogOpen(true)} className="text-sidebar-foreground hover:bg-white/20">
             <Search className="h-5 w-5" />
           </Button>
