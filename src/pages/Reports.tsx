@@ -197,7 +197,7 @@ const Reports: React.FC = () => {
             {activeReportId === "stock-discrepancy" && (
               <div className="space-y-2">
                 <Label htmlFor="discrepancyStatusFilter">Status Filter</Label>
-                <Select value={discrepancyStatusFilter} onValueChange={(value: "all" | "pending" | "resolved") => setDiscrepcrepancyStatusFilter(value)}>
+                <Select value={discrepancyStatusFilter} onValueChange={(value: "all" | "pending" | "resolved") => setDiscrecrepancyStatusFilter(value)}>
                   <SelectTrigger id="discrepancyStatusFilter" className="w-[180px]">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
