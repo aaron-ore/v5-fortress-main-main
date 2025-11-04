@@ -121,10 +121,16 @@ serve(async (req) => {
         const checkoutSession = event.data.object as Stripe.Checkout.Session;
         const customerId = checkoutSession.customer as string;
         const organizationIdFromSession = checkoutSession.metadata?.organization_id;
+        const productNameFromMetadata = checkoutSession.metadata?.product_name; // NEW: Get product name from metadata
+
         if (organizationIdFromSession) {
           // Update the organization with the customer ID if it's a new customer
           await supabaseAdmin.from('organizations').update({
             stripe_customer_id: customerId,
+            // NEW: Update plan for one-time purchases
+            plan: productNameFromMetadata ? productNameFromMetadata.toLowerCase() : 'free',
+            stripe_subscription_id: null, // Ensure subscription ID is null for one-time payments
+            trial_ends_at: null, // Ensure trial ends at is null for one-time payments
           }).eq('id', organizationIdFromSession);
         }
         break;

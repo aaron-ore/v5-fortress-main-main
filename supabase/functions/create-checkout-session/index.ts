@@ -38,14 +38,15 @@ serve(async (req) => {
       });
     }
 
-    const { priceId, organizationId, trial_period_days } = requestBody;
+    const { priceId, organizationId, mode, trial_period_days } = requestBody; // NEW: Destructure mode
     console.log('Edge Function: Extracted priceId:', priceId);
     console.log('Edge Function: Extracted organizationId:', organizationId);
+    console.log('Edge Function: Extracted mode:', mode); // NEW: Log mode
     console.log('Edge Function: Extracted trial_period_days:', trial_period_days);
 
-    if (!priceId || !organizationId) {
-      console.error('Edge Function: Missing required parameters after extraction. priceId:', priceId, 'organizationId:', organizationId);
-      return new Response(JSON.stringify({ error: 'Missing required parameters: priceId, organizationId.' }), {
+    if (!priceId || !organizationId || !mode) { // NEW: mode is now required
+      console.error('Edge Function: Missing required parameters after extraction. priceId:', priceId, 'organizationId:', organizationId, 'mode:', mode);
+      return new Response(JSON.stringify({ error: 'Missing required parameters: priceId, organizationId, mode.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -139,22 +140,67 @@ serve(async (req) => {
       await supabaseAdmin.from('organizations').update({ stripe_customer_id: customerId }).eq('id', organizationId);
     }
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
-      mode: 'subscription',
       line_items: [{
         price: priceId,
         quantity: 1,
       }],
-      subscription_data: {
-        trial_period_days: trial_period_days || undefined,
-      },
-      success_url: `${req.headers.get('referer')}integrations?stripe_success=true`,
-      cancel_url: `${req.headers.get('referer')}integrations?stripe_cancel=true`,
+      success_url: `${req.headers.get('referer')}billing?stripe_success=true`,
+      cancel_url: `${req.headers.get('referer')}billing?stripe_cancel=true`,
       metadata: {
         organization_id: organizationId,
       },
-    });
+    };
+
+    if (mode === 'subscription') {
+      checkoutSessionConfig.mode = 'subscription';
+      checkoutSessionConfig.subscription_data = {
+        trial_period_days: trial_period_days || undefined,
+      };
+    } else if (mode === 'payment') { // NEW: Handle one-time payment mode
+      checkoutSessionConfig.mode = 'payment';
+      // For one-time payments, we might want to store the product name in metadata
+      // to update the organization's plan after successful payment.
+      const { data: priceData, error: priceError } = await supabaseAdmin
+        .from('prices')
+        .select('product_id')
+        .eq('id', priceId)
+        .single();
+
+      if (priceError || !priceData) {
+        console.error('Error fetching price data for one-time payment:', priceError);
+        return new Response(JSON.stringify({ error: 'Failed to fetch price details for one-time payment.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      const { data: productData, error: productError } = await supabaseAdmin
+        .from('products')
+        .select('name')
+        .eq('id', priceData.product_id)
+        .single();
+
+      if (productError || !productData) {
+        console.error('Error fetching product data for one-time payment:', productError);
+        return new Response(JSON.stringify({ error: 'Failed to fetch product details for one-time payment.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+      checkoutSessionConfig.metadata = {
+        ...checkoutSessionConfig.metadata,
+        product_name: productData.name, // Store product name for webhook
+      };
+    } else {
+      return new Response(JSON.stringify({ error: 'Invalid mode specified. Must be "subscription" or "payment".' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(checkoutSessionConfig);
 
     return new Response(JSON.stringify({ sessionId: checkoutSession.id, url: checkoutSession.url }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

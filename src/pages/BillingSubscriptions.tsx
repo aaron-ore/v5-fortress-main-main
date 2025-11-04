@@ -40,8 +40,9 @@ interface StripePrice {
 
 interface SubscriptionPlanDisplay extends StripeProduct {
   prices: StripePrice[];
-  monthlyPrice: number; // Calculated monthly price for display
+  monthlyPrice?: number; // Calculated monthly price for display
   annualPrice?: number; // Calculated annual price for display
+  oneTimePrice?: number; // NEW: Calculated one-time price for display
   isPopular?: boolean;
   features: PlanFeature[]; // Added features array
 }
@@ -56,9 +57,6 @@ const BillingSubscriptions: React.FC = () => {
 
   const currentPlanId = profile?.companyProfile?.plan || "free";
   const currentStripeCustomerId = profile?.stripeCustomerId;
-
-  // The fetchProfile calls in handleChoosePlan and handleManageSubscription's finally blocks are sufficient.
-  // The previous useEffect here caused an infinite re-render loop.
 
   useEffect(() => {
     const fetchStripeProductsAndPrices = async () => {
@@ -91,8 +89,9 @@ const BillingSubscriptions: React.FC = () => {
         const productPrices = prices.filter(price => price.product_id === product.id);
         
         // Find the monthly recurring price for display
-        const monthlyPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'month')?.unit_amount || 0;
-        const annualPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'year')?.unit_amount || 0;
+        const monthlyPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'month')?.unit_amount || undefined;
+        const annualPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'year')?.unit_amount || undefined;
+        const oneTimePrice = productPrices.find(p => p.type === 'one_time')?.unit_amount || undefined; // NEW: Find one-time price
 
         // Mock features for display, as they are not coming from Stripe directly in this setup
         const features: PlanFeature[] = [
@@ -100,13 +99,13 @@ const BillingSubscriptions: React.FC = () => {
           { text: "Dashboard Overview", included: true },
           { text: "Up to 500 Items", included: product.name.toLowerCase() === 'free' },
           { text: "Up to 1000 Items", included: product.name.toLowerCase() === 'standard' },
-          { text: "Unlimited Items", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "Unlimited Items", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime') },
           { text: "Basic Order Management", included: true },
           { text: "Customer & Vendor Management", included: product.name.toLowerCase() !== 'free' },
-          { text: "Advanced Reporting", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
-          { text: "AI Summary for Reports", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
-          { text: "QuickBooks Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
-          { text: "Shopify Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' },
+          { text: "Advanced Reporting", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
+          { text: "AI Summary for Reports", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
+          { text: "QuickBooks Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
+          { text: "Shopify Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
           { text: "Automation Engine", included: product.name.toLowerCase() === 'enterprise' },
           { text: "Dedicated Support", included: product.name.toLowerCase() === 'enterprise' },
         ];
@@ -114,12 +113,13 @@ const BillingSubscriptions: React.FC = () => {
         return {
           ...product,
           prices: productPrices,
-          monthlyPrice: monthlyPrice / 100, // Convert cents to dollars
-          annualPrice: annualPrice / 100, // Convert cents to dollars
+          monthlyPrice: monthlyPrice ? monthlyPrice / 100 : undefined, // Convert cents to dollars
+          annualPrice: annualPrice ? annualPrice / 100 : undefined, // Convert cents to dollars
+          oneTimePrice: oneTimePrice ? oneTimePrice / 100 : undefined, // NEW: Convert cents to dollars
           isPopular: product.metadata?.is_popular === 'true',
           features: features, // Assign mock features
         };
-      }).sort((a, b) => a.monthlyPrice - b.monthlyPrice); // Sort by price
+      }).sort((a, b) => (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity)); // Sort by monthly price, putting free/lifetime first
 
       setAvailablePlans(plansWithPrices);
       setIsLoadingPlans(false);
@@ -130,14 +130,14 @@ const BillingSubscriptions: React.FC = () => {
 
   const getPriceDisplay = (plan: SubscriptionPlanDisplay) => {
     if (plan.name.toLowerCase() === "enterprise") return "Contact Sales";
-    if (plan.monthlyPrice === 0) return "Free";
+    if (plan.name.toLowerCase() === "free") return "Free";
+    if (plan.oneTimePrice !== undefined) return `$${plan.oneTimePrice.toFixed(0)} one-time`; // NEW: Display one-time price
 
     if (billingCycle === "monthly") {
-      return `$${plan.monthlyPrice.toFixed(0)}/month`;
+      return plan.monthlyPrice !== undefined ? `$${plan.monthlyPrice.toFixed(0)}/month` : "N/A";
     } else {
-      // If annual price is available, use it, otherwise calculate with discount
-      const price = plan.annualPrice && plan.annualPrice > 0 ? plan.annualPrice : plan.monthlyPrice * 12 * 0.83; // Approx 17% discount
-      return `$${price.toFixed(0)}/year`;
+      const price = plan.annualPrice !== undefined && plan.annualPrice > 0 ? plan.annualPrice : (plan.monthlyPrice !== undefined ? plan.monthlyPrice * 12 * 0.83 : undefined); // Approx 17% discount
+      return price !== undefined ? `$${price.toFixed(0)}/year` : "N/A";
     }
   };
 
@@ -154,13 +154,22 @@ const BillingSubscriptions: React.FC = () => {
 
     setIsProcessingSubscription(true);
     try {
-      const selectedPrice = plan.prices.find(p => 
-        p.type === 'recurring' && 
-        (billingCycle === 'monthly' ? p.interval === 'month' : p.interval === 'year')
-      );
+      let selectedPrice: StripePrice | undefined;
+      let mode: 'subscription' | 'payment';
+
+      if (plan.oneTimePrice !== undefined) { // NEW: Handle one-time payment
+        selectedPrice = plan.prices.find(p => p.type === 'one_time');
+        mode = 'payment';
+      } else {
+        selectedPrice = plan.prices.find(p => 
+          p.type === 'recurring' && 
+          (billingCycle === 'monthly' ? p.interval === 'month' : p.interval === 'year')
+        );
+        mode = 'subscription';
+      }
 
       if (!selectedPrice) {
-        throw new Error(`No ${billingCycle} recurring price found for ${plan.name}.`);
+        throw new Error(`No suitable price found for ${plan.name} with selected billing cycle.`);
       }
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -171,12 +180,12 @@ const BillingSubscriptions: React.FC = () => {
       const payload = {
         priceId: selectedPrice.id,
         organizationId: profile.organizationId,
-        trial_period_days: selectedPrice.trial_period_days || undefined, // Pass trial_period_days
+        mode: mode, // Pass the mode to the Edge Function
+        trial_period_days: selectedPrice.trial_period_days || undefined,
       };
 
       console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2));
 
-      // --- START: Direct fetch call to Edge Function ---
       const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/create-checkout-session`;
       const response = await fetch(edgeFunctionUrl, {
         method: 'POST',
@@ -200,7 +209,6 @@ const BillingSubscriptions: React.FC = () => {
       }
 
       const data = await response.json();
-      // --- END: Direct fetch call ---
 
       if (data.error) {
         throw new Error(data.error);
@@ -272,6 +280,9 @@ const BillingSubscriptions: React.FC = () => {
     showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
   };
 
+  const recurringPlans = availablePlans.filter(plan => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
+  const lifetimePlans = availablePlans.filter(plan => plan.oneTimePrice !== undefined);
+
   if (isLoadingProfile || isLoadingPlans) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -305,9 +316,9 @@ const BillingSubscriptions: React.FC = () => {
         </ToggleGroup>
       </div>
 
-      {/* Plan Cards */}
+      {/* Recurring Plan Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {availablePlans.map((plan: SubscriptionPlanDisplay) => (
+        {recurringPlans.map((plan: SubscriptionPlanDisplay) => (
           <Card
             key={plan.id}
             className={cn(
@@ -363,6 +374,69 @@ const BillingSubscriptions: React.FC = () => {
         ))}
       </div>
 
+      {/* NEW: Lifetime Deal Cards */}
+      {lifetimePlans.length > 0 && (
+        <div className="mt-10 space-y-6">
+          <h2 className="text-2xl font-bold text-foreground text-center">Lifetime Deals (AppSumo Exclusive)</h2>
+          <p className="text-muted-foreground text-center">Get unlimited access with a one-time payment!</p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {lifetimePlans.map((plan: SubscriptionPlanDisplay) => (
+              <Card
+                key={plan.id}
+                className={cn(
+                  "bg-card border-border rounded-lg shadow-sm flex flex-col",
+                  plan.isPopular && "border-2 border-primary shadow-lg"
+                )}
+              >
+                <CardHeader className="pb-4 text-center">
+                  {plan.isPopular && (
+                    <div className="flex justify-center mb-2">
+                      <Badge variant="secondary" className="bg-primary/20 text-primary text-xs px-3 py-1 rounded-full flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
+                  <div className="mt-4 text-4xl font-extrabold text-foreground">
+                    {getPriceDisplay(plan)}
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col justify-between p-6 pt-0">
+                  <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+                    {plan.features.map((feature: PlanFeature, index: number) => (
+                      <li key={index} className="flex items-center gap-2">
+                        {feature.included ? (
+                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
+                        {feature.text}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="w-full mt-auto"
+                    onClick={() => handleChoosePlan(plan)}
+                    disabled={currentPlanId === plan.name.toLowerCase() || isProcessingSubscription}
+                  >
+                    {isProcessingSubscription ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
+                      </>
+                    ) : currentPlanId === plan.name.toLowerCase() ? (
+                      "Current Plan"
+                    ) : (
+                      "Get Lifetime Deal"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Current Plan Details */}
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
@@ -389,7 +463,7 @@ const BillingSubscriptions: React.FC = () => {
               ))}
             </ul>
           </div>
-          {currentPlanId !== "free" && (
+          {currentPlanId !== "free" && !currentPlanId.includes('lifetime') && ( // Only show manage subscription for recurring plans
             <Button onClick={handleManageSubscription} disabled={isManagingSubscription}>
               {isManagingSubscription ? (
                 <>
