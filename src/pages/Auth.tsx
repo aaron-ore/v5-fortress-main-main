@@ -232,11 +232,6 @@ const Auth: React.FC = () => {
                     If you have a company code, enter it to join your organization.
                   </p>
                 </div>
-                <p className="text-xs text-white/70 text-center">
-                  By signing up, you agree to our{" "}
-                  <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link> and{" "}
-                  <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
-                </p>
               </>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
