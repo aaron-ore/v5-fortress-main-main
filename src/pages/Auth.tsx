@@ -5,11 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom"; // NEW: Import Link
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
 import { useProfile } from "@/context/ProfileContext";
+import Footer from "@/components/Footer"; // NEW: Import Footer
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -137,7 +138,7 @@ const Auth: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center p-4"
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/932271.jpg')` }}
     >
       <Card className="w-full max-w-md bg-black/20 backdrop-blur-lg border border-white/30 shadow-lg text-white">
@@ -231,6 +232,11 @@ const Auth: React.FC = () => {
                     If you have a company code, enter it to join your organization.
                   </p>
                 </div>
+                <p className="text-xs text-white/70 text-center">
+                  By signing up, you agree to our{" "}
+                  <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link> and{" "}
+                  <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
+                </p>
               </>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
@@ -287,6 +293,7 @@ const Auth: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      <Footer /> {/* NEW: Add Footer to Auth page */}
     </div>
   );
 };

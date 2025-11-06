@@ -26,6 +26,7 @@ import { Loader2 } from "lucide-react";
 // Removed: import TutorialTooltip from "./components/TutorialTooltip";
 import UpgradePromptDialog from "./components/UpgradePromptDialog";
 import LiveChatWidget from "./components/LiveChatWidget";
+import Footer from "./components/Footer"; // NEW: Import Footer
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -58,6 +59,10 @@ const Automation = lazy(() => import("./pages/Automation"));
 const ItemHistoryPage = lazy(() => import("./pages/ItemHistoryPage"));
 const FolderContentPage = lazy(() => import("./pages/FolderContentPage"));
 const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService")); // NEW: Import TermsOfService
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy")); // NEW: Import PrivacyPolicy
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy")); // NEW: Import RefundPolicy
+
 
 // Fallback component for Suspense
 const LoadingFallback = () => (
@@ -110,6 +115,9 @@ const AuthenticatedApp = () => {
                               <Route path="folders/:folderId" element={<FolderContentPage />} />
                               <Route path="integrations" element={<Integrations />} />
                               <Route path="automation" element={<Automation />} />
+                              <Route path="terms-of-service" element={<TermsOfService />} /> {/* NEW: Route for TermsOfService */}
+                              <Route path="privacy-policy" element={<PrivacyPolicy />} /> {/* NEW: Route for PrivacyPolicy */}
+                              <Route path="refund-policy" element={<RefundPolicy />} /> {/* NEW: Route for RefundPolicy */}
                               <Route path="*" element={<NotFound />} />
                             </Route>
                           </Routes>
@@ -262,6 +270,9 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} /> {/* NEW: Public route for TermsOfService */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* NEW: Public route for PrivacyPolicy */}
+        <Route path="/refund-policy" element={<RefundPolicy />} /> {/* NEW: Public route for RefundPolicy */}
         <Route path="*" element={<Auth />} />
       </Routes>
     </Suspense>
@@ -285,6 +296,10 @@ const AppContent = () => {
     <>
       <div className={isPrinting ? "hidden" : ""}>
         {mainAppRoutes}
+        {/* Only show footer if not in print mode and not on onboarding page */}
+        {!isPrinting && location.pathname !== '/onboarding' && location.pathname !== '/auth' && (
+          <Footer />
+        )}
       </div>
 
       {isPrinting && printContentData && (
