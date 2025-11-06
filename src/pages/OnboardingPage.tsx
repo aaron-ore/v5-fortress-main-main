@@ -1,20 +1,23 @@
-import React, { useState, useEffect } from "react"; // Import useEffect
-import { useNavigate, Link } from "react-router-dom"; // NEW: Import Link
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"; // NEW: Import Button
 import { CheckCircle } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
-import Footer from "@/components/Footer"; // NEW: Import Footer
+import Footer from "@/components/Footer";
+import PolicyDialog from "@/components/PolicyDialog"; // NEW: Import PolicyDialog
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { markOnboardingComplete } = useOnboarding(); // Keep markOnboardingComplete for the final step
+  const { markOnboardingComplete } = useOnboarding();
   const { profile, isLoadingProfile } = useProfile();
 
-  const [currentStep, setCurrentStep] = useState(0); // State for the current step
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false); // NEW: State for PolicyDialog
+  const [policyType, setPolicyType] = useState<'terms' | 'privacy' | 'refund'>('terms'); // NEW: State for policy type
 
-  // Effect to handle redirection if onboarding is already complete
   useEffect(() => {
     if (!isLoadingProfile && profile?.hasOnboardingWizardCompleted) {
       navigate("/", { replace: true });
@@ -22,18 +25,21 @@ const OnboardingPage: React.FC = () => {
   }, [isLoadingProfile, profile?.hasOnboardingWizardCompleted, navigate]);
 
   const handleOnboardingComplete = async () => {
-    // This is the last step of the wizard, so we mark onboarding as complete
-    await markOnboardingComplete(); // Mark the wizard as completed in DB via context
-    navigate("/", { replace: true }); // Redirect to dashboard after onboarding
-  };
-
-  const handleOnboardingClose = () => {
-    // If the user closes the onboarding wizard, redirect them to the dashboard
+    await markOnboardingComplete();
     navigate("/", { replace: true });
   };
 
+  const handleOnboardingClose = () => {
+    navigate("/", { replace: true });
+  };
+
+  // NEW: Function to open policy dialog
+  const openPolicyDialog = (type: 'terms' | 'privacy' | 'refund') => {
+    setPolicyType(type);
+    setIsPolicyDialogOpen(true);
+  };
+
   if (isLoadingProfile || profile?.hasOnboardingWizardCompleted) {
-    // Show loading or redirect if profile is loading or onboarding is already complete
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
         <Card className="w-full max-w-md text-center">
@@ -63,10 +69,17 @@ const OnboardingPage: React.FC = () => {
       />
       <div className="mt-auto w-full max-w-md text-center text-xs text-muted-foreground pt-4">
         By continuing, you agree to our{" "}
-        <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link> and{" "}
-        <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
+        <Button variant="link" className="p-0 h-auto text-primary hover:underline" onClick={() => openPolicyDialog('terms')}>Terms of Service</Button> and{" "}
+        <Button variant="link" className="p-0 h-auto text-primary hover:underline" onClick={() => openPolicyDialog('privacy')}>Privacy Policy</Button>.
       </div>
-      <Footer /> {/* NEW: Add Footer to Onboarding page */}
+      <Footer />
+
+      {/* NEW: Policy Dialog */}
+      <PolicyDialog
+        isOpen={isPolicyDialogOpen}
+        onClose={() => setIsPolicyDialogOpen(false)}
+        policyType={policyType}
+      />
     </div>
   );
 };
