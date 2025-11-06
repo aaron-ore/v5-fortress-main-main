@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
 import { useProfile } from "@/context/ProfileContext";
-import Footer from "@/components/Footer";
+// Removed: import Footer from "@/components/Footer"; // Removed Footer import
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -288,15 +288,7 @@ const Auth: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      {/* This section was removed to ensure policy links only appear in the Footer. */}
-      {/*
-      <div className="mt-auto w-full max-w-md text-center text-xs text-muted-foreground pt-4">
-        By continuing, you agree to our{" "}
-        <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link> and{" "}
-        <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
-      </div>
-      */}
-      <Footer />
+      {/* Removed Footer component from Auth page */}
     </div>
   );
 };
