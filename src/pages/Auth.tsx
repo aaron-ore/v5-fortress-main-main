@@ -288,6 +288,14 @@ const Auth: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      {/* This section was removed to ensure policy links only appear in the Footer. */}
+      {/*
+      <div className="mt-auto w-full max-w-md text-center text-xs text-muted-foreground pt-4">
+        By continuing, you agree to our{" "}
+        <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link> and{" "}
+        <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
+      </div>
+      */}
       <Footer />
     </div>
   );
