@@ -5,12 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate, useLocation, Link } from "react-router-dom"; // NEW: Import Link
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
 import { useProfile } from "@/context/ProfileContext";
-import Footer from "@/components/Footer"; // NEW: Import Footer
+import Footer from "@/components/Footer";
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -288,7 +288,7 @@ const Auth: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      <Footer /> {/* NEW: Add Footer to Auth page */}
+      <Footer />
     </div>
   );
 };
