@@ -127,8 +127,9 @@ const BillingSubscriptions: React.FC = () => {
         if (plan.name.toLowerCase().includes('lifetime premium')) {
           return { ...plan, oneTimePrice: 999 };
         }
-        if (plan.name.toLowerCase().includes('lifetime standard')) {
-          return { ...plan, oneTimePrice: 499 };
+        // Corrected: Target 'lifetime lite' and rename it to 'Lifetime Standard' with price $499
+        if (plan.name.toLowerCase().includes('lifetime lite')) {
+          return { ...plan, name: 'Lifetime Standard', oneTimePrice: 499 };
         }
         return plan;
       });
