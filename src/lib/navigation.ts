@@ -17,6 +17,7 @@ import {
   Plug,
   Zap,
   Activity,
+  FileText, // Added FileText icon for policy documents
 } from "lucide-react";
 
 export interface NavItem {
@@ -74,4 +75,7 @@ export const supportAndResourcesNavItems: NavItem[] = [
   { title: "Help Center", href: "/help", icon: HelpCircle },
   { title: "What's New?", href: "/whats-new", icon: Sparkles },
   { title: "Setup Instructions", href: "/setup-instructions", icon: BookOpen },
+  { title: "Terms of Service", href: "/terms-of-service", icon: FileText }, // NEW: Added Terms of Service
+  { title: "Privacy Policy", href: "/privacy-policy", icon: FileText },   // NEW: Added Privacy Policy
+  { title: "Refund Policy", href: "/refund-policy", icon: FileText },     // NEW: Added Refund Policy
 ];
