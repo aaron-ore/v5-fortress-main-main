@@ -121,7 +121,19 @@ const BillingSubscriptions: React.FC = () => {
         };
       }).sort((a, b) => (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity)); // Sort by monthly price, putting free/lifetime first
 
-      setAvailablePlans(plansWithPrices);
+      // TEMPORARY CLIENT-SIDE OVERRIDE: Update lifetime deal prices as requested.
+      // In a real application, these prices should be updated directly in Stripe and Supabase.
+      const updatedPlans = plansWithPrices.map(plan => {
+        if (plan.name.toLowerCase().includes('lifetime premium')) {
+          return { ...plan, oneTimePrice: 999 };
+        }
+        if (plan.name.toLowerCase().includes('lifetime standard')) {
+          return { ...plan, oneTimePrice: 499 };
+        }
+        return plan;
+      });
+
+      setAvailablePlans(updatedPlans);
       setIsLoadingPlans(false);
     };
 
