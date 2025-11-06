@@ -292,7 +292,20 @@ const BillingSubscriptions: React.FC = () => {
     showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
   };
 
-  const recurringPlans = availablePlans.filter(plan => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
+  // Filter out the regular 'Standard' plan if 'Lifetime Standard' exists
+  const hasLifetimeStandard = availablePlans.some(plan => plan.name.toLowerCase() === 'lifetime standard' && plan.oneTimePrice !== undefined);
+
+  const recurringPlans = availablePlans.filter(plan => {
+    const isRecurring = plan.monthlyPrice !== undefined || plan.annualPrice !== undefined;
+    if (!isRecurring) return false;
+
+    // If a lifetime standard exists, exclude the regular 'Standard' recurring plan
+    if (hasLifetimeStandard && plan.name.toLowerCase() === 'standard') {
+      return false;
+    }
+    return true;
+  });
+
   const lifetimePlans = availablePlans.filter(plan => plan.oneTimePrice !== undefined);
 
   if (isLoadingProfile || isLoadingPlans) {
