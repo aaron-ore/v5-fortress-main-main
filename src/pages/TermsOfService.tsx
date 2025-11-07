@@ -1,6 +1,7 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+// Removed: import { CardHeader, CardTitle } from "@/components/ui/card";
+// Removed: import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TermsOfService: React.FC = () => {
   return (
