@@ -83,7 +83,7 @@ serve(async (req) => {
     // Fetch existing inventory items to identify updates vs. new inserts
     const { data: existingInventoryItems, error: existingInvError } = await supabaseAdmin
       .from('inventory_items')
-      .select('id, shopify_product_id, shopify_variant_id, quantity, picking_bin_quantity, overstock_quantity, reorder_level')
+      .select('id, name, description, sku, category, picking_bin_quantity, overstock_quantity, quantity, reorder_level, picking_reorder_level, committed_stock, incoming_stock, unit_cost, retail_price, folder_id, picking_bin_folder_id, tags, notes, status, last_updated, image_url, vendor_id, barcode_url, auto_reorder_enabled, auto_reorder_quantity, shopify_product_id, shopify_variant_id')
       .eq('organization_id', organizationId);
 
     if (existingInvError) throw existingInvError;
@@ -91,7 +91,7 @@ serve(async (req) => {
     const existingInventoryMap = new Map<string, any>(); // Map by shopify_variant_id
     existingInventoryItems.forEach(item => {
       if (item.shopify_variant_id) {
-        existingInventoryMap.set(item.shopify_variant_id, item);
+        existingInventoryMap.set(String(item.shopify_variant_id), item);
       }
     });
 

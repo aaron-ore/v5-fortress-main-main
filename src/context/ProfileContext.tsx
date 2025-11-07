@@ -23,6 +23,9 @@ export interface CompanyProfile {
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean;
+  shopifyAccessToken?: string; // NEW: Shopify Access Token
+  shopifyRefreshToken?: string; // NEW: Shopify Refresh Token
+  shopifyStoreName?: string; // NEW: Shopify Store Name
 }
 
 export interface UserProfile {
@@ -38,9 +41,9 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  shopifyAccessToken?: string;
-  shopifyRefreshToken?: string;
-  shopifyStoreName?: string;
+  shopifyAccessToken?: string; // NEW: Shopify Access Token (redundant, but kept for direct user profile access if needed)
+  shopifyRefreshToken?: string; // NEW: Shopify Refresh Token (redundant)
+  shopifyStoreName?: string; // NEW: Shopify Store Name (redundant)
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
@@ -101,6 +104,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false,
+      shopifyAccessToken: companyData.shopify_access_token || undefined, // NEW: Map Shopify Access Token
+      shopifyRefreshToken: companyData.shopify_refresh_token || undefined, // NEW: Map Shopify Refresh Token
+      shopifyStoreName: companyData.shopify_store_name || undefined, // NEW: Map Shopify Store Name
     } : undefined;
 
     return {
@@ -116,9 +122,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      shopifyAccessToken: companyData?.shopify_access_token || undefined,
-      shopifyRefreshToken: companyData?.shopify_refresh_token || undefined,
-      shopifyStoreName: companyData?.shopify_store_name || undefined,
+      shopifyAccessToken: companyData?.shopify_access_token || undefined, // NEW: Shopify Access Token (redundant, but kept for direct user profile access if needed)
+      shopifyRefreshToken: companyData?.shopify_refresh_token || undefined, // NEW: Shopify Refresh Token (redundant)
+      shopifyStoreName: companyData?.shopify_store_name || undefined, // NEW: Shopify Store Name (redundant)
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
@@ -329,6 +335,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder,
+      shopify_access_token: updates.shopifyAccessToken, // NEW: Update Shopify Access Token
+      shopify_refresh_token: updates.shopifyRefreshToken, // NEW: Update Shopify Refresh Token
+      shopify_store_name: updates.shopifyStoreName, // NEW: Update Shopify Store Name
     };
 
     if (uniqueCode !== undefined) {
