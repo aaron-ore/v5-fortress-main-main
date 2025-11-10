@@ -37,21 +37,22 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
   }, [isOpen]);
 
   const handleSubmit = () => {
-    let formattedUrl = storeUrl.trim();
+    const formattedUrl = storeUrl.trim();
 
     if (!formattedUrl) {
       showError("Shopify Store URL cannot be empty.");
       return;
     }
 
-    // Prepend https:// if no protocol is present
+    // Validate that the URL starts with http:// or https://
     if (!/^https?:\/\//i.test(formattedUrl)) {
-      formattedUrl = `https://${formattedUrl}`;
+      showError("Please include 'https://' or 'http://' in your Shopify store URL.");
+      return;
     }
 
     // Basic validation for .myshopify.com domain
     if (!/\.myshopify\.com$/i.test(formattedUrl)) {
-      showError("Please enter a valid Shopify store URL (e.g., your-store.myshopify.com).");
+      showError("Please enter a valid Shopify store URL (e.g., https://your-store.myshopify.com).");
       return;
     }
 
@@ -66,7 +67,7 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
             <Store className="h-6 w-6 text-primary" /> Enter Shopify Store URL
           </DialogTitle>
           <DialogDescription>
-            Please enter your Shopify store's URL (e.g., `your-store.myshopify.com`).
+            Please enter your **full** Shopify store URL, including `https://` (e.g., `https://your-store.myshopify.com`).
             This is required to connect Fortress to your Shopify account.
           </DialogDescription>
         </DialogHeader>
@@ -77,7 +78,7 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
               id="shopifyStoreUrl"
               value={storeUrl}
               onChange={(e) => setStoreUrl(e.target.value)}
-              placeholder="e.g., your-store.myshopify.com"
+              placeholder="e.g., https://your-store.myshopify.com"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleSubmit();
