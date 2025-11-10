@@ -261,11 +261,11 @@ const Integrations: React.FC = () => {
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
+    // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
-    console.log("[Shopify OAuth] Generated Auth URL (COPY THIS):", authUrl); // Add log here
-    window.location.href = authUrl; // RE-ENABLED REDIRECT
-    // Removed: showSuccess("Shopify Auth URL logged to console. Please copy and paste it into your browser.");
+    console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // Add log here
+    window.location.href = authUrl;
   };
 
   const handleConnectShopify = () => {

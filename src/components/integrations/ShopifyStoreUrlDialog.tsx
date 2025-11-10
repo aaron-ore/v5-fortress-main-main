@@ -46,7 +46,7 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
 
     // Validate that the URL starts with http:// or https://
     if (!/^https?:\/\//i.test(formattedUrl)) {
-      showError("Please include 'https://' or 'http://://' in your Shopify store URL.");
+      showError("Please include 'https://' or 'http://' in your Shopify store URL.");
       return;
     }
 
@@ -56,7 +56,16 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
       return;
     }
 
-    onConfirm(formattedUrl);
+    // Extract just the domain part (e.g., "your-store.myshopify.com")
+    try {
+        const urlObj = new URL(formattedUrl);
+        // Remove trailing slash from hostname if present
+        const domainOnly = urlObj.hostname.replace(/\/$/, '');
+        onConfirm(domainOnly); // Pass only the domain
+    } catch (e) {
+        console.error("Error parsing URL in ShopifyStoreUrlDialog:", e);
+        showError("Invalid URL format. Please ensure it's a complete and valid URL.");
+    }
   };
 
   return (
