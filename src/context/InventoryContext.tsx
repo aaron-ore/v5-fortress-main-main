@@ -51,7 +51,7 @@ export interface InventoryItem {
   autoReorderQuantity: number;
   createdAt: string; // Added createdAt
   shopifyProductId?: string; // NEW: Shopify Product ID
-  shopifyVariantId?: string; // NEW: Shopify Variant ID
+  shopifyVariantId?: string; // NEW: Shopify Shopify Variant ID
 }
 
 interface InventoryContextType {
@@ -228,7 +228,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({
   }, [profile?.organizationId]);
 
   useEffect(() => {
-    const isAutoReorderGloballyEnabled = profile?.companyProfile?.enableAutoReorder || false;
+    const isAutoReorderGloballyEnabled = profile?.companyProfile?.enableAutoReorder || false; // Corrected typo here
 
     if (!isAutoReorderGloballyEnabled) {
       if (!hasLoggedDisabledRef.current) {

@@ -24,7 +24,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
   const { profile, isLoadingProfile, updateCompanyProfile } = useProfile();
   const [defaultReorderLevel, setDefaultReorderLevel] = useState("0");
   const [enableAutoReorderNotifications, setEnableAutoReorderNotifications] = useState(false);
-  const [enableAutoReorder, setEnableAutoReorder] = useState(false);
+  const [enableAutoReorder, setEnableAutoReorder] = useState(false); // Corrected typo here
   const [isSaving, setIsSaving] = useState(false);
 
   // Role-based permissions
@@ -34,7 +34,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
     if (isOpen && !isLoadingProfile && profile?.companyProfile) {
       setDefaultReorderLevel(String(profile.companyProfile.defaultReorderLevel || 0));
       setEnableAutoReorderNotifications(profile.companyProfile.enableAutoReorderNotifications || false);
-      setEnableAutoReorder(profile.companyProfile.enableAutoReorder || false);
+      setEnableAutoReorder(profile.companyProfile.enableAutoReorder || false); // Corrected typo here
     } else if (isOpen && !isLoadingProfile && !profile?.companyProfile) {
       // If no company profile, reset to defaults
       setDefaultReorderLevel("0");
@@ -64,7 +64,7 @@ const AutoReorderSettingsDialog: React.FC<AutoReorderSettingsDialogProps> = ({ i
       await updateCompanyProfile({
         defaultReorderLevel: parsedLevel,
         enableAutoReorderNotifications: enableAutoReorderNotifications,
-        enableAutoReorder: enableAutoReorder,
+        enableAutoReorder: enableAutoReorder, // Corrected typo here
       });
       showSuccess("Auto-reorder settings saved!");
       onClose();

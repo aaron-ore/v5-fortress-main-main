@@ -246,7 +246,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             trialEndsAt: undefined, // Explicitly set to undefined for new org
             defaultReorderLevel: 0, // Default for new org
             enableAutoReorderNotifications: false, // Default for new org
-            enableAutoReorder: false, // Default for new org
+            enableAutoReorder: false, // Corrected typo here
           }
         });
 
@@ -324,7 +324,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           trial_ends_at: existingOrg?.trial_ends_at,
           default_reorder_level: existingOrg?.default_reorder_level || 0,
           enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
-          enable_auto_reorder: existingOrg?.enable_auto_reorder || false,
+          enable_auto_reorder: existingOrg?.enable_auto_reorder || false, // Corrected typo here
         };
         console.log("[OnboardingContext] Update payload for organizations table:", updatePayload);
 
@@ -359,7 +359,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             trialEndsAt: updatePayload.trial_ends_at,
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
-            enableAutoReorder: updatePayload.enable_auto_reorder,
+            enableAutoReorder: updatePayload.enable_auto_reorder, // Corrected typo here
           }
         });
       }

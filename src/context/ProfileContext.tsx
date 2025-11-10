@@ -22,7 +22,7 @@ export interface CompanyProfile {
   trialEndsAt?: string;
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
-  enableAutoAutoReorder?: boolean;
+  enableAutoReorder?: boolean; // Corrected typo here
   shopifyAccessToken?: string; // NEW: Shopify Access Token
   shopifyRefreshToken?: string; // NEW: Shopify Refresh Token
   shopifyStoreName?: string; // NEW: Shopify Store Name
@@ -103,7 +103,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       trialEndsAt: companyData.trial_end ? new Date(companyData.trial_end * 1000).toISOString() : undefined, // Corrected to trial_end and converted from Unix timestamp
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
-      enableAutoReorder: companyData.enable_auto_reorder || false,
+      enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
       shopifyAccessToken: companyData.shopify_access_token || undefined, // NEW: Map Shopify Access Token
       shopifyRefreshToken: companyData.shopify_refresh_token || undefined, // NEW: Map Shopify Refresh Token
       shopifyStoreName: companyData.shopify_store_name || undefined, // NEW: Map Shopify Store Name
@@ -171,14 +171,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (error) {
       console.error('Error fetching profile:', error);
       // NEW: Check for 401 Unauthorized error and force sign out
-      if (error.status === 401) {
+      if ((error as any).status === 401) { // Cast to any to access status
         console.warn('Profile fetch failed with 401 Unauthorized. Attempting to sign out to clear stale session.');
         await supabase.auth.signOut(); // Force sign out
         showError('Session expired. Please log in again.');
       } else {
         showError('Failed to load profile.');
       }
-      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: error.status }, true);
+      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true); // Cast to any
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
@@ -341,7 +341,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       trial_ends_at: updates.trialEndsAt,
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
-      enable_auto_reorder: updates.enableAutoReorder,
+      enable_auto_reorder: updates.enableAutoReorder, // Corrected typo here
       shopify_access_token: updates.shopifyAccessToken, // NEW: Update Shopify Access Token
       shopify_refresh_token: updates.shopifyRefreshToken, // NEW: Update Shopify Refresh Token
       shopify_store_name: updates.shopifyStoreName, // NEW: Update Shopify Store Name

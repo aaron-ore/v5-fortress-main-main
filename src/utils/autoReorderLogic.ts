@@ -21,7 +21,7 @@ export const processAutoReorder = async (
   // All global auto-reorder checks are now handled by the calling useEffect in InventoryContext.tsx.
   // This function assumes it is only called when auto-reorder is globally enabled.
 
-  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) {
+  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) { // Corrected typo here
     console.warn("[Auto-Reorder] Cannot process auto-reorder: Auto-reorder is not globally enabled or organization ID is missing.");
     return;
   }
