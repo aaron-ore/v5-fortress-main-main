@@ -263,8 +263,9 @@ const Integrations: React.FC = () => {
 
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
-    console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // Add log here
-    window.location.href = authUrl;
+    console.log("[Shopify OAuth] Generated Auth URL (COPY THIS):", authUrl); // Add log here
+    // window.location.href = authUrl; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
+    showSuccess("Shopify Auth URL logged to console. Please copy and paste it into your browser.");
   };
 
   const handleConnectShopify = () => {
