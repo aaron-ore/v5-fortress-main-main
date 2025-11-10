@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Store } from "lucide-react";
+import { showError } from "@/utils/toast"; // Import showError
 
 interface ShopifyStoreUrlDialogProps {
   isOpen: boolean;
@@ -36,9 +37,25 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
   }, [isOpen]);
 
   const handleSubmit = () => {
-    if (storeUrl.trim()) {
-      onConfirm(storeUrl.trim());
+    let formattedUrl = storeUrl.trim();
+
+    if (!formattedUrl) {
+      showError("Shopify Store URL cannot be empty.");
+      return;
     }
+
+    // Prepend https:// if no protocol is present
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+
+    // Basic validation for .myshopify.com domain
+    if (!/\.myshopify\.com$/i.test(formattedUrl)) {
+      showError("Please enter a valid Shopify store URL (e.g., your-store.myshopify.com).");
+      return;
+    }
+
+    onConfirm(formattedUrl);
   };
 
   return (
