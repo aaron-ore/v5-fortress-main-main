@@ -46,12 +46,12 @@ const ShopifyStoreUrlDialog: React.FC<ShopifyStoreUrlDialogProps> = ({
 
     // Validate that the URL starts with http:// or https://
     if (!/^https?:\/\//i.test(formattedUrl)) {
-      showError("Please include 'https://' or 'http://' in your Shopify store URL.");
+      showError("Please include 'https://' or 'http://://' in your Shopify store URL.");
       return;
     }
 
-    // Basic validation for .myshopify.com domain
-    if (!/\.myshopify\.com$/i.test(formattedUrl)) {
+    // Basic validation for .myshopify.com domain, now allowing for an optional trailing slash
+    if (!/\.myshopify\.com\/?$/i.test(formattedUrl)) {
       showError("Please enter a valid Shopify store URL (e.g., https://your-store.myshopify.com).");
       return;
     }
