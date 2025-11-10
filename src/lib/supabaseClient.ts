@@ -19,7 +19,8 @@ if (!supabaseUrl || typeof supabaseUrl !== 'string' || supabaseUrl.trim() === ''
   const dummyKey = "dummy_anon_key";
   supabase = createClient(supabaseUrl, dummyKey);
 } else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Trim the anon key to remove any leading/trailing whitespace
+  supabase = createClient(supabaseUrl, supabaseAnonKey.trim());
 }
 
 export { supabase };
