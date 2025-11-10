@@ -22,7 +22,7 @@ export interface CompanyProfile {
   trialEndsAt?: string;
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
-  enableAutoReorder?: boolean;
+  enableAutoAutoReorder?: boolean;
   shopifyAccessToken?: string; // NEW: Shopify Access Token
   shopifyRefreshToken?: string; // NEW: Shopify Refresh Token
   shopifyStoreName?: string; // NEW: Shopify Store Name
@@ -100,7 +100,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       stripeCustomerId: companyData.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined,
-      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined,
+      trialEndsAt: companyData.trial_end ? new Date(companyData.trial_end * 1000).toISOString() : undefined, // Corrected to trial_end and converted from Unix timestamp
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false,
@@ -170,8 +170,15 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (error) {
       console.error('Error fetching profile:', error);
-      showError('Failed to load profile.');
-      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message }, true);
+      // NEW: Check for 401 Unauthorized error and force sign out
+      if (error.status === 401) {
+        console.warn('Profile fetch failed with 401 Unauthorized. Attempting to sign out to clear stale session.');
+        await supabase.auth.signOut(); // Force sign out
+        showError('Session expired. Please log in again.');
+      } else {
+        showError('Failed to load profile.');
+      }
+      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: error.status }, true);
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
