@@ -85,6 +85,8 @@ const Integrations: React.FC = () => {
     console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
     console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
     console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
+    console.log('Integrations.tsx: stripe_success from URL parameters:', params.get('stripe_success'));
+    console.log('Integrations.tsx: stripe_cancel from URL parameters:', params.get('stripe_cancel'));
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
@@ -225,6 +227,7 @@ const Integrations: React.FC = () => {
   const initiateShopifyOAuth = (shopifyStoreName: string) => {
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
+      console.error("[Shopify OAuth] Profile ID missing."); // Add log
       return;
     }
 
@@ -232,6 +235,7 @@ const Integrations: React.FC = () => {
 
     if (!clientId) {
       showError("Shopify Client ID is not configured. Please add VITE_SHOPIFY_CLIENT_ID to your .env file.");
+      console.error("[Shopify OAuth] VITE_SHOPIFY_CLIENT_ID is missing."); // Add log
       return;
     }
 
@@ -259,6 +263,7 @@ const Integrations: React.FC = () => {
 
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
+    console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // Add log here
     window.location.href = authUrl;
   };
 
