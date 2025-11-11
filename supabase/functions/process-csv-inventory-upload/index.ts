@@ -17,7 +17,7 @@ const sanitizeHtml = (html: string): string => {
   // 2. Remove common event handlers (e.g., onclick, onerror)
   // Using new RegExp() for robustness
   sanitized = sanitized.replace(new RegExp('(\\s)(on[a-zA-Z]+)="[^"]*"', 'gi'), '$1');
-  sanitized = sanitized.replace(new RegExp('(\\s)(on[a-zA-Z]+)=\'[^"]*\'', 'gi'), '$1');
+  sanitized = sanitized = sanitized.replace(new RegExp('(\\s)(on[a-zA-Z]+)=\'[^"]*\'', 'gi'), '$1');
 
   // 3. Remove data: URLs from src/href attributes
   // Using new RegExp() for robustness
@@ -314,6 +314,7 @@ serve(async (req) => {
       const existingItem = existingInventoryMap.get(sku.toLowerCase());
       const totalQuantity = pickingBinQuantity + overstockQuantity;
       const status = totalQuantity > reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
+      const currentTimestamp = new Date().toISOString(); // Pre-calculate timestamp
 
       // Construct itemPayload as a single, flat object literal with explicitly quoted keys
       const itemPayload = {
@@ -332,7 +333,7 @@ serve(async (req) => {
         "folder_id": folderId,
         "picking_bin_folder_id": pickingBinFolderId, 
         "status": status,
-        "last_updated": new Date().toISOString(),
+        "last_updated": currentTimestamp, // Use pre-calculated value
         "image_url": imageUrl,
         "vendor_id": vendorId,
         "barcode_url": barcodeUrl,
@@ -355,7 +356,7 @@ serve(async (req) => {
             overstock_quantity: updatedOverstockQty,
             quantity: updatedPickingBinQty + updatedOverstockQty,
             status: (updatedPickingBinQty + updatedOverstockQty) > existingItem.reorder_level ? "In Stock" : ((updatedPickingBinQty + updatedOverstockQty) > 0 ? "Low Stock" : "Out of Stock"),
-            last_updated: new Date().toISOString(),
+            last_updated: currentTimestamp,
           });
           await supabaseAdmin.from('stock_movements').insert({
             item_id: existingItem.id,
