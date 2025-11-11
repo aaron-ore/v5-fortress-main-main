@@ -19,6 +19,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('Edge Function: fetch-shopify-locations - Unauthorized: Authorization header missing.');
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
@@ -41,6 +42,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error('Edge Function: fetch-shopify-locations - JWT verification failed or user not found:', userError?.message);
       return new Response(JSON.stringify({ error: `Unauthorized: ${userError?.message || 'User not authenticated.'}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
@@ -54,9 +56,10 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profileData?.organization_id || !profileData.organizations?.shopify_access_token || !profileData.organizations?.shopify_store_name) {
+      console.error('Edge Function: fetch-shopify-locations - Shopify integration not fully set up for user/organization. Profile data:', profileData, 'Error:', profileError);
       return new Response(JSON.stringify({ error: 'Shopify integration not fully set up for this user/organization.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 400, // Bad Request because prerequisites are not met
       });
     }
 
@@ -69,10 +72,12 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     };
 
+    console.log(`Edge Function: fetch-shopify-locations - Attempting to fetch from Shopify API: ${shopifyApiBaseUrl}/locations.json`);
     const shopifyResponse = await fetch(`${shopifyApiBaseUrl}/locations.json`, { headers });
+    
     if (!shopifyResponse.ok) {
       const errorData = await shopifyResponse.json();
-      console.error('Shopify API error fetching locations:', errorData);
+      console.error('Edge Function: fetch-shopify-locations - Shopify API error fetching locations:', errorData);
       throw new Error(`Failed to fetch locations from Shopify: ${errorData.errors || shopifyResponse.statusText}`);
     }
     const data = await shopifyResponse.json();
@@ -92,7 +97,7 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Edge Function error:', error);
+    console.error('Edge Function: fetch-shopify-locations - Caught top-level error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
