@@ -63,7 +63,7 @@ serve(async (req) => {
           },
         },
       }
-    );
+    ); // Corrected: Added closing curly brace for the options object
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 

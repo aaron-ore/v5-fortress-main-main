@@ -112,7 +112,7 @@ serve(async (req) => {
           Authorization: `Bearer ${token}`,
         },
       },
-    );
+    }); // Corrected: Added closing curly brace for the options object
 
     console.log('Edge Function: Attempting to get user from token.');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
