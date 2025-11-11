@@ -337,7 +337,7 @@ serve(async (req) => {
         user_id: user.id,
         organization_id: organizationId,
         auto_reorder_enabled: autoReorderEnabled,
-        auto_reorder_quantity: autoReorderQuantity,
+        auto_reorder_quantity: autoReorderQuantity
       };
 
       if (existingItem) {
