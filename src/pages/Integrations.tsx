@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
-import { showError, showSuccess } from "@/utils/toast";
+import { showError, showSuccess, showInfo } from "@/utils/toast"; // Added showInfo
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -258,7 +258,8 @@ const Integrations: React.FC = () => {
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
     console.log("[Shopify OAuth] Generated Shopify Auth URL:", authUrl); // Log the URL
-    window.location.href = authUrl;
+    showInfo(`Shopify Auth URL (copy this): ${authUrl}`); // Display in toast
+    // window.location.href = authUrl; // Temporarily commented out for debugging
   };
 
   const handleConnectShopify = () => {
