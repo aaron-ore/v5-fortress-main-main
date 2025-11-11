@@ -232,6 +232,7 @@ const Integrations: React.FC = () => {
     }
 
     const clientId = import.meta.env.VITE_SHOPIFY_CLIENT_ID;
+    console.log("[Shopify OAuth] Frontend using VITE_SHOPIFY_CLIENT_ID:", clientId); // TEMPORARY LOG
 
     if (!clientId) {
       showError("Shopify Client ID is not configured. Please add VITE_SHOPIFY_CLIENT_ID to your .env file.");
@@ -264,7 +265,6 @@ const Integrations: React.FC = () => {
     // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
-    console.log("[Shopify OAuth] Generated Client ID:", clientId); // ADDED LOG
     console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // ADDED LOG
     window.location.href = authUrl; // UNCOMMENTED FOR REDIRECT
   };
