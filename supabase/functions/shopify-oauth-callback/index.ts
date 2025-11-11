@@ -21,14 +21,14 @@ serve(async (req) => {
 
     console.log('Shopify OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
-    let userIdFromState: string | null = null; // Renamed to avoid conflict
+    let userIdFromState: string | null = null;
     let redirectToFrontend: string | null = null;
     const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
 
     if (state) {
       try {
         const decodedState = JSON.parse(atob(state));
-        userIdFromState = decodedState.userId; // Use this as the expected Supabase user ID
+        userIdFromState = decodedState.userId;
         redirectToFrontend = decodedState.redirectToFrontend;
         console.log('Shopify OAuth Callback: Decoded state - userIdFromState:', userIdFromState, 'redirectToFrontend:', redirectToFrontend);
       } catch (e) {
@@ -42,7 +42,7 @@ serve(async (req) => {
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
-    if (!code || !userIdFromState) { // Use userIdFromState
+    if (!code || !userIdFromState) {
       console.error('Missing authorization code or userIdFromState in Shopify OAuth callback.');
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
     }
@@ -51,9 +51,8 @@ serve(async (req) => {
     const SHOPIFY_CLIENT_SECRET = Deno.env.get('SHOPIFY_CLIENT_SECRET');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY'); // Need anon key for JWT verification
 
-    if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_ANON_KEY) {
+    if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Missing Supabase or Shopify environment variables.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Missing environment variables.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -92,32 +91,18 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // --- NEW AUTHENTICATION LOGIC ---
-    // Verify the Supabase JWT passed in the *incoming request's* Authorization header
-    const incomingAuthHeader = req.headers.get('Authorization');
-    if (!incomingAuthHeader) {
-      console.error('Shopify OAuth Callback: Incoming Authorization header missing.');
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication required to complete connection.')}`, 302);
-    }
-    const supabaseJwt = incomingAuthHeader.split(' ')[1];
-
-    const { data: { user: authenticatedSupabaseUser }, error: supabaseAuthError } = await supabaseAdmin.auth.getUser(supabaseJwt); // Use admin client to verify JWT
-
-    if (supabaseAuthError || !authenticatedSupabaseUser || authenticatedSupabaseUser.id !== userIdFromState) {
-      console.error('Shopify OAuth Callback: Supabase JWT verification failed or user ID mismatch:', supabaseAuthError?.message || 'User not authenticated or ID from JWT does not match ID from state.');
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication mismatch. Please log in to Fortress and try again.')}`, 302);
-    }
-    // --- END NEW AUTHENTICATION LOGIC ---
-
+    // --- REVISED AUTHENTICATION LOGIC ---
+    // Instead of verifying an incoming JWT (which isn't present in an OAuth redirect),
+    // we use the userIdFromState (which came from the authenticated client) to find the organization.
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
-      .eq('id', authenticatedSupabaseUser.id) // Use the authenticated user's ID
+      .eq('id', userIdFromState) // Use userIdFromState to find the organization
       .single();
 
     if (profileFetchError || !userProfile?.organization_id) {
-      console.error('Error fetching user profile or organization ID:', profileFetchError);
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('User organization not found.')}`, 302);
+      console.error('Error fetching user profile or organization ID using userIdFromState:', profileFetchError);
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('User organization not found or profile access denied.')}`, 302);
     }
 
     const organizationId = userProfile.organization_id;
