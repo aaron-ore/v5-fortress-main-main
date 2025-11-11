@@ -335,7 +335,6 @@ serve(async (req) => {
       itemPayload.image_url = imageUrl;
       itemPayload.vendor_id = vendorId;
       itemPayload.barcode_url = barcodeUrl;
-      // Removed user_id and organization_id from itemPayload
       itemPayload.auto_reorder_enabled = autoReorderEnabled;
       itemPayload.auto_reorder_quantity = autoReorderQuantity;
 
