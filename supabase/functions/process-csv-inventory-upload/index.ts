@@ -315,31 +315,32 @@ serve(async (req) => {
       const totalQuantity = pickingBinQuantity + overstockQuantity;
       const status = totalQuantity > reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
 
-      // Construct itemPayload by assigning properties one by one
-      const itemPayload: { [key: string]: any } = {};
-      itemPayload.name = itemName;
-      itemPayload.description = description;
-      itemPayload.sku = sku;
-      itemPayload.category = categoryName;
-      itemPayload.picking_bin_quantity = pickingBinQuantity;
-      itemPayload.overstock_quantity = overstockQuantity;
-      itemPayload.reorder_level = reorderLevel;
-      itemPayload.picking_reorder_level = pickingReorderLevel;
-      itemPayload.committed_stock = committedStock;
-      itemPayload.incoming_stock = incomingStock;
-      itemPayload.unit_cost = unitCost;
-      itemPayload.retail_price = retailPrice;
-      itemPayload.folder_id = folderId;
-      itemPayload.picking_bin_folder_id = pickingBinFolderId; 
-      itemPayload.status = status;
-      itemPayload.last_updated = new Date().toISOString();
-      itemPayload.image_url = imageUrl;
-      itemPayload.vendor_id = vendorId;
-      itemPayload.barcode_url = barcodeUrl;
-      itemPayload.user_id = user.id;
-      itemPayload.organization_id = organizationId;
-      itemPayload.auto_reorder_enabled = autoReorderEnabled;
-      itemPayload.auto_reorder_quantity = autoReorderQuantity;
+      // Construct itemPayload as a single, flat object literal with explicitly quoted keys
+      const itemPayload = {
+        "name": itemName,
+        "description": description,
+        "sku": sku,
+        "category": categoryName,
+        "picking_bin_quantity": pickingBinQuantity,
+        "overstock_quantity": overstockQuantity,
+        "reorder_level": reorderLevel,
+        "picking_reorder_level": pickingReorderLevel,
+        "committed_stock": committedStock,
+        "incoming_stock": incomingStock,
+        "unit_cost": unitCost,
+        "retail_price": retailPrice,
+        "folder_id": folderId,
+        "picking_bin_folder_id": pickingBinFolderId, 
+        "status": status,
+        "last_updated": new Date().toISOString(),
+        "image_url": imageUrl,
+        "vendor_id": vendorId,
+        "barcode_url": barcodeUrl,
+        "user_id": user.id,
+        "organization_id": organizationId,
+        "auto_reorder_enabled": autoReorderEnabled,
+        "auto_reorder_quantity": autoReorderQuantity
+      };
 
       if (existingItem) {
         if (actionForDuplicates === "skip") {
