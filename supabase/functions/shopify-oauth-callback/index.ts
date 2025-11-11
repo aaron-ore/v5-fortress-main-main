@@ -21,16 +21,16 @@ serve(async (req) => {
 
     console.log('Shopify OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
-    let userId: string | null = null;
+    let userIdFromState: string | null = null; // Renamed to avoid conflict
     let redirectToFrontend: string | null = null;
     const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
 
     if (state) {
       try {
         const decodedState = JSON.parse(atob(state));
-        userId = decodedState.userId;
+        userIdFromState = decodedState.userId; // Use this as the expected Supabase user ID
         redirectToFrontend = decodedState.redirectToFrontend;
-        console.log('Shopify OAuth Callback: Decoded state - userId:', userId, 'redirectToFrontend:', redirectToFrontend);
+        console.log('Shopify OAuth Callback: Decoded state - userIdFromState:', userIdFromState, 'redirectToFrontend:', redirectToFrontend);
       } catch (e) {
         console.error('Error decoding state parameter:', e);
       }
@@ -42,8 +42,8 @@ serve(async (req) => {
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
-    if (!code || !userId) {
-      console.error('Missing authorization code or userId in Shopify OAuth callback.');
+    if (!code || !userIdFromState) { // Use userIdFromState
+      console.error('Missing authorization code or userIdFromState in Shopify OAuth callback.');
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
     }
 
@@ -51,8 +51,9 @@ serve(async (req) => {
     const SHOPIFY_CLIENT_SECRET = Deno.env.get('SHOPIFY_CLIENT_SECRET');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY'); // Need anon key for JWT verification
 
-    if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_ANON_KEY) {
       console.error('Missing Supabase or Shopify environment variables.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Missing environment variables.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,36 +86,33 @@ serve(async (req) => {
     const tokens = await tokenResponse.json();
     console.log('Shopify OAuth Callback: Full tokens object received:', JSON.stringify(tokens, null, 2));
 
-    const accessToken = tokens.access_token;
-    const refreshToken = tokens.refresh_token;
+    const shopifyAccessToken = tokens.access_token;
+    const shopifyRefreshToken = tokens.refresh_token;
     const shopDomain = shop;
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Verify the user's token using a client initialized with the anon key
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`, // Use the newly acquired access token for verification
-          },
-        },
-      }
-    );
-
-    const { data: { user }, error: userVerificationError } = await supabaseClient.auth.getUser();
-
-    if (userVerificationError || !user || user.id !== userId) {
-      console.error('Shopify OAuth Callback: JWT verification failed or user mismatch:', userVerificationError?.message || 'User not found or ID mismatch');
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication mismatch. Please try again.')}`, 302);
+    // --- NEW AUTHENTICATION LOGIC ---
+    // Verify the Supabase JWT passed in the *incoming request's* Authorization header
+    const incomingAuthHeader = req.headers.get('Authorization');
+    if (!incomingAuthHeader) {
+      console.error('Shopify OAuth Callback: Incoming Authorization header missing.');
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication required to complete connection.')}`, 302);
     }
+    const supabaseJwt = incomingAuthHeader.split(' ')[1];
+
+    const { data: { user: authenticatedSupabaseUser }, error: supabaseAuthError } = await supabaseAdmin.auth.getUser(supabaseJwt); // Use admin client to verify JWT
+
+    if (supabaseAuthError || !authenticatedSupabaseUser || authenticatedSupabaseUser.id !== userIdFromState) {
+      console.error('Shopify OAuth Callback: Supabase JWT verification failed or user ID mismatch:', supabaseAuthError?.message || 'User not authenticated or ID from JWT does not match ID from state.');
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication mismatch. Please log in to Fortress and try again.')}`, 302);
+    }
+    // --- END NEW AUTHENTICATION LOGIC ---
 
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
-      .eq('id', userId)
+      .eq('id', authenticatedSupabaseUser.id) // Use the authenticated user's ID
       .single();
 
     if (profileFetchError || !userProfile?.organization_id) {
@@ -127,8 +125,8 @@ serve(async (req) => {
     const { data: updatedOrganizationData, error: updateError } = await supabaseAdmin
       .from('organizations')
       .update({
-        shopify_access_token: accessToken,
-        shopify_refresh_token: refreshToken,
+        shopify_access_token: shopifyAccessToken,
+        shopify_refresh_token: shopifyRefreshToken,
         shopify_store_name: shopDomain,
       })
       .eq('id', organizationId)
