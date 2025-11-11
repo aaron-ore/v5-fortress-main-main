@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
-import { showError, showSuccess } from "@/utils/toast"; // Removed showInfo
+import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -20,7 +20,7 @@ import {
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Label } from "@/components/ui/label";
 import { hasRequiredPlan } from "@/utils/planUtils";
-import ShopifyStoreUrlDialog from "@/components/integrations/ShopifyStoreUrlDialog"; // NEW: Import the new dialog
+import ShopifyStoreUrlDialog from "@/components/integrations/ShopifyStoreUrlDialog";
 
 interface ShopifyLocation {
   id: string;
@@ -65,7 +65,7 @@ const Integrations: React.FC = () => {
   const [mappingToDelete, setMappingToDelete] = useState<ShopifyLocationMapping | null>(null);
   const [isConfirmDeleteMappingOpen, setIsConfirmDeleteMappingOpen] = useState(false);
 
-  const [isShopifyStoreUrlDialogOpen, setIsShopifyStoreUrlDialogOpen] = useState(false); // NEW: State for the new dialog
+  const [isShopifyStoreUrlDialogOpen, setIsShopifyStoreUrlDialogOpen] = useState(false);
 
   const qbCallbackProcessedRef = React.useRef(false);
   const shopifyCallbackProcessedRef = React.useRef(false);
@@ -116,7 +116,7 @@ const Integrations: React.FC = () => {
   const canAccessShopify = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
   const handleConnectQuickBooks = () => {
-    if (!canAccessQuickBooks) { // NEW: Check plan access
+    if (!canAccessQuickBooks) {
       showError("QuickBooks integration is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
@@ -171,7 +171,7 @@ const Integrations: React.FC = () => {
   };
 
   const handleSyncSalesOrders = async () => {
-    if (!canAccessQuickBooks) { // NEW: Check plan access
+    if (!canAccessQuickBooks) {
       showError("QuickBooks integration is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
@@ -220,7 +220,7 @@ const Integrations: React.FC = () => {
   const initiateShopifyOAuth = (shopifyStoreName: string) => {
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
-      console.error("[Shopify OAuth] Profile ID missing."); // Add log
+      console.error("[Shopify OAuth] Profile ID missing.");
       return;
     }
 
@@ -228,7 +228,7 @@ const Integrations: React.FC = () => {
 
     if (!clientId) {
       showError("Shopify Client ID is not configured. Please add VITE_SHOPIFY_CLIENT_ID to your .env file.");
-      console.error("[Shopify OAuth] VITE_SHOPIFY_CLIENT_ID is missing."); // Add log
+      console.error("[Shopify OAuth] VITE_SHOPIFY_CLIENT_ID is missing.");
       return;
     }
 
@@ -257,8 +257,9 @@ const Integrations: React.FC = () => {
     // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
-    console.log("[Shopify OAuth] Generated Shopify Auth URL:", authUrl); // Log the URL
-    window.location.href = authUrl; // Re-enable redirect
+    console.log("[Shopify OAuth] Generated Shopify Auth URL:", authUrl);
+    // MODIFIED: Open in a new tab
+    window.open(authUrl, '_blank');
   };
 
   const handleConnectShopify = () => {
@@ -266,7 +267,7 @@ const Integrations: React.FC = () => {
       showError("Shopify integration is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
-    setIsShopifyStoreUrlDialogOpen(true); // NEW: Open the custom dialog
+    setIsShopifyStoreUrlDialogOpen(true);
   };
 
   const handleDisconnectShopify = async () => {
@@ -294,7 +295,7 @@ const Integrations: React.FC = () => {
   };
 
   const handleSyncShopifyProducts = async () => {
-    if (!canAccessShopify) { // NEW: Check plan access
+    if (!canAccessShopify) {
       showError("Shopify integration is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
@@ -345,7 +346,7 @@ const Integrations: React.FC = () => {
     }
     setIsFetchingShopifyLocations(true);
     try {
-      const { data: { session } = { session: null } } = await supabase.auth.getSession(); // Ensure session is not null
+      const { data: { session } = { session: null } } = await supabase.auth.getSession();
       if (!session) {
         showError("You must be logged in to fetch Shopify locations.");
         return;
@@ -759,7 +760,7 @@ const Integrations: React.FC = () => {
         isOpen={isShopifyStoreUrlDialogOpen}
         onClose={() => setIsShopifyStoreUrlDialogOpen(false)}
         onConfirm={initiateShopifyOAuth}
-        isLoading={!profile?.id} // Disable if profile not loaded
+        isLoading={!profile?.id}
       />
     </div>
   );
