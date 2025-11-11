@@ -24,7 +24,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
       'import.meta.env.VITE_SHOPIFY_CLIENT_ID': JSON.stringify(env.VITE_SHOPIFY_CLIENT_ID),
-      'import.meta.env.VITE_SHOPIFY_CLIENT_SECRET': JSON.stringify(env.VITE_SHOPIFY_CLIENT_SECRET),
+      // VITE_SHOPIFY_CLIENT_SECRET is removed from here to prevent client-side exposure.
+      // It should only be accessed server-side (e.g., in Edge Functions) via Deno.env.get().
       // Add any other VITE_ prefixed env vars you need to expose to the client here
     },
     build: {
