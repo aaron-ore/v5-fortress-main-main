@@ -48,7 +48,6 @@ serve(async (req) => {
     }
 
     const SHOPIFY_CLIENT_ID = Deno.env.get('SHOPIFY_CLIENT_ID');
-    console.log('Shopify OAuth Callback Edge Function: Using SHOPIFY_CLIENT_ID from environment:', SHOPIFY_CLIENT_ID); // TEMPORARY LOG
     const SHOPIFY_CLIENT_SECRET = Deno.env.get('SHOPIFY_CLIENT_SECRET');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
