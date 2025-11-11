@@ -49,6 +49,21 @@ serve(async (req) => {
       });
     }
 
+    // NEW: Implement robust role-based authorization
+    const { data: adminProfile, error: adminProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (adminProfileError || adminProfile?.role !== 'admin') { // Assuming 'admin' can view all companies
+      console.error('Edge Function: User is not an admin or profile not found:', adminProfileError?.message);
+      return new Response(JSON.stringify({ error: 'Forbidden: Only administrators can view all companies overview.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 403,
+      });
+    }
+
     // Fetch all organizations
     const { data: organizations, error: orgError } = await supabaseAdmin
       .from('organizations')

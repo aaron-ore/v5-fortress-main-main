@@ -217,18 +217,38 @@ const Integrations: React.FC = () => {
   const isAdmin = profile?.role === 'admin';
 
   // NEW: Function to initiate Shopify OAuth after getting store URL
-  const initiateShopifyOAuth = (shopifyStoreName: string) => {
+  const initiateShopifyOAuth = async (shopifyStoreName: string) => {
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
       console.error("[Shopify OAuth] Profile ID missing.");
       return;
     }
 
-    const clientId = import.meta.env.VITE_SHOPIFY_CLIENT_ID;
+    // Fetch Shopify Client ID securely from Edge Function
+    let clientId: string | null = null;
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("User session not found. Please log in again.");
+      }
+      const { data: clientData, error: clientError } = await supabase.functions.invoke('get-shopify-client-id', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+      if (clientError) throw clientError;
+      if (clientData.error) throw new Error(clientData.error);
+      clientId = clientData.shopifyClientId;
+    } catch (error: any) {
+      console.error("Error fetching Shopify Client ID:", error);
+      showError(`Failed to get Shopify Client ID: ${error.message}`);
+      return;
+    }
 
     if (!clientId) {
-      showError("Shopify Client ID is not configured. Please add VITE_SHOPIFY_CLIENT_ID to your .env file.");
-      console.error("[Shopify OAuth] VITE_SHOPIFY_CLIENT_ID is missing.");
+      showError("Shopify Client ID is not configured. Please contact support.");
+      console.error("[Shopify OAuth] Shopify Client ID is missing after Edge Function call.");
       return;
     }
 

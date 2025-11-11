@@ -60,6 +60,32 @@ serve(async (req) => {
       });
     }
 
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // NEW: Verify userId from JWT against userId from state
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Shopify OAuth Callback: Authorization header missing for JWT verification.');
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication required for Shopify connection.')}`, 302);
+    }
+    const token = authHeader.split(' ')[1];
+    const supabaseClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    });
+
+    const { data: { user: authenticatedUser }, error: authError } = await supabaseClient.auth.getUser();
+
+    if (authError || !authenticatedUser || authenticatedUser.id !== userIdFromState) {
+      console.error('Shopify OAuth Callback: Authenticated user ID mismatch with state userId or user not found.', authError?.message);
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication mismatch or invalid state. Please try again.')}`, 302);
+    }
+    console.log('Shopify OAuth Callback: Authenticated user ID matched with state userId:', authenticatedUser.id);
+
+
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
     console.log('Using redirectUri for token exchange:', redirectUri);
 
@@ -89,9 +115,7 @@ serve(async (req) => {
     const shopifyRefreshToken = tokens.refresh_token;
     const shopDomain = shop;
 
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Use userIdFromState to find the organization.
+    // Use userIdFromState (which is now verified against authenticatedUser.id) to find the organization.
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
