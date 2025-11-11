@@ -1,13 +1,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-// Removed: import { CardHeader, CardTitle } from "@/components/ui/card";
-// Removed: import { ScrollArea } from "@/components/ui/scroll-area";
 
 const TermsOfService: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold">Fortress Inventory Terms of Service Agreement</h1>
-      <p className="text-muted-foreground">Effective Date: October 1, 2025 | Last Updated: October 1, 2025</p>
+      <p className="text-muted-foreground">Effective Date: November 11, 2025 | Last Updated: November 11, 2025</p>
 
       <Card className="bg-card border-border rounded-lg shadow-sm">
         <CardContent className="p-6 prose dark:prose-invert max-w-none">
@@ -27,11 +25,11 @@ const TermsOfService: React.FC = () => {
           <p><strong>2.3 Trial Period:</strong> If you register for a free trial, we will make the Service available on a trial basis, free of charge, until the earlier of (a) the end of the trial period or (b) termination by either party. Data entered during a trial may be permanently lost unless you purchase a paid Subscription.</p>
 
           <h2>3. Fees and Payment Terms</h2>
-          <p><strong>3.1 Billing:</strong> Fees for the Service are detailed in the Subscription plan selected by the Customer and are billed in advance for the billing cycle (e.g., monthly or annually).</p>
-          <p><strong>3.2 Auto-Renewal:</strong> Your Subscription will automatically renew at the end of each billing cycle unless you cancel or we notify you otherwise. You authorize us (or our third-party payment processor) to charge your designated payment method for the renewal term.</p>
+          <p><strong>3.1 Billing:</strong> Fees for the Service are detailed in the Subscription plan selected by the Customer and are billed in advance for the billing cycle (e.g., monthly or annually). Our Merchant of Record, Paddle.com Market Limited ("Paddle"), handles all billing, payment processing, and related financial transactions. You will enter into a separate agreement with Paddle for these services.</p>
+          <p><strong>3.2 Auto-Renewal:</strong> Your Subscription will automatically renew at the end of each billing cycle unless you cancel or we notify you otherwise. You authorize us (or Paddle, our Merchant of Record) to charge your designated payment method for the renewal term.</p>
           <p><strong>3.3 Price Changes:</strong> We reserve the right to change the fees for the Service at any time, provided that any price increase will take effect no earlier than thirty (30) days after notice is sent to you, and will not affect the fees for the remainder of your current Subscription Term.</p>
           <p><strong>3.4 Taxes:</strong> All fees are exclusive of applicable taxes, duties, and levies, which are your responsibility.</p>
-          <p><strong>3.5 Refunds:</strong> ALL FEES ARE NON-REFUNDABLE AND NON-CANCELLABLE. No refunds or credits will be provided for partial months of service, downgrade refunds, or unused periods of service.</p>
+          <p><strong>3.5 Refunds:</strong> All refunds are handled in accordance with our Refund Policy, which is incorporated herein by reference. Please review our <a href="/refund-policy" className="text-primary hover:underline">Refund Policy</a> for full details.</p>
 
           <h2>4. Customer Data Ownership and Use</h2>
           <p><strong>4.1 Ownership:</strong> As between the parties, you exclusively own all rights, title, and interest in and to all Customer Data.</p>
@@ -75,7 +73,7 @@ const TermsOfService: React.FC = () => {
 
           <h2>11. General Provisions</h2>
           <p><strong>11.1 Governing Law and Venue:</strong> These Terms and any dispute or claim arising out of or in connection with them shall be governed by and construed in accordance with the laws of New York, without regard to its conflict of law principles. Any legal action or proceeding arising under these Terms shall be brought exclusively in the courts located in New York, NY.</p>
-          <p><strong>11.2 Entire Agreement:</strong> These Terms, together with the Privacy Policy, constitute the entire agreement between you and us concerning the use of the Service and supersedes all prior agreements, proposals, or representations.</p>
+          <p><strong>11.2 Entire Agreement:</strong> These Terms, together with the Privacy Policy and Refund Policy, constitute the entire agreement between you and us concerning the use of the Service and supersedes all prior agreements, proposals, or representations.</p>
           <p><strong>11.3 Modification:</strong> We may modify these Terms at any time by posting the revised Terms on our website or within the Service and updating the "Last Updated" date. Your continued use of the Service after the effective date of the changes constitutes your acceptance of the new Terms.</p>
 
           <h2>12. Contact Information</h2>

@@ -1,13 +1,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-// Removed: import { CardHeader, CardTitle } from "@/components/ui/card";
-// Removed: import { ScrollArea } from "@/components/ui/scroll-area";
 
 const PrivacyPolicy: React.FC = () => {
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold">Privacy Policy</h1>
-      <p className="text-muted-foreground">Effective Date: October 1, 2025 | Last Updated: October 1, 2025</p>
+      <p className="text-muted-foreground">Effective Date: November 11, 2025 | Last Updated: November 11, 2025</p>
 
       <Card className="bg-card border-border rounded-lg shadow-sm">
         <CardContent className="p-6 prose dark:prose-invert max-w-none">
@@ -18,7 +16,7 @@ const PrivacyPolicy: React.FC = () => {
           <ul>
             <li><strong>Account Data:</strong> When you register for an account, we collect your name, email address, password, and company information.</li>
             <li><strong>Profile Data:</strong> You may provide additional information for your user profile, such as phone number, address, and avatar URL.</li>
-            <li><strong>Payment Information:</strong> If you subscribe to a paid plan, our third-party payment processor (FastSpring) collects your payment details. We do not directly store your credit card information.</li>
+            <li><strong>Payment Information:</strong> If you subscribe to a paid plan, our Merchant of Record, Paddle.com Market Limited ("Paddle"), collects your payment details. We do not directly store your credit card information.</li>
             <li><strong>Customer Data:</strong> Any inventory records, product details, stock levels, transaction history, customer lists, and pricing information you upload or create within the Service.</li>
             <li><strong>Communications:</strong> Records of your communications with us, including support requests and feedback.</li>
           </ul>
@@ -46,7 +44,7 @@ const PrivacyPolicy: React.FC = () => {
           <h2>3. How We Share Your Information</h2>
           <p>We may share your information with third parties in the following circumstances:</p>
           <ul>
-            <li><strong>Service Providers:</strong> With third-party vendors, consultants, and other service providers who perform services on our behalf (e.g., hosting, payment processing, analytics, email delivery).</li>
+            <li><strong>Service Providers:</strong> With third-party vendors, consultants, and other service providers who perform services on our behalf (e.g., hosting, payment processing by Paddle, analytics, email delivery).</li>
             <li><strong>Business Transfers:</strong> In connection with any merger, sale of company assets, financing, or acquisition of all or a portion of our business by another company.</li>
             <li><strong>Legal Compliance:</strong> To comply with legal obligations, respond to lawful requests from public authorities, or protect our rights, privacy, safety, or property.</li>
             <li><strong>With Your Consent:</strong> We may share your information with your consent or at your direction.</li>
