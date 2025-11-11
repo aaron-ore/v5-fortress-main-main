@@ -13,11 +13,15 @@ const sanitizeHtml = (html: string): string => {
   // 1. Remove script tags
   sanitized = sanitized.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
 
-  // 2. Remove common event handlers from all tags
-  sanitized = sanitized.replace(/(\s)(on[a-zA-Z]+)=["']([^"']*)["']/gi, '$1');
+  // 2. Remove common event handlers (e.g., onclick, onerror)
+  // Using two separate replaces for double and single quotes for broader compatibility
+  sanitized = sanitized.replace(/(\s)on\w+="[^"]*"/gi, '$1');
+  sanitized = sanitized.replace(/(\s)on\w+='[^']*'/gi, '$1');
 
   // 3. Remove data: URLs from src/href attributes
-  sanitized = sanitized.replace(/(src|href)=["']data:[^"']*/gi, '$1=""');
+  // Using two separate replaces for double and single quotes for broader compatibility
+  sanitized = sanitized.replace(/(src|href)="data:[^"]*"/gi, '$1=""');
+  sanitized = sanitized.replace(/(src|href)='data:[^']*'/gi, '$1=""');
 
   return sanitized;
 };
