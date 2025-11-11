@@ -264,7 +264,8 @@ const Integrations: React.FC = () => {
     // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
-    console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // Add log here
+    console.log("[Shopify OAuth] Generated Client ID:", clientId); // ADDED LOG
+    console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // ADDED LOG
     window.location.href = authUrl;
   };
 
