@@ -340,8 +340,10 @@ const Integrations: React.FC = () => {
   };
 
   const fetchShopifyLocations = async () => {
+    // Add a check here to ensure profile data is available before proceeding
     if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
-      showError("Shopify not connected. Please connect your Shopify store first.");
+      showError("Shopify is not fully connected. Please ensure your store is connected and try again.");
+      setIsFetchingShopifyLocations(false); // Ensure loading state is reset
       return;
     }
     setIsFetchingShopifyLocations(true);
@@ -349,6 +351,7 @@ const Integrations: React.FC = () => {
       const { data: { session } = { session: null } } = await supabase.auth.getSession();
       if (!session) {
         showError("You must be logged in to fetch Shopify locations.");
+        setIsFetchingShopifyLocations(false);
         return;
       }
 
@@ -370,7 +373,7 @@ const Integrations: React.FC = () => {
       showSuccess("Shopify locations fetched!");
     } catch (error: any) {
       console.error("Error fetching Shopify locations:", error);
-      showError(`Failed to fetch Shopify locations: ${error.message}`);
+      showError(`Failed to fetch Shopify locations: ${error.message}`); // This will now show the specific message from the Edge Function if it's a 400
     } finally {
       setIsFetchingShopifyLocations(false);
     }
@@ -588,7 +591,7 @@ const Integrations: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
                 </p>
-                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify}>
+                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify || !isShopifyConnected}>
                   {isFetchingShopifyLocations ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
