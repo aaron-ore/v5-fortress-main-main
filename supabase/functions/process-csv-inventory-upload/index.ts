@@ -315,30 +315,31 @@ serve(async (req) => {
       const totalQuantity = pickingBinQuantity + overstockQuantity;
       const status = totalQuantity > reorderLevel ? "In Stock" : (totalQuantity > 0 ? "Low Stock" : "Out of Stock");
 
+      // Construct itemPayload by assigning properties one by one
       const itemPayload: { [key: string]: any } = {};
-      itemPayload["name"] = itemName;
-      itemPayload["description"] = description;
-      itemPayload["sku"] = sku;
-      itemPayload["category"] = categoryName;
-      itemPayload["picking_bin_quantity"] = pickingBinQuantity;
-      itemPayload["overstock_quantity"] = overstockQuantity;
-      itemPayload["reorder_level"] = reorderLevel;
-      itemPayload["picking_reorder_level"] = pickingReorderLevel;
-      itemPayload["committed_stock"] = committedStock;
-      itemPayload["incoming_stock"] = incomingStock;
-      itemPayload["unit_cost"] = unitCost;
-      itemPayload["retail_price"] = retailPrice;
-      itemPayload["folder_id"] = folderId;
-      itemPayload["picking_bin_folder_id"] = pickingBinFolderId; 
-      itemPayload["status"] = status;
-      itemPayload["last_updated"] = new Date().toISOString();
-      itemPayload["image_url"] = imageUrl;
-      itemPayload["vendor_id"] = vendorId;
-      itemPayload["barcode_url"] = barcodeUrl;
-      itemPayload["user_id"] = user.id;
-      itemPayload["organization_id"] = organizationId;
-      itemPayload["auto_reorder_enabled"] = autoReorderEnabled;
-      itemPayload["auto_reorder_quantity"] = autoReorderQuantity;
+      itemPayload.name = itemName;
+      itemPayload.description = description;
+      itemPayload.sku = sku;
+      itemPayload.category = categoryName;
+      itemPayload.picking_bin_quantity = pickingBinQuantity;
+      itemPayload.overstock_quantity = overstockQuantity;
+      itemPayload.reorder_level = reorderLevel;
+      itemPayload.picking_reorder_level = pickingReorderLevel;
+      itemPayload.committed_stock = committedStock;
+      itemPayload.incoming_stock = incomingStock;
+      itemPayload.unit_cost = unitCost;
+      itemPayload.retail_price = retailPrice;
+      itemPayload.folder_id = folderId;
+      itemPayload.picking_bin_folder_id = pickingBinFolderId; 
+      itemPayload.status = status;
+      itemPayload.last_updated = new Date().toISOString();
+      itemPayload.image_url = imageUrl;
+      itemPayload.vendor_id = vendorId;
+      itemPayload.barcode_url = barcodeUrl;
+      itemPayload.user_id = user.id;
+      itemPayload.organization_id = organizationId;
+      itemPayload.auto_reorder_enabled = autoReorderEnabled;
+      itemPayload.auto_reorder_quantity = autoReorderQuantity;
 
       if (existingItem) {
         if (actionForDuplicates === "skip") {
