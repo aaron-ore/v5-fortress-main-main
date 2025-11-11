@@ -91,42 +91,46 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // --- REVISED AUTHENTICATION LOGIC ---
-    // Instead of verifying an incoming JWT (which isn't present in an OAuth redirect),
-    // we use the userIdFromState (which came from the authenticated client) to find the organization.
+    // Use userIdFromState to find the organization.
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
-      .eq('id', userIdFromState) // Use userIdFromState to find the organization
+      .eq('id', userIdFromState)
       .single();
 
     if (profileFetchError || !userProfile?.organization_id) {
-      console.error('Error fetching user profile or organization ID using userIdFromState:', profileFetchError);
+      console.error('Shopify OAuth Callback: Error fetching user profile or organization ID using userIdFromState:', profileFetchError);
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('User organization not found or profile access denied.')}`, 302);
     }
 
     const organizationId = userProfile.organization_id;
+    console.log('Shopify OAuth Callback: Identified organizationId for update:', organizationId);
+
+    const updatePayload = {
+      shopify_access_token: shopifyAccessToken,
+      shopify_refresh_token: shopifyRefreshToken,
+      shopify_store_name: shopDomain,
+    };
+    console.log('Shopify OAuth Callback: Attempting to update organization with payload:', JSON.stringify(updatePayload, null, 2));
 
     const { data: updatedOrganizationData, error: updateError } = await supabaseAdmin
       .from('organizations')
-      .update({
-        shopify_access_token: shopifyAccessToken,
-        shopify_refresh_token: shopifyRefreshToken,
-        shopify_store_name: shopDomain,
-      })
+      .update(updatePayload)
       .eq('id', organizationId)
       .select()
       .single();
 
     if (updateError) {
-      console.error('Error updating organization profile with Shopify tokens:', updateError);
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Failed to save Shopify tokens.')}`, 302);
+      console.error('Shopify OAuth Callback: Error updating organization profile with Shopify tokens:', updateError);
+      // Log the full error object for more details
+      console.error('Shopify OAuth Callback: Supabase update error details:', JSON.stringify(updateError, null, 2));
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Failed to save Shopify tokens: ' + updateError.message)}`, 302); // Include error message
     }
 
     console.log('Shopify tokens and store name successfully stored for organization:', organizationId);
     return Response.redirect(`${finalRedirectBase}/integrations?shopify_success=true`, 302);
   } catch (error) {
-    console.error('Shopify OAuth callback Edge Function error:', error);
+    console.error('Shopify OAuth callback Edge Function error (caught at top level):', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
