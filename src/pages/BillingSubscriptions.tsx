@@ -107,7 +107,7 @@ const BillingSubscriptions: React.FC = () => {
           { text: "QuickBooks Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
           { text: "Shopify Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
           { text: "Automation Engine", included: product.name.toLowerCase() === 'enterprise' },
-          { text: "Dedicated Support", included: product.name.toLowerCase() === 'enterprise' },
+          { text: "Priority Support", included: product.name.toLowerCase() === 'enterprise' },
         ];
 
         return {
