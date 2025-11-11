@@ -12,17 +12,15 @@ const sanitizeHtml = (html: string): string => {
   let sanitized = html;
 
   // 1. Remove script tags
-  sanitized = sanitized.replace(new RegExp('<script\\b[^>]*>[\\s\\S]*?<\\/script>', 'gi'), '');
+  sanitized = sanitized.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
 
   // 2. Remove common event handlers (e.g., onclick, onerror)
-  // Using new RegExp() for robustness
-  sanitized = sanitized.replace(new RegExp('(\\s)(on[a-zA-Z]+)="[^"]*"', 'gi'), '$1');
-  sanitized = sanitized.replace(new RegExp('(\\s)(on[a-zA-Z]+)=\'[^"]*\'', 'gi'), '$1');
+  sanitized = sanitized.replace(/(\s)(on[a-zA-Z]+)="[^"]*"/gi, '$1');
+  sanitized = sanitized.replace(/(\s)(on[a-zA-Z]+)='[^"]*'/gi, '$1');
 
   // 3. Remove data: URLs from src/href attributes
-  // Using new RegExp() for robustness
-  sanitized = sanitized.replace(new RegExp('(src|href)="data:[^"]*"', 'gi'), '$1=""');
-  sanitized = sanitized.replace(new RegExp('(src|href)=\'data:[^"]*\'', 'gi'), '$1=""');
+  sanitized = sanitized.replace(/(src|href)="data:[^"]*"/gi, '$1=""');
+  sanitized = sanitized.replace(/(src|href)='data:[^"]*'/gi, '$1=""');
 
   return sanitized;
 };
@@ -333,12 +331,11 @@ serve(async (req) => {
       itemPayload.folder_id = folderId;
       itemPayload.picking_bin_folder_id = pickingBinFolderId; 
       itemPayload.status = status;
-      itemPayload.last_updated = currentTimestamp;
+      itemPayload.last_updated = currentTimestamp; // Use pre-calculated value
       itemPayload.image_url = imageUrl;
       itemPayload.vendor_id = vendorId;
       itemPayload.barcode_url = barcodeUrl;
-      itemPayload.user_id = user.id;
-      itemPayload.organization_id = organizationId;
+      // Removed user_id and organization_id from itemPayload
       itemPayload.auto_reorder_enabled = autoReorderEnabled;
       itemPayload.auto_reorder_quantity = autoReorderQuantity;
 
@@ -373,7 +370,7 @@ serve(async (req) => {
           itemsToUpdate.push({ id: existingItem.id, ...itemPayload, quantity: totalQuantity });
         }
       } else {
-        newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity });
+        newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity, user_id: user.id, organization_id: organizationId, created_at: currentTimestamp });
       }
     }
     console.log('Edge Function: Finished processing CSV rows.');
