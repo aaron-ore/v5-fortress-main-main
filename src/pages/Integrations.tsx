@@ -266,7 +266,7 @@ const Integrations: React.FC = () => {
     
     console.log("[Shopify OAuth] Generated Client ID:", clientId); // ADDED LOG
     console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // ADDED LOG
-    window.location.href = authUrl;
+    // window.location.href = authUrl; // COMMENTED OUT FOR DEBUGGING
   };
 
   const handleConnectShopify = () => {
