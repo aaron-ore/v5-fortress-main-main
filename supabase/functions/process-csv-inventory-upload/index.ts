@@ -1,4 +1,4 @@
-import { createClient } 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 const corsHeaders = {
