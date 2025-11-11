@@ -5,6 +5,12 @@ const ERROR_THRESHOLD = 10; // Number of consecutive errors before showing a sum
 let summaryErrorToastId: string | number | null = null; // ID of the persistent summary error toast
 const activeToastIds: Set<string | number> = new Set(); // Track all active toast IDs
 
+/**
+ * Truncates a message to a specified word limit.
+ * @param message The message string to truncate.
+ * @param wordLimit The maximum number of words to keep (default: 10).
+ * @returns The truncated message.
+ */
 const truncateMessage = (message: string, wordLimit: number = 10): string => {
   const words = message.split(' ');
   if (words.length > wordLimit) {
@@ -13,7 +19,15 @@ const truncateMessage = (message: string, wordLimit: number = 10): string => {
   return message;
 };
 
-const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, options?: any) => {
+/**
+ * Displays a toast notification of a specified type.
+ * This function dismisses all currently active toasts before showing a new one.
+ * @param type The type of the toast ('success', 'error', 'info', 'warning').
+ * @param message The message to display in the toast.
+ * @param options Optional configuration for the toast (e.g., duration, closeButton).
+ * @returns The ID of the displayed toast.
+ */
+const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: string, options?: any): string | number => {
   // Dismiss all currently active toasts before showing a new one
   activeToastIds.forEach(id => toast.dismiss(id));
   activeToastIds.clear();
@@ -43,7 +57,12 @@ const showToast = (type: 'success' | 'error' | 'info' | 'warning', message: stri
   return id;
 };
 
-export const showSuccess = (message: string) => {
+/**
+ * Displays a success toast notification.
+ * If a summary error toast is active, it will be dismissed.
+ * @param message The success message to display.
+ */
+export const showSuccess = (message: string): void => {
   // If a summary error toast is active, dismiss it when a success occurs
   if (summaryErrorToastId !== null) {
     toast.dismiss(summaryErrorToastId);
@@ -54,7 +73,13 @@ export const showSuccess = (message: string) => {
   showToast('success', message);
 };
 
-export const showError = (message: string) => {
+/**
+ * Displays an error toast notification.
+ * If a summary error toast is already active, new individual errors are suppressed.
+ * If the number of consecutive errors reaches a threshold, a persistent summary error toast is shown.
+ * @param message The error message to display.
+ */
+export const showError = (message: string): void => {
   // If a summary error toast is already active, don't show new individual errors
   if (summaryErrorToastId !== null) {
     console.warn("Additional error occurred while summary toast is active. Message:", message);
@@ -80,7 +105,12 @@ export const showError = (message: string) => {
   }
 };
 
-export const showInfo = (message: string) => {
+/**
+ * Displays an informational toast notification.
+ * If a summary error toast is active, it will be dismissed.
+ * @param message The informational message to display.
+ */
+export const showInfo = (message: string): void => {
   if (summaryErrorToastId !== null) {
     toast.dismiss(summaryErrorToastId);
     summaryErrorToastId = null;
@@ -90,7 +120,12 @@ export const showInfo = (message: string) => {
   showToast('info', message);
 };
 
-export const showWarning = (message: string) => {
+/**
+ * Displays a warning toast notification.
+ * If a summary error toast is active, it will be dismissed.
+ * @param message The warning message to display.
+ */
+export const showWarning = (message: string): void => {
   if (summaryErrorToastId !== null) {
     toast.dismiss(summaryErrorToastId);
     summaryErrorToastId = null;
@@ -100,6 +135,10 @@ export const showWarning = (message: string) => {
   showToast('warning', message);
 };
 
-export const dismissToast = (toastId: string | number) => {
+/**
+ * Dismisses a specific toast notification by its ID.
+ * @param toastId The ID of the toast to dismiss.
+ */
+export const dismissToast = (toastId: string | number): void => {
   toast.dismiss(toastId);
 };
