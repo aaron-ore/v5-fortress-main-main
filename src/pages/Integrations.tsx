@@ -81,13 +81,6 @@ const Integrations: React.FC = () => {
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
 
-    console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
-    console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
-    console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
-    console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
-    console.log('Integrations.tsx: stripe_success from URL parameters:', params.get('stripe_success'));
-    console.log('Integrations.tsx: stripe_cancel from URL parameters:', params.get('stripe_cancel'));
-
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected!");
@@ -264,6 +257,7 @@ const Integrations: React.FC = () => {
     // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
+    console.log("[Shopify OAuth] Generated Shopify Auth URL:", authUrl); // Log the URL
     window.location.href = authUrl;
   };
 
