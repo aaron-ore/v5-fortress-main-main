@@ -266,7 +266,7 @@ const Integrations: React.FC = () => {
     
     console.log("[Shopify OAuth] Generated Client ID:", clientId); // ADDED LOG
     console.log("[Shopify OAuth] Generated Auth URL:", authUrl); // ADDED LOG
-    // window.location.href = authUrl; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
+    window.location.href = authUrl;
   };
 
   const handleConnectShopify = () => {
@@ -353,7 +353,7 @@ const Integrations: React.FC = () => {
     }
     setIsFetchingShopifyLocations(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } = { session: null } } = await supabase.auth.getSession(); // Ensure session is not null
       if (!session) {
         showError("You must be logged in to fetch Shopify locations.");
         return;
