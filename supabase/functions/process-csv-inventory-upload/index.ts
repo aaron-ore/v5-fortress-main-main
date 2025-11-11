@@ -6,32 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper function to sanitize HTML content
+// Helper function to sanitize HTML content for Deno environment
 const sanitizeHtml = (html: string): string => {
-  // A simple, effective sanitizer for basic XSS prevention.
-  // For more complex scenarios, a dedicated library like DOMPurify is recommended.
-  // This implementation strips script tags and event handlers.
-  const div = new DOMParser().parseFromString(html, 'text/html').body;
+  let sanitized = html;
 
-  // Remove script tags
-  const scripts = div.getElementsByTagName('script');
-  for (let i = scripts.length - 1; i >= 0; i--) {
-    scripts[i].remove();
-  }
+  // 1. Remove script tags
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
-  // Remove event handlers (e.g., onclick, onerror)
-  const allElements = div.getElementsByTagName('*');
-  for (let i = 0; i < allElements.length; i++) {
-    const element = allElements[i] as HTMLElement;
-    for (let j = 0; j < element.attributes.length; j++) {
-      const attr = element.attributes[j];
-      if (attr.name.startsWith('on')) {
-        element.removeAttribute(attr.name);
-      }
-    }
-  }
+  // 2. Remove common event handlers from all tags
+  // This regex targets attributes starting with 'on' followed by any character,
+  // then an equals sign, and then a quoted string.
+  sanitized = sanitized.replace(/(\s)(on\w+)=["']([^"']*)["']/gi, '$1');
 
-  return div.innerHTML;
+  // 3. Remove data: URLs from src/href attributes (optional, but good for security)
+  sanitized = sanitized.replace(/(src|href)=["']data:([^"']*)["']/gi, '$1=""');
+
+  return sanitized;
 };
 
 interface ExistingInventoryItem {
