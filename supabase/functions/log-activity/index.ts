@@ -6,6 +6,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to sanitize HTML content
+const sanitizeHtml = (html: string): string => {
+  // A simple, effective sanitizer for basic XSS prevention.
+  // This implementation strips script tags and event handlers.
+  const div = new DOMParser().parseFromString(html, 'text/html').body;
+
+  // Remove script tags
+  const scripts = div.getElementsByTagName('script');
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    scripts[i].remove();
+  }
+
+  // Remove event handlers (e.g., onclick, onerror)
+  const allElements = div.getElementsByTagName('*');
+  for (let i = 0; i < allElements.length; i++) {
+    const element = allElements[i] as HTMLElement;
+    for (let j = 0; j < element.attributes.length; j++) {
+      const attr = element.attributes[j];
+      if (attr.name.startsWith('on')) {
+        element.removeAttribute(attr.name);
+      }
+    }
+  }
+
+  return div.innerHTML;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -57,12 +84,21 @@ serve(async (req) => {
       });
     }
 
+    // Sanitize description and any string values in details before insertion
+    const sanitizedDescription = sanitizeHtml(description);
+    const sanitizedDetails = details ? JSON.parse(JSON.stringify(details, (key, value) => {
+      if (typeof value === 'string') {
+        return sanitizeHtml(value);
+      }
+      return value;
+    })) : {};
+
     const { data, error } = await supabaseAdmin
       .from('activity_logs')
       .insert({
         activity_type,
-        description,
-        details: details || {},
+        description: sanitizedDescription,
+        details: sanitizedDetails,
         user_id,
         organization_id,
       })

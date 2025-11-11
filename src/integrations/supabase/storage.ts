@@ -2,12 +2,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Uploads a file to a specified Supabase Storage bucket and returns its internal file path.
+ * Uploads a file to a specified Supabase Storage bucket via a secure Edge Function
+ * and returns its internal file path.
  * @param file The File object to upload.
  * @param bucketName The name of the Supabase Storage bucket.
  * @param folderPath The path within the bucket (e.g., 'avatars/', 'company-logos/').
  * @returns A promise that resolves with the internal file path of the uploaded file.
- * @throws An error if the upload fails.
+ * @throws An error if the upload fails or is rejected by server-side validation.
  */
 export const uploadFileToSupabase = async (file: File, bucketName: string, folderPath: string = ''): Promise<string> => {
   if (!file) {
@@ -16,24 +17,54 @@ export const uploadFileToSupabase = async (file: File, bucketName: string, folde
 
   const fileExtension = file.name.split('.').pop();
   const fileName = `${uuidv4()}.${fileExtension}`;
-  const filePath = `${folderPath}${fileName}`; // This is the internal path
+  
+  // Read file as base64
+  const reader = new FileReader();
+  const base64Data = await new Promise<string>((resolve, reject) => {
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]); // Get base64 part
+      } else {
+        reject(new Error("Failed to read file as base64."));
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
-  console.log(`[Storage] Uploading file to bucket: ${bucketName}, path: ${filePath}`);
+  console.log(`[Storage] Calling secure upload Edge Function for bucket: ${bucketName}, path: ${folderPath}${fileName}`);
 
-  const { error } = await supabase.storage
-    .from(bucketName)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session) {
+    throw new Error("Authentication session expired. Please log in again.");
+  }
+
+  const { data, error } = await supabase.functions.invoke('upload-image-with-validation', {
+    body: JSON.stringify({
+      base64Data: base64Data,
+      mimeType: file.type,
+      fileName: fileName,
+      bucketName: bucketName,
+      folderPath: folderPath,
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${sessionData.session.access_token}`,
+    },
+  });
 
   if (error) {
-    console.error("[Storage] Supabase file upload error:", error);
+    console.error("[Storage] Secure upload Edge Function error:", error);
     throw new Error(`Failed to upload file: ${error.message}`);
   }
 
-  console.log(`[Storage] File uploaded successfully. Internal path: ${filePath}`);
-  return filePath; // Return the internal file path
+  if (data.error) {
+    console.error("[Storage] Secure upload Edge Function returned error:", data.error);
+    throw new Error(`Failed to upload file: ${data.error}`);
+  }
+
+  console.log(`[Storage] File uploaded successfully via Edge Function. Internal path: ${data.filePath}`);
+  return data.filePath; // Return the internal file path from the Edge Function response
 };
 
 /**

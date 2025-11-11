@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react'; // Import useEffect
+import React, { useRef, useEffect, useState } from 'react'; // Import useState
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X, UploadCloud, Loader2 } from 'lucide-react';
+import { showError } from '@/utils/toast'; // Import showError for client-side validation
 
 interface CustomFileInputProps {
   id: string;
@@ -16,6 +17,8 @@ interface CustomFileInputProps {
   previewUrl?: string | null; // This is now expected to be a PUBLIC URL or data:URL
 }
 
+const ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+
 const CustomFileInput: React.FC<CustomFileInputProps> = ({
   id,
   label,
@@ -27,11 +30,31 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
   previewUrl,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [internalPreviewUrl, setInternalPreviewUrl] = useState<string | null>(previewUrl || null);
 
   useEffect(() => {
-    console.log(`[CustomFileInput - ${id}] Rendered with previewUrl: "${previewUrl}" (Type: ${typeof previewUrl})`);
-    console.log(`[CustomFileInput - ${id}] Has active preview:`, !!previewUrl && previewUrl !== "");
-  }, [previewUrl, id]);
+    setInternalPreviewUrl(previewUrl || null);
+  }, [previewUrl]);
+
+  const handleInternalChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const selectedFile = event.target.files[0];
+      if (!ALLOWED_IMAGE_MIMES.includes(selectedFile.type)) {
+        showError("Invalid file type. Only JPEG, PNG, GIF, WEBP, and SVG images are allowed.");
+        event.target.value = ''; // Clear the input
+        setInternalPreviewUrl(null);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setInternalPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setInternalPreviewUrl(null);
+    }
+    onChange(event); // Pass the event up to the parent
+  };
 
   const handleButtonClick = () => {
     if (fileInputRef.current && !disabled && !isUploading) {
@@ -39,8 +62,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
     }
   };
 
-  // NEW: Explicitly check for non-empty string for previewUrl
-  const hasActivePreview = !!previewUrl && previewUrl !== "";
+  const hasActivePreview = !!internalPreviewUrl && internalPreviewUrl !== "";
   const hasFileOrPreview = !!file || hasActivePreview;
 
   const buttonText = isUploading
@@ -67,8 +89,8 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
           <Input
             id={id}
             type="file"
-            accept="image/*"
-            onChange={onChange}
+            accept={ALLOWED_IMAGE_MIMES.join(',')} // Restrict client-side file picker
+            onChange={handleInternalChange}
             ref={fileInputRef}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer hidden"
             disabled={disabled || isUploading}
@@ -94,7 +116,7 @@ const CustomFileInput: React.FC<CustomFileInputProps> = ({
         </div>
       ) : hasActivePreview ? (
         <div className="mt-2 p-2 border border-border rounded-md flex items-center justify-center bg-muted/20">
-          <img src={previewUrl!} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
+          <img src={internalPreviewUrl!} alt="Product Preview" className="max-w-[100px] max-h-[100px] object-contain" />
         </div>
       ) : (
         <div className="mt-2 p-4 border border-dashed border-muted-foreground/50 rounded-md flex items-center justify-center text-muted-foreground text-sm">

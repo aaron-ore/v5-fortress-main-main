@@ -6,6 +6,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to sanitize HTML content
+const sanitizeHtml = (html: string): string => {
+  // A simple, effective sanitizer for basic XSS prevention.
+  // For more complex scenarios, a dedicated library like DOMPurify is recommended.
+  // This implementation strips script tags and event handlers.
+  const div = new DOMParser().parseFromString(html, 'text/html').body;
+
+  // Remove script tags
+  const scripts = div.getElementsByTagName('script');
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    scripts[i].remove();
+  }
+
+  // Remove event handlers (e.g., onclick, onerror)
+  const allElements = div.getElementsByTagName('*');
+  for (let i = 0; i < allElements.length; i++) {
+    const element = allElements[i] as HTMLElement;
+    for (let j = 0; j < element.attributes.length; j++) {
+      const attr = element.attributes[j];
+      if (attr.name.startsWith('on')) {
+        element.removeAttribute(attr.name);
+      }
+    }
+  }
+
+  return div.innerHTML;
+};
+
 interface ExistingInventoryItem {
   id: string;
   name: string;
@@ -93,7 +121,7 @@ serve(async (req) => {
           Authorization: `Bearer ${token}`,
         },
       },
-    });
+    );
 
     console.log('Edge Function: Attempting to get user from token.');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
@@ -199,8 +227,9 @@ serve(async (req) => {
       const row = jsonData[i];
       const rowNumber = i + 2;
 
-      const itemName = String(row.name || '').trim();
-      const sku = String(row.sku || '').trim();
+      // Sanitize all string inputs from CSV
+      const itemName = sanitizeHtml(String(row.name || '').trim());
+      const sku = sanitizeHtml(String(row.sku || '').trim());
 
       if (!itemName) {
         errors.push(`Row ${rowNumber} (SKU: ${sku || 'N/A'}): Item Name is required.`);
@@ -232,10 +261,10 @@ serve(async (req) => {
         continue;
       }
 
-      const description = String(row.description || '').trim() || undefined;
-      const imageUrl = String(row.imageUrl || '').trim() || undefined;
-      const vendorId = String(row.vendorId || '').trim() || undefined;
-      const barcodeUrl = String(row.barcodeUrl || '').trim() || sku;
+      const description = sanitizeHtml(String(row.description || '').trim()) || undefined;
+      const imageUrl = sanitizeHtml(String(row.imageUrl || '').trim()) || undefined;
+      const vendorId = sanitizeHtml(String(row.vendorId || '').trim()) || undefined;
+      const barcodeUrl = sanitizeHtml(String(row.barcodeUrl || '').trim()) || sku;
       const autoReorderEnabled = String(row.autoReorderEnabled || 'false').toLowerCase() === 'true';
       
       let reorderLevel = parseInt(String(row.reorderLevel || '0'));
@@ -249,7 +278,7 @@ serve(async (req) => {
       let autoReorderQuantity = parseInt(String(row.autoReorderQuantity || '0'));
       if (isNaN(autoReorderQuantity) || autoReorderQuantity < 0) autoReorderQuantity = 0;
 
-      let categoryName = String(row.category || '').trim();
+      let categoryName = sanitizeHtml(String(row.category || '').trim());
       if (!categoryName) categoryName = 'Uncategorized';
       if (!categoryMap.has(categoryName.toLowerCase())) {
         const { data: newCat, error: insertCatError } = await supabaseAdmin
@@ -264,7 +293,7 @@ serve(async (req) => {
         categoryMap.set(newCat.name.toLowerCase(), newCat.id);
       }
 
-      let folderName = String(row.folderName || '').trim();
+      let folderName = sanitizeHtml(String(row.folderName || '').trim());
       if (!folderName) folderName = 'Unassigned';
       let folderId: string | undefined = folderMap.get(folderName.toLowerCase());
 

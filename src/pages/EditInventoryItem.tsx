@@ -250,7 +250,7 @@ const EditInventoryItem = () => {
         console.log("[EditInventoryItem] onSubmit: finalImageUrlForDb set to null (image cleared).");
       } else {
         // No new file, not explicitly cleared. Keep existing image's internal path.
-        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') : null; // Ensure it's null if no image
+        finalImageUrlForDb = item.imageUrl ? getFilePathFromPublicUrl(item.imageUrl, 'inventory-images') || null : null; // Ensure it's null if no image
         console.log("[EditInventoryItem] onSubmit: No image change. Keeping existing internal path:", finalImageUrlForDb);
       }
     } catch (error: any) {

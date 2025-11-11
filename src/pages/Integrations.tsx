@@ -42,6 +42,9 @@ interface ShopifyLocationMapping {
   created_at: string;
 }
 
+// Hardcode Shopify Client ID as it's a public credential for public apps
+const SHOPIFY_CLIENT_ID = "a0000000000000000000000000000000"; // Replace with your actual Shopify Client ID
+
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const { inventoryFolders, fetchInventoryFolders } = useOnboarding();
@@ -224,31 +227,12 @@ const Integrations: React.FC = () => {
       return;
     }
 
-    // Fetch Shopify Client ID securely from Edge Function
-    let clientId: string | null = null;
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
-      }
-      const { data: clientData, error: clientError } = await supabase.functions.invoke('get-shopify-client-id', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-      });
-      if (clientError) throw clientError;
-      if (clientData.error) throw new Error(clientData.error);
-      clientId = clientData.shopifyClientId;
-    } catch (error: any) {
-      console.error("Error fetching Shopify Client ID:", error);
-      showError(`Failed to get Shopify Client ID: ${error.message}`);
-      return;
-    }
+    // Use the hardcoded Shopify Client ID
+    const clientId = SHOPIFY_CLIENT_ID;
 
     if (!clientId) {
       showError("Shopify Client ID is not configured. Please contact support.");
-      console.error("[Shopify OAuth] Shopify Client ID is missing after Edge Function call.");
+      console.error("[Shopify OAuth] Shopify Client ID is missing.");
       return;
     }
 

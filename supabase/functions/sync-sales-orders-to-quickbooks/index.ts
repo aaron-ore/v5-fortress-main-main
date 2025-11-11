@@ -7,6 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to escape single quotes for SQL-like queries in QuickBooks API
+const escapeQuickBooksQueryString = (value: string): string => {
+  return value.replace(/'/g, "''");
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -174,7 +179,9 @@ serve(async (req) => {
     };
 
     const getOrCreateQuickBooksCustomer = async (customerName: string, customerEmail?: string) => {
-      const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${customerName}'`)}&minorversion=69`;
+      // Sanitize customerName for the query string
+      const sanitizedCustomerName = escapeQuickBooksQueryString(customerName);
+      const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${sanitizedCustomerName}'`)}&minorversion=69`;
       const { data: searchResult, intuit_tid: searchTid } = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
         headers: {
@@ -191,7 +198,7 @@ serve(async (req) => {
 
       console.log(`QuickBooks customer ${customerName} not found, creating new...`);
       const newCustomerPayload = {
-        DisplayName: customerName,
+        DisplayName: customerName, // JSON.stringify will handle escaping for the payload
         PrimaryEmailAddr: customerEmail ? { Address: customerEmail } : undefined,
       };
       const createUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/customer?minorversion=69`;
@@ -258,7 +265,9 @@ serve(async (req) => {
     };
 
     const getOrCreateQuickBooksItem = async (itemName: string, unitPrice: number) => {
-      const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Item WHERE Name = '${itemName}'`)}&minorversion=69`;
+      // Sanitize itemName for the query string
+      const sanitizedItemName = escapeQuickBooksQueryString(itemName);
+      const queryUrl = `${QUICKBOOKS_API_BASE_URL}/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Item WHERE Name = '${sanitizedItemName}'`)}&minorversion=69`;
       const { data: searchResult, intuit_tid: searchTid } = await makeQuickBooksApiCall(queryUrl, {
         method: 'GET',
         headers: {
@@ -278,7 +287,7 @@ serve(async (req) => {
       const incomeAccountId = await getQuickBooksIncomeAccountId();
 
       const newItemPayload = {
-        Name: itemName,
+        Name: itemName, // JSON.stringify will handle escaping for the payload
         Type: 'Service',
         Active: true,
         UnitPrice: unitPrice,

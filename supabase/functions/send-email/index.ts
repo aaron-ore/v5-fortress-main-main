@@ -6,6 +6,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to sanitize HTML content
+const sanitizeHtml = (html: string): string => {
+  // A simple, effective sanitizer for basic XSS prevention.
+  // This implementation strips script tags and event handlers.
+  const div = new DOMParser().parseFromString(html, 'text/html').body;
+
+  // Remove script tags
+  const scripts = div.getElementsByTagName('script');
+  for (let i = scripts.length - 1; i >= 0; i--) {
+    scripts[i].remove();
+  }
+
+  // Remove event handlers (e.g., onclick, onerror)
+  const allElements = div.getElementsByTagName('*');
+  for (let i = 0; i < allElements.length; i++) {
+    const element = allElements[i] as HTMLElement;
+    for (let j = 0; j < element.attributes.length; j++) {
+      const attr = element.attributes[j];
+      if (attr.name.startsWith('on')) {
+        element.removeAttribute(attr.name);
+      }
+    }
+  }
+
+  return div.innerHTML;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -66,6 +93,9 @@ serve(async (req) => {
       });
     }
 
+    // Sanitize htmlContent before sending to Brevo
+    const sanitizedHtmlContent = sanitizeHtml(htmlContent);
+
     const brevoResponse = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
@@ -77,7 +107,7 @@ serve(async (req) => {
         sender: { email: 'noreply@fortress.com', name: 'Fortress Inventory' },
         to: [{ email: to }],
         subject: subject,
-        htmlContent: htmlContent,
+        htmlContent: sanitizedHtmlContent, // Use sanitized content
       }),
     });
 

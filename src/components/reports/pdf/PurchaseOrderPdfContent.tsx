@@ -2,6 +2,7 @@ import React from "react";
 import { format, isValid } from "date-fns";
 import { parseAndValidateDate } from "@/utils/dateUtils";
 import { useProfile } from "@/context/ProfileContext";
+import { escapeHtml } from "@/utils/htmlSanitizer"; // Import escapeHtml
 
 interface POItem {
   id: number;
@@ -52,6 +53,18 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
   const poDateObj = parseAndValidateDate(poDate);
   const dueDateObj = parseAndValidateDate(dueDate);
 
+  // Escape all user-controlled text fields
+  const safePoNumber = escapeHtml(poNumber ?? "N/A");
+  const safeSupplierName = escapeHtml(supplierName ?? "N/A");
+  const safeSupplierEmail = escapeHtml(supplierEmail ?? "N/A");
+  const safeSupplierAddressLines = (supplierAddress ?? "N/A").split('\n').map(escapeHtml);
+  const safeTerms = escapeHtml(terms ?? "N/A");
+  const safeNotes = escapeHtml(notes ?? "N/A");
+  const safeCompanyName = escapeHtml(profile.companyProfile.companyName || "Your Company");
+  const safeCompanyCurrency = escapeHtml(profile.companyProfile.companyCurrency || "N/A");
+  const safeCompanyAddressLines = (profile.companyProfile.companyAddress?.split('\n') || ["N/A"]).map(escapeHtml);
+
+
   return (
     <div className="bg-white text-gray-900 font-sans text-sm p-[20mm]">
       <div className="flex justify-between items-start mb-8">
@@ -67,9 +80,10 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold">DATE: {poDateObj && isValid(poDateObj) ? format(poDateObj, "MMM dd, yyyy") : "N/A"}</p>
-          <p className="text-sm font-semibold">PO: {poNumber ?? "N/A"}</p>
+          <p className="text-sm font-semibold">PO: {safePoNumber}</p>
           {poQrCodeSvg && (
             <div className="mt-2 flex justify-end p-2 bg-white">
+              {/* qrCodeSvg is already generated as SVG, assuming it's safe from generateQrCodeSvg */}
               <div dangerouslySetInnerHTML={{ __html: poQrCodeSvg }} className="w-[20mm] h-[20mm] object-contain" />
             </div>
           )}
@@ -80,19 +94,19 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">FROM:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p className="font-semibold">{profile.companyProfile.companyName || "Your Company"}</p>
-            <p>{profile.companyProfile.companyCurrency || "N/A"}</p>
-            <p>{(profile.companyProfile.companyAddress?.split('\n')[0] || "N/A")}</p>
-            <p>{(profile.companyProfile.companyAddress?.split('\n')[1] || "")}</p>
+            <p className="font-semibold">{safeCompanyName}</p>
+            <p>{safeCompanyCurrency}</p>
+            <p>{safeCompanyAddressLines[0]}</p>
+            <p>{safeCompanyAddressLines[1]}</p>
           </div>
         </div>
         <div>
           <p className="font-bold mb-2">TO:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p className="font-semibold">{supplierName ?? "N/A"}</p>
-            <p>{supplierEmail ?? "N/A"}</p>
-            <p>{(supplierAddress?.split('\n')[0] || "N/A")}</p>
-            <p>{(supplierAddress?.split('\n')[1] || "")}</p>
+            <p className="font-semibold">{safeSupplierName}</p>
+            <p>{safeSupplierEmail}</p>
+            <p>{safeSupplierAddressLines[0]}</p>
+            <p>{safeSupplierAddressLines[1]}</p>
           </div>
         </div>
       </div>
@@ -101,7 +115,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">TERMS:</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded">
-            <p>{terms ?? "N/A"}</p>
+            <p>{safeTerms}</p>
           </div>
         </div>
         <div>
@@ -124,7 +138,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <tbody>
           {(items ?? []).map((item: POItem, _index: number) => (
             <tr key={item.id}>
-              <td className="py-2 px-4 border-r border-gray-200">{item.itemName ?? "N/A"}</td>
+              <td className="py-2 px-4 border-r border-gray-200">{escapeHtml(item.itemName ?? "N/A")}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">{item.quantity ?? 0}</td>
               <td className="py-2 px-4 text-right border-r border-gray-200">${(item.unitPrice ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               <td className="py-2 px-4 text-right">${((item.quantity ?? 0) * (item.unitPrice ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -159,7 +173,7 @@ const PurchaseOrderPdfContent: React.FC<PurchaseOrderPdfContentProps> = ({
         <div>
           <p className="font-bold mb-2">Notes</p>
           <div className="bg-gray-50 p-3 border border-gray-200 rounded min-h-[80px]">
-            <p>{notes ?? "N/A"}</p>
+            <p>{safeNotes}</p>
           </div>
         </div>
 
