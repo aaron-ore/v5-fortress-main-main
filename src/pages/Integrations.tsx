@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
@@ -43,7 +43,7 @@ interface ShopifyLocationMapping {
 }
 
 // Hardcode Shopify Client ID as it's a public credential for public apps
-const SHOPIFY_CLIENT_ID = "8496dff0a4396a6baeede4ce7f17902f"; // <--- REPLACED WITH USER'S ACTUAL CLIENT ID
+const SHOPIFY_CLIENT_ID = "8496dff0a4396a6baeede4ce7f17902f";
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
@@ -52,6 +52,8 @@ const Integrations: React.FC = () => {
   const location = useLocation();
   const { theme } = useTheme();
 
+  const [quickbooksClientId, setQuickbooksClientId] = useState<string | null>(null);
+  const [isFetchingQuickbooksClientId, setIsFetchingQuickbooksClientId] = useState(true);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
   const [isSyncingShopify, setIsSyncingShopify] = useState(false);
 
@@ -76,6 +78,39 @@ const Integrations: React.FC = () => {
   const shopifyLogoSrc = theme === 'dark' || theme === 'emerald' || theme === 'deep-forest'
     ? "/shopify_logo_white.png"
     : "/shopify_logo_black.png";
+
+  // Fetch QuickBooks Client ID securely
+  const fetchQuickbooksClientId = useCallback(async () => {
+    if (!profile?.id) {
+      setIsFetchingQuickbooksClientId(false);
+      return;
+    }
+    setIsFetchingQuickbooksClientId(true);
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("Authentication session expired. Please log in again.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('get-quickbooks-client-id', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      setQuickbooksClientId(data.clientId);
+    } catch (error: any) {
+      console.error("Error fetching QuickBooks Client ID:", error);
+      showError(`Failed to load QuickBooks integration: ${error.message}`);
+      setQuickbooksClientId(null);
+    } finally {
+      setIsFetchingQuickbooksClientId(false);
+    }
+  }, [profile?.id]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -110,8 +145,9 @@ const Integrations: React.FC = () => {
     if (!isLoadingProfile && profile?.organizationId) {
       fetchInventoryFolders();
       fetchShopifyLocationMappings();
+      fetchQuickbooksClientId(); // Fetch QB Client ID when profile is loaded
     }
-  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders]);
+  }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders, fetchQuickbooksClientId]);
 
   // NEW: Check QuickBooks access based on plan
   const canAccessQuickBooks = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
@@ -127,11 +163,8 @@ const Integrations: React.FC = () => {
       showError("You must be logged in to connect to QuickBooks.");
       return;
     }
-
-    const clientId = import.meta.env.VITE_QUICKBOOKS_CLIENT_ID;
-
-    if (!clientId) {
-      showError("QuickBooks Client ID is not configured. Please add VITE_QUICKBOOKS_CLIENT_ID to your .env file.");
+    if (!quickbooksClientId) {
+      showError("QuickBooks Client ID is not available. Please try again in a moment.");
       return;
     }
 
@@ -146,7 +179,7 @@ const Integrations: React.FC = () => {
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
-    const authUrl = `https://appcenter.intuit.com/app/connect/oauth2?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&state=${encodedState}`;
+    const authUrl = `https://appcenter.intuit.com/app/connect/oauth2?client_id=${quickbooksClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=${responseType}&state=${encodedState}`;
     
     window.location.href = authUrl;
   };
@@ -512,7 +545,7 @@ const Integrations: React.FC = () => {
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
   const isShopifyConnected = profile?.companyProfile?.shopifyAccessToken && profile?.companyProfile?.shopifyStoreName;
 
-  if (isLoadingProfile) {
+  if (isLoadingProfile || isFetchingQuickbooksClientId) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -560,8 +593,14 @@ const Integrations: React.FC = () => {
               <p className="text-muted-foreground">
                 Connect your QuickBooks account to enable automatic syncing of orders, inventory, and more.
               </p>
-              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks || isLoadingProfile}>
-                Connect to QuickBooks
+              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks || isLoadingProfile || isFetchingQuickbooksClientId || !quickbooksClientId}>
+                {isFetchingQuickbooksClientId ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Client ID...
+                  </>
+                ) : (
+                  "Connect to QuickBooks"
+                )}
               </Button>
               {!profile?.id && (
                 <p className="text-sm text-red-500">
