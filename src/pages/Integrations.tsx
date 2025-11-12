@@ -566,233 +566,235 @@ const Integrations: React.FC = () => {
       <h1 className="text-3xl font-bold">Integrations</h1>
       <p className="text-muted-foreground">Connect Fortress with your favorite business tools for enhanced workflow.</p>
 
-      <Card className="bg-card border-border rounded-lg shadow-sm p-6">
-        <CardHeader className="pb-4 flex flex-row items-center gap-4">
-          <img src="/Intuit_QuickBooks_logo.png" alt="QuickBooks Logo" className="h-10 object-contain" />
-          <CardTitle className="text-xl font-semibold">QuickBooks Integration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isQuickBooksConnected ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-green-500 font-semibold">
-                <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to QuickBooks!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Your Fortress account is linked with QuickBooks. You can now synchronize data.
-              </p>
-              <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks || isLoadingProfile}>
-                {isSyncingQuickBooks ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
-                  </>
-                ) : (
-                  <>
-                    <Plug className="h-4 w-4 mr-2" /> Sync Sales Orders to QuickBooks
-                  </>
-                )}
-              </Button>
-              <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks || isLoadingProfile}>
-                Disconnect QuickBooks
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-muted-foreground">
-                Connect your QuickBooks account to enable automatic syncing of orders, inventory, and more.
-              </p>
-              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks || isLoadingProfile || isFetchingQuickbooksClientId || !quickbooksClientId}>
-                {isFetchingQuickbooksClientId ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Client ID...
-                  </>
-                ) : (
-                  "Connect to QuickBooks"
-                )}
-              </Button>
-              {!profile?.id && (
-                <p className="text-sm text-red-500">
-                  Please log in to connect to QuickBooks.
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> {/* NEW: Grid layout for integration cards */}
+        <Card className="bg-card border-border rounded-lg shadow-sm p-6">
+          <CardHeader className="pb-4 flex flex-row items-center gap-4">
+            <img src="/Intuit_QuickBooks_logo.png" alt="QuickBooks Logo" className="h-10 object-contain" />
+            <CardTitle className="text-xl font-semibold">QuickBooks Integration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isQuickBooksConnected ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-green-500 font-semibold">
+                  <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to QuickBooks!
                 </p>
-              )}
-              {!canAccessQuickBooks && (
-                <p className="text-sm text-yellow-500">
-                  QuickBooks integration requires a Premium or Enterprise plan.
-                </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-card border-border rounded-lg shadow-sm p-6">
-        <CardHeader className="pb-4 flex flex-row items-center gap-4">
-          <img src={shopifyLogoSrc} alt="Shopify Logo" className="h-10 object-contain" />
-          <CardTitle className="text-xl font-semibold">Shopify Integration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isShopifyConnected ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-green-500 font-semibold">
-                <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to Shopify Store: {profile?.companyProfile?.shopifyStoreName}!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Your Fortress account is linked with Shopify. You can now synchronize product data.
-              </p>
-              <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify || isLoadingProfile}>
-                {isSyncingShopify ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" /> Sync Products from Shopify
-                  </>
-                )}
-              </Button>
-              <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify || isLoadingProfile}>
-                Disconnect Shopify
-              </Button>
-
-              <div className="mt-6 pt-4 border-t border-border space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-primary" /> Shopify Location Mappings
-                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
+                  Your Fortress account is linked with QuickBooks. You can now synchronize data.
                 </p>
-                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify || !isShopifyConnected || isLoadingProfile}>
-                  {isFetchingShopifyLocations ? (
+                <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks || isLoadingProfile}>
+                  {isSyncingQuickBooks ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="h-4 w-4 mr-2" /> Fetch Shopify Locations
+                      <Plug className="h-4 w-4 mr-2" /> Sync Sales Orders to QuickBooks
                     </>
                   )}
                 </Button>
-
-                {shopifyLocations.length > 0 && (
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-md">Create/Update Mapping</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                      <div className="space-y-2">
-                        <Label htmlFor="shopify-location-select">Shopify Location</Label>
-                        <Select
-                          value={selectedShopifyLocationId || ""}
-                          onValueChange={(value) => {
-                            setSelectedShopifyLocationId(value);
-                            const existing = shopifyMappings.find(m => m.shopify_location_id === value);
-                            setSelectedFortressFolderId(existing?.fortress_location_id || null);
-                            setMappingToEdit(existing || null);
-                          }}
-                          disabled={isSavingMapping || !canAccessShopify || isLoadingProfile}
-                        >
-                          <SelectTrigger id="shopify-location-select">
-                            <SelectValue placeholder="Select Shopify Location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {shopifyLocations.map(loc => (
-                              <SelectItem key={loc.id} value={loc.id}>
-                                {loc.name} ({loc.city}, {loc.country})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="fortress-folder-select">Fortress Folder</Label>
-                        <Select
-                          value={selectedFortressFolderId || ""}
-                          onValueChange={setSelectedFortressFolderId}
-                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify || isLoadingProfile}
-                        >
-                          <SelectTrigger id="fortress-folder-select">
-                            <SelectValue placeholder="Select Fortress Folder" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {inventoryFolders.map(folder => (
-                              <SelectItem key={folder.id} value={folder.id}>
-                                {folder.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Button
-                        onClick={handleSaveLocationMapping}
-                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify || isLoadingProfile}
-                      >
-                        {isSavingMapping ? (
-                          <>
-                            <LinkIcon className="h-4 w-4 mr-2" /> Saving...
-                          </>
-                        ) : (
-                          <>
-                            <LinkIcon className="h-4 w-4 mr-2" /> {mappingToEdit ? "Update Mapping" : "Save Mapping"}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks || isLoadingProfile}>
+                  Disconnect QuickBooks
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground">
+                  Connect your QuickBooks account to enable automatic syncing of orders, inventory, and more.
+                </p>
+                <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks || isLoadingProfile || isFetchingQuickbooksClientId || !quickbooksClientId}>
+                  {isFetchingQuickbooksClientId ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading Client ID...
+                    </>
+                  ) : (
+                    "Connect to QuickBooks"
+                  )}
+                </Button>
+                {!profile?.id && (
+                  <p className="text-sm text-red-500">
+                    Please log in to connect to QuickBooks.
+                  </p>
                 )}
-
-                {isFetchingShopifyMappings ? (
-                  <div className="flex items-center justify-center h-24">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    <span className="ml-2 text-muted-foreground">Loading mappings...</span>
-                  </div>
-                ) : shopifyMappings.length > 0 && (
-                  <div className="mt-6 space-y-2">
-                    <h4 className="font-semibold text-md">Existing Mappings</h4>
-                    <div className="border rounded-md">
-                      {shopifyMappings.map(mapping => (
-                        <div key={mapping.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                              <span className="font-medium">{mapping.shopify_location_name}</span>
-                              <span className="text-muted-foreground"> &rarr; </span>
-                              <span className="font-medium">{getFortressFolderDisplayName(mapping.fortress_location_id)}</span>
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!isAdmin || !canAccessShopify || isLoadingProfile}>
-                              <Edit className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !isAdmin || !canAccessShopify || isLoadingProfile}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                {!canAccessQuickBooks && (
+                  <p className="text-sm text-yellow-500">
+                    QuickBooks integration requires a Premium or Enterprise plan.
+                  </p>
                 )}
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-muted-foreground">
-                Connect your Shopify store to import products and synchronize inventory levels.
-              </p>
-              <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify || isLoadingProfile}>
-                Connect to Shopify
-              </Button>
-              {!profile?.id && (
-                <p className="text-sm text-red-500">
-                  Please log in to connect to Shopify.
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border rounded-lg shadow-sm p-6">
+          <CardHeader className="pb-4 flex flex-row items-center gap-4">
+            <img src={shopifyLogoSrc} alt="Shopify Logo" className="h-10 object-contain" />
+            <CardTitle className="text-xl font-semibold">Shopify Integration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isShopifyConnected ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-green-500 font-semibold">
+                  <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to Shopify Store: {profile?.companyProfile?.shopifyStoreName}!
                 </p>
-              )}
-              {!canAccessShopify && (
-                <p className="text-sm text-yellow-500">
-                  Shopify integration requires a Premium or Enterprise plan.
+                <p className="text-sm text-muted-foreground">
+                  Your Fortress account is linked with Shopify. You can now synchronize product data.
                 </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify || isLoadingProfile}>
+                  {isSyncingShopify ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" /> Sync Products from Shopify
+                    </>
+                  )}
+                </Button>
+                <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify || isLoadingProfile}>
+                  Disconnect Shopify
+                </Button>
+
+                <div className="mt-6 pt-4 border-t border-border space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" /> Shopify Location Mappings
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
+                  </p>
+                  <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify || !isShopifyConnected || isLoadingProfile}>
+                    {isFetchingShopifyLocations ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" /> Fetch Shopify Locations
+                      </>
+                    )}
+                  </Button>
+
+                  {shopifyLocations.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-md">Create/Update Mapping</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div className="space-y-2">
+                          <Label htmlFor="shopify-location-select">Shopify Location</Label>
+                          <Select
+                            value={selectedShopifyLocationId || ""}
+                            onValueChange={(value) => {
+                              setSelectedShopifyLocationId(value);
+                              const existing = shopifyMappings.find(m => m.shopify_location_id === value);
+                              setSelectedFortressFolderId(existing?.fortress_location_id || null);
+                              setMappingToEdit(existing || null);
+                            }}
+                            disabled={isSavingMapping || !canAccessShopify || isLoadingProfile}
+                          >
+                            <SelectTrigger id="shopify-location-select">
+                              <SelectValue placeholder="Select Shopify Location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {shopifyLocations.map(loc => (
+                                <SelectItem key={loc.id} value={loc.id}>
+                                  {loc.name} ({loc.city}, {loc.country})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="fortress-folder-select">Fortress Folder</Label>
+                          <Select
+                            value={selectedFortressFolderId || ""}
+                            onValueChange={setSelectedFortressFolderId}
+                            disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify || isLoadingProfile}
+                          >
+                            <SelectTrigger id="fortress-folder-select">
+                              <SelectValue placeholder="Select Fortress Folder" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {inventoryFolders.map(folder => (
+                                <SelectItem key={folder.id} value={folder.id}>
+                                  {folder.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          onClick={handleSaveLocationMapping}
+                          disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify || isLoadingProfile}
+                        >
+                          {isSavingMapping ? (
+                            <>
+                              <LinkIcon className="h-4 w-4 mr-2" /> Saving...
+                            </>
+                          ) : (
+                            <>
+                              <LinkIcon className="h-4 w-4 mr-2" /> {mappingToEdit ? "Update Mapping" : "Save Mapping"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {isFetchingShopifyMappings ? (
+                    <div className="flex items-center justify-center h-24">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">Loading mappings...</span>
+                    </div>
+                  ) : shopifyMappings.length > 0 && (
+                    <div className="mt-6 space-y-2">
+                      <h4 className="font-semibold text-md">Existing Mappings</h4>
+                      <div className="border rounded-md">
+                        {shopifyMappings.map(mapping => (
+                          <div key={mapping.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span>
+                                <span className="font-medium">{mapping.shopify_location_name}</span>
+                                <span className="text-muted-foreground"> &rarr; </span>
+                                <span className="font-medium">{getFortressFolderDisplayName(mapping.fortress_location_id)}</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!isAdmin || !canAccessShopify || isLoadingProfile}>
+                                <Edit className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !isAdmin || !canAccessShopify || isLoadingProfile}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground">
+                  Connect your Shopify store to import products and synchronize inventory levels.
+                </p>
+                <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify || isLoadingProfile}>
+                  Connect to Shopify
+                </Button>
+                {!profile?.id && (
+                  <p className="text-sm text-red-500">
+                    Please log in to connect to Shopify.
+                  </p>
+                )}
+                {!canAccessShopify && (
+                  <p className="text-sm text-yellow-500">
+                    Shopify integration requires a Premium or Enterprise plan.
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="bg-card border-border rounded-lg shadow-sm p-6">
         <CardHeader className="pb-4 flex flex-row items-center gap-4">
