@@ -21,6 +21,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { Label } from "@/components/ui/label";
 import { hasRequiredPlan } from "@/utils/planUtils";
 import ShopifyStoreUrlDialog from "@/components/integrations/ShopifyStoreUrlDialog";
+import { useAuth } from "@/context/AuthContext"; // NEW: Import useAuth
 
 interface ShopifyLocation {
   id: string;
@@ -47,6 +48,7 @@ const SHOPIFY_CLIENT_ID = "8496dff0a4396a6baeede4ce7f17902f";
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
+  const { session } = useAuth(); // NEW: Get session from useAuth
   const { inventoryFolders, fetchInventoryFolders } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
@@ -167,6 +169,10 @@ const Integrations: React.FC = () => {
       showError("QuickBooks Client ID is not available. Please try again in a moment.");
       return;
     }
+    if (!session?.access_token) { // NEW: Check for Supabase session token
+      showError("Your session has expired. Please log in again.");
+      return;
+    }
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/quickbooks-oauth-callback`;
     
@@ -176,6 +182,7 @@ const Integrations: React.FC = () => {
     const statePayload = {
       userId: profile.id,
       redirectToFrontend: window.location.origin,
+      supabaseAccessToken: session.access_token, // NEW: Include Supabase access token
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
@@ -217,9 +224,9 @@ const Integrations: React.FC = () => {
     }
     setIsSyncingQuickBooks(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (!sessionData.session) {
         showError("Login required to sync QuickBooks.");
         return;
       }
@@ -227,7 +234,7 @@ const Integrations: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('sync-sales-orders-to-quickbooks', {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });
 
@@ -265,8 +272,8 @@ const Integrations: React.FC = () => {
     }
 
     // Get the current Supabase session token
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+    if (!supabaseSession) {
       showError("Your session has expired. Please log in again.");
       return;
     }
@@ -301,7 +308,7 @@ const Integrations: React.FC = () => {
     const statePayload = {
       userId: profile.id,
       redirectToFrontend: window.location.origin,
-      supabaseAccessToken: session.access_token, // NEW: Include Supabase access token
+      supabaseAccessToken: supabaseSession.access_token, // NEW: Include Supabase access token
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
@@ -354,9 +361,9 @@ const Integrations: React.FC = () => {
       }
     setIsSyncingShopify(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (!sessionData.session) {
         showError("You must be logged in to sync with Shopify.");
         return;
       }
@@ -364,7 +371,7 @@ const Integrations: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('sync-shopify-data', {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });
 
@@ -404,8 +411,8 @@ const Integrations: React.FC = () => {
     }
     setIsFetchingShopifyLocations(true);
     try {
-      const { data: { session } = { session: null } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (!sessionData.session) {
         showError("You must be logged in to fetch Shopify locations.");
         setIsFetchingShopifyLocations(false);
         return;
@@ -414,7 +421,7 @@ const Integrations: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('fetch-shopify-locations', {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });
 
