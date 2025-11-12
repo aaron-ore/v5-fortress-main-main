@@ -49,6 +49,7 @@ serve(async (req) => {
     }
 
     const quickbooksClientId = Deno.env.get('QUICKBOOKS_CLIENT_ID');
+    const quickbooksEnvironment = Deno.env.get('QUICKBOOKS_ENVIRONMENT') || 'sandbox'; // NEW: Get environment
 
     if (!quickbooksClientId) {
       console.error('Edge Function: QUICKBOOKS_CLIENT_ID environment variable is not set.');
@@ -58,7 +59,7 @@ serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ clientId: quickbooksClientId }), {
+    return new Response(JSON.stringify({ clientId: quickbooksClientId, environment: quickbooksEnvironment }), { // NEW: Return environment
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
