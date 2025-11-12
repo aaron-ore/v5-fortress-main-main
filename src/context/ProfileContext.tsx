@@ -41,9 +41,9 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  shopifyAccessToken?: string; // NEW: Shopify Access Token (redundant, but kept for direct user profile access if needed)
-  shopifyRefreshToken?: string; // NEW: Shopify Refresh Token (redundant)
-  shopifyStoreName?: string; // NEW: Shopify Store Name (redundant)
+  // Removed: shopifyAccessToken?: string; // No longer redundant
+  // Removed: shopifyRefreshToken?: string; // No longer redundant
+  // Removed: shopifyStoreName?: string; // No longer redundant
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
@@ -59,7 +59,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -100,7 +100,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       stripeCustomerId: companyData.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined,
-      trialEndsAt: companyData.trial_end ? new Date(companyData.trial_end * 1000).toISOString() : undefined, // Corrected to trial_end and converted from Unix timestamp
+      trialEndsAt: companyData.trial_ends_at || undefined, // Corrected to trial_ends_at
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
@@ -122,9 +122,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      shopifyAccessToken: companyData?.shopify_access_token || undefined, // NEW: Shopify Access Token (redundant, but kept for direct user profile access if needed)
-      shopifyRefreshToken: companyData?.shopify_refresh_token || undefined, // NEW: Shopify Refresh Token (redundant)
-      shopifyStoreName: companyData?.shopify_store_name || undefined, // NEW: Shopify Store Name (redundant)
+      // Removed: shopifyAccessToken: companyData?.shopify_access_token || undefined, // No longer redundant
+      // Removed: shopifyRefreshToken: companyData?.shopify_refresh_token || undefined, // No longer redundant
+      // Removed: shopifyStoreName: companyData?.shopify_store_name || undefined, // No longer redundant
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
@@ -247,7 +247,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'shopifyAccessToken' | 'shopifyRefreshToken' | 'shopifyStoreName' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);

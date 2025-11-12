@@ -221,6 +221,10 @@ const Integrations: React.FC = () => {
 
   // NEW: Function to initiate Shopify OAuth after getting store URL
   const initiateShopifyOAuth = async (shopifyStoreName: string) => {
+    if (isLoadingProfile) {
+      showError("Profile is still loading. Please wait a moment.");
+      return;
+    }
     if (!profile?.id) {
       showError("You must be logged in to connect to Shopify.");
       console.error("[Shopify OAuth] Profile ID missing.");
@@ -275,7 +279,7 @@ const Integrations: React.FC = () => {
   };
 
   const handleDisconnectShopify = async () => {
-    if (!profile?.organizationId || !profile?.shopifyAccessToken) {
+    if (!profile?.organizationId || !profile?.companyProfile?.shopifyAccessToken) {
       showError("Not connected to Shopify.");
       return;
     }
@@ -303,7 +307,7 @@ const Integrations: React.FC = () => {
       showError("Shopify integration is a Premium/Enterprise feature. Please upgrade your plan.");
       return;
     }
-    if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
+    if (!profile?.companyProfile?.shopifyAccessToken || !profile?.companyProfile?.shopifyStoreName) {
       showError("Shopify not connected. Please connect your Shopify store first.");
       return;
     }
@@ -344,10 +348,18 @@ const Integrations: React.FC = () => {
   };
 
   const fetchShopifyLocations = async () => {
-    // Add a check here to ensure profile data is available before proceeding
-    if (!profile?.shopifyAccessToken || !profile?.shopifyStoreName) {
+    console.log("[Integrations] fetchShopifyLocations called.");
+    console.log("[Integrations] Current profile.companyProfile.shopifyAccessToken:", profile?.companyProfile?.shopifyAccessToken ? "present" : "missing");
+    console.log("[Integrations] Current profile.companyProfile.shopifyStoreName:", profile?.companyProfile?.shopifyStoreName ? "present" : "missing");
+
+    if (isLoadingProfile) {
+      showError("Profile is still loading. Please wait a moment.");
+      setIsFetchingShopifyLocations(false);
+      return;
+    }
+    if (!profile?.companyProfile?.shopifyAccessToken || !profile?.companyProfile?.shopifyStoreName) {
       showError("Shopify is not fully connected. Please ensure your store is connected and try again.");
-      setIsFetchingShopifyLocations(false); // Ensure loading state is reset
+      setIsFetchingShopifyLocations(false);
       return;
     }
     setIsFetchingShopifyLocations(true);
@@ -491,7 +503,7 @@ const Integrations: React.FC = () => {
   };
 
   const isQuickBooksConnected = profile?.quickbooksAccessToken && profile?.quickbooksRefreshToken && profile?.quickbooksRealmId;
-  const isShopifyConnected = profile?.shopifyAccessToken && profile?.shopifyStoreName;
+  const isShopifyConnected = profile?.companyProfile?.shopifyAccessToken && profile?.companyProfile?.shopifyStoreName;
 
   if (isLoadingProfile) {
     return (
@@ -521,7 +533,7 @@ const Integrations: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 Your Fortress account is linked with QuickBooks. You can now synchronize data.
               </p>
-              <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks}>
+              <Button onClick={handleSyncSalesOrders} disabled={isSyncingQuickBooks || !canAccessQuickBooks || isLoadingProfile}>
                 {isSyncingQuickBooks ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
@@ -532,7 +544,7 @@ const Integrations: React.FC = () => {
                   </>
                 )}
               </Button>
-              <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks}>
+              <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks || isLoadingProfile}>
                 Disconnect QuickBooks
               </Button>
             </div>
@@ -541,7 +553,7 @@ const Integrations: React.FC = () => {
               <p className="text-muted-foreground">
                 Connect your QuickBooks account to enable automatic syncing of orders, inventory, and more.
               </p>
-              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks}>
+              <Button onClick={handleConnectQuickBooks} disabled={!profile?.id || !canAccessQuickBooks || isLoadingProfile}>
                 Connect to QuickBooks
               </Button>
               {!profile?.id && (
@@ -568,12 +580,12 @@ const Integrations: React.FC = () => {
           {isShopifyConnected ? (
             <div className="flex flex-col gap-2">
               <p className="text-green-500 font-semibold">
-                <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to Shopify Store: {profile?.shopifyStoreName}!
+                <CheckCircle className="inline h-4 w-4 mr-2" /> Connected to Shopify Store: {profile?.companyProfile?.shopifyStoreName}!
               </p>
               <p className="text-sm text-muted-foreground">
                 Your Fortress account is linked with Shopify. You can now synchronize product data.
               </p>
-              <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify}>
+              <Button onClick={handleSyncShopifyProducts} disabled={isSyncingShopify || !canAccessShopify || isLoadingProfile}>
                 {isSyncingShopify ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Syncing...
@@ -584,7 +596,7 @@ const Integrations: React.FC = () => {
                   </>
                 )}
               </Button>
-              <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify}>
+              <Button variant="destructive" onClick={handleDisconnectShopify} disabled={!canAccessShopify || isLoadingProfile}>
                 Disconnect Shopify
               </Button>
 
@@ -595,7 +607,7 @@ const Integrations: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Map your Shopify fulfillment locations to your Fortress inventory folders to ensure accurate stock deduction.
                 </p>
-                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify || !isShopifyConnected}>
+                <Button onClick={fetchShopifyLocations} disabled={isFetchingShopifyLocations || !canAccessShopify || !isShopifyConnected || isLoadingProfile}>
                   {isFetchingShopifyLocations ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching Locations...
@@ -621,7 +633,7 @@ const Integrations: React.FC = () => {
                             setSelectedFortressFolderId(existing?.fortress_location_id || null);
                             setMappingToEdit(existing || null);
                           }}
-                          disabled={isSavingMapping || !canAccessShopify}
+                          disabled={isSavingMapping || !canAccessShopify || isLoadingProfile}
                         >
                           <SelectTrigger id="shopify-location-select">
                             <SelectValue placeholder="Select Shopify Location" />
@@ -640,7 +652,7 @@ const Integrations: React.FC = () => {
                         <Select
                           value={selectedFortressFolderId || ""}
                           onValueChange={setSelectedFortressFolderId}
-                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify}
+                          disabled={isSavingMapping || inventoryFolders.length === 0 || !canAccessShopify || isLoadingProfile}
                         >
                           <SelectTrigger id="fortress-folder-select">
                             <SelectValue placeholder="Select Fortress Folder" />
@@ -656,7 +668,7 @@ const Integrations: React.FC = () => {
                       </div>
                       <Button
                         onClick={handleSaveLocationMapping}
-                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify}
+                        disabled={isSavingMapping || !selectedShopifyLocationId || !selectedFortressFolderId || !canAccessShopify || isLoadingProfile}
                       >
                         {isSavingMapping ? (
                           <>
@@ -692,10 +704,10 @@ const Integrations: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!isAdmin || !canAccessShopify}>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditMappingClick(mapping)} disabled={!isAdmin || !canAccessShopify || isLoadingProfile}>
                               <Edit className="h-4 w-4 text-primary" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !isAdmin || !canAccessShopify}>
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteMappingClick(mapping)} disabled={isDeletingMapping || !isAdmin || !canAccessShopify || isLoadingProfile}>
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
@@ -711,7 +723,7 @@ const Integrations: React.FC = () => {
               <p className="text-muted-foreground">
                 Connect your Shopify store to import products and synchronize inventory levels.
               </p>
-              <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify}>
+              <Button onClick={handleConnectShopify} disabled={!profile?.id || !canAccessShopify || isLoadingProfile}>
                 Connect to Shopify
               </Button>
               {!profile?.id && (
@@ -767,7 +779,7 @@ const Integrations: React.FC = () => {
         isOpen={isShopifyStoreUrlDialogOpen}
         onClose={() => setIsShopifyStoreUrlDialogOpen(false)}
         onConfirm={initiateShopifyOAuth}
-        isLoading={!profile?.id}
+        isLoading={isLoadingProfile}
       />
     </div>
   );
