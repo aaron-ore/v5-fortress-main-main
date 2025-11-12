@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass, ExternalLink } from "lucide-react"; // NEW: Import ExternalLink
+import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass, ExternalLink } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -90,8 +90,8 @@ const Integrations: React.FC = () => {
     }
     setIsFetchingQuickbooksClientId(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
+      if (_sessionError || !sessionData.session) {
         throw new Error("Authentication session expired. Please log in again.");
       }
 
@@ -238,7 +238,7 @@ const Integrations: React.FC = () => {
     }
     setIsSyncingQuickBooks(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
       
       if (!sessionData.session) {
         showError("Login required to sync QuickBooks.");
@@ -375,7 +375,7 @@ const Integrations: React.FC = () => {
       }
     setIsSyncingShopify(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
       
       if (!sessionData.session) {
         showError("You must be logged in to sync with Shopify.");
@@ -425,7 +425,7 @@ const Integrations: React.FC = () => {
     }
     setIsFetchingShopifyLocations(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
       if (!sessionData.session) {
         showError("You must be logged in to fetch Shopify locations.");
         setIsFetchingShopifyLocations(false);
