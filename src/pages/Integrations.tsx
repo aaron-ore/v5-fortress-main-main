@@ -43,7 +43,7 @@ interface ShopifyLocationMapping {
 }
 
 // Hardcode Shopify Client ID as it's a public credential for public apps
-const SHOPIFY_CLIENT_ID = "YOUR_ACTUAL_SHOPIFY_CLIENT_ID_HERE"; // <--- REPLACE THIS WITH YOUR REAL SHOPIFY CLIENT ID
+const SHOPIFY_CLIENT_ID = "8496dff0a4396a6baeede4ce7f17902f"; // <--- REPLACED WITH USER'S ACTUAL CLIENT ID
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
@@ -310,7 +310,7 @@ const Integrations: React.FC = () => {
     if (!profile?.companyProfile?.shopifyAccessToken || !profile?.companyProfile?.shopifyStoreName) {
       showError("Shopify not connected. Please connect your Shopify store first.");
       return;
-    }
+      }
     setIsSyncingShopify(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
