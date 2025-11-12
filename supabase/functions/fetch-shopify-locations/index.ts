@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Edge Function: fetch-shopify-locations - Invoked.');
+  console.log('Full incoming request URL:', req.url);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -48,7 +50,9 @@ serve(async (req) => {
         status: 401,
       });
     }
+    console.log('Edge Function: fetch-shopify-locations - Authenticated user ID:', user.id);
 
+    console.log('Edge Function: fetch-shopify-locations - Fetching profile and organization data...');
     const { data: profileData, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id, organizations(shopify_access_token, shopify_store_name)')
@@ -63,6 +67,8 @@ serve(async (req) => {
       });
     }
 
+    console.log('Edge Function: fetch-shopify-locations - Fetched profileData:', JSON.stringify(profileData, null, 2));
+
     if (!profileData || !profileData.organization_id) {
       console.error('Edge Function: fetch-shopify-locations - User profile or organization ID not found. ProfileData:', profileData);
       return new Response(JSON.stringify({ error: 'User profile or organization ID not found. Please ensure your company profile is set up.' }), {
@@ -72,7 +78,7 @@ serve(async (req) => {
     }
 
     if (!profileData.organizations) {
-      console.error('Edge Function: fetch-shopify-locations - Organization data is null, indicating a missing organization record for ID:', profileData.organization_id);
+      console.error('Edge Function: fetch-shopify-locations - profileData.organizations is null. This indicates a missing or unlinked organization record for ID:', profileData.organization_id);
       return new Response(JSON.stringify({ error: 'Organization record not found for your profile. This may indicate a data inconsistency. Please contact support.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -82,8 +88,11 @@ serve(async (req) => {
     const shopifyAccessToken = profileData.organizations.shopify_access_token;
     const shopifyStoreName = profileData.organizations.shopify_store_name;
 
+    console.log('Edge Function: fetch-shopify-locations - shopifyAccessToken from DB:', shopifyAccessToken ? 'present' : 'missing');
+    console.log('Edge Function: fetch-shopify-locations - shopifyStoreName from DB:', shopifyStoreName ? 'present' : 'missing');
+
     if (!shopifyAccessToken || !shopifyStoreName) {
-      console.error('Edge Function: fetch-shopify-locations - Shopify access token or store name missing. Tokens:', shopifyAccessToken ? 'present' : 'missing', 'Store Name:', shopifyStoreName ? 'present' : 'missing');
+      console.error('Edge Function: fetch-shopify-locations - Shopify access token or store name missing from organization record. Returning 400.');
       return new Response(JSON.stringify({ error: 'Shopify integration not fully set up. Please connect your Shopify store first.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -102,8 +111,6 @@ serve(async (req) => {
     if (!shopifyResponse.ok) {
       const errorData = await shopifyResponse.json();
       console.error('Edge Function: fetch-shopify-locations - Shopify API error fetching locations:', errorData);
-      // If Shopify returns an empty list of locations, it's still a 200 OK.
-      // This error block is for non-2xx responses from Shopify.
       throw new Error(`Failed to fetch locations from Shopify: ${errorData.errors || shopifyResponse.statusText}`);
     }
     const data = await shopifyResponse.json();
@@ -117,6 +124,7 @@ serve(async (req) => {
       active: loc.active,
     }));
 
+    console.log('Edge Function: fetch-shopify-locations - Successfully fetched Shopify locations. Returning 200.');
     return new Response(JSON.stringify({ locations }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

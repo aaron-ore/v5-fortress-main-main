@@ -55,8 +55,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_ID:', SHOPIFY_CLIENT_ID ? 'present' : 'MISSING'); // NEW: Log presence
-    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_SECRET:', SHOPIFY_CLIENT_SECRET ? 'present' : 'MISSING'); // NEW: Log presence
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_ID (from env):', SHOPIFY_CLIENT_ID ? 'present' : 'MISSING'); // NEW: Log presence
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_SECRET (from env):', SHOPIFY_CLIENT_SECRET ? 'present' : 'MISSING'); // NEW: Log presence
 
     if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Shopify OAuth Callback: Missing Supabase or Shopify environment variables.');
@@ -95,6 +95,7 @@ serve(async (req) => {
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
     console.log('Shopify OAuth Callback: Using redirectUri for token exchange:', redirectUri); // NEW: Log redirectUri
 
+    console.log(`Shopify OAuth Callback: Attempting token exchange with Shopify for shop: ${shop}`);
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST',
       headers: {
@@ -124,6 +125,7 @@ serve(async (req) => {
     const shopDomain = shop;
 
     // Use userIdFromState (which is now verified against authenticatedUser.id) to find the organization.
+    console.log('Shopify OAuth Callback: Fetching user profile to get organization_id for update.');
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
       .select('organization_id')
