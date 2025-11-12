@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Shopify OAuth Callback: Edge Function invoked.'); // NEW: Log at start
+  console.log('Shopify OAuth Callback: Edge Function invoked.');
   console.log('Full incoming request URL:', req.url);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -20,7 +20,7 @@ serve(async (req) => {
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
     const shop = url.searchParams.get('shop');
-    console.log('Shopify OAuth Callback: Received shop parameter:', shop); // NEW: Log shop parameter
+    console.log('Shopify OAuth Callback: Received shop parameter:', shop);
 
     console.log('Shopify OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
@@ -41,12 +41,12 @@ serve(async (req) => {
     const finalRedirectBase = redirectToFrontend || FALLBACK_CLIENT_APP_BASE_URL;
 
     if (error) {
-      console.error('Shopify OAuth Callback: Error parameter received:', error, errorDescription); // NEW: More explicit log
+      console.error('Shopify OAuth Callback: Error parameter received:', error, errorDescription);
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
     if (!code || !userIdFromState) {
-      console.error('Shopify OAuth Callback: Missing authorization code or userIdFromState in Shopify OAuth callback. Code:', code ? 'present' : 'missing', 'UserIdFromState:', userIdFromState ? 'present' : 'missing'); // NEW: More explicit log
+      console.error('Shopify OAuth Callback: Missing authorization code or userIdFromState. Code:', code ? 'present' : 'missing', 'UserIdFromState:', userIdFromState ? 'present' : 'missing');
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
     }
 
@@ -55,8 +55,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_ID (from env):', SHOPIFY_CLIENT_ID ? 'present' : 'MISSING'); // NEW: Log presence
-    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_SECRET (from env):', SHOPIFY_CLIENT_SECRET ? 'present' : 'MISSING'); // NEW: Log presence
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_ID (from env):', SHOPIFY_CLIENT_ID ? 'present' : 'MISSING');
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_SECRET (from env):', SHOPIFY_CLIENT_SECRET ? 'present' : 'MISSING');
 
     if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Shopify OAuth Callback: Missing Supabase or Shopify environment variables.');
@@ -68,7 +68,6 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // NEW: Verify userId from JWT against userId from state
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('Shopify OAuth Callback: Authorization header missing for JWT verification.');
@@ -93,7 +92,7 @@ serve(async (req) => {
 
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
-    console.log('Shopify OAuth Callback: Using redirectUri for token exchange:', redirectUri); // NEW: Log redirectUri
+    console.log('Shopify OAuth Callback: Using redirectUri for token exchange:', redirectUri);
 
     console.log(`Shopify OAuth Callback: Attempting token exchange with Shopify for shop: ${shop}`);
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
@@ -112,19 +111,22 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
       console.error('Shopify OAuth Callback: Error exchanging Shopify code for tokens:', errorData);
-      console.error('Shopify OAuth Callback: Token exchange response status:', tokenResponse.status, 'statusText:', tokenResponse.statusText); // NEW: Log full status
-      console.error('Shopify OAuth Callback: Token exchange response headers:', JSON.stringify(Object.fromEntries(tokenResponse.headers.entries()), null, 2)); // NEW: Log headers
+      console.error('Shopify OAuth Callback: Token exchange response status:', tokenResponse.status, 'statusText:', tokenResponse.statusText);
+      console.error('Shopify OAuth Callback: Token exchange response headers:', JSON.stringify(Object.fromEntries(tokenResponse.headers.entries()), null, 2));
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorData.error_description || 'Failed to get Shopify tokens.')}`, 302);
     }
 
     const tokens = await tokenResponse.json();
-    console.log('Shopify OAuth Callback: Full tokens object received:', JSON.stringify(tokens, null, 2));
+    console.log('Shopify OAuth Callback: Full tokens object received from Shopify:', JSON.stringify(tokens, null, 2));
 
     const shopifyAccessToken = tokens.access_token;
     const shopifyRefreshToken = tokens.refresh_token;
     const shopDomain = shop;
 
-    // Use userIdFromState (which is now verified against authenticatedUser.id) to find the organization.
+    console.log('Shopify OAuth Callback: Extracted shopifyAccessToken:', shopifyAccessToken ? 'present' : 'missing');
+    console.log('Shopify OAuth Callback: Extracted shopifyRefreshToken:', shopifyRefreshToken ? 'present' : 'missing');
+    console.log('Shopify OAuth Callback: Extracted shopDomain:', shopDomain);
+
     console.log('Shopify OAuth Callback: Fetching user profile to get organization_id for update.');
     const { data: userProfile, error: profileFetchError } = await supabaseAdmin
       .from('profiles')
@@ -156,16 +158,15 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Shopify OAuth Callback: Error updating organization profile with Shopify tokens:', updateError);
-      // Log the full error object for more details
       console.error('Shopify OAuth Callback: Supabase update error details:', JSON.stringify(updateError, null, 2));
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Failed to save Shopify tokens: ' + updateError.message)}`, 302); // Include error message
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Failed to save Shopify tokens: ' + updateError.message)}`, 302);
     }
 
-    console.log('Shopify OAuth Callback: Organization updated successfully. Data returned:', JSON.stringify(updatedOrganizationData, null, 2));
+    console.log('Shopify OAuth Callback: Organization updated successfully. Data returned from Supabase:', JSON.stringify(updatedOrganizationData, null, 2));
     console.log('Shopify OAuth Callback: Redirecting to frontend with success.');
     return Response.redirect(`${finalRedirectBase}/integrations?shopify_success=true`, 302);
-  } catch (error: any) { // Catch any unexpected errors
-    console.error('Shopify OAuth Callback: Caught top-level unexpected error:', error); // NEW: Log unexpected errors
+  } catch (error: any) {
+    console.error('Shopify OAuth Callback: Caught top-level unexpected error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
