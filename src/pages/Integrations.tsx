@@ -43,7 +43,7 @@ interface ShopifyLocationMapping {
 }
 
 // Hardcode Shopify Client ID as it's a public credential for public apps
-const SHOPIFY_CLIENT_ID = "a0000000000000000000000000000000"; // Replace with your actual Shopify Client ID
+const SHOPIFY_CLIENT_ID = "YOUR_ACTUAL_SHOPIFY_CLIENT_ID_HERE"; // <--- REPLACE THIS WITH YOUR REAL SHOPIFY CLIENT ID
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
