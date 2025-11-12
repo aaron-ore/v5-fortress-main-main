@@ -231,6 +231,13 @@ const Integrations: React.FC = () => {
       return;
     }
 
+    // Get the current Supabase session token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      showError("Your session has expired. Please log in again.");
+      return;
+    }
+
     // Use the hardcoded Shopify Client ID
     const clientId = SHOPIFY_CLIENT_ID;
 
@@ -261,6 +268,7 @@ const Integrations: React.FC = () => {
     const statePayload = {
       userId: profile.id,
       redirectToFrontend: window.location.origin,
+      supabaseAccessToken: session.access_token, // NEW: Include Supabase access token
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 

@@ -26,6 +26,7 @@ serve(async (req) => {
 
     let userIdFromState: string | null = null;
     let redirectToFrontend: string | null = null;
+    let supabaseAccessToken: string | null = null; // NEW: Variable to hold Supabase access token from state
     const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
 
     if (state) {
@@ -33,7 +34,8 @@ serve(async (req) => {
         const decodedState = JSON.parse(atob(state));
         userIdFromState = decodedState.userId;
         redirectToFrontend = decodedState.redirectToFrontend;
-        console.log('Shopify OAuth Callback: Decoded state - userIdFromState:', userIdFromState, 'redirectToFrontend:', redirectToFrontend);
+        supabaseAccessToken = decodedState.supabaseAccessToken; // NEW: Extract Supabase access token
+        console.log('Shopify OAuth Callback: Decoded state - userIdFromState:', userIdFromState, 'redirectToFrontend:', redirectToFrontend, 'supabaseAccessToken:', supabaseAccessToken ? 'present' : 'missing');
       } catch (e) {
         console.error('Shopify OAuth Callback: Error decoding state parameter:', e);
       }
@@ -45,9 +47,9 @@ serve(async (req) => {
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
-    if (!code || !userIdFromState) {
-      console.error('Shopify OAuth Callback: Missing authorization code or userIdFromState. Code:', code ? 'present' : 'missing', 'UserIdFromState:', userIdFromState ? 'present' : 'missing');
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
+    if (!code || !userIdFromState || !supabaseAccessToken) { // MODIFIED: supabaseAccessToken is now required
+      console.error('Shopify OAuth Callback: Missing authorization code, userIdFromState, or Supabase access token. Code:', code ? 'present' : 'missing', 'UserIdFromState:', userIdFromState ? 'present' : 'missing', 'SupabaseAccessToken:', supabaseAccessToken ? 'present' : 'missing');
+      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code, user ID, or authentication token.')}`, 302);
     }
 
     const SHOPIFY_CLIENT_ID = Deno.env.get('SHOPIFY_CLIENT_ID');
@@ -68,20 +70,19 @@ serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('Shopify OAuth Callback: Authorization header missing for JWT verification.');
-      return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Authentication required for Shopify connection.')}`, 302);
-    }
-    const token = authHeader.split(' ')[1];
+    // MODIFIED: Use supabaseAccessToken from state for user verification
+    // Removed: const authHeader = req.headers.get('Authorization');
+    // Removed: if (!authHeader) { ... }
+    // Removed: const token = authHeader.split(' ')[1];
     const supabaseClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY') ?? '', {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${supabaseAccessToken}`, // NEW: Use token from state
         },
       },
     });
 
+    console.log('Shopify OAuth Callback: Attempting to verify user with token from state.');
     const { data: { user: authenticatedUser }, error: authError } = await supabaseClient.auth.getUser();
 
     if (authError || !authenticatedUser || authenticatedUser.id !== userIdFromState) {
