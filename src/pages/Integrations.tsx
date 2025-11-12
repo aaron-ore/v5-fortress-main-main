@@ -242,6 +242,7 @@ const Integrations: React.FC = () => {
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
     
+    // MODIFIED: Added read_locations scope
     const scopes = [
       "read_products",
       "write_products",
@@ -253,6 +254,7 @@ const Integrations: React.FC = () => {
       "write_fulfillments",
       "read_inventory",
       "write_inventory",
+      "read_locations", // NEW: Added read_locations scope
     ];
     const scope = scopes.join(',');
     
@@ -262,11 +264,9 @@ const Integrations: React.FC = () => {
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
-    // Corrected: Use the domain directly without prepending "https://" again
     const authUrl = `https://${shopifyStoreName}/admin/oauth/authorize?client_id=${clientId}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodedState}`;
     
     console.log("[Shopify OAuth] Generated Shopify Auth URL:", authUrl);
-    // MODIFIED: Open in a new tab
     window.open(authUrl, '_blank');
   };
 
@@ -320,7 +320,6 @@ const Integrations: React.FC = () => {
         return;
       }
 
-      // NEW: Call the new sync-shopify-data Edge Function
       const { data, error } = await supabase.functions.invoke('sync-shopify-data', {
         headers: {
           'Content-Type': 'application/json',
@@ -389,7 +388,7 @@ const Integrations: React.FC = () => {
       showSuccess("Shopify locations fetched!");
     } catch (error: any) {
       console.error("Error fetching Shopify locations:", error);
-      showError(`Failed to fetch Shopify locations: ${error.message}`); // This will now show the specific message from the Edge Function if it's a 400
+      showError(`Failed to fetch Shopify locations: ${error.message}`);
     } finally {
       setIsFetchingShopifyLocations(false);
     }
@@ -774,7 +773,6 @@ const Integrations: React.FC = () => {
         />
       )}
 
-      {/* NEW: Shopify Store URL Dialog */}
       <ShopifyStoreUrlDialog
         isOpen={isShopifyStoreUrlDialogOpen}
         onClose={() => setIsShopifyStoreUrlDialogOpen(false)}
