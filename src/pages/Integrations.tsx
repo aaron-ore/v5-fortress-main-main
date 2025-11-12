@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass } from "lucide-react";
+import { Plug, CheckCircle, RefreshCw, Loader2, MapPin, Link as LinkIcon, Trash2, Edit, Hourglass, ExternalLink } from "lucide-react"; // NEW: Import ExternalLink
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
 import { supabase } from "@/lib/supabaseClient";
@@ -55,6 +55,7 @@ const Integrations: React.FC = () => {
   const { theme } = useTheme();
 
   const [quickbooksClientId, setQuickbooksClientId] = useState<string | null>(null);
+  const [quickbooksEnvironment, setQuickbooksEnvironment] = useState<string | null>(null); // NEW: State for QuickBooks environment
   const [isFetchingQuickbooksClientId, setIsFetchingQuickbooksClientId] = useState(true);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
   const [isSyncingShopify, setIsSyncingShopify] = useState(false);
@@ -105,10 +106,12 @@ const Integrations: React.FC = () => {
       if (data.error) throw new Error(data.error);
 
       setQuickbooksClientId(data.clientId);
+      setQuickbooksEnvironment(data.environment); // NEW: Set QuickBooks environment
     } catch (error: any) {
       console.error("Error fetching QuickBooks Client ID:", error);
       showError(`Failed to load QuickBooks integration: ${error.message}`);
       setQuickbooksClientId(null);
+      setQuickbooksEnvironment(null); // NEW: Clear environment on error
     } finally {
       setIsFetchingQuickbooksClientId(false);
     }
@@ -211,6 +214,17 @@ const Integrations: React.FC = () => {
       console.error("Error disconnecting QuickBooks:", error);
       showError(`Failed to disconnect from QuickBooks: ${error.message}`);
     }
+  };
+
+  const handleGoToQuickBooksAccount = () => { // NEW: Handler for going to QuickBooks account
+    if (!quickbooksEnvironment) {
+      showError("QuickBooks environment not loaded. Please try again.");
+      return;
+    }
+    const qbHomepageUrl = quickbooksEnvironment === 'production'
+      ? 'https://app.qbo.intuit.com/app/homepage'
+      : 'https://sandbox.qbo.intuit.com/app/homepage';
+    window.open(qbHomepageUrl, '_blank');
   };
 
   const handleSyncSalesOrders = async () => {
@@ -591,6 +605,9 @@ const Integrations: React.FC = () => {
                       <Plug className="h-4 w-4 mr-2" /> Sync Sales Orders to QuickBooks
                     </>
                   )}
+                </Button>
+                <Button variant="outline" onClick={handleGoToQuickBooksAccount} disabled={!canAccessQuickBooks || isLoadingProfile || !quickbooksEnvironment}> {/* NEW: Go to QuickBooks button */}
+                  <ExternalLink className="h-4 w-4 mr-2" /> Go to QuickBooks Account
                 </Button>
                 <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks || isLoadingProfile}>
                   Disconnect QuickBooks
