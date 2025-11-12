@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Shopify OAuth Callback: Edge Function invoked.'); // NEW: Log at start
+  console.log('Full incoming request URL:', req.url);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -18,6 +20,7 @@ serve(async (req) => {
     const error = url.searchParams.get('error');
     const errorDescription = url.searchParams.get('error_description');
     const shop = url.searchParams.get('shop');
+    console.log('Shopify OAuth Callback: Received shop parameter:', shop); // NEW: Log shop parameter
 
     console.log('Shopify OAuth Callback: All URL search parameters:', JSON.stringify(Object.fromEntries(url.searchParams.entries()), null, 2));
 
@@ -32,18 +35,18 @@ serve(async (req) => {
         redirectToFrontend = decodedState.redirectToFrontend;
         console.log('Shopify OAuth Callback: Decoded state - userIdFromState:', userIdFromState, 'redirectToFrontend:', redirectToFrontend);
       } catch (e) {
-        console.error('Error decoding state parameter:', e);
+        console.error('Shopify OAuth Callback: Error decoding state parameter:', e);
       }
     }
     const finalRedirectBase = redirectToFrontend || FALLBACK_CLIENT_APP_BASE_URL;
 
     if (error) {
-      console.error('Shopify OAuth Error:', error, errorDescription);
+      console.error('Shopify OAuth Callback: Error parameter received:', error, errorDescription); // NEW: More explicit log
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorDescription || error)}`, 302);
     }
 
     if (!code || !userIdFromState) {
-      console.error('Missing authorization code or userIdFromState in Shopify OAuth callback.');
+      console.error('Shopify OAuth Callback: Missing authorization code or userIdFromState in Shopify OAuth callback. Code:', code ? 'present' : 'missing', 'UserIdFromState:', userIdFromState ? 'present' : 'missing'); // NEW: More explicit log
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Missing authorization code or user ID.')}`, 302);
     }
 
@@ -52,8 +55,11 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_ID:', SHOPIFY_CLIENT_ID ? 'present' : 'MISSING'); // NEW: Log presence
+    console.log('Shopify OAuth Callback: SHOPIFY_CLIENT_SECRET:', SHOPIFY_CLIENT_SECRET ? 'present' : 'MISSING'); // NEW: Log presence
+
     if (!SHOPIFY_CLIENT_ID || !SHOPIFY_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('Missing Supabase or Shopify environment variables.');
+      console.error('Shopify OAuth Callback: Missing Supabase or Shopify environment variables.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Missing environment variables.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -87,7 +93,7 @@ serve(async (req) => {
 
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
-    console.log('Using redirectUri for token exchange:', redirectUri);
+    console.log('Shopify OAuth Callback: Using redirectUri for token exchange:', redirectUri); // NEW: Log redirectUri
 
     const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST',
@@ -104,7 +110,9 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.json();
-      console.error('Error exchanging Shopify code for tokens:', errorData);
+      console.error('Shopify OAuth Callback: Error exchanging Shopify code for tokens:', errorData);
+      console.error('Shopify OAuth Callback: Token exchange response status:', tokenResponse.status, 'statusText:', tokenResponse.statusText); // NEW: Log full status
+      console.error('Shopify OAuth Callback: Token exchange response headers:', JSON.stringify(Object.fromEntries(tokenResponse.headers.entries()), null, 2)); // NEW: Log headers
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent(errorData.error_description || 'Failed to get Shopify tokens.')}`, 302);
     }
 
@@ -151,10 +159,11 @@ serve(async (req) => {
       return Response.redirect(`${finalRedirectBase}/integrations?shopify_error=${encodeURIComponent('Failed to save Shopify tokens: ' + updateError.message)}`, 302); // Include error message
     }
 
-    console.log('Shopify tokens and store name successfully stored for organization:', organizationId);
+    console.log('Shopify OAuth Callback: Organization updated successfully. Data returned:', JSON.stringify(updatedOrganizationData, null, 2));
+    console.log('Shopify OAuth Callback: Redirecting to frontend with success.');
     return Response.redirect(`${finalRedirectBase}/integrations?shopify_success=true`, 302);
-  } catch (error) {
-    console.error('Shopify OAuth callback Edge Function error (caught at top level):', error);
+  } catch (error: any) { // Catch any unexpected errors
+    console.error('Shopify OAuth Callback: Caught top-level unexpected error:', error); // NEW: Log unexpected errors
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
