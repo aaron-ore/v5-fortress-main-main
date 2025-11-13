@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useProfile } from "@/context/ProfileContext"; // Corrected import
 import { supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
+import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features"; // NEW: Import ALL_APP_FEATURES and getAllFeatureIds
 
 interface PlanFeature {
   text: string;
@@ -46,6 +47,9 @@ interface SubscriptionPlanDisplay extends StripeProduct {
   isPopular?: boolean;
   features: PlanFeature[]; // Added features array
 }
+
+// Define the current application version
+const CURRENT_APP_VERSION = "1.3.0"; // IMPORTANT: Update this with each major release
 
 const BillingSubscriptions: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
@@ -94,21 +98,26 @@ const BillingSubscriptions: React.FC = () => {
         const oneTimePrice = productPrices.find(p => p.type === 'one_time')?.unit_amount || undefined; // NEW: Find one-time price
 
         // Mock features for display, as they are not coming from Stripe directly in this setup
-        const features: PlanFeature[] = [
-          { text: "Basic Inventory Management", included: true },
-          { text: "Dashboard Overview", included: true },
-          { text: "Up to 500 Items", included: product.name.toLowerCase() === 'free' },
-          { text: "Up to 1000 Items", included: product.name.toLowerCase() === 'standard' },
-          { text: "Unlimited Items", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime') },
-          { text: "Basic Order Management", included: true },
-          { text: "Customer & Vendor Management", included: product.name.toLowerCase() !== 'free' },
-          { text: "Advanced Reporting", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
-          { text: "AI Summary for Reports", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
-          { text: "QuickBooks Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
-          { text: "Shopify Integration", included: product.name.toLowerCase() === 'premium' || product.name.toLowerCase() === 'enterprise' || product.name.toLowerCase().includes('lifetime premium') },
-          { text: "Automation Engine", included: product.name.toLowerCase() === 'enterprise' },
-          { text: "Priority Support", included: product.name.toLowerCase() === 'enterprise' },
-        ];
+        // This needs to align with ALL_APP_FEATURES and the useFeature hook logic
+        const features: PlanFeature[] = ALL_APP_FEATURES.map(appFeature => {
+          let included = false;
+          const planNameLower = product.name.toLowerCase();
+
+          // Logic to determine if a feature is included in this plan for display purposes
+          if (planNameLower === 'free') {
+            included = ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id);
+            if (appFeature.id === 'core_inventory_management') included = true; // Example: Basic IM is always free
+          } else if (planNameLower === 'standard') {
+            included = ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id);
+          } else if (planNameLower === 'premium' || planNameLower.includes('perpetual license')) { // NEW: Perpetual License includes all current features
+            included = getAllFeatureIds().includes(appFeature.id); // All features up to CURRENT_APP_VERSION
+          } else if (planNameLower === 'enterprise') {
+            included = true; // Enterprise includes everything
+          }
+
+          return { text: appFeature.name, included };
+        });
+
 
         return {
           ...product,
@@ -119,13 +128,20 @@ const BillingSubscriptions: React.FC = () => {
           isPopular: product.metadata?.is_popular === 'true',
           features: features, // Assign mock features
         };
-      }).sort((a, b) => (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity)); // Sort by monthly price, putting free/lifetime first
+      }).sort((a, b) => {
+        // Sort: Free first, then Perpetual, then by monthly price
+        if (a.name.toLowerCase() === 'free') return -1;
+        if (b.name.toLowerCase() === 'free') return 1;
+        if (a.name.toLowerCase().includes('perpetual license')) return -1;
+        if (b.name.toLowerCase().includes('perpetual license')) return 1;
+        return (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity);
+      });
 
       // TEMPORARY CLIENT-SIDE OVERRIDE: Update lifetime deal prices as requested.
       // In a real application, these prices should be updated directly in Stripe and Supabase.
       const updatedPlans = plansWithPrices.map(plan => {
-        if (plan.name.toLowerCase().includes('lifetime premium')) {
-          return { ...plan, oneTimePrice: 999 };
+        if (plan.name.toLowerCase().includes('perpetual license')) { // Changed from 'lifetime premium'
+          return { ...plan, oneTimePrice: 999 }; // Set the one-time price for Perpetual License
         }
         // Corrected: Target 'lifetime lite' and rename it to 'Lifetime Standard' with price $499
         if (plan.name.toLowerCase().includes('lifetime lite')) {
@@ -169,11 +185,17 @@ const BillingSubscriptions: React.FC = () => {
     try {
       let selectedPrice: StripePrice | undefined;
       let mode: 'subscription' | 'payment';
+      let perpetualFeatures: string[] | undefined;
+      let perpetualLicenseVersion: string | undefined;
 
-      if (plan.oneTimePrice !== undefined) { // NEW: Handle one-time payment
+      if (plan.oneTimePrice !== undefined) { // Handle one-time payment (including Perpetual License)
         selectedPrice = plan.prices.find(p => p.type === 'one_time');
         mode = 'payment';
-      } else {
+        if (plan.name.toLowerCase().includes('perpetual license')) {
+          perpetualFeatures = getAllFeatureIds(); // Capture all current features
+          perpetualLicenseVersion = CURRENT_APP_VERSION;
+        }
+      } else { // Handle recurring subscription
         selectedPrice = plan.prices.find(p => 
           p.type === 'recurring' && 
           (billingCycle === 'monthly' ? p.interval === 'month' : p.interval === 'year')
@@ -185,8 +207,8 @@ const BillingSubscriptions: React.FC = () => {
         throw new Error(`No suitable price found for ${plan.name} with selected billing cycle.`);
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
+      if (_sessionError || !sessionData.session) {
         throw new Error("User session not found. Please log in again.");
       }
 
@@ -195,6 +217,8 @@ const BillingSubscriptions: React.FC = () => {
         organizationId: profile.organizationId,
         mode: mode, // Pass the mode to the Edge Function
         trial_period_days: selectedPrice.trial_period_days || undefined,
+        perpetualFeatures: perpetualFeatures, // NEW: Pass perpetual features
+        perpetualLicenseVersion: perpetualLicenseVersion, // NEW: Pass perpetual license version
       };
 
       console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2));
@@ -249,8 +273,8 @@ const BillingSubscriptions: React.FC = () => {
 
     setIsManagingSubscription(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
+      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
+      if (_sessionError || !sessionData.session) {
         throw new Error("User session not found. Please log in again.");
       }
 
@@ -400,11 +424,11 @@ const BillingSubscriptions: React.FC = () => {
         ))}
       </div>
 
-      {/* NEW: Lifetime Deal Cards */}
+      {/* NEW: Perpetual License Card */}
       {lifetimePlans.length > 0 && (
         <div className="mt-10 space-y-6">
-          <h2 className="text-2xl font-bold text-foreground text-center">Lifetime Deals</h2>
-          <p className="text-muted-foreground text-center">Get unlimited access with a one-time payment!</p>
+          <h2 className="text-2xl font-bold text-foreground text-center">One-Time Licenses</h2>
+          <p className="text-muted-foreground text-center">Get access to a specific feature set with a single payment!</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {lifetimePlans.map((plan: SubscriptionPlanDisplay) => (
               <Card
@@ -422,7 +446,7 @@ const BillingSubscriptions: React.FC = () => {
                       </Badge>
                     </div>
                   )}
-                  <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-foreground">{plan.name.includes('Perpetual License') ? 'Perpetual License' : plan.name}</CardTitle>
                   <p className="text-muted-foreground text-sm">{plan.description}</p>
                   <div className="mt-4 text-4xl font-extrabold text-foreground">
                     {getPriceDisplay(plan)}
@@ -451,15 +475,18 @@ const BillingSubscriptions: React.FC = () => {
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
                       </>
                     ) : currentPlanId === plan.name.toLowerCase() ? (
-                      "Current Plan"
+                      "Current License"
                     ) : (
-                      "Get Lifetime Deal"
+                      "Get Perpetual License"
                     )}
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            Perpetual Licenses grant access to the features available at the time of purchase, plus ongoing bug fixes and security updates. New features are not included.
+          </p>
         </div>
       )}
 
@@ -476,6 +503,9 @@ const BillingSubscriptions: React.FC = () => {
               {profile?.companyProfile?.trialEndsAt && (
                 <span className="ml-2 text-sm text-yellow-500">(Trial ends: {format(new Date(profile.companyProfile.trialEndsAt), "MMM dd, yyyy")})</span>
               )}
+              {profile?.companyProfile?.perpetualLicenseVersion && ( // NEW: Display perpetual license version
+                <span className="ml-2 text-sm text-muted-foreground">(Licensed Version: {profile.companyProfile.perpetualLicenseVersion})</span>
+              )}
             </p>
             <p className="text-sm text-muted-foreground">Status: <span className="font-medium text-green-500">Active</span></p>
           </div>
@@ -489,7 +519,7 @@ const BillingSubscriptions: React.FC = () => {
               ))}
             </ul>
           </div>
-          {currentPlanId !== "free" && !currentPlanId.includes('lifetime') && ( // Only show manage subscription for recurring plans
+          {currentPlanId !== "free" && !currentPlanId.includes('perpetual') && ( // Only show manage subscription for recurring plans
             <Button onClick={handleManageSubscription} disabled={isManagingSubscription}>
               {isManagingSubscription ? (
                 <>

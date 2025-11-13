@@ -103,6 +103,8 @@ serve(async (req) => {
             stripe_subscription_id: subscription.id,
             plan: productData.name.toLowerCase(), // Assuming product name is the plan name
             trial_ends_at: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+            perpetual_features: null, // Clear perpetual features if switching to subscription
+            perpetual_license_version: null, // Clear perpetual license version
           }).eq('id', organizationId);
         }
         break;
@@ -114,6 +116,8 @@ serve(async (req) => {
             stripe_subscription_id: null,
             plan: 'free', // Revert to free plan
             trial_ends_at: null,
+            perpetual_features: null, // Clear perpetual features if reverting to free
+            perpetual_license_version: null, // Clear perpetual license version
           }).eq('id', deletedOrganizationId);
         }
         break;
@@ -121,17 +125,44 @@ serve(async (req) => {
         const checkoutSession = event.data.object as Stripe.Checkout.Session;
         const customerId = checkoutSession.customer as string;
         const organizationIdFromSession = checkoutSession.metadata?.organization_id;
-        const productNameFromMetadata = checkoutSession.metadata?.product_name; // NEW: Get product name from metadata
+        const productNameFromMetadata = checkoutSession.metadata?.product_name;
+        const perpetualFeaturesString = checkoutSession.metadata?.perpetual_features; // NEW: Get perpetual features string
+        const perpetualLicenseVersion = checkoutSession.metadata?.perpetual_license_version; // NEW: Get perpetual license version
 
         if (organizationIdFromSession) {
-          // Update the organization with the customer ID if it's a new customer
-          await supabaseAdmin.from('organizations').update({
+          const updatePayload: {
+            stripe_customer_id?: string;
+            plan?: string;
+            stripe_subscription_id?: string | null;
+            trial_ends_at?: string | null;
+            perpetual_features?: string[] | null; // NEW: Add to update payload
+            perpetual_license_version?: string | null; // NEW: Add to update payload
+          } = {
             stripe_customer_id: customerId,
-            // NEW: Update plan for one-time purchases
-            plan: productNameFromMetadata ? productNameFromMetadata.toLowerCase() : 'free',
             stripe_subscription_id: null, // Ensure subscription ID is null for one-time payments
             trial_ends_at: null, // Ensure trial ends at is null for one-time payments
-          }).eq('id', organizationIdFromSession);
+          };
+
+          if (productNameFromMetadata) {
+            updatePayload.plan = productNameFromMetadata.toLowerCase();
+          }
+
+          if (perpetualFeaturesString) { // NEW: If perpetual features are present
+            try {
+              updatePayload.perpetual_features = JSON.parse(perpetualFeaturesString);
+              updatePayload.perpetual_license_version = perpetualLicenseVersion;
+              // If a perpetual license is purchased, ensure plan reflects it
+              updatePayload.plan = productNameFromMetadata ? productNameFromMetadata.toLowerCase() : 'perpetual';
+            } catch (parseError) {
+              console.error('Error parsing perpetual_features from metadata:', parseError);
+            }
+          } else {
+            // If not a perpetual license, ensure these fields are cleared
+            updatePayload.perpetual_features = null;
+            updatePayload.perpetual_license_version = null;
+          }
+
+          await supabaseAdmin.from('organizations').update(updatePayload).eq('id', organizationIdFromSession);
         }
         break;
       default:

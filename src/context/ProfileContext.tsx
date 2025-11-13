@@ -26,6 +26,8 @@ export interface CompanyProfile {
   shopifyAccessToken?: string; // NEW: Shopify Access Token
   shopifyRefreshToken?: string; // NEW: Shopify Refresh Token
   shopifyStoreName?: string; // NEW: Shopify Store Name
+  perpetualFeatures?: string[]; // NEW: List of feature IDs for perpetual license
+  perpetualLicenseVersion?: string; // NEW: Version at time of perpetual license purchase
 }
 
 export interface UserProfile {
@@ -41,14 +43,10 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  // Removed: shopifyAccessToken?: string; // No longer redundant
-  // Removed: shopifyRefreshToken?: string; // No longer redundant
-  // Removed: shopifyStoreName?: string; // No longer redundant
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
-  // Removed: hasUiTutorialShown: boolean;
   hasSeenUpgradePrompt: boolean;
 }
 
@@ -59,12 +57,11 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
   markOnboardingWizardCompleted: () => Promise<void>;
-  // Removed: markTutorialAsShown: () => Promise<void>;
   markUpgradePromptSeen: () => Promise<void>;
   updateProfileLocally: (updates: Partial<UserProfile>) => void;
   transferAdminRole: (newAdminUserId: string) => Promise<void>; // NEW: Added transferAdminRole
@@ -107,6 +104,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopifyAccessToken: companyData.shopify_access_token || undefined, // NEW: Map Shopify Access Token
       shopifyRefreshToken: companyData.shopify_refresh_token || undefined, // NEW: Map Shopify Refresh Token
       shopifyStoreName: companyData.shopify_store_name || undefined, // NEW: Map Shopify Store Name
+      perpetualFeatures: companyData.perpetual_features || undefined, // NEW: Map perpetual features
+      perpetualLicenseVersion: companyData.perpetual_license_version || undefined, // NEW: Map perpetual license version
     } : undefined;
 
     return {
@@ -122,14 +121,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      // Removed: shopifyAccessToken: companyData?.shopify_access_token || undefined, // No longer redundant
-      // Removed: shopifyRefreshToken: companyData?.shopify_refresh_token || undefined, // No longer redundant
-      // Removed: shopifyStoreName: companyData?.shopify_store_name || undefined, // No longer redundant
       stripeCustomerId: companyData?.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
-      // Removed: hasUiTutorialShown: data.has_ui_tutorial_shown ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
     };
   };
@@ -162,7 +157,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           trial_ends_at,
           default_reorder_level,
           enable_auto_reorder_notifications,
-          enable_auto_reorder
+          enable_auto_reorder,
+          perpetual_features, -- NEW: Select perpetual features
+          perpetual_license_version -- NEW: Select perpetual license version
         )
       `)
       .eq('id', user.id)
@@ -247,7 +244,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' /* Removed: | 'hasUiTutorialShown' */ | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -345,6 +342,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopify_access_token: updates.shopifyAccessToken, // NEW: Update Shopify Access Token
       shopify_refresh_token: updates.shopifyRefreshToken, // NEW: Update Shopify Refresh Token
       shopify_store_name: updates.shopifyStoreName, // NEW: Update Shopify Store Name
+      perpetual_features: updates.perpetualFeatures, // NEW: Update perpetual features
+      perpetual_license_version: updates.perpetualLicenseVersion, // NEW: Update perpetual license version
     };
 
     if (uniqueCode !== undefined) {

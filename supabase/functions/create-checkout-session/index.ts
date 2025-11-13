@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { createClient } from 'npm:@supabase/supabase-js';
+import { createClient } 'npm:@supabase/supabase-js';
 import Stripe from 'https://esm.sh/stripe@16.2.0?target=deno';
 
 const corsHeaders = {
@@ -38,13 +38,15 @@ serve(async (req) => {
       });
     }
 
-    const { priceId, organizationId, mode, trial_period_days } = requestBody; // NEW: Destructure mode
+    const { priceId, organizationId, mode, trial_period_days, perpetualFeatures, perpetualLicenseVersion } = requestBody; // NEW: Destructure perpetualFeatures and perpetualLicenseVersion
     console.log('Edge Function: Extracted priceId:', priceId);
     console.log('Edge Function: Extracted organizationId:', organizationId);
-    console.log('Edge Function: Extracted mode:', mode); // NEW: Log mode
+    console.log('Edge Function: Extracted mode:', mode);
     console.log('Edge Function: Extracted trial_period_days:', trial_period_days);
+    console.log('Edge Function: Extracted perpetualFeatures:', perpetualFeatures); // NEW: Log perpetualFeatures
+    console.log('Edge Function: Extracted perpetualLicenseVersion:', perpetualLicenseVersion); // NEW: Log perpetualLicenseVersion
 
-    if (!priceId || !organizationId || !mode) { // NEW: mode is now required
+    if (!priceId || !organizationId || !mode) {
       console.error('Edge Function: Missing required parameters after extraction. priceId:', priceId, 'organizationId:', organizationId, 'mode:', mode);
       return new Response(JSON.stringify({ error: 'Missing required parameters: priceId, organizationId, mode.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -158,10 +160,8 @@ serve(async (req) => {
       checkoutSessionConfig.subscription_data = {
         trial_period_days: trial_period_days || undefined,
       };
-    } else if (mode === 'payment') { // NEW: Handle one-time payment mode
+    } else if (mode === 'payment') {
       checkoutSessionConfig.mode = 'payment';
-      // For one-time payments, we might want to store the product name in metadata
-      // to update the organization's plan after successful payment.
       const { data: priceData, error: priceError } = await supabaseAdmin
         .from('prices')
         .select('product_id')
@@ -192,6 +192,8 @@ serve(async (req) => {
       checkoutSessionConfig.metadata = {
         ...checkoutSessionConfig.metadata,
         product_name: productData.name, // Store product name for webhook
+        perpetual_features: perpetualFeatures ? JSON.stringify(perpetualFeatures) : undefined, // NEW: Store perpetual features
+        perpetual_license_version: perpetualLicenseVersion || undefined, // NEW: Store perpetual license version
       };
     } else {
       return new Response(JSON.stringify({ error: 'Invalid mode specified. Must be "subscription" or "payment".' }), {
