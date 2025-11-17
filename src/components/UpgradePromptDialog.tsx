@@ -21,12 +21,6 @@ interface UpgradePromptDialogProps {
   onClose: () => void;
 }
 
-// Dodo Product IDs (mocked for client-side)
-const DODO_PRODUCT_IDS = {
-  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
-  PRO: "pdt_TrF9X3inM62YVnop3GmX9",
-};
-
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { profile, markUpgradePromptSeen, fetchProfile } = useProfile();
@@ -53,8 +47,6 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
       // In a real Dodo integration, you would call a Dodo API to initiate a trial
       // For now, we'll simulate this and update the profile directly.
       console.log(`Simulating Dodo trial for plan: ${planName}`);
-
-      // const dodoProductId = planName === 'standard' ? DODO_PRODUCT_IDS.STANDARD : DODO_PRODUCT_IDS.PRO; // Removed unused declaration
 
       // Simulate Dodo API call and get a customer ID and subscription ID
       const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
