@@ -54,7 +54,7 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
       // For now, we'll simulate this and update the profile directly.
       console.log(`Simulating Dodo trial for plan: ${planName}`);
 
-      const dodoProductId = planName === 'standard' ? DODO_PRODUCT_IDS.STANDARD : DODO_PRODUCT_IDS.PRO;
+      // const dodoProductId = planName === 'standard' ? DODO_PRODUCT_IDS.STANDARD : DODO_PRODUCT_IDS.PRO; // Removed unused declaration
 
       // Simulate Dodo API call and get a customer ID and subscription ID
       const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;

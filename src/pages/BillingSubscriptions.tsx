@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreditCard, DollarSign, FileText, CheckCircle, XCircle, Sparkles, Loader2 } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess, showError, showInfo } from "@/utils/toast"; // Added showInfo
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useProfile } from "@/context/ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
-import { format } from "date-fns";
+// Removed: import { format } from "date-fns"; // Removed unused import
 import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features";
 
 interface PlanFeature {
@@ -19,8 +19,7 @@ interface PlanFeature {
 
 // Removed StripeProduct, StripePrice, SubscriptionPlanDisplay interfaces
 
-// Define the current application version
-const CURRENT_APP_VERSION = "1.3.0";
+// Removed: const CURRENT_APP_VERSION = "1.3.0"; // Removed unused declaration
 
 // Dodo Product IDs (provided by user)
 const DODO_PRODUCT_IDS = {
