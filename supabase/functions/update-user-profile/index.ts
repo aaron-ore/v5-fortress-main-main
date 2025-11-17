@@ -12,38 +12,19 @@ serve(async (req) => {
   }
 
   let requestBody: any = {};
+  try {
+    // Attempt to parse JSON directly. req.json() handles content-type and empty bodies gracefully.
+    // If the body is empty or not valid JSON, req.json() will throw an error.
+    requestBody = await req.json();
+    console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+  } catch (parseError: any) {
+    // If parsing fails, it means the body was either empty, malformed, or not JSON.
+    // Log the error and proceed with an empty requestBody object.
+    console.warn('Edge Function: Failed to parse request body as JSON. Assuming empty body. Error:', parseError.message);
+    requestBody = {}; // Default to empty object
+  }
 
   try {
-    const contentType = req.headers.get('content-type');
-    console.log('Edge Function: Received Content-Type header:', contentType);
-
-    if (contentType && contentType.includes('application/json')) {
-      const rawBody = await req.text();
-      console.log('Edge Function: Raw request body length:', rawBody.length);
-      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
-
-      if (rawBody.trim()) {
-        try {
-          requestBody = JSON.parse(rawBody);
-          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-        } catch (parseError: any) {
-          console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
-          return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          });
-        }
-      } else {
-        console.warn('Edge Function: Received empty or whitespace-only JSON body. Proceeding with empty requestBody.');
-      }
-    } else {
-      console.error('Edge Function: Unsupported Content-Type:', contentType);
-      return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json.` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-
     const { targetUserId, newRole, organizationId } = requestBody;
 
     const supabaseAdmin = createClient(

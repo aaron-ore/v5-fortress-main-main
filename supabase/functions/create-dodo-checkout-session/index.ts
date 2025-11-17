@@ -15,56 +15,21 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  let requestBody: any = {}; // Initialize as empty object to ensure it's always defined
+  let requestBody: any = {};
 
   try {
-    const contentType = req.headers.get('content-type');
-    const contentLength = req.headers.get('content-length'); // NEW: Get Content-Length header
-    console.log('Edge Function: Received Content-Type header:', contentType);
-    console.log('Edge Function: Received Content-Length header:', contentLength);
+    // Attempt to parse JSON directly. req.json() handles content-type and empty bodies gracefully.
+    // If the body is empty or not valid JSON, req.json() will throw an error.
+    requestBody = await req.json();
+    console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+  } catch (parseError: any) {
+    // If parsing fails, it means the body was either empty, malformed, or not JSON.
+    // Log the error and proceed with an empty requestBody object.
+    console.warn('Edge Function: Failed to parse request body as JSON. Assuming empty body. Error:', parseError.message);
+    requestBody = {}; // Default to empty object
+  }
 
-    if (contentType && contentType.includes('application/json')) {
-      if (contentLength === '0') { // NEW: Handle empty body explicitly
-        console.warn('Edge Function: Received Content-Type: application/json with Content-Length: 0. Treating body as empty JSON object.');
-        requestBody = {}; // Explicitly set to empty object
-      } else if (req.body) { // NEW: Check if req.body is not null/undefined
-        let rawBody = '';
-        try {
-          const buffer = await req.arrayBuffer(); // Try arrayBuffer
-          if (buffer.byteLength > 0) {
-            rawBody = new TextDecoder().decode(buffer);
-          }
-        } catch (bufferError: any) {
-          console.warn('Edge Function: Error reading request body as ArrayBuffer:', bufferError.message);
-          // If reading buffer fails, treat as empty body
-        }
-
-        if (rawBody.trim()) { // Only attempt JSON.parse if there's actual non-whitespace content
-          try {
-            requestBody = JSON.parse(rawBody);
-            console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-          } catch (parseError: any) {
-            console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
-            return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 400,
-            });
-          }
-        } else {
-          console.warn('Edge Function: Received empty or whitespace-only JSON body after ArrayBuffer. Proceeding with empty requestBody.');
-          // requestBody remains {} as initialized, which will lead to missing parameter errors later
-        }
-      } else { // NEW: Handle case where req.body is null/undefined
-        console.warn('Edge Function: Content-Type: application/json but req.body is null/undefined. Proceeding with empty requestBody.');
-      }
-    } else {
-      console.error('Edge Function: Unsupported Content-Type:', contentType);
-      return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json.` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-
+  try {
     const { dodoProductId, organizationId, userId } = requestBody;
 
     console.log('Edge Function: Extracted dodoProductId:', dodoProductId);
