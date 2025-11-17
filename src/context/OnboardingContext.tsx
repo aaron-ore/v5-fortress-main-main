@@ -243,7 +243,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             plan: orgData.plan || 'free',
             // Removed stripeCustomerId: undefined, // Explicitly set to undefined for new org
             // Removed stripeSubscriptionId: undefined, // Explicitly set to undefined for new org
-            trialEndsAt: undefined, // Explicitly set to undefined for new org
+            // Removed trialEndsAt: undefined, // Explicitly set to undefined for new org
             defaultReorderLevel: 0, // Default for new org
             enableAutoReorderNotifications: false, // Default for new org
             enableAutoReorder: false, // Corrected typo here
@@ -356,7 +356,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             plan: updatePayload.plan,
             // Removed stripeCustomerId: updatePayload.stripe_customer_id,
             // Removed stripeSubscriptionId: updatePayload.stripe_subscription_id,
-            trialEndsAt: updatePayload.trial_ends_at,
+            // Removed trialEndsAt: updatePayload.trial_ends_at,
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
             enableAutoReorder: updatePayload.enable_auto_reorder, // Corrected typo here
