@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useProfile } from "@/context/ProfileContext";
 import { hasRequiredPlan, PlanLevel } from "@/utils/planUtils";
-import { ALL_APP_FEATURES, AppFeature } from "@/lib/features";
+import { ALL_APP_FEATURES } from "@/lib/features"; // Removed AppFeature import
 
 /**
  * Determines if the current user has access to a specific application feature.
@@ -43,13 +43,7 @@ export const useFeature = (featureId: string): boolean => {
     // If not a perpetual license holder for this feature, check against subscription plan
     // For simplicity, we'll assume a mapping from feature ID to a minimum required plan level
     // This mapping should be maintained in `ALL_APP_FEATURES` or a separate config.
-    // For now, we'll use a simplified logic: if a feature is not explicitly perpetual,
-    // it requires a plan that includes it. This is a placeholder and needs refinement
-    // based on your actual plan-feature mapping.
-
-    // Example: If a feature is considered 'premium' or 'enterprise' level
-    // This part needs to be customized based on how you map features to plans.
-    // For demonstration, let's assume some features are 'premium' or 'enterprise' by default
+    // For now, let's assume some features are 'premium' or 'enterprise' by default
     // if not covered by perpetual.
     let requiredPlanLevel: PlanLevel = 'free'; // Default to free for basic features
 

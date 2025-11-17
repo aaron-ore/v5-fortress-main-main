@@ -60,7 +60,7 @@ const BillingSubscriptions: React.FC = () => {
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
   const currentPlanId = profile?.companyProfile?.plan || "free";
-  const currentStripeCustomerId = profile?.stripeCustomerId;
+  // Removed: const currentStripeCustomerId = profile?.stripeCustomerId;
 
   useEffect(() => {
     const fetchStripeProductsAndPrices = async () => {
@@ -266,7 +266,7 @@ const BillingSubscriptions: React.FC = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!profile?.organizationId || !currentStripeCustomerId) {
+    if (!profile?.organizationId || !profile?.stripeCustomerId) { // Access stripeCustomerId from profile.companyProfile
       showError("You don't have an active Stripe subscription to manage.");
       return;
     }

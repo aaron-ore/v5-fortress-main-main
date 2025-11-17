@@ -241,8 +241,8 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             organizationCode: uniqueCodeToPersist,
             organizationTheme: orgData.default_theme || 'dark',
             plan: orgData.plan || 'free',
-            stripeCustomerId: undefined, // Explicitly set to undefined for new org
-            stripeSubscriptionId: undefined, // Explicitly set to undefined for new org
+            // Removed stripeCustomerId: undefined, // Explicitly set to undefined for new org
+            // Removed stripeSubscriptionId: undefined, // Explicitly set to undefined for new org
             trialEndsAt: undefined, // Explicitly set to undefined for new org
             defaultReorderLevel: 0, // Default for new org
             enableAutoReorderNotifications: false, // Default for new org
@@ -270,7 +270,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan, stripe_customer_id, stripe_subscription_id, trial_ends_at, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder')
+          .select('unique_code, company_logo_url, default_theme, plan, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder')
           .eq('id', profile.organizationId)
           .single();
 
@@ -319,9 +319,9 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           default_theme: existingOrg?.default_theme || 'dark',
           plan: existingOrg?.plan || 'free',
           company_logo_url: profileData.companyLogoUrl,
-          stripe_customer_id: existingOrg?.stripe_customer_id,
-          stripe_subscription_id: existingOrg?.stripe_subscription_id,
-          trial_ends_at: existingOrg?.trial_ends_at,
+          // Removed stripe_customer_id: existingOrg?.stripe_customer_id,
+          // Removed stripe_subscription_id: existingOrg?.stripe_subscription_id,
+          // Removed trial_ends_at: existingOrg?.trial_ends_at,
           default_reorder_level: existingOrg?.default_reorder_level || 0,
           enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
           enable_auto_reorder: existingOrg?.enable_auto_reorder || false, // Corrected typo here
@@ -354,8 +354,8 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             organizationCode: uniqueCodeToPersist, // Ensure code is updated
             organizationTheme: updatePayload.default_theme,
             plan: updatePayload.plan,
-            stripeCustomerId: updatePayload.stripe_customer_id,
-            stripeSubscriptionId: updatePayload.stripe_subscription_id,
+            // Removed stripeCustomerId: updatePayload.stripe_customer_id,
+            // Removed stripeSubscriptionId: updatePayload.stripe_subscription_id,
             trialEndsAt: updatePayload.trial_ends_at,
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
