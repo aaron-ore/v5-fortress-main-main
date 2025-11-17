@@ -179,7 +179,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingAllProfiles(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt')
       .eq('organization_id', profile.organizationId)
       .order('full_name', { ascending: true });
 
