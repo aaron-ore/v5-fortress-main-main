@@ -22,9 +22,16 @@ serve(async (req) => {
     console.log('Edge Function: Received Content-Type header:', contentType);
 
     if (contentType && contentType.includes('application/json')) {
-      const rawBody = await req.text(); // Read the raw body as text
-      console.log('Edge Function: Raw request body length:', rawBody.length);
-      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+      let rawBody = '';
+      try {
+        const buffer = await req.arrayBuffer(); // Try arrayBuffer
+        if (buffer.byteLength > 0) {
+          rawBody = new TextDecoder().decode(buffer);
+        }
+      } catch (bufferError: any) {
+        console.warn('Edge Function: Error reading request body as ArrayBuffer:', bufferError.message);
+        // Treat as empty body if reading buffer fails
+      }
 
       if (rawBody.trim()) { // Only attempt JSON.parse if there's actual non-whitespace content
         try {
@@ -38,7 +45,7 @@ serve(async (req) => {
           });
         }
       } else {
-        console.warn('Edge Function: Received empty or whitespace-only JSON body. Proceeding with empty requestBody.');
+        console.warn('Edge Function: Received empty or whitespace-only JSON body after ArrayBuffer. Proceeding with empty requestBody.');
         // requestBody remains {} as initialized, which will lead to missing parameter errors later
       }
     } else {
