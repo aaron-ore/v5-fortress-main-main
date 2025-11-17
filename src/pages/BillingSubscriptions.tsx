@@ -151,13 +151,13 @@ const BillingSubscriptions: React.FC = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
-        body: JSON.stringify({
+        body: {
           dodoProductId: plan.dodoProductId,
           organizationId: profile.organizationId,
           userId: profile.id,
-        }),
+        },
         headers: {
-          'Content-Type': 'application/json',
+          // Removed explicit 'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });

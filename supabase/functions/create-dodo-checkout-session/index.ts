@@ -14,25 +14,24 @@ serve(async (req) => {
   }
 
   try {
-    const contentType = req.headers.get('content-type');
-    console.log('Edge Function: Received Content-Type header:', contentType);
-
     let requestBody;
-    let rawBody = '';
     try {
-      if (contentType && contentType.includes('application/json')) {
-        rawBody = await req.text();
-        console.log('Edge Function: Raw request body length:', rawBody.length);
-        console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
-        requestBody = JSON.parse(rawBody);
-        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
-      } else {
-        throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+      // Directly parse the JSON body
+      requestBody = await req.json();
+      console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+
+      // Check if the parsed body is empty (e.g., if client sent {} or null)
+      if (!requestBody || Object.keys(requestBody).length === 0) {
+        console.error('Edge Function: Received empty or invalid JSON body after parsing.');
+        return new Response(JSON.stringify({ error: 'Request body is empty or invalid. Please ensure product ID, organization ID, and user ID are provided.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
       }
     } catch (parseError: any) {
-      console.error('Edge Function: ERROR during JSON parsing:', parseError.message);
-      console.error('Edge Function: Raw body that failed to parse:', rawBody);
-      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}` }), {
+      console.error('Edge Function: ERROR during JSON parsing with req.json():', parseError.message);
+      // If req.json() fails, it's likely not a valid JSON body or empty stream
+      return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
