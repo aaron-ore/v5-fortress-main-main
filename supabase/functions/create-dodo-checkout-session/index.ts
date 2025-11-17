@@ -8,30 +8,41 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log('Edge Function: create-dodo-checkout-session - Invoked.');
-  console.log('Full incoming request URL:', req.url);
+  console.log('Edge Function: Request method:', req.method);
+  console.log('Edge Function: Request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    let requestBody;
-    try {
-      // Directly parse the JSON body
-      requestBody = await req.json();
-      console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+    const contentLength = req.headers.get('content-length');
+    console.log('Edge Function: Content-Length header:', contentLength);
 
-      // Check if the parsed body is empty (e.g., if client sent {} or null)
-      if (!requestBody || Object.keys(requestBody).length === 0) {
-        console.error('Edge Function: Received empty or invalid JSON body after parsing.');
-        return new Response(JSON.stringify({ error: 'Request body is empty or invalid. Please ensure product ID, organization ID, and user ID are provided.' }), {
+    let requestBody;
+    if (contentLength && parseInt(contentLength) > 0) {
+      console.log('Edge Function: Content-Length > 0. Attempting to parse request body as JSON.');
+      try {
+        requestBody = await req.json();
+        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+
+        if (!requestBody || Object.keys(requestBody).length === 0) {
+          console.error('Edge Function: Parsed JSON body is empty or invalid.');
+          return new Response(JSON.stringify({ error: 'Request body is empty or invalid. Please ensure product ID, organization ID, and user ID are provided.' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
+      } catch (parseError: any) {
+        console.error('Edge Function: ERROR during JSON parsing with req.json():', parseError.message);
+        return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         });
       }
-    } catch (parseError: any) {
-      console.error('Edge Function: ERROR during JSON parsing with req.json():', parseError.message);
-      // If req.json() fails, it's likely not a valid JSON body or empty stream
-      return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
+    } else {
+      console.error('Edge Function: Request body is empty (Content-Length is 0 or missing).');
+      return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure product ID, organization ID, and user ID are provided.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
