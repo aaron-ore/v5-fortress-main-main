@@ -110,8 +110,8 @@ serve(async (req) => {
       });
     }
 
-    // Placeholder for Dodo API endpoint - **You will need to replace this with the actual Dodo API endpoint for creating checkout sessions.**
-    const dodoCheckoutApiUrl = 'https://api.dodo.com/checkout-session'; 
+    // IMPORTANT: Replace this placeholder URL with the actual Dodo API endpoint for creating checkout sessions.
+    const dodoCheckoutApiUrl = 'https://your-actual-dodo-api-endpoint.com/checkout-session'; 
 
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     console.log('Edge Function: CLIENT_APP_BASE_URL is', clientAppBaseUrl ? 'present' : 'MISSING');
