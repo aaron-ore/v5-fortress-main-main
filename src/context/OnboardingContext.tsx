@@ -243,7 +243,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             plan: orgData.plan || 'free',
             dodoCustomerId: undefined, // Explicitly set to undefined for new org
             dodoSubscriptionId: undefined, // Explicitly set to undefined for new org
-            trialEndsAt: undefined, // Explicitly set to undefined for new org
             defaultReorderLevel: 0, // Default for new org
             enableAutoReorderNotifications: false, // Default for new org
             enableAutoReorder: false, // Corrected typo here
@@ -270,7 +269,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan, dodo_customer_id, dodo_subscription_id, trial_ends_at, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // NEW: Added dodo_customer_id, dodo_subscription_id, trial_ends_at
+          .select('unique_code, company_logo_url, default_theme, plan, dodo_customer_id, dodo_subscription_id, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // Removed: trial_ends_at
           .eq('id', profile.organizationId)
           .single();
 
@@ -321,7 +320,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           company_logo_url: profileData.companyLogoUrl,
           dodo_customer_id: existingOrg?.dodo_customer_id, // NEW: Keep existing Dodo customer ID
           dodo_subscription_id: existingOrg?.dodo_subscription_id, // NEW: Keep existing Dodo subscription ID
-          trial_ends_at: existingOrg?.trial_ends_at, // NEW: Keep existing trial end date
           default_reorder_level: existingOrg?.default_reorder_level || 0,
           enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
           enable_auto_reorder: existingOrg?.enable_auto_reorder || false, // Corrected typo here
@@ -356,7 +354,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             plan: updatePayload.plan,
             dodoCustomerId: updatePayload.dodo_customer_id, // NEW: Update Dodo customer ID
             dodoSubscriptionId: updatePayload.dodo_subscription_id, // NEW: Update Dodo subscription ID
-            trialEndsAt: updatePayload.trial_ends_at, // NEW: Update trial end date
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
             enableAutoReorder: updatePayload.enable_auto_reorder, // Corrected typo here
