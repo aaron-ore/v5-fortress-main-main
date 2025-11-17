@@ -19,7 +19,7 @@ export interface CompanyProfile {
   plan?: string;
   dodoCustomerId?: string; // NEW: Dodo Customer ID
   dodoSubscriptionId?: string; // NEW: Dodo Subscription ID
-  trialEndsAt?: string; // NEW: Trial end date
+  // Removed: trialEndsAt?: string; // NEW: Trial end date
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean; // Corrected typo here
@@ -95,7 +95,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       dodoCustomerId: companyData.dodo_customer_id || undefined, // NEW: Map Dodo Customer ID
       dodoSubscriptionId: companyData.dodo_subscription_id || undefined, // NEW: Map Dodo Subscription ID
-      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial end date
+      // Removed: trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial end date
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
@@ -135,7 +135,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,trial_ends_at,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // NEW: Added dodo_customer_id, dodo_subscription_id, trial_ends_at
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // Removed: trial_ends_at
       .eq('id', user.id)
       .single();
 
@@ -309,7 +309,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: updates.plan,
       dodo_customer_id: updates.dodoCustomerId, // NEW: Update Dodo Customer ID
       dodo_subscription_id: updates.dodoSubscriptionId, // NEW: Update Dodo Subscription ID
-      trial_ends_at: updates.trialEndsAt, // NEW: Update trial end date
+      // Removed: trial_ends_at: updates.trialEndsAt, // NEW: Update trial end date
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder, // Corrected typo here
