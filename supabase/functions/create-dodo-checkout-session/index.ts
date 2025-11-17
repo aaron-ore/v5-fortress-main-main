@@ -7,14 +7,45 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('Edge Function: create-dodo-checkout-session - Invoked.');
+  console.log('Full incoming request URL:', req.url);
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { dodoProductId, organizationId, userId } = await req.json();
+    const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Received Content-Type header:', contentType);
+
+    let requestBody;
+    let rawBody = '';
+    try {
+      if (contentType && contentType.includes('application/json')) {
+        rawBody = await req.text();
+        console.log('Edge Function: Raw request body length:', rawBody.length);
+        console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+        requestBody = JSON.parse(rawBody);
+        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+      } else {
+        throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+      }
+    } catch (parseError: any) {
+      console.error('Edge Function: ERROR during JSON parsing:', parseError.message);
+      console.error('Edge Function: Raw body that failed to parse:', rawBody);
+      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const { dodoProductId, organizationId, userId } = requestBody;
+
+    console.log('Edge Function: Extracted dodoProductId:', dodoProductId);
+    console.log('Edge Function: Extracted organizationId:', organizationId);
+    console.log('Edge Function: Extracted userId:', userId);
 
     if (!dodoProductId || !organizationId || !userId) {
+      console.error('Edge Function: Missing required parameters after parsing. dodoProductId:', dodoProductId, 'organizationId:', organizationId, 'userId:', userId);
       return new Response(JSON.stringify({ error: 'Missing required parameters: dodoProductId, organizationId, userId.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -28,6 +59,7 @@ serve(async (req) => {
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('Edge Function: Unauthorized: Authorization header missing.');
       return new Response(JSON.stringify({ error: 'Unauthorized: Authorization header missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
@@ -56,8 +88,10 @@ serve(async (req) => {
         status: 401,
       });
     }
+    console.log('Edge Function: User authenticated and matched:', user.id);
 
     const dodoApiKey = Deno.env.get('DODO_API_KEY');
+    console.log('Edge Function: DODO_API_KEY is', dodoApiKey ? 'present' : 'MISSING');
     if (!dodoApiKey) {
       console.error('Edge Function: DODO_API_KEY environment variable is not set.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Dodo API Key is missing.' }), {
@@ -69,8 +103,18 @@ serve(async (req) => {
     // Placeholder for Dodo API endpoint - **You will need to replace this with the actual Dodo API endpoint for creating checkout sessions.**
     const dodoCheckoutApiUrl = 'https://api.dodo.com/checkout-session'; 
 
-    const successUrl = `${Deno.env.get('CLIENT_APP_BASE_URL')}/billing?dodo_checkout_success=true`;
-    const cancelUrl = `${Deno.env.get('CLIENT_APP_BASE_URL')}/billing?dodo_checkout_cancel=true`;
+    const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
+    console.log('Edge Function: CLIENT_APP_BASE_URL is', clientAppBaseUrl ? 'present' : 'MISSING');
+    if (!clientAppBaseUrl) {
+      console.error('Edge Function: CLIENT_APP_BASE_URL environment variable is not set.');
+      return new Response(JSON.stringify({ error: 'Server configuration error: CLIENT_APP_BASE_URL is missing.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    const successUrl = `${clientAppBaseUrl}/billing?dodo_checkout_success=true`;
+    const cancelUrl = `${clientAppBaseUrl}/billing?dodo_checkout_cancel=true`;
 
     const checkoutSessionPayload = {
       product_id: dodoProductId,
@@ -83,7 +127,8 @@ serve(async (req) => {
       },
     };
 
-    console.log('Edge Function: Calling Dodo API with payload:', JSON.stringify(checkoutSessionPayload, null, 2));
+    console.log('Edge Function: Calling Dodo API with URL:', dodoCheckoutApiUrl);
+    console.log('Edge Function: Dodo API Payload:', JSON.stringify(checkoutSessionPayload, null, 2));
 
     const dodoResponse = await fetch(dodoCheckoutApiUrl, {
       method: 'POST',
@@ -97,6 +142,7 @@ serve(async (req) => {
     if (!dodoResponse.ok) {
       const errorData = await dodoResponse.json();
       console.error('Edge Function: Dodo API error creating checkout session:', errorData);
+      console.error('Edge Function: Dodo API response status:', dodoResponse.status);
       return new Response(JSON.stringify({ error: `Failed to create Dodo checkout session: ${errorData.message || 'Unknown error'}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: dodoResponse.status,
@@ -113,6 +159,7 @@ serve(async (req) => {
         status: 500,
       });
     }
+    console.log('Edge Function: Successfully received Dodo checkout URL:', checkoutUrl);
 
     return new Response(JSON.stringify({ checkoutUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -120,7 +167,7 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Edge Function error:', error);
+    console.error('Edge Function error (caught at top level):', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
