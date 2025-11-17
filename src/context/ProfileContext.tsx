@@ -19,7 +19,7 @@ export interface CompanyProfile {
   plan?: string;
   stripeCustomerId?: string; // Re-added
   stripeSubscriptionId?: string; // Re-added
-  // Removed trialEndsAt?: string;
+  trialEndsAt?: string; // Re-added
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean; // Corrected typo here
@@ -97,7 +97,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       stripeCustomerId: companyData.stripe_customer_id || undefined, // Re-added
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // Re-added
-      // Removed trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at * 1000).toISOString() : undefined, // Corrected to trial_ends_at
+      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at * 1000).toISOString() : undefined, // Re-added
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
@@ -139,7 +139,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,stripe_customer_id,stripe_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,stripe_customer_id,stripe_subscription_id,trial_ends_at,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
       .eq('id', user.id)
       .single();
 
@@ -313,7 +313,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: updates.plan,
       stripe_customer_id: updates.stripeCustomerId, // Re-added
       stripe_subscription_id: updates.stripeSubscriptionId, // Re-added
-      // Removed trial_ends_at: updates.trialEndsAt,
+      trial_ends_at: updates.trialEndsAt, // Re-added
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder, // Corrected typo here
