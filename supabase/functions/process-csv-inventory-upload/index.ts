@@ -42,26 +42,34 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let requestBody: any = {};
+
   try {
     const contentType = req.headers.get('content-type');
     console.log('Edge Function: Content-Type header:', contentType);
 
-    let requestBody;
-    let rawBody = '';
-    try {
-      if (contentType && contentType.includes('application/json')) {
-        rawBody = await req.text();
-        console.log('Edge Function: Raw request body length:', rawBody.length);
-        console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
-        requestBody = JSON.parse(rawBody);
-        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+    if (contentType && contentType.includes('application/json')) {
+      const rawBody = await req.text();
+      console.log('Edge Function: Raw request body length:', rawBody.length);
+      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+
+      if (rawBody.trim()) {
+        try {
+          requestBody = JSON.parse(rawBody);
+          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+        } catch (parseError: any) {
+          console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
+          return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
       } else {
-        throw new Error(`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`);
+        console.warn('Edge Function: Received empty or whitespace-only JSON body. Proceeding with empty requestBody.');
       }
-    } catch (parseError: any) {
-      console.error('Edge Function: ERROR during JSON parsing:', parseError.message);
-      console.error('Edge Function: Raw body that failed to parse:', rawBody);
-      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
+    } else {
+      console.error('Edge Function: Unsupported Content-Type:', contentType);
+      return new Response(JSON.stringify({ error: `Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`, success: false, errors: [`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -112,7 +120,7 @@ serve(async (req) => {
           Authorization: `Bearer ${token}`,
         },
       },
-    }); // Corrected: Added closing curly brace for the options object
+    });
 
     console.log('Edge Function: Attempting to get user from token.');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();

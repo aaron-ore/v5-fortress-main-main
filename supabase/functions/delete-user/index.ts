@@ -11,37 +11,34 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let requestBody: any = {};
+
   try {
     const contentType = req.headers.get('content-type');
     console.log('Edge Function: Received Content-Type header:', contentType);
-    let requestBody;
-    let rawBody = ''; // Initialize rawBody here
 
     if (contentType && contentType.includes('application/json')) {
-      rawBody = await req.text(); // Read the raw body as text
+      const rawBody = await req.text();
       console.log('Edge Function: Raw request body length:', rawBody.length);
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
 
-      if (!rawBody.trim()) { // Check if rawBody is empty or just whitespace
-        console.error('Edge Function: Received empty or whitespace-only JSON body.');
-        return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure user ID is provided.' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
-      }
-      try {
-        requestBody = JSON.parse(rawBody);
-        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-      } catch (parseError: any) {
-        console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
-        return new Response(JSON.stringify({ error: `Failed to parse request data. Please try again.` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
+      if (rawBody.trim()) {
+        try {
+          requestBody = JSON.parse(rawBody);
+          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+        } catch (parseError: any) {
+          console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
+          return new Response(JSON.stringify({ error: `Failed to parse request data. Please ensure the request body is valid JSON.` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
+      } else {
+        console.warn('Edge Function: Received empty or whitespace-only JSON body. Proceeding with empty requestBody.');
       }
     } else {
       console.error('Edge Function: Unsupported Content-Type:', contentType);
-      return new Response(JSON.stringify({ error: `Unsupported request format. Expected JSON.` }), {
+      return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json.` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });

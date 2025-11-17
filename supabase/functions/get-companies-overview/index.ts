@@ -13,6 +13,24 @@ serve(async (req) => {
   }
 
   try {
+    // No request body expected for GET, but keep the pattern for consistency if it were a POST
+    let requestBody: any = {};
+    const contentType = req.headers.get('content-type');
+    if (req.method === 'POST' && contentType && contentType.includes('application/json')) {
+      const rawBody = await req.text();
+      if (rawBody.trim()) {
+        try {
+          requestBody = JSON.parse(rawBody);
+        } catch (parseError: any) {
+          console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
+          return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
+      }
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
