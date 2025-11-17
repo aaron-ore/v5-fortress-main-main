@@ -150,14 +150,17 @@ const BillingSubscriptions: React.FC = () => {
         throw new Error("Authentication session expired. Please log in again.");
       }
 
+      // NEW: Add client-side logging for the payload being sent
+      const payload = {
+        dodoProductId: plan.dodoProductId,
+        organizationId: profile.organizationId,
+        userId: profile.id,
+      };
+      console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload);
+
       const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
-        body: {
-          dodoProductId: plan.dodoProductId,
-          organizationId: profile.organizationId,
-          userId: profile.id,
-        },
+        body: payload, // Use the payload object directly
         headers: {
-          // Removed explicit 'Content-Type': 'application/json',
           'Authorization': `Bearer ${sessionData.session.access_token}`,
         },
       });

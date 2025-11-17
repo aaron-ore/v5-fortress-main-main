@@ -19,7 +19,7 @@ serve(async (req) => {
 
   let requestBody: any = {};
   const contentType = req.headers.get('content-type');
-  if (req.method === 'POST' && contentType && contentType.includes('application/json')) {
+  if (contentType && contentType.includes('application/json')) {
     const rawBody = await req.text();
     if (rawBody.trim()) {
       try {

@@ -26,7 +26,7 @@ serve(async (req) => {
       console.log('Edge Function: Raw request body length:', rawBody.length);
       console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
 
-      if (rawBody.trim()) { // Only attempt JSON.parse if there's actual content
+      if (rawBody.trim()) { // Only attempt JSON.parse if there's actual non-whitespace content
         try {
           requestBody = JSON.parse(rawBody);
           console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
@@ -39,6 +39,7 @@ serve(async (req) => {
         }
       } else {
         console.warn('Edge Function: Received empty or whitespace-only JSON body. Proceeding with empty requestBody.');
+        // requestBody remains {} as initialized, which will lead to missing parameter errors later
       }
     } else {
       console.error('Edge Function: Unsupported Content-Type:', contentType);

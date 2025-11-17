@@ -100,7 +100,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
-      console.error('Edge Function: JWT verification failed or user not found:', userError?.message);
+      console.error('JWT verification failed or user not found:', userError?.message);
       return new Response(JSON.stringify({ error: 'Unauthorized: Invalid or mismatched user token.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
