@@ -97,7 +97,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       plan: companyData.plan || undefined,
       stripeCustomerId: companyData.stripe_customer_id || undefined,
       stripeSubscriptionId: companyData.stripe_subscription_id || undefined,
-      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // Corrected to trial_ends_at
+      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at * 1000).toISOString() : undefined, // Corrected to trial_ends_at
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
@@ -158,8 +158,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
           default_reorder_level,
           enable_auto_reorder_notifications,
           enable_auto_reorder,
-          perpetual_features, -- NEW: Select perpetual features
-          perpetual_license_version -- NEW: Select perpetual license version
+          perpetual_features,
+          perpetual_license_version
         )
       `)
       .eq('id', user.id)
