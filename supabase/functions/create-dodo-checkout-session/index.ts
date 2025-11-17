@@ -16,33 +16,36 @@ serve(async (req) => {
   }
 
   try {
-    const contentLength = req.headers.get('content-length');
-    console.log('Edge Function: Content-Length header:', contentLength);
-
+    const contentType = req.headers.get('content-type');
+    console.log('Edge Function: Received Content-Type header:', contentType);
     let requestBody;
-    if (contentLength && parseInt(contentLength) > 0) {
-      console.log('Edge Function: Content-Length > 0. Attempting to parse request body as JSON.');
-      try {
-        requestBody = await req.json();
-        console.log('Edge Function: Parsed request body:', JSON.stringify(requestBody, null, 2));
+    let rawBody = ''; // Initialize rawBody here
 
-        if (!requestBody || Object.keys(requestBody).length === 0) {
-          console.error('Edge Function: Parsed JSON body is empty or invalid.');
-          return new Response(JSON.stringify({ error: 'Request body is empty or invalid. Please ensure product ID, organization ID, and user ID are provided.' }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          });
-        }
+    if (contentType && contentType.includes('application/json')) {
+      rawBody = await req.text(); // Read the raw body as text
+      console.log('Edge Function: Raw request body length:', rawBody.length);
+      console.log('Edge Function: Raw request body (first 500 chars):', rawBody.substring(0, 500) + (rawBody.length > 500 ? '...' : ''));
+
+      if (!rawBody.trim()) { // Check if rawBody is empty or just whitespace
+        console.error('Edge Function: Received empty or whitespace-only JSON body.');
+        return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure product ID, organization ID, and user ID are provided.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+      try {
+        requestBody = JSON.parse(rawBody);
+        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
       } catch (parseError: any) {
-        console.error('Edge Function: ERROR during JSON parsing with req.json():', parseError.message);
-        return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
+        console.error('Edge Function: JSON parse error:', parseError.message, 'Raw body that failed to parse:', rawBody);
+        return new Response(JSON.stringify({ error: `Failed to parse request data. Please try again.` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         });
       }
     } else {
-      console.error('Edge Function: Request body is empty (Content-Length is 0 or missing).');
-      return new Response(JSON.stringify({ error: 'Request body is empty. Please ensure product ID, organization ID, and user ID are provided.' }), {
+      console.error('Edge Function: Unsupported Content-Type:', contentType);
+      return new Response(JSON.stringify({ error: `Unsupported request format. Expected JSON.` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -110,7 +113,6 @@ serve(async (req) => {
       });
     }
 
-    // CORRECTED: Use the actual Dodo Payments API endpoint for creating checkout sessions
     const dodoCheckoutApiUrl = 'https://test.dodopayments.com/checkouts'; // Using Test Mode URL as per documentation
 
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
@@ -123,18 +125,16 @@ serve(async (req) => {
       });
     }
 
-    // The Dodo API uses a single `return_url` for both success and failure.
-    // The frontend will need to parse this URL to determine the outcome.
     const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
 
     const checkoutSessionPayload = {
       product_cart: [{
         product_id: dodoProductId,
-        quantity: 1, // Assuming 1 unit for a subscription plan
+        quantity: 1,
       }],
       customer: {
         email: user.email,
-        name: user.user_metadata.full_name || user.email, // Use full_name from user_metadata or fallback to email
+        name: user.user_metadata.full_name || user.email,
       },
       confirm: true,
       return_url: returnUrl,
@@ -142,7 +142,7 @@ serve(async (req) => {
         organization_id: organizationId,
         user_id: userId,
       },
-      allowed_payment_method_types: ['credit', 'debit'], // Always provide these as fallback
+      allowed_payment_method_types: ['credit', 'debit'],
     };
 
     console.log('Edge Function: Calling Dodo API with URL:', dodoCheckoutApiUrl);
@@ -152,7 +152,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${dodoApiKey}`, // Use Dodo API Key
+        'Authorization': `Bearer ${dodoApiKey}`,
       },
       body: JSON.stringify(checkoutSessionPayload),
     });
@@ -168,7 +168,7 @@ serve(async (req) => {
     }
 
     const dodoSession = await dodoResponse.json();
-    const checkoutUrl = dodoSession.checkout_url; // Assuming Dodo returns a checkout_url
+    const checkoutUrl = dodoSession.checkout_url;
 
     if (!checkoutUrl) {
       console.error('Edge Function: Dodo API did not return a checkout URL.');
