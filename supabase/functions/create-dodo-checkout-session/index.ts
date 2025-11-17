@@ -110,8 +110,8 @@ serve(async (req) => {
       });
     }
 
-    // IMPORTANT: Replace this placeholder URL with the actual Dodo API endpoint for creating checkout sessions.
-    const dodoCheckoutApiUrl = 'https://your-actual-dodo-api-endpoint.com/checkout-session'; 
+    // CORRECTED: Use the actual Dodo Payments API endpoint for creating checkout sessions
+    const dodoCheckoutApiUrl = 'https://test.dodopayments.com/checkouts'; // Using Test Mode URL as per documentation
 
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     console.log('Edge Function: CLIENT_APP_BASE_URL is', clientAppBaseUrl ? 'present' : 'MISSING');
@@ -123,18 +123,26 @@ serve(async (req) => {
       });
     }
 
-    const successUrl = `${clientAppBaseUrl}/billing?dodo_checkout_success=true`;
-    const cancelUrl = `${clientAppBaseUrl}/billing?dodo_checkout_cancel=true`;
+    // The Dodo API uses a single `return_url` for both success and failure.
+    // The frontend will need to parse this URL to determine the outcome.
+    const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
 
     const checkoutSessionPayload = {
-      product_id: dodoProductId,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      customer_email: user.email, // Pass user's email to Dodo
+      product_cart: [{
+        product_id: dodoProductId,
+        quantity: 1, // Assuming 1 unit for a subscription plan
+      }],
+      customer: {
+        email: user.email,
+        name: user.user_metadata.full_name || user.email, // Use full_name from user_metadata or fallback to email
+      },
+      confirm: true,
+      return_url: returnUrl,
       metadata: {
         organization_id: organizationId,
         user_id: userId,
       },
+      allowed_payment_method_types: ['credit', 'debit'], // Always provide these as fallback
     };
 
     console.log('Edge Function: Calling Dodo API with URL:', dodoCheckoutApiUrl);
