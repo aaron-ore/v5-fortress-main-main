@@ -139,7 +139,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name, currency, address, unique_code, default_theme, company_logo_url, shopify_access_token, shopify_refresh_token, shopify_store_name, plan, stripe_customer_id, stripe_subscription_id, trial_ends_at, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder, perpetual_features, perpetual_license_version)')
+      .select('*, organizations(name, currency, address, unique_code, default_theme, company_logo_url, shopify_access_token, shopify_refresh_token, shopify_store_name, plan, stripe_customer_id, stripe_subscription_id, trial_ends_at, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder)')
       .eq('id', user.id)
       .single();
 
