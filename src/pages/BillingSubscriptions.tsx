@@ -145,31 +145,45 @@ const BillingSubscriptions: React.FC = () => {
 
     setIsProcessingSubscription(true);
     try {
-      // In a real Dodo integration, you would call a Dodo API to create a checkout session
-      // For now, we'll simulate this and update the profile directly.
-      console.log(`Simulating Dodo checkout for plan: ${plan.name}, product ID: ${plan.dodoProductId}`);
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("Authentication session expired. Please log in again.");
+      }
 
-      // Simulate Dodo API call and get a customer ID and subscription ID
-      const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
-      const simulatedDodoSubscriptionId = `dodo_sub_${Math.random().toString(36).substring(2, 15)}`;
+      const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
+        body: JSON.stringify({
+          dodoProductId: plan.dodoProductId,
+          organizationId: profile.organizationId,
+          userId: profile.id,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
 
-      // Update the organization with Dodo customer and subscription IDs
-      await supabase
-        .from('organizations')
-        .update({
-          dodo_customer_id: simulatedDodoCustomerId,
-          dodo_subscription_id: simulatedDodoSubscriptionId,
-          plan: plan.name.toLowerCase(),
-          // For Dodo, trial_ends_at would be managed by Dodo's API and webhook
-          // For now, we'll clear it or set a mock value if Dodo supports trials.
-          // trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // Example 14-day trial
-        })
-        .eq('id', profile.organizationId);
+      if (error) {
+        throw error;
+      }
 
-      showSuccess(`Successfully subscribed to ${plan.name} plan via Dodo (simulated)!`);
-      await fetchProfile(); // Refresh profile to reflect new plan
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const checkoutUrl = data.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl; // Redirect to Dodo checkout page
+      } else {
+        throw new Error("Dodo checkout URL not received.");
+      }
+      
+      // The actual profile update (plan, dodo_customer_id, dodo_subscription_id)
+      // will happen via a Dodo webhook to your Supabase project after successful payment.
+      // For now, we just redirect.
+      showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
+
     } catch (error: any) {
-      console.error("Error initiating Dodo Checkout (simulated):", error);
+      console.error("Error initiating Dodo Checkout:", error);
       showError(`Failed to subscribe: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);
