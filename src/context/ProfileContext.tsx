@@ -17,9 +17,9 @@ export interface CompanyProfile {
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
-  stripeCustomerId?: string; // Re-added
-  stripeSubscriptionId?: string; // Re-added
-  trialEndsAt?: string; // Re-added
+  // Removed: stripeCustomerId?: string;
+  // Removed: stripeSubscriptionId?: string;
+  // Removed: trialEndsAt?: string;
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean; // Corrected typo here
@@ -43,8 +43,8 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  stripeCustomerId?: string; // Re-added
-  stripeSubscriptionId?: string; // Re-added
+  // Removed: stripeCustomerId?: string;
+  // Removed: stripeSubscriptionId?: string;
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
   hasSeenUpgradePrompt: boolean;
@@ -57,7 +57,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -95,9 +95,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
-      stripeCustomerId: companyData.stripe_customer_id || undefined, // Re-added
-      stripeSubscriptionId: companyData.stripe_subscription_id || undefined, // Re-added
-      trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at * 1000).toISOString() : undefined, // Re-added
+      // Removed: stripeCustomerId: companyData.stripe_customer_id || undefined,
+      // Removed: stripeSubscriptionId: companyData.stripe_subscription_id || undefined,
+      // Removed: trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at * 1000).toISOString() : undefined,
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
@@ -121,8 +121,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      stripeCustomerId: companyData?.stripe_customer_id || undefined, // Re-added
-      stripeSubscriptionId: companyData?.stripe_subscription_id || undefined, // Re-added
+      // Removed: stripeCustomerId: companyData?.stripe_customer_id || undefined,
+      // Removed: stripeSubscriptionId: companyData?.stripe_subscription_id || undefined,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -139,7 +139,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,stripe_customer_id,stripe_subscription_id,trial_ends_at,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
       .eq('id', user.id)
       .single();
 
@@ -222,7 +222,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -311,9 +311,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       address: updates.companyAddress,
       company_logo_url: companyLogoUrlForDb, // Store internal path or null
       plan: updates.plan,
-      stripe_customer_id: updates.stripeCustomerId, // Re-added
-      stripe_subscription_id: updates.stripeSubscriptionId, // Re-added
-      trial_ends_at: updates.trialEndsAt, // Re-added
+      // Removed: stripe_customer_id: updates.stripeCustomerId,
+      // Removed: stripe_subscription_id: updates.stripeSubscriptionId,
+      // Removed: trial_ends_at: updates.trialEndsAt,
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder, // Corrected typo here

@@ -7,170 +7,128 @@ import { showSuccess, showError } from "@/utils/toast";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { useProfile } from "@/context/ProfileContext"; // Corrected import
+import { useProfile } from "@/context/ProfileContext";
 import { supabase } from "@/lib/supabaseClient";
 import { format } from "date-fns";
-import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features"; // NEW: Import ALL_APP_FEATURES and getAllFeatureIds
+import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features";
 
 interface PlanFeature {
   text: string;
   included: boolean;
 }
 
-interface StripeProduct {
-  id: string;
-  active: boolean;
-  name: string;
-  description: string;
-  image: string | null;
-  metadata: any;
-}
-
-interface StripePrice {
-  id: string;
-  product_id: string;
-  active: boolean;
-  unit_amount: number; // In cents
-  currency: string;
-  type: 'one_time' | 'recurring';
-  interval: 'day' | 'week' | 'month' | 'year' | null;
-  interval_count: number | null;
-  trial_period_days: number | null;
-  metadata: any;
-}
-
-interface SubscriptionPlanDisplay extends StripeProduct {
-  prices: StripePrice[];
-  monthlyPrice?: number; // Calculated monthly price for display
-  annualPrice?: number; // Calculated annual price for display
-  oneTimePrice?: number; // NEW: Calculated one-time price for display
-  isPopular?: boolean;
-  features: PlanFeature[]; // Added features array
-}
+// Removed StripeProduct, StripePrice, SubscriptionPlanDisplay interfaces
 
 // Define the current application version
-const CURRENT_APP_VERSION = "1.3.0"; // IMPORTANT: Update this with each major release
+const CURRENT_APP_VERSION = "1.3.0";
+
+// Dodo Product IDs (provided by user)
+const DODO_PRODUCT_IDS = {
+  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
+  PRO: "pdt_TrF9X3inM62YVnop3GmX9",
+};
+
+// Mock Dodo Plan structure for display
+interface DodoPlanDisplay {
+  id: string;
+  name: string;
+  description: string;
+  monthlyPrice?: number;
+  annualPrice?: number;
+  oneTimePrice?: number;
+  isPopular?: boolean;
+  features: PlanFeature[];
+  dodoProductId: string; // Dodo's product ID
+}
 
 const BillingSubscriptions: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-  const [availablePlans, setAvailablePlans] = useState<SubscriptionPlanDisplay[]>([]);
+  const [availableDodoPlans, setAvailableDodoPlans] = useState<DodoPlanDisplay[]>([]); // Changed to Dodo plans
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
   const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
   const [isManagingSubscription, setIsManagingSubscription] = useState(false);
 
   const currentPlanId = profile?.companyProfile?.plan || "free";
-  // Removed: const currentStripeCustomerId = profile?.stripeCustomerId;
 
   useEffect(() => {
-    const fetchStripeProductsAndPrices = async () => {
+    const fetchDodoPlans = async () => {
       setIsLoadingPlans(true);
-      const { data: products, error: productsError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('active', true);
+      // In a real Dodo integration, you would fetch plan details from Dodo's API
+      // For now, we'll use mock data based on the provided product IDs.
+      const mockDodoPlans: DodoPlanDisplay[] = [
+        {
+          id: "dodo-free",
+          name: "Free",
+          description: "Basic inventory management for small businesses.",
+          isPopular: false,
+          features: ALL_APP_FEATURES.map(appFeature => ({
+            text: appFeature.name,
+            included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
+          })),
+          dodoProductId: "free", // Placeholder for free plan
+        },
+        {
+          id: "dodo-standard",
+          name: "Standard",
+          description: "Essential features for growing businesses.",
+          monthlyPrice: 59,
+          annualPrice: 59 * 12 * 0.83, // Approx 17% discount
+          isPopular: true,
+          features: ALL_APP_FEATURES.map(appFeature => ({
+            text: appFeature.name,
+            included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
+          })),
+          dodoProductId: DODO_PRODUCT_IDS.STANDARD,
+        },
+        {
+          id: "dodo-pro",
+          name: "Pro",
+          description: "Advanced features for optimized operations.",
+          monthlyPrice: 125,
+          annualPrice: 125 * 12 * 0.83, // Approx 17% discount
+          isPopular: false,
+          features: ALL_APP_FEATURES.map(appFeature => ({
+            text: appFeature.name,
+            included: getAllFeatureIds().includes(appFeature.id), // Pro includes all current features
+          })),
+          dodoProductId: DODO_PRODUCT_IDS.PRO,
+        },
+        {
+          id: "dodo-enterprise",
+          name: "Enterprise",
+          description: "Custom solutions for large-scale businesses.",
+          isPopular: false,
+          features: ALL_APP_FEATURES.map(appFeature => ({ text: appFeature.name, included: true })),
+          dodoProductId: "enterprise", // Placeholder for enterprise plan
+        },
+      ];
 
-      if (productsError) {
-        console.error('Error fetching Stripe products:', productsError);
-        showError('Failed to load subscription plans.');
-        setIsLoadingPlans(false);
-        return;
-      }
-
-      const { data: prices, error: pricesError } = await supabase
-        .from('prices')
-        .select('*')
-        .eq('active', true);
-
-      if (pricesError) {
-        console.error('Error fetching Stripe prices:', pricesError);
-        showError('Failed to load subscription prices.');
-        setIsLoadingPlans(false);
-        return;
-      }
-
-      const plansWithPrices: SubscriptionPlanDisplay[] = products.map(product => {
-        const productPrices = prices.filter(price => price.product_id === product.id);
-        
-        // Find the monthly recurring price for display
-        const monthlyPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'month')?.unit_amount || undefined;
-        const annualPrice = productPrices.find(p => p.type === 'recurring' && p.interval === 'year')?.unit_amount || undefined;
-        const oneTimePrice = productPrices.find(p => p.type === 'one_time')?.unit_amount || undefined; // NEW: Find one-time price
-
-        // Mock features for display, as they are not coming from Stripe directly in this setup
-        // This needs to align with ALL_APP_FEATURES and the useFeature hook logic
-        const features: PlanFeature[] = ALL_APP_FEATURES.map(appFeature => {
-          let included = false;
-          const planNameLower = product.name.toLowerCase();
-
-          // Logic to determine if a feature is included in this plan for display purposes
-          if (planNameLower === 'free') {
-            included = ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id);
-            if (appFeature.id === 'core_inventory_management') included = true; // Example: Basic IM is always free
-          } else if (planNameLower === 'standard') {
-            included = ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id);
-          } else if (planNameLower === 'premium' || planNameLower.includes('perpetual license')) { // NEW: Perpetual License includes all current features
-            included = getAllFeatureIds().includes(appFeature.id); // All features up to CURRENT_APP_VERSION
-          } else if (planNameLower === 'enterprise') {
-            included = true; // Enterprise includes everything
-          }
-
-          return { text: appFeature.name, included };
-        });
-
-
-        return {
-          ...product,
-          prices: productPrices,
-          monthlyPrice: monthlyPrice ? monthlyPrice / 100 : undefined, // Convert cents to dollars
-          annualPrice: annualPrice ? annualPrice / 100 : undefined, // Convert cents to dollars
-          oneTimePrice: oneTimePrice ? oneTimePrice / 100 : undefined, // NEW: Convert cents to dollars
-          isPopular: product.metadata?.is_popular === 'true',
-          features: features, // Assign mock features
-        };
-      }).sort((a, b) => {
-        // Sort: Free first, then Perpetual, then by monthly price
+      setAvailableDodoPlans(mockDodoPlans.sort((a, b) => {
         if (a.name.toLowerCase() === 'free') return -1;
         if (b.name.toLowerCase() === 'free') return 1;
-        if (a.name.toLowerCase().includes('perpetual license')) return -1;
-        if (b.name.toLowerCase().includes('perpetual license')) return 1;
         return (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity);
-      });
-
-      // TEMPORARY CLIENT-SIDE OVERRIDE: Update lifetime deal prices as requested.
-      // In a real application, these prices should be updated directly in Stripe and Supabase.
-      const updatedPlans = plansWithPrices.map(plan => {
-        if (plan.name.toLowerCase().includes('perpetual license')) { // Changed from 'lifetime premium'
-          return { ...plan, oneTimePrice: 999 }; // Set the one-time price for Perpetual License
-        }
-        // Corrected: Target 'lifetime lite' and rename it to 'Lifetime Standard' with price $499
-        if (plan.name.toLowerCase().includes('lifetime lite')) {
-          return { ...plan, name: 'Lifetime Standard', oneTimePrice: 499 };
-        }
-        return plan;
-      });
-
-      setAvailablePlans(updatedPlans);
+      }));
       setIsLoadingPlans(false);
     };
 
-    fetchStripeProductsAndPrices();
+    fetchDodoPlans();
   }, []);
 
-  const getPriceDisplay = (plan: SubscriptionPlanDisplay) => {
+  const getPriceDisplay = (plan: DodoPlanDisplay) => {
     if (plan.name.toLowerCase() === "enterprise") return "Contact Sales";
     if (plan.name.toLowerCase() === "free") return "Free";
-    if (plan.oneTimePrice !== undefined) return `$${plan.oneTimePrice.toFixed(0)} one-time`; // NEW: Display one-time price
+    if (plan.oneTimePrice !== undefined) return `$${plan.oneTimePrice.toFixed(0)} one-time`;
 
     if (billingCycle === "monthly") {
       return plan.monthlyPrice !== undefined ? `$${plan.monthlyPrice.toFixed(0)}/month` : "N/A";
     } else {
-      const price = plan.annualPrice !== undefined && plan.annualPrice > 0 ? plan.annualPrice : (plan.monthlyPrice !== undefined ? plan.monthlyPrice * 12 * 0.83 : undefined); // Approx 17% discount
+      const price = plan.annualPrice !== undefined && plan.annualPrice > 0 ? plan.annualPrice : (plan.monthlyPrice !== undefined ? plan.monthlyPrice * 12 * 0.83 : undefined);
       return price !== undefined ? `$${price.toFixed(0)}/year` : "N/A";
     }
   };
 
-  const handleChoosePlan = async (plan: SubscriptionPlanDisplay) => {
+  const handleChoosePlan = async (plan: DodoPlanDisplay) => {
     if (!profile?.organizationId) {
       showError("Organization not found. Please ensure your company profile is set up.");
       return;
@@ -181,127 +139,61 @@ const BillingSubscriptions: React.FC = () => {
       return;
     }
 
+    if (plan.name.toLowerCase() === "free") {
+      showSuccess("You are already on the Free plan.");
+      return;
+    }
+
     setIsProcessingSubscription(true);
     try {
-      let selectedPrice: StripePrice | undefined;
-      let mode: 'subscription' | 'payment';
-      let perpetualFeatures: string[] | undefined;
-      let perpetualLicenseVersion: string | undefined;
+      // In a real Dodo integration, you would call a Dodo API to create a checkout session
+      // For now, we'll simulate this and update the profile directly.
+      console.log(`Simulating Dodo checkout for plan: ${plan.name}, product ID: ${plan.dodoProductId}`);
 
-      if (plan.oneTimePrice !== undefined) { // Handle one-time payment (including Perpetual License)
-        selectedPrice = plan.prices.find(p => p.type === 'one_time');
-        mode = 'payment';
-        if (plan.name.toLowerCase().includes('perpetual license')) {
-          perpetualFeatures = getAllFeatureIds(); // Capture all current features
-          perpetualLicenseVersion = CURRENT_APP_VERSION;
-        }
-      } else { // Handle recurring subscription
-        selectedPrice = plan.prices.find(p => 
-          p.type === 'recurring' && 
-          (billingCycle === 'monthly' ? p.interval === 'month' : p.interval === 'year')
-        );
-        mode = 'subscription';
-      }
+      // Simulate Dodo API call and get a customer ID and subscription ID
+      const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
+      const simulatedDodoSubscriptionId = `dodo_sub_${Math.random().toString(36).substring(2, 15)}`;
 
-      if (!selectedPrice) {
-        throw new Error(`No suitable price found for ${plan.name} with selected billing cycle.`);
-      }
+      // Update the organization with Dodo customer and subscription IDs
+      await supabase
+        .from('organizations')
+        .update({
+          dodo_customer_id: simulatedDodoCustomerId,
+          dodo_subscription_id: simulatedDodoSubscriptionId,
+          plan: plan.name.toLowerCase(),
+          // For Dodo, trial_ends_at would be managed by Dodo's API and webhook
+          // For now, we'll clear it or set a mock value if Dodo supports trials.
+          // trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // Example 14-day trial
+        })
+        .eq('id', profile.organizationId);
 
-      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
-      if (_sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
-      }
-
-      const payload = {
-        priceId: selectedPrice.id,
-        organizationId: profile.organizationId,
-        mode: mode, // Pass the mode to the Edge Function
-        trial_period_days: selectedPrice.trial_period_days || undefined,
-        perpetualFeatures: perpetualFeatures, // NEW: Pass perpetual features
-        perpetualLicenseVersion: perpetualLicenseVersion, // NEW: Pass perpetual license version
-      };
-
-      console.log("[BillingSubscriptions] Sending payload to create-checkout-session:", JSON.stringify(payload, null, 2));
-
-      const edgeFunctionUrl = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/create-checkout-session`;
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        let errorDetail = `Edge Function failed with status: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorDetail = errorData.error || JSON.stringify(errorData);
-        } catch (jsonError) {
-          console.error("Failed to parse error response JSON from Edge Function:", jsonError);
-          errorDetail = `Edge Function failed with status: ${response.status}. Response was not valid JSON. Raw response: ${await response.text()}`;
-        }
-        throw new Error(errorDetail);
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("Stripe Checkout URL not returned.");
-      }
+      showSuccess(`Successfully subscribed to ${plan.name} plan via Dodo (simulated)!`);
+      await fetchProfile(); // Refresh profile to reflect new plan
     } catch (error: any) {
-      console.error("Error initiating Stripe Checkout:", error);
+      console.error("Error initiating Dodo Checkout (simulated):", error);
       showError(`Failed to subscribe: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);
-      await fetchProfile(); // Refresh profile after potential subscription change
     }
   };
 
   const handleManageSubscription = async () => {
-    if (!profile?.organizationId || !profile?.companyProfile?.stripeCustomerId) { // Access stripeCustomerId from profile.companyProfile
-      showError("You don't have an active Stripe subscription to manage.");
+    if (!profile?.organizationId || !profile?.companyProfile?.dodoCustomerId) {
+      showError("You don't have an active Dodo subscription to manage.");
       return;
     }
 
     setIsManagingSubscription(true);
     try {
-      const { data: sessionData, error: _sessionError } = await supabase.auth.getSession();
-      if (_sessionError || !sessionData.session) {
-        throw new Error("User session not found. Please log in again.");
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-portal-session', {
-        body: JSON.stringify({
-          organizationId: profile.organizationId,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("Stripe Customer Portal URL not returned.");
-      }
+      // In a real Dodo integration, you would redirect to Dodo's customer portal
+      // For now, we'll show a placeholder message.
+      showInfo("Redirecting to Dodo Customer Portal (simulated)...");
+      // Example: window.location.href = `https://dodo.com/customer-portal?customer_id=${profile.companyProfile.dodoCustomerId}`;
     } catch (error: any) {
-      console.error("Error creating customer portal session:", error);
+      console.error("Error managing Dodo subscription (simulated):", error);
       showError(`Failed to manage subscription: ${error.message}`);
     } finally {
       setIsManagingSubscription(false);
-      await fetchProfile(); // Refresh profile after potential subscription change
     }
   };
 
@@ -310,28 +202,15 @@ const BillingSubscriptions: React.FC = () => {
   const paymentMethods: any[] = [];
 
   const handleUpdatePaymentMethod = () => {
-    showError("Payment methods are managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
+    showError("Payment methods are managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.");
   };
 
-  const handleDownloadInvoice = (_invoiceId: string) => { // Marked as unused
-    showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it."); // NEW: Updated toast
+  const handleDownloadInvoice = (_invoiceId: string) => {
+    showError("Invoice history is managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.");
   };
 
-  // Filter out the regular 'Standard' plan if 'Lifetime Standard' exists
-  const hasLifetimeStandard = availablePlans.some(plan => plan.name.toLowerCase() === 'lifetime standard' && plan.oneTimePrice !== undefined);
-
-  const recurringPlans = availablePlans.filter(plan => {
-    const isRecurring = plan.monthlyPrice !== undefined || plan.annualPrice !== undefined;
-    if (!isRecurring) return false;
-
-    // If a lifetime standard exists, exclude the regular 'Standard' recurring plan
-    if (hasLifetimeStandard && plan.name.toLowerCase() === 'standard') {
-      return false;
-    }
-    return true;
-  });
-
-  const lifetimePlans = availablePlans.filter(plan => plan.oneTimePrice !== undefined);
+  const recurringPlans = availableDodoPlans.filter(plan => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
+  const lifetimePlans = availableDodoPlans.filter(plan => plan.oneTimePrice !== undefined);
 
   if (isLoadingProfile || isLoadingPlans) {
     return (
@@ -368,7 +247,7 @@ const BillingSubscriptions: React.FC = () => {
 
       {/* Recurring Plan Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {recurringPlans.map((plan: SubscriptionPlanDisplay) => (
+        {recurringPlans.map((plan: DodoPlanDisplay) => (
           <Card
             key={plan.id}
             className={cn(
@@ -430,7 +309,7 @@ const BillingSubscriptions: React.FC = () => {
           <h2 className="text-2xl font-bold text-foreground text-center">One-Time Licenses</h2>
           <p className="text-muted-foreground text-center">Get access to a specific feature set with a single payment!</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {lifetimePlans.map((plan: SubscriptionPlanDisplay) => (
+            {lifetimePlans.map((plan: DodoPlanDisplay) => (
               <Card
                 key={plan.id}
                 className={cn(
@@ -500,10 +379,10 @@ const BillingSubscriptions: React.FC = () => {
           <div className="grid gap-2">
             <p className="text-lg font-semibold text-foreground">
               {profile?.companyProfile?.plan ? profile.companyProfile.plan.charAt(0).toUpperCase() + profile.companyProfile.plan.slice(1) : "Free"}
-              {profile?.companyProfile?.trialEndsAt && (
+              {/* Removed: {profile?.companyProfile?.trialEndsAt && (
                 <span className="ml-2 text-sm text-yellow-500">(Trial ends: {format(new Date(profile.companyProfile.trialEndsAt), "MMM dd, yyyy")})</span>
-              )}
-              {profile?.companyProfile?.perpetualLicenseVersion && ( // NEW: Display perpetual license version
+              )} */}
+              {profile?.companyProfile?.perpetualLicenseVersion && (
                 <span className="ml-2 text-sm text-muted-foreground">(Licensed Version: {profile.companyProfile.perpetualLicenseVersion})</span>
               )}
             </p>
@@ -512,14 +391,14 @@ const BillingSubscriptions: React.FC = () => {
           <div className="space-y-2">
             <h3 className="font-semibold text-foreground">Features:</h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {availablePlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
+              {availableDodoPlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
                 <li key={index} className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" /> {feature.text}
                 </li>
               ))}
             </ul>
           </div>
-          {currentPlanId !== "free" && !currentPlanId.includes('perpetual') && ( // Only show manage subscription for recurring plans
+          {currentPlanId !== "free" && !currentPlanId.includes('perpetual') && (
             <Button onClick={handleManageSubscription} disabled={isManagingSubscription}>
               {isManagingSubscription ? (
                 <>
@@ -605,7 +484,7 @@ const BillingSubscriptions: React.FC = () => {
           ) : (
             <p className="text-center text-muted-foreground py-4">No invoices available.</p>
           )}
-          <Button onClick={() => showError("Invoice history is managed directly in the Stripe Customer Portal. Click 'Manage Subscription' to access it.")}>View All Invoices</Button>
+          <Button onClick={() => showError("Invoice history is managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.")}>View All Invoices</Button>
         </CardContent>
       </Card>
     </div>

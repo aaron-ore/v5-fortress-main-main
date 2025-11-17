@@ -21,6 +21,12 @@ interface UpgradePromptDialogProps {
   onClose: () => void;
 }
 
+// Dodo Product IDs (mocked for client-side)
+const DODO_PRODUCT_IDS = {
+  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
+  PRO: "pdt_TrF9X3inM62YVnop3GmX9",
+};
+
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { profile, markUpgradePromptSeen, fetchProfile } = useProfile();
@@ -32,9 +38,9 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
     navigate("/billing");
   };
 
-  const handleStartFreeTrial = async (plan: 'standard' | 'premium') => {
+  const handleStartFreeTrial = async (planName: 'standard' | 'pro') => { // Changed from 'standard' | 'premium'
     if (!profile?.organizationId) {
-      showError("Org not found. Cannot start trial.");
+      showError("Organization not found. Cannot start trial.");
       return;
     }
     if (!profile?.id) {
@@ -44,55 +50,33 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
 
     setIsProcessingTrial(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error("Session expired. Log in again.");
-      }
+      // In a real Dodo integration, you would call a Dodo API to initiate a trial
+      // For now, we'll simulate this and update the profile directly.
+      console.log(`Simulating Dodo trial for plan: ${planName}`);
 
-      // Find the price ID for the selected plan (e.g., 'standard' monthly)
-      const { data: prices, error: pricesError } = await supabase
-        .from('prices')
-        .select('id, product_id')
-        .eq('type', 'recurring')
-        .eq('interval', 'month');
+      const dodoProductId = planName === 'standard' ? DODO_PRODUCT_IDS.STANDARD : DODO_PRODUCT_IDS.PRO;
 
-      if (pricesError) throw pricesError;
+      // Simulate Dodo API call and get a customer ID and subscription ID
+      const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
+      const simulatedDodoSubscriptionId = `dodo_sub_${Math.random().toString(36).substring(2, 15)}`;
 
-      const { data: products, error: productsError } = await supabase
-        .from('products')
-        .select('id, name')
-        .in('name', [plan]);
+      // Update the organization with Dodo customer and subscription IDs
+      await supabase
+        .from('organizations')
+        .update({
+          dodo_customer_id: simulatedDodoCustomerId,
+          dodo_subscription_id: simulatedDodoSubscriptionId,
+          plan: planName,
+          // For Dodo, trial_ends_at would be managed by Dodo's API and webhook
+          // For now, we'll set a mock trial end date.
+          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14-day free trial
+        })
+        .eq('id', profile.organizationId);
 
-      if (productsError) throw productsError;
-
-      const selectedProduct = products.find(p => p.name.toLowerCase() === plan);
-      if (!selectedProduct) throw new Error(`Product for plan '${plan}' not found.`);
-
-      const selectedPrice = prices.find(p => p.product_id === selectedProduct.id);
-      if (!selectedPrice) throw new Error(`Monthly price for plan '${plan}' not found.`);
-
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: JSON.stringify({
-          priceId: selectedPrice.id,
-          organizationId: profile.organizationId,
-          trial_period_days: 14, // 14-day free trial
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      if (data.url) {
-        window.location.href = data.url; // Redirect to Stripe Checkout
-      } else {
-        throw new Error("Stripe Checkout URL not returned.");
-      }
+      showSuccess(`14-Day Free Trial for ${planName} plan started (simulated)!`);
+      onClose();
     } catch (error: any) {
-      console.error("Error starting free trial:", error);
+      console.error("Error starting free trial (simulated):", error);
       showError(`Failed to start free trial: ${error.message}`);
     } finally {
       setIsProcessingTrial(false);

@@ -270,7 +270,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder')
+          .select('unique_code, company_logo_url, default_theme, plan, dodo_customer_id, dodo_subscription_id, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder')
           .eq('id', profile.organizationId)
           .single();
 
