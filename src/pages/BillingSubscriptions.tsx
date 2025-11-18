@@ -18,7 +18,7 @@ import React, { useState, useEffect } from "react";
 
     // Lemon Squeezy Product IDs (placeholders - you'll need to replace these with your actual Lemon Squeezy Product IDs)
     const LEMON_SQUEEZY_PRODUCT_IDS = {
-      STANDARD: "YOUR_LEMON_SQUEEZY_STANDARD_PRODUCT_ID",
+      STANDARD: "697654",
       PRO: "YOUR_LEMON_SQUEEZY_PRO_PRODUCT_ID",
     };
 
