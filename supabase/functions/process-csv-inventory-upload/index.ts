@@ -36,77 +36,78 @@ interface ExistingInventoryItem {
 }
 
 serve(async (req) => {
-  console.log('Edge Function: Request received at top level.');
-
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  let requestBody: any = {};
-  const contentType = req.headers.get('content-type');
-  let rawBodyText = '';
-
-  // Only attempt to read body for methods that are expected to have one
-  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-    if (req.body) {
-      try {
-        const reader = req.body.getReader();
-        let chunks: Uint8Array[] = [];
-        let done: boolean | undefined;
-        let value: Uint8Array | undefined;
-
-        while (!done) {
-          ({ value, done } = await reader.read());
-          if (value) {
-            chunks.push(value);
-          }
-        }
-
-        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-        const combinedChunks = new Uint8Array(totalLength);
-        let offset = 0;
-        for (const chunk of chunks) {
-          combinedChunks.set(chunk, offset);
-          offset += chunk.length;
-        }
-
-        rawBodyText = new TextDecoder().decode(combinedChunks);
-        console.log('Edge Function: Raw body text read from stream (length):', rawBodyText.length);
-
-      } catch (readError: any) {
-        console.error('Edge Function: Error reading request body stream (likely empty or malformed input):', readError.message);
-        rawBodyText = ''; // Treat as empty if stream reading fails
-      }
-    } else {
-      console.log('Edge Function: Request method does not typically have a body, or req.body is null.');
-    }
-  }
-
-  if (contentType && contentType.includes('application/json')) {
-    if (rawBodyText.trim() === '') {
-      console.warn('Edge Function: Content-Type: application/json with empty/whitespace body. Treating body as empty JSON object.');
-      requestBody = {};
-    } else {
-      try {
-        requestBody = JSON.parse(rawBodyText); // Parse only if not empty
-        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-      } catch (parseError: any) {
-        console.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
-        return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
-      }
-    }
-  } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-    console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
-    return new Response(JSON.stringify({ error: `Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`, success: false, errors: [`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`] }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
-  }
-
+  // --- START: Global Error Handling for the entire Edge Function ---
   try {
+    console.log('Edge Function: Request received at top level.');
+
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', { headers: corsHeaders });
+    }
+
+    let requestBody: any = {};
+    const contentType = req.headers.get('content-type');
+    let rawBodyText = '';
+
+    // Only attempt to read body for methods that are expected to have one
+    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+      if (req.body) {
+        try {
+          const reader = req.body.getReader();
+          let chunks: Uint8Array[] = [];
+          let done: boolean | undefined;
+          let value: Uint8Array | undefined;
+
+          while (!done) {
+            ({ value, done } = await reader.read());
+            if (value) {
+              chunks.push(value);
+            }
+          }
+
+          const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+          const combinedChunks = new Uint8Array(totalLength);
+          let offset = 0;
+          for (const chunk of chunks) {
+            combinedChunks.set(chunk, offset);
+            offset += chunk.length;
+          }
+
+          rawBodyText = new TextDecoder().decode(combinedChunks);
+          console.log('Edge Function: Raw body text read from stream (length):', rawBodyText.length);
+
+        } catch (readError: any) {
+          console.error('Edge Function: Error reading request body stream (likely empty or malformed input):', readError.message);
+          rawBodyText = ''; // Treat as empty if stream reading fails
+        }
+      } else {
+        console.log('Edge Function: Request method does not typically have a body, or req.body is null.');
+      }
+    }
+
+    if (contentType && contentType.includes('application/json')) {
+      if (rawBodyText.trim() === '') {
+        console.warn('Edge Function: Content-Type: application/json with empty/whitespace body. Treating body as empty JSON object.');
+        requestBody = {};
+      } else {
+        try {
+          requestBody = JSON.parse(rawBodyText); // Parse only if not empty
+          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+        } catch (parseError: any) {
+          console.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
+          return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
+      }
+    } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+      console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
+      return new Response(JSON.stringify({ error: `Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`, success: false, errors: [`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
     const { filePath, organizationId, userId, actionForDuplicates } = requestBody;
 
     console.log('Edge Function: Extracted filePath:', filePath);
@@ -479,9 +480,10 @@ serve(async (req) => {
     } else if (typeof error === 'string') {
       errorMessage = error;
     }
-    return new Response(JSON.stringify({ error: errorMessage, success: false, errors: [errorMessage] }), {
+    return new Response(JSON.stringify({ error: errorMessage, success: false, errors: [errorMessage], rawBody: rawBodyText, contentType: contentType }), { // Added rawBody and contentType for debugging
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });
   }
+  // --- END: Global Error Handling for the entire Edge Function ---
 });
