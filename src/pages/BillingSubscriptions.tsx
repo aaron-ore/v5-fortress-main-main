@@ -9,7 +9,6 @@ import React, { useState, useEffect } from "react";
     import { Badge } from "@/components/ui/badge";
     import { useProfile } from "@/context/ProfileContext";
     import { supabase } from "@/lib/supabaseClient";
-    // Removed: import { format } from "date-fns"; // Removed unused import
     import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features";
 
     interface PlanFeature {
@@ -19,7 +18,7 @@ import React, { useState, useEffect } from "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_VMipcUntrixK6ugcsu4VJ", // UPDATED: Changed to new product ID
+      STANDARD: "pdt_VMipcUntrixK6ugcsu4VJ",
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
@@ -34,6 +33,7 @@ import React, { useState, useEffect } from "react";
       isPopular?: boolean;
       features: PlanFeature[];
       dodoProductId: string; // Dodo's product ID
+      paymentLink?: string; // NEW: Direct payment link
     }
 
     const BillingSubscriptions: React.FC = () => {
@@ -49,8 +49,6 @@ import React, { useState, useEffect } from "react";
       useEffect(() => {
         const fetchDodoPlans = async () => {
           setIsLoadingPlans(true);
-          // In a real Dodo integration, you would fetch plan details from Dodo's API
-          // For now, we'll use mock data based on the provided product IDs.
           const mockDodoPlans: DodoPlanDisplay[] = [
             {
               id: "dodo-free",
@@ -75,6 +73,7 @@ import React, { useState, useEffect } from "react";
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
               dodoProductId: DODO_PRODUCT_IDS.STANDARD,
+              paymentLink: "YOUR_STANDARD_PLAN_PAYMENT_LINK", // REPLACE THIS WITH ACTUAL DODO PAYMENT LINK
             },
             {
               id: "dodo-pro",
@@ -88,6 +87,7 @@ import React, { useState, useEffect } from "react";
                 included: getAllFeatureIds().includes(appFeature.id), // Pro includes all current features
               })),
               dodoProductId: DODO_PRODUCT_IDS.PRO,
+              paymentLink: "YOUR_PRO_PLAN_PAYMENT_LINK", // REPLACE THIS WITH ACTUAL DODO PAYMENT LINK
             },
             {
               id: "dodo-enterprise",
@@ -139,6 +139,13 @@ import React, { useState, useEffect } from "react";
           return;
         }
 
+        // NEW: Directly redirect to Dodo payment link if available
+        if (plan.paymentLink && plan.paymentLink.startsWith('http')) {
+          showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
+          window.location.href = plan.paymentLink;
+          return; // Exit function after redirect
+        }
+
         setIsProcessingSubscription(true);
         try {
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -146,16 +153,15 @@ import React, { useState, useEffect } from "react";
             throw new Error("Authentication session expired. Please log in again.");
           }
 
-          // NEW: Add client-side logging for the payload being sent
           const payload = {
             dodoProductId: plan.dodoProductId,
             organizationId: profile.organizationId,
             userId: profile.id,
           };
-          console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload); // Changed
+          console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload);
 
           const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
-            body: payload, // Use the payload object directly
+            body: payload,
             headers: {
               'Authorization': `Bearer ${sessionData.session.access_token}`,
             },
@@ -176,13 +182,10 @@ import React, { useState, useEffect } from "react";
             throw new Error("Dodo checkout URL not received.");
           }
           
-          // The actual profile update (plan, dodo_customer_id, dodo_subscription_id)
-          // will happen via a Dodo webhook to your Supabase project after successful payment.
-          // For now, we just redirect.
           showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
 
         } catch (error: any) {
-          console.error("Error initiating Dodo Checkout:", error); // Changed
+          console.error("Error initiating Dodo Checkout:", error);
           showError(`Failed to subscribe: ${error.message}`);
         } finally {
           setIsProcessingSubscription(false);
@@ -197,12 +200,10 @@ import React, { useState, useEffect } from "react";
 
         setIsManagingSubscription(true);
         try {
-          // In a real Dodo integration, you would redirect to Dodo's customer portal
-          // For now, we'll show a placeholder message.
           showInfo("Redirecting to Dodo Customer Portal (simulated)...");
           // Example: window.location.href = `https://dodo.com/customer-portal?customer_id=${profile.companyProfile.dodoCustomerId}`;
         } catch (error: any) {
-          console.error("Error managing Dodo subscription (simulated):", error); // Changed
+          console.error("Error managing Dodo subscription (simulated):", error);
           showError(`Failed to manage subscription: ${error.message}`);
         } finally {
           setIsManagingSubscription(false);
@@ -391,9 +392,6 @@ import React, { useState, useEffect } from "react";
               <div className="grid gap-2">
                 <p className="text-lg font-semibold text-foreground">
                   {profile?.companyProfile?.plan ? profile.companyProfile.plan.charAt(0).toUpperCase() + profile.companyProfile.plan.slice(1) : "Free"}
-                  {/* Removed: {profile?.companyProfile?.trialEndsAt && (
-                    <span className="ml-2 text-sm text-yellow-500">(Trial ends: {format(new Date(profile.companyProfile.trialEndsAt), "MMM dd, yyyy")})</span>
-                  )} */}
                   {profile?.companyProfile?.perpetualLicenseVersion && (
                     <span className="ml-2 text-sm text-muted-foreground">(Licensed Version: {profile.companyProfile.perpetualLicenseVersion})</span>
                   )}
