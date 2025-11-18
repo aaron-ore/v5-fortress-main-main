@@ -143,7 +143,7 @@ serve(async (req) => {
     }
 
     const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Removed /v1
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/api/v1/checkout-sessions`; // MODIFIED: Added /api/v1
     safeConsole.log('Edge Function: Using Dodo API URL for checkout sessions:', dodoCheckoutApiUrl);
 
     safeConsole.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
