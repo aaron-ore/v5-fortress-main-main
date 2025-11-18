@@ -133,6 +133,21 @@ serve(async (req) => {
     }
     console.log('Edge Function: User authenticated and matched:', user.id);
 
+    // NEW: Fetch user's profile to get address
+    const { data: userProfile, error: profileFetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name, email, address')
+      .eq('id', user.id)
+      .single();
+
+    if (profileFetchError || !userProfile) {
+      console.error('Edge Function: Error fetching user profile for address:', profileFetchError);
+      return new Response(JSON.stringify({ error: 'Failed to retrieve user profile for billing address.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
     const dodoApiKey = Deno.env.get('DODO_API_KEY');
     console.log('Edge Function: DODO_API_KEY is', dodoApiKey ? 'present' : 'MISSING', `(length: ${dodoApiKey?.length || 0})`); // Added length check
     if (!dodoApiKey) {
@@ -160,14 +175,22 @@ serve(async (req) => {
 
     const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
 
+    // NEW: Construct billing address object
+    const billingAddress = userProfile.address ? {
+      address_line_1: userProfile.address,
+      // For simplicity, other address components are omitted. Dodo might infer or require more.
+      // If Dodo continues to complain, we might need to collect more structured address data in our profiles.
+    } : undefined;
+
     const checkoutSessionPayload = {
       product_cart: [{
         product_id: dodoProductId,
         quantity: 1,
       }],
       customer: {
-        email: user.email,
-        name: user.user_metadata.full_name || user.email,
+        email: userProfile.email,
+        name: userProfile.full_name || userProfile.email,
+        billing_address: billingAddress, // NEW: Include billing address
       },
       confirm: true,
       return_url: returnUrl,
