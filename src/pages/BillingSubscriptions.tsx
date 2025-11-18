@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } => "react";
     import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
     import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,7 +18,7 @@ import React, { useState, useEffect } from "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_TrF9X3inM62YVnop3GmX9", // TEMPORARY: Using Pro Plan ID for testing
+      STANDARD: "pdt_TrF9X3inM62YVnop3GmX9", // Using Pro Plan ID as Standard was not found by Dodo API
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
@@ -72,7 +72,7 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
-              dodoProductId: DODO_PRODUCT_IDS.STANDARD, // This will now use the Pro ID
+              dodoProductId: DODO_PRODUCT_IDS.STANDARD,
               // Removed: paymentLink: "YOUR_STANDARD_PLAN_PAYMENT_LINK",
             },
             {
