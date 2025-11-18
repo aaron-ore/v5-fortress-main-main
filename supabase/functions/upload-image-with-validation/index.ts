@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { createClient } 'npm:@supabase/supabase-js';
+import { createClient } from 'npm:@supabase/supabase-js';
 import { fileTypeFromBuffer } from 'npm:file-type'; // Import file-type library
 
 const corsHeaders = {
@@ -77,11 +77,15 @@ serve(async (req) => {
       }
     }
   } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-    console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
-    return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json for this method.` }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    // If there was a body but it wasn't JSON, and it's a method that expects a body
+    if (rawBodyText.length > 0) {
+      console.error('Edge Function: Unsupported Content-Type for non-empty body:', contentType);
+      return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json for this method with a non-empty body.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    // If body was empty and not JSON, it's fine, requestBody remains {}
   }
 
   try {
