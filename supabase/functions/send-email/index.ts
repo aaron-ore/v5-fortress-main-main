@@ -25,6 +25,9 @@ const sanitizeHtml = (html: string): string => {
 };
 
 serve(async (req) => {
+  let rawBodyText = ''; // Declared at a higher scope
+  const contentType = req.headers.get('content-type');
+
   // --- START: Global Error Handling for the entire Edge Function ---
   try {
     if (req.method === 'OPTIONS') {
@@ -32,8 +35,7 @@ serve(async (req) => {
     }
 
     let requestBody: any = {};
-    const contentType = req.headers.get('content-type');
-    let rawBodyText = ''; // Keep for logging in case of error
+    
 
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       if (contentType && contentType.includes('application/json')) {
@@ -53,7 +55,7 @@ serve(async (req) => {
             console.warn('Edge Function: req.json() failed with SyntaxError on empty/whitespace body. Treating as empty JSON object.');
             requestBody = {}; // Treat empty body as empty JSON object
           } else {
-            console.error('Edge Function: req.json() parse error:', parseError.message, 'Raw body:', rawBodyText);
+            console.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
             return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
               status: 400,
