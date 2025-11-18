@@ -18,7 +18,7 @@ import React, { useState, useEffect } from "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_VMipcUntrixK6ugcsu4VJ",
+      STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5", // UPDATED
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
