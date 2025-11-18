@@ -18,7 +18,7 @@ import React, { useState, useEffect } => "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_TrF9X3inM62YVnop3GmX9", // Using Pro Plan ID as Standard was not found by Dodo API
+      STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5", // Using Pro Plan ID as Standard was not found by Dodo API
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
