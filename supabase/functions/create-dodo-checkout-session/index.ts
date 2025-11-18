@@ -167,7 +167,8 @@ serve(async (req) => {
     const dodoProductsData = await dodoProductsResponse.json();
     safeConsole.log('Edge Function: Fetched Dodo products data:', JSON.stringify(dodoProductsData, null, 2));
 
-    const productExists = dodoProductsData.data?.some((p: any) => p.id === dodoProductId);
+    // CORRECTED LINE: Access 'items' array and 'product_id' field
+    const productExists = dodoProductsData.items?.some((p: any) => p.product_id === dodoProductId);
 
     if (!productExists) {
       safeConsole.error(`Edge Function: Dodo Product ID '${dodoProductId}' not found or not active in Dodo Payments account.`);
