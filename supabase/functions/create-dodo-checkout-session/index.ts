@@ -144,8 +144,42 @@ serve(async (req) => {
     }
 
     // CORRECTED: Use the live environment base URL for Dodo API
-    const dodoCheckoutApiUrl = 'https://live.dodopayments.com/checkouts'; 
+    const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Corrected endpoint
     console.log('Edge Function: Using Dodo API URL:', dodoCheckoutApiUrl);
+
+    // --- NEW: Diagnostic GET request to Dodo API ---
+    console.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
+    try {
+      const diagnosticDodoResponse = await fetch(`${dodoApiBaseUrl}/products`, { // Assuming /products is a valid GET endpoint
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${dodoApiKey}`,
+          'User-Agent': 'Fortress-Diagnostic-Agent/1.0 (Supabase-Edge-Function)',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (diagnosticDodoResponse.ok) {
+        console('Edge Function: Diagnostic GET to Dodo /products SUCCESS. Status:', diagnosticDodoResponse.status);
+      } else {
+        const errorText = await diagnosticDodoResponse.text();
+        console.error(`Edge Function: Diagnostic GET to Dodo /products FAILED with status ${diagnosticDodoResponse.status}. Response: ${errorText}`);
+        // If the diagnostic GET fails, it's a strong indicator the API key is bad or lacks basic permissions.
+        return new Response(JSON.stringify({ error: `Dodo API Key validation failed (GET /products returned ${diagnosticDodoResponse.status}). Please check your Dodo API Key and its permissions. Details: ${errorText.substring(0, 200)}...` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+    } catch (diagnosticDodoError: any) {
+      console.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', diagnosticDodoError.message);
+      return new Response(JSON.stringify({ error: `Network error during Dodo API Key validation: ${diagnosticDodoError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+    console.log('Edge Function: Diagnostic GET to Dodo /products complete.');
+    // --- END NEW: Diagnostic GET request to Dodo API ---
 
 
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
