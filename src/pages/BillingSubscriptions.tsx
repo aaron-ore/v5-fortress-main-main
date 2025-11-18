@@ -19,7 +19,7 @@ import React, { useState, useEffect } from "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "YOUR_NEW_DODO_PRODUCT_ID_HERE", // UPDATED: Changed to new product ID
+      STANDARD: "pdt_VMipcUntrixK6ugcsu4VJ", // UPDATED: Changed to new product ID
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
