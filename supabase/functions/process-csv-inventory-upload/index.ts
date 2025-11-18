@@ -44,31 +44,37 @@ serve(async (req) => {
 
   let requestBody: any = {};
   const contentType = req.headers.get('content-type');
+  let rawBodyText = '';
 
-  if (contentType && contentType.includes('application/json')) {
+  // Always attempt to read the body as text first for methods that typically have a body
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     try {
-      const textBody = await req.text(); // Read as text first
-      if (textBody.trim() === '') {
-        console.warn('Edge Function: Received Content-Type: application/json with empty body. Treating body as empty JSON object.');
-        requestBody = {};
-      } else {
-        try {
-          requestBody = JSON.parse(textBody); // Parse only if not empty
-          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-        } catch (parseError: any) {
-          console.error('Edge Function: JSON parse error for textBody:', textBody, 'Error:', parseError.message);
-          return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          });
-        }
-      }
+      rawBodyText = await req.text();
+      console.log('Edge Function: Raw body text received (length):', rawBodyText.length);
     } catch (readError: any) {
       console.error('Edge Function: Error reading request body as text:', readError.message);
       return new Response(JSON.stringify({ error: `Failed to read request body: ${readError.message}`, success: false, errors: [readError.message] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
+    }
+  }
+
+  if (contentType && contentType.includes('application/json')) {
+    if (rawBodyText.trim() === '') {
+      console.warn('Edge Function: Content-Type: application/json with empty/whitespace body. Treating body as empty JSON object.');
+      requestBody = {};
+    } else {
+      try {
+        requestBody = JSON.parse(rawBodyText); // Parse only if not empty
+        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+      } catch (parseError: any) {
+        console.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
+        return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
     }
   } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
