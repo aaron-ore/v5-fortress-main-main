@@ -122,7 +122,9 @@ serve(async (req) => {
       });
     }
 
-    const dodoCheckoutApiUrl = 'https://test.dodopayments.com/checkouts'; // Using Test Mode URL as per documentation
+    const dodoCheckoutApiUrl = 'https://api.dodopayments.com/checkouts'; // Changed to LIVE Mode URL
+    console.log('Edge Function: Using Dodo API URL:', dodoCheckoutApiUrl);
+
 
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     console.log('Edge Function: CLIENT_APP_BASE_URL is', clientAppBaseUrl ? 'present' : 'MISSING');
