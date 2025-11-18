@@ -241,7 +241,7 @@ serve(async (req) => {
     safeConsole.log('  URL:', dodoCheckoutApiUrl);
     safeConsole.log('  Method:', fetchOptions.method);
     safeConsole.log('  Headers:', JSON.stringify(fetchOptions.headers, null, 2));
-    safeConsole.log('  Body:', fetchOptions.body);
+    safeConsole.log('  Body:', fetchOptions.body); // Log the actual body being sent
 
     let dodoResponse: Response;
     try {
