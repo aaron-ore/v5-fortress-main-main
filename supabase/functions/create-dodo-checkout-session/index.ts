@@ -17,10 +17,11 @@ serve(async (req) => {
 
   let requestBody: any = {};
   const contentType = req.headers.get('content-type');
-  const contentLength = req.headers.get('content-length');
+  const contentLength = req.headers.get('content-length'); // This will be a string or null
 
+  // More robust check for empty body: !contentLength handles null/undefined, parseInt handles '0' or empty string
+  const isBodyEmpty = !contentLength || parseInt(contentLength) === 0;
   const isJsonContentType = contentType && contentType.includes('application/json');
-  const isBodyEmpty = contentLength === '0' || contentLength === null || contentLength === undefined;
 
   if (isJsonContentType) {
     if (isBodyEmpty) {
