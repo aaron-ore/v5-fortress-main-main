@@ -156,7 +156,7 @@ const BillingSubscriptions: React.FC = () => {
         organizationId: profile.organizationId,
         userId: profile.id,
       };
-      safeConsole.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload); // Changed
+      console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload); // Changed
 
       const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
         body: payload, // Use the payload object directly
@@ -186,7 +186,7 @@ const BillingSubscriptions: React.FC = () => {
       showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
 
     } catch (error: any) {
-      safeConsole.error("Error initiating Dodo Checkout:", error); // Changed
+      console.error("Error initiating Dodo Checkout:", error); // Changed
       showError(`Failed to subscribe: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);
@@ -206,7 +206,7 @@ const BillingSubscriptions: React.FC = () => {
       showInfo("Redirecting to Dodo Customer Portal (simulated)...");
       // Example: window.location.href = `https://dodo.com/customer-portal?customer_id=${profile.companyProfile.dodoCustomerId}`;
     } catch (error: any) {
-      safeConsole.error("Error managing Dodo subscription (simulated):", error); // Changed
+      console.error("Error managing Dodo subscription (simulated):", error); // Changed
       showError(`Failed to manage subscription: ${error.message}`);
     } finally {
       setIsManagingSubscription(false);
@@ -322,7 +322,7 @@ const BillingSubscriptions: React.FC = () => {
       {/* NEW: Perpetual License Card */}
       {lifetimePlans.length > 0 && (
         <div className="mt-10 space-y-6">
-          <h2 className="2xl font-bold text-foreground text-center">One-Time Licenses</h2>
+          <h2 className="text-2xl font-bold text-foreground text-center">One-Time Licenses</h2>
           <p className="text-muted-foreground text-center">Get access to a specific feature set with a single payment!</p>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {lifetimePlans.map((plan: DodoPlanDisplay) => (
