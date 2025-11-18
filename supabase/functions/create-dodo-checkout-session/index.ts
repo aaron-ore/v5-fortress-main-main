@@ -20,6 +20,27 @@ serve(async (req) => {
       return new Response('ok', { headers: corsHeaders });
     }
 
+    // --- START: Diagnostic Fetch to httpbin.org ---
+    console.log('Edge Function: Performing diagnostic fetch to httpbin.org...');
+    try {
+      const diagnosticResponse = await fetch('https://httpbin.org/get', {
+        method: 'GET',
+        headers: { 'User-Agent': 'Fortress-Diagnostic-Agent/1.0' },
+      });
+      if (diagnosticResponse.ok) {
+        const diagnosticData = await diagnosticResponse.json();
+        console.log('Edge Function: Diagnostic fetch to httpbin.org SUCCESS. IP:', diagnosticData.origin);
+      } else {
+        const errorText = await diagnosticResponse.text();
+        console.error(`Edge Function: Diagnostic fetch to httpbin.org FAILED with status ${diagnosticResponse.status}. Response: ${errorText}`);
+      }
+    } catch (diagnosticError: any) {
+      console.error('Edge Function: Diagnostic fetch to httpbin.org encountered NETWORK ERROR:', diagnosticError.message);
+    }
+    console.log('Edge Function: Diagnostic fetch complete.');
+    // --- END: Diagnostic Fetch to httpbin.org ---
+
+
     let requestBody: any = {};
     
 
@@ -179,9 +200,10 @@ serve(async (req) => {
       console.log('Edge Function: Dodo API response status:', dodoResponse.status);
       
       if (!dodoResponse.ok) {
-        const errorText = await dodoResponse.text();
+        const errorText = await dodoResponse.text(); // Read raw text for better error logging
         console.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
         
+        // Directly construct the error message using the raw text and status
         const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
         
         return new Response(JSON.stringify({ error: errorMessage }), {
