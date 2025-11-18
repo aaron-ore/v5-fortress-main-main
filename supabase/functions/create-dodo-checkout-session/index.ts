@@ -39,31 +39,6 @@ serve(async (req) => {
       return new Response('ok', { headers: corsHeaders });
     }
 
-    // --- START: Diagnostic Fetch to httpbin.org ---
-    safeConsole.log('Edge Function: Performing diagnostic fetch to httpbin.org...');
-    try {
-      const diagnosticResponse = await fetch('https://httpbin.org/get', {
-        method: 'GET',
-        headers: { 'User-Agent': 'Fortress-Diagnostic-Agent/1.0' },
-      });
-      if (diagnosticResponse.ok) {
-        const diagnosticData = await diagnosticResponse.json();
-        safeConsole.log('Edge Function: Diagnostic fetch to httpbin.org SUCCESS. IP:', diagnosticData.origin);
-      } else {
-        const errorText = await diagnosticResponse.text();
-        safeConsole.error(`Edge Function: Diagnostic fetch to httpbin.org FAILED with status ${diagnosticResponse.status}. Response: ${errorText}`);
-      }
-    } catch (diagnosticError: any) {
-      safeConsole.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', String(diagnosticError));
-      return new Response(JSON.stringify({ error: `Dodo API Key validation failed (GET /products returned network error). Please check your Dodo API Key and its permissions. Details: ${String(diagnosticError).substring(0, 200)}...` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-    safeConsole.log('Edge Function: Diagnostic fetch complete.');
-    // --- END: Diagnostic Fetch to httpbin.org ---
-
-
     let requestBody: any = {};
     
 
