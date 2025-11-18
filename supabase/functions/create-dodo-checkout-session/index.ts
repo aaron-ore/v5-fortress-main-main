@@ -79,15 +79,16 @@ serve(async (req) => {
       }
     }
 
-    const { dodoProductId, organizationId, userId } = requestBody;
+    const { dodoProductId, organizationId, userId, returnUrl } = requestBody; // MODIFIED: Added returnUrl
 
     safeConsole.log('Edge Function: Extracted dodoProductId:', dodoProductId);
     safeConsole.log('Edge Function: Extracted organizationId:', organizationId);
     safeConsole.log('Edge Function: Extracted userId:', userId);
+    safeConsole.log('Edge Function: Extracted returnUrl:', returnUrl); // NEW: Log returnUrl
 
-    if (!dodoProductId || !organizationId || !userId) {
-      safeConsole.error('Edge Function: Missing required parameters after parsing. dodoProductId:', dodoProductId, 'organizationId:', organizationId, 'userId:', userId);
-      return new Response(JSON.stringify({ error: 'Missing required parameters: dodoProductId, organizationId, userId.' }), {
+    if (!dodoProductId || !organizationId || !userId || !returnUrl) { // MODIFIED: returnUrl is now required
+      safeConsole.error('Edge Function: Missing required parameters after parsing. dodoProductId:', dodoProductId, 'organizationId:', organizationId, 'userId:', userId, 'returnUrl:', returnUrl);
+      return new Response(JSON.stringify({ error: 'Missing required parameters: dodoProductId, organizationId, userId, returnUrl.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -141,15 +142,13 @@ serve(async (req) => {
       });
     }
 
-    // CORRECTED: Use the live environment base URL for Dodo API
     const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Corrected endpoint
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`;
     safeConsole.log('Edge Function: Using Dodo API URL:', dodoCheckoutApiUrl);
 
-    // --- NEW: Diagnostic GET request to Dodo API ---
     safeConsole.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
     try {
-      const diagnosticDodoResponse = await fetch(`${dodoApiBaseUrl}/products`, { // Assuming /products is a valid GET endpoint
+      const diagnosticDodoResponse = await fetch(`${dodoApiBaseUrl}/products`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${dodoApiKey}`,
@@ -161,9 +160,8 @@ serve(async (req) => {
       if (diagnosticDodoResponse.ok) {
         safeConsole.log('Edge Function: Diagnostic GET to Dodo /products SUCCESS. Status:', diagnosticDodoResponse.status);
       } else {
-        const errorText = await diagnosticDodoResponse.text(); // Read raw text for better error logging
+        const errorText = await diagnosticDodoResponse.text();
         safeConsole.error(`Edge Function: Diagnostic GET to Dodo /products FAILED with status ${diagnosticDodoResponse.status}. Response: ${errorText}`);
-        // If the diagnostic GET fails, it's a strong indicator the API key is bad or lacks basic permissions.
         return new Response(JSON.stringify({ error: `Dodo API Key validation failed (GET /products returned ${diagnosticDodoResponse.status}). Please check your Dodo API Key and its permissions. Details: ${errorText.substring(0, 200)}...` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500,
@@ -177,35 +175,25 @@ serve(async (req) => {
       });
     }
     safeConsole.log('Edge Function: Diagnostic GET to Dodo /products complete.');
-    // --- END NEW: Diagnostic GET request to Dodo API ---
 
-
-    const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
-    safeConsole.log('Edge Function: CLIENT_APP_BASE_URL is', clientAppBaseUrl ? 'present' : 'MISSING');
-    if (!clientAppBaseUrl) {
-      safeConsole.error('Edge Function: CLIENT_APP_BASE_URL environment variable is not set.');
-      return new Response(JSON.stringify({ error: 'Server configuration error: CLIENT_APP_BASE_URL is missing.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-
-    const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
-
-    // MODIFIED: Simplified payload to match Dodo's minimal example
+    // MODIFIED: Pass userId and organizationId in metadata
     const checkoutSessionPayload = {
       product_cart: [{
         product_id: dodoProductId,
         quantity: 1,
       }],
-      return_url: returnUrl,
+      return_url: returnUrl, // Use the returnUrl passed from the client
+      metadata: { // NEW: Include metadata
+        user_id: userId,
+        organization_id: organizationId,
+      },
     };
 
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${dodoApiKey}`, // REVERTED: Back to Authorization: Bearer
+        'Authorization': `Bearer ${dodoApiKey}`,
         'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)',
         'Accept': 'application/json',
       },
@@ -216,7 +204,7 @@ serve(async (req) => {
     safeConsole.log('  URL:', dodoCheckoutApiUrl);
     safeConsole.log('  Method:', fetchOptions.method);
     safeConsole.log('  Headers:', JSON.stringify(fetchOptions.headers, null, 2));
-    safeConsole.log('  Body:', fetchOptions.body); // Log the actual body being sent
+    safeConsole.log('  Body:', fetchOptions.body);
 
     let dodoResponse: Response;
     try {
@@ -224,7 +212,7 @@ serve(async (req) => {
       safeConsole.log('Edge Function: Dodo API response status:', dodoResponse.status);
       
       if (!dodoResponse.ok) {
-        const errorText = await dodoResponse.text(); // Read raw text for better error logging
+        const errorText = await dodoResponse.text();
         safeConsole.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
         
         const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
@@ -266,5 +254,4 @@ serve(async (req) => {
       status: 400,
     });
   }
-  // --- END: Global Error Handling for the entire Edge Function ---
 });

@@ -33,7 +33,7 @@ import React, { useState, useEffect } from "react";
       isPopular?: boolean;
       features: PlanFeature[];
       dodoProductId: string; // Dodo's product ID
-      paymentLink?: string; // NEW: Direct payment link
+      // Removed: paymentLink?: string; // No longer needed as we're using the Edge Function
     }
 
     const BillingSubscriptions: React.FC = () => {
@@ -73,7 +73,7 @@ import React, { useState, useEffect } from "react";
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
               dodoProductId: DODO_PRODUCT_IDS.STANDARD,
-              paymentLink: "YOUR_STANDARD_PLAN_PAYMENT_LINK", // REPLACE THIS WITH ACTUAL DODO PAYMENT LINK
+              // Removed: paymentLink: "YOUR_STANDARD_PLAN_PAYMENT_LINK",
             },
             {
               id: "dodo-pro",
@@ -87,7 +87,7 @@ import React, { useState, useEffect } from "react";
                 included: getAllFeatureIds().includes(appFeature.id), // Pro includes all current features
               })),
               dodoProductId: DODO_PRODUCT_IDS.PRO,
-              paymentLink: "YOUR_PRO_PLAN_PAYMENT_LINK", // REPLACE THIS WITH ACTUAL DODO PAYMENT LINK
+              // Removed: paymentLink: "YOUR_PRO_PLAN_PAYMENT_LINK",
             },
             {
               id: "dodo-enterprise",
@@ -139,12 +139,7 @@ import React, { useState, useEffect } from "react";
           return;
         }
 
-        // NEW: Directly redirect to Dodo payment link if available
-        if (plan.paymentLink && plan.paymentLink.startsWith('http')) {
-          showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
-          window.location.href = plan.paymentLink;
-          return; // Exit function after redirect
-        }
+        // Removed: Direct redirect to Dodo payment link if available
 
         setIsProcessingSubscription(true);
         try {
@@ -153,10 +148,14 @@ import React, { useState, useEffect } from "react";
             throw new Error("Authentication session expired. Please log in again.");
           }
 
+          // Dynamically construct the return URL for Dodo
+          const returnUrl = `${window.location.origin}/billing?dodo_checkout_status={status}&organization_id=${profile.organizationId}&user_id=${profile.id}`;
+
           const payload = {
             dodoProductId: plan.dodoProductId,
             organizationId: profile.organizationId,
             userId: profile.id,
+            returnUrl: returnUrl, // Pass the dynamically constructed return URL
           };
           console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload);
 
