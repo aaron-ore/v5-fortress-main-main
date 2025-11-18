@@ -19,17 +19,39 @@ serve(async (req) => {
   const contentType = req.headers.get('content-type');
   let rawBodyText = '';
 
-  // Always attempt to read the body as text first for methods that typically have a body
+  // Only attempt to read body for methods that are expected to have one
   if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-    try {
-      rawBodyText = await req.text();
-      console.log('Edge Function: Raw body text received (length):', rawBodyText.length);
-    } catch (readError: any) {
-      console.error('Edge Function: Error reading request body as text:', readError.message);
-      return new Response(JSON.stringify({ error: `Failed to read request body: ${readError.message}` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
+    if (req.body) {
+      try {
+        const reader = req.body.getReader();
+        let chunks: Uint8Array[] = [];
+        let done: boolean | undefined;
+        let value: Uint8Array | undefined;
+
+        while (!done) {
+          ({ value, done } = await reader.read());
+          if (value) {
+            chunks.push(value);
+          }
+        }
+
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+        const combinedChunks = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of chunks) {
+          combinedChunks.set(chunk, offset);
+          offset += chunk.length;
+        }
+
+        rawBodyText = new TextDecoder().decode(combinedChunks);
+        console.log('Edge Function: Raw body text read from stream (length):', rawBodyText.length);
+
+      } catch (readError: any) {
+        console.error('Edge Function: Error reading request body stream (likely empty or malformed input):', readError.message);
+        rawBodyText = ''; // Treat as empty if stream reading fails
+      }
+    } else {
+      console.log('Edge Function: Request method does not typically have a body, or req.body is null.');
     }
   }
 
