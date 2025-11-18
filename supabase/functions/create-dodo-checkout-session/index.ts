@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js';
+import { createClient } 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 
 const corsHeaders = {
@@ -143,7 +143,7 @@ serve(async (req) => {
     }
 
     const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/v1/checkout-sessions`; // MODIFIED: Removed /api
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Removed /api and /v1
     safeConsole.log('Edge Function: Using Dodo API URL for checkout sessions:', dodoCheckoutApiUrl);
 
     safeConsole.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
