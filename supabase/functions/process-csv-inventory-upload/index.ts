@@ -52,12 +52,20 @@ serve(async (req) => {
         console.warn('Edge Function: Received Content-Type: application/json with empty body. Treating body as empty JSON object.');
         requestBody = {};
       } else {
-        requestBody = JSON.parse(textBody); // Parse only if not empty
-        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+        try {
+          requestBody = JSON.parse(textBody); // Parse only if not empty
+          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+        } catch (parseError: any) {
+          console.error('Edge Function: JSON parse error for textBody:', textBody, 'Error:', parseError.message);
+          return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          });
+        }
       }
-    } catch (parseError: any) {
-      console.error('Edge Function: JSON parse error:', parseError.message);
-      return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
+    } catch (readError: any) {
+      console.error('Edge Function: Error reading request body as text:', readError.message);
+      return new Response(JSON.stringify({ error: `Failed to read request body: ${readError.message}`, success: false, errors: [readError.message] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
