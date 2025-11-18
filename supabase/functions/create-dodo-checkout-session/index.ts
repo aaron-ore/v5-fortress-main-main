@@ -194,8 +194,7 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${dodoApiKey}`,
-        'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)',
-        'Accept': 'application/json',
+        // Removed 'User-Agent' and 'Accept' headers
       },
       body: JSON.stringify(checkoutSessionPayload),
     };
