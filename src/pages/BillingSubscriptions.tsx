@@ -17,14 +17,10 @@ interface PlanFeature {
   included: boolean;
 }
 
-// Removed StripeProduct, StripePrice, SubscriptionPlanDisplay interfaces
-
-// Removed: const CURRENT_APP_VERSION = "1.3.0"; // Removed unused declaration
-
 // Dodo Product IDs (provided by user)
 const DODO_PRODUCT_IDS = {
-  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5", // <--- UPDATE THIS WITH YOUR ACTUAL DODO STANDARD PRODUCT ID!
-  PRO: "pdt_TrF9X3inM62YVnop3GmX9",           // <--- UPDATE THIS WITH YOUR ACTUAL DODO PRO PRODUCT ID!
+  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
+  PRO: "pdt_TrF9X3inM62YVnop3GmX9",
 };
 
 // Mock Dodo Plan structure for display
