@@ -154,10 +154,10 @@ serve(async (req) => {
       body: JSON.stringify(checkoutSessionPayload),
     });
 
+    console.log('Edge Function: Dodo API response status:', dodoResponse.status);
     if (!dodoResponse.ok) {
       const errorData = await dodoResponse.json();
       console.error('Edge Function: Dodo API error creating checkout session:', errorData);
-      console.error('Edge Function: Dodo API response status:', dodoResponse.status);
       return new Response(JSON.stringify({ error: `Failed to create Dodo checkout session: ${errorData.message || 'Unknown error'}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: dodoResponse.status,
