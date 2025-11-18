@@ -156,33 +156,44 @@ serve(async (req) => {
       allowed_payment_method_types: ['credit', 'debit'],
     };
 
-    console.log('Edge Function: Calling Dodo API with URL:', dodoCheckoutApiUrl);
-    console.log('Edge Function: Dodo API Payload:', JSON.stringify(checkoutSessionPayload, null, 2));
-
-    const dodoResponse = await fetch(dodoCheckoutApiUrl, {
+    const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${dodoApiKey}`,
-        'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)', // Added User-Agent
-        'Accept': 'application/json', // Added Accept header
+        'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)',
+        'Accept': 'application/json',
       },
       body: JSON.stringify(checkoutSessionPayload),
-    });
+    };
 
-    console.log('Edge Function: Dodo API response status:', dodoResponse.status);
-    
-    // CRITICAL FIX: Check if response is OK before attempting to parse JSON
-    if (!dodoResponse.ok) {
-      const errorText = await dodoResponse.text(); // Read raw text for better error logging
-      console.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
+    console.log('Edge Function: Outgoing Dodo API Request Details:');
+    console.log('  URL:', dodoCheckoutApiUrl);
+    console.log('  Method:', fetchOptions.method);
+    console.log('  Headers:', JSON.stringify(fetchOptions.headers, null, 2));
+    console.log('  Body:', fetchOptions.body);
+
+    let dodoResponse: Response;
+    try {
+      dodoResponse = await fetch(dodoCheckoutApiUrl, fetchOptions);
+      console.log('Edge Function: Dodo API response status:', dodoResponse.status);
       
-      // Directly construct the error message using the raw text and status
-      const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
-      
-      return new Response(JSON.stringify({ error: errorMessage }), {
+      if (!dodoResponse.ok) {
+        const errorText = await dodoResponse.text();
+        console.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
+        
+        const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
+        
+        return new Response(JSON.stringify({ error: errorMessage }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: dodoResponse.status,
+        });
+      }
+    } catch (fetchError: any) {
+      console.error('Edge Function: Error during fetch to Dodo API:', fetchError);
+      return new Response(JSON.stringify({ error: `Network error connecting to Dodo API: ${fetchError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: dodoResponse.status,
+        status: 500,
       });
     }
 
@@ -205,7 +216,7 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Edge Function error (caught at top level):', error);
-    return new Response(JSON.stringify({ error: error.message, rawBody: rawBodyText, contentType: contentType }), { // Added rawBody and contentType for debugging
+    return new Response(JSON.stringify({ error: error.message, rawBody: rawBodyText, contentType: contentType }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     });
