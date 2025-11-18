@@ -15,70 +15,42 @@ serve(async (req) => {
 
     let requestBody: any = {};
     const contentType = req.headers.get('content-type');
-    let rawBodyText = '';
+    let rawBodyText = ''; // Keep for logging in case of error
 
-    // Only attempt to read body for methods that are expected to have one
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-      if (req.body) {
+      if (contentType && contentType.includes('application/json')) {
         try {
-          const reader = req.body.getReader();
-          let chunks: Uint8Array[] = [];
-          let done: boolean | undefined;
-          let value: Uint8Array | undefined;
-
-          while (!done) {
-            ({ value, done } = await reader.read());
-            if (value) {
-              chunks.push(value);
-            }
-          }
-
-          const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-          const combinedChunks = new Uint8Array(totalLength);
-          let offset = 0;
-          for (const chunk of chunks) {
-            combinedChunks.set(chunk, offset);
-            offset += chunk.length;
-          }
-
-          rawBodyText = new TextDecoder().decode(combinedChunks);
-          console.log('Edge Function: Raw body text read from stream (length):', rawBodyText.length);
-
-        } catch (readError: any) {
-          console.error('Edge Function: Error reading request body stream (likely empty or malformed input):', readError.message);
-          rawBodyText = ''; // Treat as empty if stream reading fails
-        }
-      } else {
-        console.log('Edge Function: Request method does not typically have a body, or req.body is null.');
-      }
-    }
-
-    if (contentType && contentType.includes('application/json')) {
-      if (rawBodyText.trim() === '') {
-        console.warn('Edge Function: Content-Type: application/json with empty/whitespace body. Treating body as empty JSON object.');
-        requestBody = {};
-      } else {
-        try {
-          requestBody = JSON.parse(rawBodyText);
-          console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+          requestBody = await req.json();
+          console.log('Edge Function: Successfully parsed request body via req.json():', JSON.stringify(requestBody, null, 2));
         } catch (parseError: any) {
-          console.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
-          return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          });
+          // If req.json() fails, it might be due to empty body or malformed JSON
+          // Try to read as text for better error logging
+          try {
+            rawBodyText = await req.text();
+          } catch (textError) {
+            console.warn('Edge Function: Could not read raw body text after req.json() failure:', textError);
+          }
+
+          if (parseError instanceof SyntaxError && rawBodyText.trim() === '') {
+            console.warn('Edge Function: req.json() failed with SyntaxError on empty/whitespace body. Treating as empty JSON object.');
+            requestBody = {}; // Treat empty body as empty JSON object
+          } else {
+            console.error('Edge Function: req.json() parse error:', parseError.message, 'Raw body:', rawBodyText);
+            return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            });
+          }
         }
+      } else if (req.body) { // If there's a body but not JSON, try to read as text for logging
+        try {
+          rawBodyText = await req.text();
+          console.warn('Edge Function: Received non-JSON body for POST/PUT/PATCH. Raw body:', rawBodyText);
+        } catch (textError) {
+          console.warn('Edge Function: Could not read raw body text for non-JSON body:', textError);
+        }
+        // For non-JSON bodies, requestBody remains {} or is handled by specific logic
       }
-    } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-      // If there was a body but it wasn't JSON, and it's a method that expects a body
-      if (rawBodyText.length > 0) {
-        console.error('Edge Function: Unsupported Content-Type for non-empty body:', contentType);
-        return new Response(JSON.stringify({ error: `Unsupported request format. Expected application/json for this method with a non-empty body.` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
-      }
-      // If body was empty and not JSON, it's fine, requestBody remains {}
     }
 
     const { item_id, folder_id, location_type, physical_count, reason } = requestBody;
