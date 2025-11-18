@@ -79,13 +79,13 @@ serve(async (req) => {
       }
     }
 
-    const { dodoProductId, organizationId, userId } = requestBody; // MODIFIED: Removed returnUrl from destructuring
+    const { dodoProductId, organizationId, userId } = requestBody;
 
     safeConsole.log('Edge Function: Extracted dodoProductId:', dodoProductId);
     safeConsole.log('Edge Function: Extracted organizationId:', organizationId);
     safeConsole.log('Edge Function: Extracted userId:', userId);
 
-    if (!dodoProductId || !organizationId || !userId) { // MODIFIED: returnUrl is no longer required here
+    if (!dodoProductId || !organizationId || !userId) {
       safeConsole.error('Edge Function: Missing required parameters after parsing. dodoProductId:', dodoProductId, 'organizationId:', organizationId, 'userId:', userId);
       return new Response(JSON.stringify({ error: 'Missing required parameters: dodoProductId, organizationId, userId.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -142,38 +142,42 @@ serve(async (req) => {
     }
 
     const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Removed /api/v1/
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`;
     safeConsole.log('Edge Function: Using Dodo API URL for checkout sessions:', dodoCheckoutApiUrl);
 
-    safeConsole.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
-    try {
-      const diagnosticDodoResponse = await fetch(`${dodoApiBaseUrl}/products`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${dodoApiKey}`,
-          'User-Agent': 'Fortress-Diagnostic-Agent/1.0 (Supabase-Edge-Function)',
-          'Accept': 'application/json',
-        },
-      });
+    // NEW DIAGNOSTIC STEP: Fetch all products from Dodo and verify the product ID
+    safeConsole.log('Edge Function: Fetching all products from Dodo to verify dodoProductId...');
+    const dodoProductsResponse = await fetch(`${dodoApiBaseUrl}/products`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${dodoApiKey}`,
+        'User-Agent': 'Fortress-Product-Verification-Agent/1.0 (Supabase-Edge-Function)',
+        'Accept': 'application/json',
+      },
+    });
 
-      if (diagnosticDodoResponse.ok) {
-        safeConsole.log('Edge Function: Diagnostic GET to Dodo /products SUCCESS. Status:', diagnosticDodoResponse.status);
-      } else {
-        const errorText = await diagnosticDodoResponse.text();
-        safeConsole.error(`Edge Function: Diagnostic GET to Dodo /products FAILED with status ${diagnosticDodoResponse.status}. Response: ${errorText}`);
-        return new Response(JSON.stringify({ error: `Dodo API Key validation failed (GET /products returned ${diagnosticDodoResponse.status}). Please check your Dodo API Key and its permissions. Details: ${errorText.substring(0, 200)}...` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        });
-      }
-    } catch (diagnosticDodoError: any) {
-      safeConsole.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', String(diagnosticDodoError));
-      return new Response(JSON.stringify({ error: `Network error during Dodo API Key validation: ${String(diagnosticDodoError).substring(0, 200)}...` }), {
+    if (!dodoProductsResponse.ok) {
+      const errorText = await dodoProductsResponse.text();
+      safeConsole.error(`Edge Function: Failed to fetch products from Dodo for verification. Status: ${dodoProductsResponse.status}. Response: ${errorText}`);
+      return new Response(JSON.stringify({ error: `Failed to verify Dodo product ID. Could not fetch product list from Dodo. Details: ${errorText.substring(0, 200)}...` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
-    safeConsole.log('Edge Function: Diagnostic GET to Dodo /products complete.');
+    const dodoProductsData = await dodoProductsResponse.json();
+    safeConsole.log('Edge Function: Fetched Dodo products data:', JSON.stringify(dodoProductsData, null, 2));
+
+    const productExists = dodoProductsData.data?.some((p: any) => p.id === dodoProductId);
+
+    if (!productExists) {
+      safeConsole.error(`Edge Function: Dodo Product ID '${dodoProductId}' not found or not active in Dodo Payments account.`);
+      return new Response(JSON.stringify({ error: `Dodo Product ID '${dodoProductId}' is invalid or not found in your Dodo Payments account. Please verify the product ID in your Dodo dashboard.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404, // Return 404 as the product resource is not found
+      });
+    }
+    safeConsole.log(`Edge Function: Dodo Product ID '${dodoProductId}' successfully verified.`);
+    // END NEW DIAGNOSTIC STEP
 
     // NEW: Construct return_url using CLIENT_APP_BASE_URL from environment variables
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
@@ -193,7 +197,7 @@ serve(async (req) => {
         product_id: dodoProductId,
         quantity: 1,
       }],
-      return_url: constructedReturnUrl, // MODIFIED: Use the internally constructed return_url
+      return_url: constructedReturnUrl,
       metadata: {
         user_id: userId,
         organization_id: organizationId,
