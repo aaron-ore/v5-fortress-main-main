@@ -187,6 +187,7 @@ import React, { useState, useEffect } from "react";
           showError(`Failed to subscribe: ${error.message}`);
         } finally {
           setIsProcessingSubscription(false);
+          await fetchProfile(); // Re-fetch profile to update plan status
         }
       };
 
@@ -205,6 +206,7 @@ import React, { useState, useEffect } from "react";
           showError(`Failed to manage subscription: ${error.message}`);
         } finally {
           setIsManagingSubscription(false);
+          await fetchProfile(); // Re-fetch profile to update plan status
         }
       };
 
