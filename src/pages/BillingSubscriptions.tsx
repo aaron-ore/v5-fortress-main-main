@@ -41,7 +41,7 @@ interface DodoPlanDisplay {
 }
 
 const BillingSubscriptions: React.FC = () => {
-  const { profile, isLoadingProfile, fetchProfile } = useProfile();
+  const { profile, isLoadingProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [availableDodoPlans, setAvailableDodoPlans] = useState<DodoPlanDisplay[]>([]); // Changed to Dodo plans
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
