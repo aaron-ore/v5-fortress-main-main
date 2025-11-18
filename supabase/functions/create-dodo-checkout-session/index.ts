@@ -217,22 +217,13 @@ serve(async (req) => {
 
     const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
 
+    // MODIFIED: Simplified payload to match Dodo's minimal example
     const checkoutSessionPayload = {
       product_cart: [{
         product_id: dodoProductId,
         quantity: 1,
       }],
-      customer: {
-        email: user.email,
-        name: user.user_metadata.full_name || user.email,
-      },
-      confirm: true,
       return_url: returnUrl,
-      metadata: {
-        organization_id: organizationId,
-        user_id: userId,
-      },
-      allowed_payment_method_types: ['credit', 'debit'],
     };
 
     const fetchOptions: RequestInit = {
