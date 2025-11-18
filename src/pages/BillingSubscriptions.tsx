@@ -148,14 +148,13 @@ import React, { useState, useEffect } from "react";
             throw new Error("Authentication session expired. Please log in again.");
           }
 
-          // Dynamically construct the return URL for Dodo
-          const returnUrl = `${window.location.origin}/billing?dodo_checkout_status={status}&organization_id=${profile.organizationId}&user_id=${profile.id}`;
+          // Removed: Dynamically construct the return URL for Dodo
 
           const payload = {
             dodoProductId: plan.dodoProductId,
             organizationId: profile.organizationId,
             userId: profile.id,
-            returnUrl: returnUrl, // Pass the dynamically constructed return URL
+            // Removed: returnUrl: returnUrl, // Pass the dynamically constructed return URL
           };
           console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload);
 
