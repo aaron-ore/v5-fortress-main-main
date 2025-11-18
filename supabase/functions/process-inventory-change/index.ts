@@ -15,9 +15,12 @@ serve(async (req) => {
   const contentType = req.headers.get('content-type');
   const contentLength = req.headers.get('content-length');
 
-  if (contentType && contentType.includes('application/json')) {
-    if (contentLength === '0') {
-      console.warn('Edge Function: Received Content-Type: application/json with Content-Length: 0. Treating body as empty JSON object.');
+  const isJsonContentType = contentType && contentType.includes('application/json');
+  const isBodyEmpty = contentLength === '0' || contentLength === null || contentLength === undefined;
+
+  if (isJsonContentType) {
+    if (isBodyEmpty) {
+      console.warn('Edge Function: Received Content-Type: application/json with empty/missing Content-Length. Treating body as empty JSON object.');
       requestBody = {};
     } else {
       try {
