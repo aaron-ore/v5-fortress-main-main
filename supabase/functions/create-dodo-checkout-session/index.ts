@@ -167,10 +167,20 @@ serve(async (req) => {
     });
 
     console.log('Edge Function: Dodo API response status:', dodoResponse.status);
+    
+    // CRITICAL FIX: Check if response is OK before attempting to parse JSON
     if (!dodoResponse.ok) {
-      const errorData = await dodoResponse.json();
-      console.error('Edge Function: Dodo API error creating checkout session:', errorData);
-      return new Response(JSON.stringify({ error: `Failed to create Dodo checkout session: ${errorData.message || 'Unknown error'}` }), {
+      const errorText = await dodoResponse.text(); // Read raw text for better error logging
+      console.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
+      let errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}.`;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = `Failed to create Dodo checkout session: ${errorData.message || errorData.error || 'Unknown error'}`;
+      } catch (jsonParseError) {
+        console.warn('Edge Function: Could not parse Dodo API error response as JSON. Using raw text.');
+        errorMessage += ` Response: ${errorText.substring(0, 200)}...`; // Truncate long responses
+      }
+      return new Response(JSON.stringify({ error: errorMessage }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: dodoResponse.status,
       });
