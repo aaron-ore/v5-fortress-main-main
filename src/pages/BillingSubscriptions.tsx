@@ -1,4 +1,4 @@
-import React, { useState, useEffect } => "react";
+import React, { useState, useEffect } from "react";
     import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
     import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,7 +18,7 @@ import React, { useState, useEffect } => "react";
 
     // Dodo Product IDs (provided by user)
     const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5", // Using Pro Plan ID as Standard was not found by Dodo API
+      STANDARD: "pdt_TrF9X3inM62YVnop3GmX9", // Using Pro Plan ID as Standard was not found by Dodo API
       PRO: "pdt_TrF9X3inM62YVnop3GmX9",
     };
 
@@ -222,8 +222,8 @@ import React, { useState, useEffect } => "react";
         showError("Invoice history is managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.");
       };
 
-      const recurringPlans = availableDodoPlans.filter(plan => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
-      const lifetimePlans = availableDodoPlans.filter(plan => plan.oneTimePrice !== undefined);
+      const recurringPlans = availableDodoPlans.filter((plan: DodoPlanDisplay) => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
+      const lifetimePlans = availableDodoPlans.filter((plan: DodoPlanDisplay) => plan.oneTimePrice !== undefined);
 
       if (isLoadingProfile || isLoadingPlans) {
         return (
@@ -401,7 +401,7 @@ import React, { useState, useEffect } => "react";
               <div className="space-y-2">
                 <h3 className="font-semibold text-foreground">Features:</h3>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {availableDodoPlans.find(p => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
+                  {availableDodoPlans.find((p: DodoPlanDisplay) => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" /> {feature.text}
                     </li>
