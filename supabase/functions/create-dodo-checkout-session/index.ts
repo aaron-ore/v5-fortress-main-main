@@ -182,7 +182,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${dodoApiKey}`,
+        'X-API-Key': dodoApiKey, // MODIFIED: Changed from 'Authorization': `Bearer ${dodoApiKey}` to 'X-API-Key'
         'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)',
         'Accept': 'application/json',
       },
