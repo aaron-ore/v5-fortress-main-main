@@ -43,16 +43,31 @@ serve(async (req) => {
   }
 
   let requestBody: any = {};
-  try {
-    // Attempt to parse JSON directly. req.json() handles content-type and empty bodies gracefully.
-    // If the body is empty or not valid JSON, req.json() will throw an error.
-    requestBody = await req.json();
-    console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-  } catch (parseError: any) {
-    // If parsing fails, it means the body was either empty, malformed, or not JSON.
-    // Log the error and proceed with an empty requestBody object.
-    console.warn('Edge Function: Failed to parse request body as JSON. Assuming empty body. Error:', parseError.message);
-    requestBody = {}; // Default to empty object
+  const contentType = req.headers.get('content-type');
+  const contentLength = req.headers.get('content-length');
+
+  if (contentType && contentType.includes('application/json')) {
+    if (contentLength === '0') {
+      console.warn('Edge Function: Received Content-Type: application/json with Content-Length: 0. Treating body as empty JSON object.');
+      requestBody = {};
+    } else {
+      try {
+        requestBody = await req.json();
+        console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
+      } catch (parseError: any) {
+        console.error('Edge Function: JSON parse error:', parseError.message);
+        return new Response(JSON.stringify({ error: `Failed to parse request body as JSON: ${parseError.message}`, success: false, errors: [parseError.message] }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+    }
+  } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
+    return new Response(JSON.stringify({ error: `Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`, success: false, errors: [`Unsupported Content-Type: ${contentType || 'none'}. Expected application/json.`] }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
+    });
   }
 
   try {
