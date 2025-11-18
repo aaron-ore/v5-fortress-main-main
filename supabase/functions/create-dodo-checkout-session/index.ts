@@ -143,8 +143,8 @@ serve(async (req) => {
     }
 
     const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/v1/checkout-sessions`; // MODIFIED: Added /v1
-    safeConsole.log('Edge Function: Using Dodo API URL:', dodoCheckoutApiUrl);
+    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`; // MODIFIED: Removed /v1
+    safeConsole.log('Edge Function: Using Dodo API URL for checkout sessions:', dodoCheckoutApiUrl);
 
     safeConsole.log('Edge Function: Performing diagnostic GET request to Dodo /products endpoint...');
     try {
@@ -210,6 +210,7 @@ serve(async (req) => {
     try {
       dodoResponse = await fetch(dodoCheckoutApiUrl, fetchOptions);
       safeConsole.log('Edge Function: Dodo API response status:', dodoResponse.status);
+      safeConsole.log('Edge Function: Dodo API response headers:', JSON.stringify(Object.fromEntries(dodoResponse.headers.entries()), null, 2));
       
       if (!dodoResponse.ok) {
         const errorText = await dodoResponse.text();
