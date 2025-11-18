@@ -13,26 +13,23 @@ serve(async (req) => {
 
   let requestBody: any = {};
   const contentType = req.headers.get('content-type');
-  const contentLength = req.headers.get('content-length');
 
-  const isJsonContentType = contentType && contentType.includes('application/json');
-  const isBodyEmpty = !contentLength || parseInt(contentLength) === 0;
-
-  if (isJsonContentType) {
-    if (isBodyEmpty) {
-      console.warn('Edge Function: Received Content-Type: application/json with empty/missing Content-Length. Treating body as empty JSON object.');
-      requestBody = {};
-    } else {
-      try {
-        requestBody = await req.json();
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      const textBody = await req.text(); // Read as text first
+      if (textBody.trim() === '') {
+        console.warn('Edge Function: Received Content-Type: application/json with empty body. Treating body as empty JSON object.');
+        requestBody = {};
+      } else {
+        requestBody = JSON.parse(textBody); // Parse only if not empty
         console.log('Edge Function: Successfully parsed request body:', JSON.stringify(requestBody, null, 2));
-      } catch (parseError: any) {
-        console.error('Edge Function: JSON parse error:', parseError.message);
-        return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        });
       }
+    } catch (parseError: any) {
+      console.error('Edge Function: JSON parse error:', parseError.message);
+      return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
     }
   } else if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     console.error('Edge Function: Unsupported Content-Type or missing for a body-expecting method:', contentType);
