@@ -143,7 +143,8 @@ serve(async (req) => {
       });
     }
 
-    const dodoCheckoutApiUrl = 'https://api.dodopayments.com/checkouts'; // Changed to LIVE Mode URL
+    // CORRECTED: Use the live environment base URL for Dodo API
+    const dodoCheckoutApiUrl = 'https://live.dodopayments.com/checkouts'; 
     console.log('Edge Function: Using Dodo API URL:', dodoCheckoutApiUrl);
 
 
@@ -203,7 +204,6 @@ serve(async (req) => {
         const errorText = await dodoResponse.text(); // Read raw text for better error logging
         console.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
         
-        // Directly construct the error message using the raw text and status
         const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
         
         return new Response(JSON.stringify({ error: errorMessage }), {
