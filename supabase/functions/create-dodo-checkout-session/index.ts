@@ -35,7 +35,13 @@ serve(async (req) => {
         console.error(`Edge Function: Diagnostic fetch to httpbin.org FAILED with status ${diagnosticResponse.status}. Response: ${errorText}`);
       }
     } catch (diagnosticError: any) {
-      console.error('Edge Function: Diagnostic fetch to httpbin.org encountered NETWORK ERROR:', diagnosticError.message);
+      // MODIFIED: Safely log the diagnosticError object
+      console.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', String(diagnosticError));
+      // If the diagnostic GET fails, it's a strong indicator the API key is bad or lacks basic permissions.
+      return new Response(JSON.stringify({ error: `Dodo API Key validation failed (GET /products returned network error). Please check your Dodo API Key and its permissions. Details: ${String(diagnosticError).substring(0, 200)}...` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
     console.log('Edge Function: Diagnostic fetch complete.');
     // --- END: Diagnostic Fetch to httpbin.org ---
@@ -172,8 +178,8 @@ serve(async (req) => {
         });
       }
     } catch (diagnosticDodoError: any) {
-      console.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', diagnosticDodoError.message);
-      return new Response(JSON.stringify({ error: `Network error during Dodo API Key validation: ${diagnosticDodoError.message}` }), {
+      console.error('Edge Function: Diagnostic GET to Dodo /products encountered NETWORK ERROR:', String(diagnosticDodoError)); // MODIFIED: Safely log the diagnosticError object
+      return new Response(JSON.stringify({ error: `Network error during Dodo API Key validation: ${String(diagnosticDodoError).substring(0, 200)}...` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
