@@ -113,7 +113,7 @@ serve(async (req) => {
     console.log('Edge Function: User authenticated and matched:', user.id);
 
     const dodoApiKey = Deno.env.get('DODO_API_KEY');
-    console.log('Edge Function: DODO_API_KEY is', dodoApiKey ? 'present' : 'MISSING');
+    console.log('Edge Function: DODO_API_KEY is', dodoApiKey ? 'present' : 'MISSING', `(length: ${dodoApiKey?.length || 0})`); // Added length check
     if (!dodoApiKey) {
       console.error('Edge Function: DODO_API_KEY environment variable is not set.');
       return new Response(JSON.stringify({ error: 'Server configuration error: Dodo API Key is missing.' }), {
@@ -164,6 +164,8 @@ serve(async (req) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${dodoApiKey}`,
+        'User-Agent': 'Fortress-Inventory-App/1.0 (Supabase-Edge-Function)', // Added User-Agent
+        'Accept': 'application/json', // Added Accept header
       },
       body: JSON.stringify(checkoutSessionPayload),
     });
