@@ -6,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define a safe console wrapper to prevent 'console is not a function' errors
 const safeConsole = {
   log: (...args: any[]) => {
     try {
@@ -26,12 +25,11 @@ const safeConsole = {
 };
 
 serve(async (req) => {
-  let rawBodyText = ''; // Declared at a higher scope
+  let rawBodyText = '';
   const contentType = req.headers.get('content-type');
 
-  // --- START: Global Error Handling for the entire Edge Function ---
   try {
-    safeConsole.log('Edge Function: create-dodo-checkout-session - Invoked.');
+    safeConsole.log('Edge Function: create-lemon-squeezy-checkout-session - Invoked.');
     safeConsole.log('Edge Function: Request method:', req.method);
     safeConsole.log('Edge Function: Request headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
@@ -41,16 +39,12 @@ serve(async (req) => {
 
     let requestBody: any = {};
     
-
-    // Only attempt to read body for methods that are expected to have one
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
       if (contentType && contentType.includes('application/json')) {
         try {
           requestBody = await req.json();
           safeConsole.log('Edge Function: Successfully parsed request body via req.json():', JSON.stringify(requestBody, null, 2));
         } catch (parseError: any) {
-          // If req.json() fails, it might be due to empty body or malformed JSON
-          // Try to read as text for better error logging
           try {
             rawBodyText = await req.text();
           } catch (textError) {
@@ -59,7 +53,7 @@ serve(async (req) => {
 
           if (parseError instanceof SyntaxError && rawBodyText.trim() === '') {
             safeConsole.warn('Edge Function: req.json() failed with SyntaxError on empty/whitespace body. Treating as empty JSON object.');
-            requestBody = {}; // Treat empty body as empty JSON object
+            requestBody = {};
           } else {
             safeConsole.error('Edge Function: JSON parse error for textBody:', rawBodyText, 'Error:', parseError.message);
             return new Response(JSON.stringify({ error: `Failed to parse request data as JSON: ${parseError.message}. Raw body: ${rawBodyText}` }), {
@@ -68,26 +62,25 @@ serve(async (req) => {
             });
           }
         }
-      } else if (req.body) { // If there's a body but not JSON, try to read as text for logging
+      } else if (req.body) {
         try {
           rawBodyText = await req.text();
           safeConsole.warn('Edge Function: Received non-JSON body for POST/PUT/PATCH. Raw body:', rawBodyText);
         } catch (textError) {
           safeConsole.warn('Edge Function: Could not read raw body text for non-JSON body:', textError);
         }
-        // For non-JSON bodies, requestBody remains {} or is handled by specific logic
       }
     }
 
-    const { dodoProductId, organizationId, userId } = requestBody;
+    const { lemonSqueezyProductId, organizationId, userId } = requestBody;
 
-    safeConsole.log('Edge Function: Extracted dodoProductId:', dodoProductId);
+    safeConsole.log('Edge Function: Extracted lemonSqueezyProductId:', lemonSqueezyProductId);
     safeConsole.log('Edge Function: Extracted organizationId:', organizationId);
     safeConsole.log('Edge Function: Extracted userId:', userId);
 
-    if (!dodoProductId || !organizationId || !userId) {
-      safeConsole.error('Edge Function: Missing required parameters after parsing. dodoProductId:', dodoProductId, 'organizationId:', organizationId, 'userId:', userId);
-      return new Response(JSON.stringify({ error: 'Missing required parameters: dodoProductId, organizationId, userId.' }), {
+    if (!lemonSqueezyProductId || !organizationId || !userId) {
+      safeConsole.error('Edge Function: Missing required parameters after parsing. lemonSqueezyProductId:', lemonSqueezyProductId, 'organizationId:', organizationId, 'userId:', userId);
+      return new Response(JSON.stringify({ error: 'Missing required parameters: lemonSqueezyProductId, organizationId, userId.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -131,56 +124,20 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: User authenticated and matched:', user.id);
 
-    const dodoApiKey = Deno.env.get('DODO_API_KEY');
-    safeConsole.log('Edge Function: DODO_API_KEY is', dodoApiKey ? 'present' : 'MISSING', `(length: ${dodoApiKey?.length || 0})`);
-    if (!dodoApiKey) {
-      safeConsole.error('Edge Function: DODO_API_KEY environment variable is not set.');
-      return new Response(JSON.stringify({ error: 'Server configuration error: Dodo API Key is missing.' }), {
+    const lemonSqueezyApiKey = Deno.env.get('LEMON_SQUEEZY_API_KEY');
+    safeConsole.log('Edge Function: LEMON_SQUEEZY_API_KEY is', lemonSqueezyApiKey ? 'present' : 'MISSING', `(length: ${lemonSqueezyApiKey?.length || 0})`);
+    if (!lemonSqueezyApiKey) {
+      safeConsole.error('Edge Function: LEMON_SQUEEZY_API_KEY environment variable is not set.');
+      return new Response(JSON.stringify({ error: 'Server configuration error: Lemon Squeezy API Key is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
 
-    const dodoApiBaseUrl = 'https://live.dodopayments.com'; 
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkout-sessions`;
-    safeConsole.log('Edge Function: Using Dodo API URL for checkout sessions:', dodoCheckoutApiUrl);
+    const lemonSqueezyApiBaseUrl = 'https://api.lemonsqueezy.com/v1';
+    const lemonSqueezyCheckoutApiUrl = `${lemonSqueezyApiBaseUrl}/checkouts`;
+    safeConsole.log('Edge Function: Using Lemon Squeezy API URL for checkouts:', lemonSqueezyCheckoutApiUrl);
 
-    // NEW DIAGNOSTIC STEP: Fetch all products from Dodo and verify the product ID
-    safeConsole.log('Edge Function: Fetching all products from Dodo to verify dodoProductId...');
-    const dodoProductsResponse = await fetch(`${dodoApiBaseUrl}/products`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${dodoApiKey}`,
-        'User-Agent': 'Fortress-Product-Verification-Agent/1.0 (Supabase-Edge-Function)',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!dodoProductsResponse.ok) {
-      const errorText = await dodoProductsResponse.text();
-      safeConsole.error(`Edge Function: Failed to fetch products from Dodo for verification. Status: ${dodoProductsResponse.status}. Response: ${errorText}`);
-      return new Response(JSON.stringify({ error: `Failed to verify Dodo product ID. Could not fetch product list from Dodo. Details: ${errorText.substring(0, 200)}...` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      });
-    }
-    const dodoProductsData = await dodoProductsResponse.json();
-    safeConsole.log('Edge Function: Fetched Dodo products data:', JSON.stringify(dodoProductsData, null, 2));
-
-    // CORRECTED LINE: Access 'items' array and 'product_id' field
-    const productExists = dodoProductsData.items?.some((p: any) => p.product_id === dodoProductId);
-
-    if (!productExists) {
-      safeConsole.error(`Edge Function: Dodo Product ID '${dodoProductId}' not found or not active in Dodo Payments account.`);
-      return new Response(JSON.stringify({ error: `Dodo Product ID '${dodoProductId}' is invalid or not found in your Dodo Payments account. Please verify the product ID in your Dodo dashboard.` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 404, // Return 404 as the product resource is not found
-      });
-    }
-    safeConsole.log(`Edge Function: Dodo Product ID '${dodoProductId}' successfully verified.`);
-    // END NEW DIAGNOSTIC STEP
-
-    // NEW: Construct return_url using CLIENT_APP_BASE_URL from environment variables
     const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     if (!clientAppBaseUrl) {
       safeConsole.error('Edge Function: CLIENT_APP_BASE_URL environment variable is not set.');
@@ -189,73 +146,77 @@ serve(async (req) => {
         status: 500,
       });
     }
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-
     const checkoutSessionPayload = {
-      product_cart: [{
-        product_id: dodoProductId,
-        quantity: 1,
-      }],
-      return_url: constructedReturnUrl,
-      metadata: {
-        user_id: userId,
-        organization_id: organizationId,
+      data: {
+        type: "checkouts",
+        attributes: {
+          product_id: lemonSqueezyProductId,
+          checkout_data: {
+            custom: {
+              user_id: userId,
+              organization_id: organizationId,
+            },
+            return_url: constructedReturnUrl,
+          },
+        },
       },
     };
 
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${dodoApiKey}`,
+        'Content-Type': 'application/vnd.api+json',
+        'Accept': 'application/vnd.api+json',
+        'Authorization': `Bearer ${lemonSqueezyApiKey}`,
       },
       body: JSON.stringify(checkoutSessionPayload),
     };
 
-    safeConsole.log('Edge Function: Outgoing Dodo API Request Details:');
-    safeConsole.log('  URL:', dodoCheckoutApiUrl);
+    safeConsole.log('Edge Function: Outgoing Lemon Squeezy API Request Details:');
+    safeConsole.log('  URL:', lemonSqueezyCheckoutApiUrl);
     safeConsole.log('  Method:', fetchOptions.method);
     safeConsole.log('  Headers:', JSON.stringify(fetchOptions.headers, null, 2));
     safeConsole.log('  Body:', fetchOptions.body);
 
-    let dodoResponse: Response;
+    let lemonSqueezyResponse: Response;
     try {
-      dodoResponse = await fetch(dodoCheckoutApiUrl, fetchOptions);
-      safeConsole.log('Edge Function: Dodo API response status:', dodoResponse.status);
-      safeConsole.log('Edge Function: Dodo API response headers:', JSON.stringify(Object.fromEntries(dodoResponse.headers.entries()), null, 2));
+      lemonSqueezyResponse = await fetch(lemonSqueezyCheckoutApiUrl, fetchOptions);
+      safeConsole.log('Edge Function: Lemon Squeezy API response status:', lemonSqueezyResponse.status);
+      safeConsole.log('Edge Function: Lemon Squeezy API response headers:', JSON.stringify(Object.fromEntries(lemonSqueezyResponse.headers.entries()), null, 2));
       
-      if (!dodoResponse.ok) {
-        const errorText = await dodoResponse.text();
-        safeConsole.error('Edge Function: Dodo API returned non-OK status. Raw error response:', errorText);
+      if (!lemonSqueezyResponse.ok) {
+        const errorText = await lemonSqueezyResponse.text();
+        safeConsole.error('Edge Function: Lemon Squeezy API returned non-OK status. Raw error response:', errorText);
         
-        const errorMessage = `Failed to create Dodo checkout session. Status: ${dodoResponse.status}. Details: ${errorText.substring(0, 200)}...`;
+        const errorMessage = `Failed to create Lemon Squeezy checkout session. Status: ${lemonSqueezyResponse.status}. Details: ${errorText.substring(0, 200)}...`;
         
         return new Response(JSON.stringify({ error: errorMessage }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: dodoResponse.status,
+          status: lemonSqueezyResponse.status,
         });
       }
     } catch (fetchError: any) {
-      safeConsole.error('Edge Function: Error during fetch to Dodo API:', fetchError);
-      return new Response(JSON.stringify({ error: `Network error connecting to Dodo API: ${fetchError.message}` }), {
+      safeConsole.error('Edge Function: Error during fetch to Lemon Squeezy API:', fetchError);
+      return new Response(JSON.stringify({ error: `Network error connecting to Lemon Squeezy API: ${fetchError.message}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
 
-    const dodoSession = await dodoResponse.json();
-    const checkoutUrl = dodoSession.checkout_url;
+    const lemonSqueezySession = await lemonSqueezyResponse.json();
+    const checkoutUrl = lemonSqueezySession.data.attributes.url;
 
     if (!checkoutUrl) {
-      safeConsole.error('Edge Function: Dodo API did not return a checkout URL.');
-      return new Response(JSON.stringify({ error: 'Failed to get checkout URL from Dodo.' }), {
+      safeConsole.error('Edge Function: Lemon Squeezy API did not return a checkout URL.');
+      return new Response(JSON.stringify({ error: 'Failed to get checkout URL from Lemon Squeezy.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
-    safeConsole.log('Edge Function: Successfully received Dodo checkout URL:', checkoutUrl);
+    safeConsole.log('Edge Function: Successfully received Lemon Squeezy checkout URL:', checkoutUrl);
 
     return new Response(JSON.stringify({ checkoutUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

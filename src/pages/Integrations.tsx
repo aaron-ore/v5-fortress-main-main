@@ -21,7 +21,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { Label } from "@/components/ui/label";
 import { hasRequiredPlan } from "@/utils/planUtils";
 import ShopifyStoreUrlDialog from "@/components/integrations/ShopifyStoreUrlDialog";
-import { useAuth } from "@/context/AuthContext"; // NEW: Import useAuth
+import { useAuth } from "@/context/AuthContext";
 
 interface ShopifyLocation {
   id: string;
@@ -43,19 +43,18 @@ interface ShopifyLocationMapping {
   created_at: string;
 }
 
-// Hardcode Shopify Client ID as it's a public credential for public apps
 const SHOPIFY_CLIENT_ID = "8496dff0a4396a6baeede4ce7f17902f";
 
 const Integrations: React.FC = () => {
   const { profile, isLoadingProfile, fetchProfile } = useProfile();
-  const { session } = useAuth(); // NEW: Get session from useAuth
+  const { session } = useAuth();
   const { inventoryFolders, fetchInventoryFolders } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
 
   const [quickbooksClientId, setQuickbooksClientId] = useState<string | null>(null);
-  const [quickbooksEnvironment, setQuickbooksEnvironment] = useState<string | null>(null); // NEW: State for QuickBooks environment
+  const [quickbooksEnvironment, setQuickbooksEnvironment] = useState<string | null>(null);
   const [isFetchingQuickbooksClientId, setIsFetchingQuickbooksClientId] = useState(true);
   const [isSyncingQuickBooks, setIsSyncingQuickBooks] = useState(false);
   const [isSyncingShopify, setIsSyncingShopify] = useState(false);
@@ -82,7 +81,6 @@ const Integrations: React.FC = () => {
     ? "/shopify_logo_white.png"
     : "/shopify_logo_black.png";
 
-  // Fetch QuickBooks Client ID securely
   const fetchQuickbooksClientId = useCallback(async () => {
     if (!profile?.id) {
       setIsFetchingQuickbooksClientId(false);
@@ -106,12 +104,12 @@ const Integrations: React.FC = () => {
       if (data.error) throw new Error(data.error);
 
       setQuickbooksClientId(data.clientId);
-      setQuickbooksEnvironment(data.environment); // NEW: Set QuickBooks environment
+      setQuickbooksEnvironment(data.environment);
     } catch (error: any) {
       console.error("Error fetching QuickBooks Client ID:", error);
       showError(`Failed to load QuickBooks integration: ${error.message}`);
       setQuickbooksClientId(null);
-      setQuickbooksEnvironment(null); // NEW: Clear environment on error
+      setQuickbooksEnvironment(null);
     } finally {
       setIsFetchingQuickbooksClientId(false);
     }
@@ -123,6 +121,7 @@ const Integrations: React.FC = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
+    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status');
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
@@ -134,7 +133,6 @@ const Integrations: React.FC = () => {
       navigate('/integrations', { replace: true });
     }
 
-    // Handle Shopify callback
     if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
       if (shopifySuccess) {
         showSuccess("Shopify connected!");
@@ -144,19 +142,32 @@ const Integrations: React.FC = () => {
       shopifyCallbackProcessedRef.current = true;
       navigate(location.pathname, { replace: true });
     }
+
+    if (lemonSqueezyCheckoutStatus) {
+      if (lemonSqueezyCheckoutStatus === 'completed') {
+        showSuccess("Lemon Squeezy checkout completed!");
+      } else if (lemonSqueezyCheckoutStatus === 'cancelled') {
+        showError("Lemon Squeezy checkout cancelled.");
+      } else {
+        showInfo(`Lemon Squeezy checkout status: ${lemonSqueezyCheckoutStatus}`);
+      }
+      const newSearchParams = new URLSearchParams(params);
+      newSearchParams.delete('lemon_squeezy_checkout_status');
+      newSearchParams.delete('organization_id');
+      newSearchParams.delete('user_id');
+      navigate({ search: newSearchParams.toString() }, { replace: true });
+    }
   }, [location.search, location.pathname, navigate]);
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
       fetchInventoryFolders();
       fetchShopifyLocationMappings();
-      fetchQuickbooksClientId(); // Fetch QB Client ID when profile is loaded
+      fetchQuickbooksClientId();
     }
   }, [isLoadingProfile, profile?.organizationId, fetchInventoryFolders, fetchQuickbooksClientId]);
 
-  // NEW: Check QuickBooks access based on plan
   const canAccessQuickBooks = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
-  // NEW: Check Shopify access based on plan
   const canAccessShopify = hasRequiredPlan(profile?.companyProfile?.plan, 'premium');
 
   const handleConnectQuickBooks = () => {
@@ -172,7 +183,7 @@ const Integrations: React.FC = () => {
       showError("QuickBooks Client ID is not available. Please try again in a moment.");
       return;
     }
-    if (!session?.access_token) { // NEW: Check for Supabase session token
+    if (!session?.access_token) {
       showError("Your session has expired. Please log in again.");
       return;
     }
@@ -185,7 +196,7 @@ const Integrations: React.FC = () => {
     const statePayload = {
       userId: profile.id,
       redirectToFrontend: window.location.origin,
-      supabaseAccessToken: session.access_token, // NEW: Include Supabase access token
+      supabaseAccessToken: session.access_token,
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
@@ -216,7 +227,7 @@ const Integrations: React.FC = () => {
     }
   };
 
-  const handleGoToQuickBooksAccount = () => { // NEW: Handler for going to QuickBooks account
+  const handleGoToQuickBooksAccount = () => {
     if (!quickbooksEnvironment) {
       showError("QuickBooks environment not loaded. Please try again.");
       return;
@@ -273,7 +284,6 @@ const Integrations: React.FC = () => {
 
   const isAdmin = profile?.role === 'admin';
 
-  // NEW: Function to initiate Shopify OAuth after getting store URL
   const initiateShopifyOAuth = async (shopifyStoreName: string) => {
     if (isLoadingProfile) {
       showError("Profile is still loading. Please wait a moment.");
@@ -285,14 +295,12 @@ const Integrations: React.FC = () => {
       return;
     }
 
-    // Get the current Supabase session token
     const { data: { session: supabaseSession } } = await supabase.auth.getSession();
     if (!supabaseSession) {
       showError("Your session has expired. Please log in again.");
       return;
     }
 
-    // Use the hardcoded Shopify Client ID
     const clientId = SHOPIFY_CLIENT_ID;
 
     if (!clientId) {
@@ -303,7 +311,6 @@ const Integrations: React.FC = () => {
 
     const redirectUri = `https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/shopify-oauth-callback`;
     
-    // MODIFIED: Added read_locations scope
     const scopes = [
       "read_products",
       "write_products",
@@ -315,14 +322,14 @@ const Integrations: React.FC = () => {
       "write_fulfillments",
       "read_inventory",
       "write_inventory",
-      "read_locations", // NEW: Added read_locations scope
+      "read_locations",
     ];
     const scope = scopes.join(',');
     
     const statePayload = {
       userId: profile.id,
       redirectToFrontend: window.location.origin,
-      supabaseAccessToken: supabaseSession.access_token, // NEW: Include Supabase access token
+      supabaseAccessToken: supabaseSession.access_token,
     };
     const encodedState = btoa(JSON.stringify(statePayload));
 
@@ -580,7 +587,7 @@ const Integrations: React.FC = () => {
       <h1 className="text-3xl font-bold">Integrations</h1>
       <p className="text-muted-foreground">Connect Fortress with your favorite business tools for enhanced workflow.</p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> {/* NEW: Grid layout for integration cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border rounded-lg shadow-sm p-6">
           <CardHeader className="pb-4 flex flex-row items-center gap-4">
             <img src="/Intuit_QuickBooks_logo.png" alt="QuickBooks Logo" className="h-10 object-contain" />
@@ -606,7 +613,7 @@ const Integrations: React.FC = () => {
                     </>
                   )}
                 </Button>
-                <Button variant="outline" onClick={handleGoToQuickBooksAccount} disabled={!canAccessQuickBooks || isLoadingProfile || !quickbooksEnvironment}> {/* NEW: Go to QuickBooks button */}
+                <Button variant="outline" onClick={handleGoToQuickBooksAccount} disabled={!canAccessQuickBooks || isLoadingProfile || !quickbooksEnvironment}>
                   <ExternalLink className="h-4 w-4 mr-2" /> Go to QuickBooks Account
                 </Button>
                 <Button variant="destructive" onClick={handleDisconnectQuickBooks} disabled={!canAccessQuickBooks || isLoadingProfile}>

@@ -8,7 +8,7 @@ import { generateUniqueCode } from "@/utils/numberGenerator";
 import { logActivity } from "@/utils/logActivity";
 import { getFilePathFromPublicUrl } from "@/integrations/supabase/storage";
 
-export interface OnboardingCompanyProfileData { // Renamed from CompanyProfile
+export interface OnboardingCompanyProfileData {
   name: string;
   currency: string;
   address: string;
@@ -46,7 +46,7 @@ interface OnboardingContextType {
   customRoles: CustomRole[];
   isLoadingCustomRoles: boolean;
   markOnboardingComplete: () => void;
-  setCompanyProfile: (profileData: OnboardingCompanyProfileData, uniqueCode?: string) => Promise<void>; // Updated type
+  setCompanyProfile: (profileData: OnboardingCompanyProfileData, uniqueCode?: string) => Promise<void>;
   addInventoryFolder: (folder: Omit<InventoryFolder, "id" | "createdAt" | "userId" | "organizationId">) => Promise<InventoryFolder | null>;
   updateInventoryFolder: (folder: Omit<InventoryFolder, "createdAt" | "userId" | "organizationId">) => Promise<void>;
   removeInventoryFolder: (folderId: string) => Promise<void>;
@@ -73,7 +73,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     console.log("[OnboardingContext] Profile or isLoadingProfile changed. isLoadingProfile:", isLoadingProfile, "profile:", profile);
     if (!isLoadingProfile && profile) {
-      // Onboarding is considered complete if the wizard has been explicitly marked as completed
       setIsOnboardingComplete(profile.hasOnboardingWizardCompleted);
       console.log("[OnboardingContext] isOnboardingComplete set to:", profile.hasOnboardingWizardCompleted);
     } else if (!isLoadingProfile && !profile) {
@@ -183,11 +182,11 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
     await logActivity("Onboarding Complete", "User completed the onboarding wizard.", profile);
     if (profile && !profile.hasOnboardingWizardCompleted) {
       console.log("[OnboardingContext] Calling markOnboardingWizardCompleted in ProfileContext.");
-      await markOnboardingWizardCompleted(); // Mark the wizard as completed in the DB
+      await markOnboardingWizardCompleted();
     }
   };
 
-  const setCompanyProfile = async (profileData: OnboardingCompanyProfileData, newUniqueCode?: string) => { // Updated type
+  const setCompanyProfile = async (profileData: OnboardingCompanyProfileData, newUniqueCode?: string) => {
     console.log("[OnboardingContext] setCompanyProfile called with profileData:", profileData, "newUniqueCode:", newUniqueCode);
 
     if (!profile) {
@@ -229,23 +228,22 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         showSuccess(`Organization "${profileData.name}" created! Code: ${uniqueCodeToPersist}`);
         await logActivity("Organization Created", `New organization "${profileData.name}" created with code: ${uniqueCodeToPersist}.`, profile, { organization_id: organizationIdToUse, organization_name: profileData.name, unique_code: uniqueCodeToPersist });
 
-        // NEW: Update profile locally after creating new organization
         updateProfileLocally({
           organizationId: organizationIdToUse,
           role: 'admin',
           companyProfile: {
-            companyName: profileData.name, // Corrected property name
-            companyCurrency: profileData.currency, // Corrected property name
-            companyAddress: profileData.address, // Corrected property name
+            companyName: profileData.name,
+            companyCurrency: profileData.currency,
+            companyAddress: profileData.address,
             companyLogoUrl: profileData.companyLogoUrl,
             organizationCode: uniqueCodeToPersist,
             organizationTheme: orgData.default_theme || 'dark',
             plan: orgData.plan || 'free',
-            dodoCustomerId: undefined, // Explicitly set to undefined for new org
-            dodoSubscriptionId: undefined, // Explicitly set to undefined for new org
-            defaultReorderLevel: 0, // Default for new org
-            enableAutoReorderNotifications: false, // Default for new org
-            enableAutoReorder: false, // Corrected typo here
+            lemonSqueezyCustomerId: undefined,
+            lemonSqueezySubscriptionId: undefined,
+            defaultReorderLevel: 0,
+            enableAutoReorderNotifications: false,
+            enableAutoReorder: false,
           }
         });
 
@@ -269,7 +267,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan, dodo_customer_id, dodo_subscription_id, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // Removed: trial_ends_at
+          .select('unique_code, company_logo_url, default_theme, plan, lemon_squeezy_customer_id, lemon_squeezy_subscription_id, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // NEW: Select Lemon Squeezy fields
           .eq('id', profile.organizationId)
           .single();
 
@@ -318,11 +316,11 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           default_theme: existingOrg?.default_theme || 'dark',
           plan: existingOrg?.plan || 'free',
           company_logo_url: profileData.companyLogoUrl,
-          dodo_customer_id: existingOrg?.dodo_customer_id, // NEW: Keep existing Dodo customer ID
-          dodo_subscription_id: existingOrg?.dodo_subscription_id, // NEW: Keep existing Dodo subscription ID
+          lemon_squeezy_customer_id: existingOrg?.lemon_squeezy_customer_id, // NEW: Keep existing Lemon Squeezy customer ID
+          lemon_squeezy_subscription_id: existingOrg?.lemon_squeezy_subscription_id, // NEW: Keep existing Lemon Squeezy subscription ID
           default_reorder_level: existingOrg?.default_reorder_level || 0,
           enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
-          enable_auto_reorder: existingOrg?.enable_auto_reorder || false, // Corrected typo here
+          enable_auto_reorder: existingOrg?.enable_auto_reorder || false,
         };
         console.log("[OnboardingContext] Update payload for organizations table:", updatePayload);
 
@@ -341,22 +339,21 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
         showSuccess(`Company profile for "${profileData.name}" updated!`);
         await logActivity("Company Profile Update Success", `Company profile for organization ${profile.organizationId} updated.`, profile, { organization_id: organizationIdToUse, updated_fields: updatePayload });
         
-        // NEW: Update profile locally after updating existing organization
         updateProfileLocally({
           companyProfile: {
-            ...profile.companyProfile, // Keep existing fields
-            companyName: profileData.name, // Apply new fields
+            ...profile.companyProfile,
+            companyName: profileData.name,
             companyCurrency: profileData.currency,
             companyAddress: profileData.address,
             companyLogoUrl: profileData.companyLogoUrl,
-            organizationCode: uniqueCodeToPersist, // Ensure code is updated
+            organizationCode: uniqueCodeToPersist,
             organizationTheme: updatePayload.default_theme,
             plan: updatePayload.plan,
-            dodoCustomerId: updatePayload.dodo_customer_id, // NEW: Update Dodo customer ID
-            dodoSubscriptionId: updatePayload.dodo_subscription_id, // NEW: Update Dodo subscription ID
+            lemonSqueezyCustomerId: updatePayload.lemon_squeezy_customer_id,
+            lemonSqueezySubscriptionId: updatePayload.lemon_squeezy_subscription_id,
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
-            enableAutoReorder: updatePayload.enable_auto_reorder, // Corrected typo here
+            enableAutoReorder: updatePayload.enable_auto_reorder,
           }
         });
       }

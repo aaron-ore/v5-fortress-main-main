@@ -10,7 +10,6 @@ import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
 import { useProfile } from "@/context/ProfileContext";
-// Removed: import Footer from "@/components/Footer"; // Removed Footer import
 
 const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -105,7 +104,7 @@ const Auth: React.FC = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth', // Redirect back to your auth page
+        redirectTo: window.location.origin + '/auth',
       },
     });
 
@@ -113,11 +112,8 @@ const Auth: React.FC = () => {
       showError(error.message);
       await logActivity("Google Sign-in Failed", `User failed to sign in with Google.`, profile, { error_message: error.message }, true);
     } else {
-      // Supabase will redirect the user to Google for authentication,
-      // then back to your redirectTo URL. The AuthContext's onAuthStateChange
-      // listener will handle the session and subsequent navigation.
     }
-    setLoading(false); // This might be reset prematurely if redirect happens quickly
+    setLoading(false);
   };
 
   if (isLoading) {
@@ -254,7 +250,6 @@ const Auth: React.FC = () => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
               disabled={loading}
             >
-              {/* Corrected Google SVG Logo */}
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.64 9.2045C17.64 8.5645 17.58 7.9545 17.47 7.3845H9.00V10.8245H13.87C13.66 11.9845 13.01 12.9945 12.00 13.6645V16.0145H15.18C17.07 14.2945 18.12 11.7045 17.64 9.2045Z" fill="#4285F4"/>
                 <path d="M9.00 18.0005C11.43 18.0005 13.46 17.2205 15.18 16.0105L12.00 13.6605C11.15 14.2305 10.13 14.5905 9.00 14.5905C6.81 14.5905 4.99 13.1405 4.34 11.1805H1.09V13.8305C1.76 15.1605 2.86 16.2705 4.24 17.0005C5.62 17.7305 7.25 18.0005 9.00 18.0005Z" fill="#34A853"/>
@@ -288,7 +283,6 @@ const Auth: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      {/* Removed Footer component from Auth page */}
     </div>
   );
 };

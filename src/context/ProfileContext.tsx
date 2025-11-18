@@ -17,17 +17,16 @@ export interface CompanyProfile {
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
-  dodoCustomerId?: string; // NEW: Dodo Customer ID
-  dodoSubscriptionId?: string; // NEW: Dodo Subscription ID
-  // Removed: trialEndsAt?: string; // NEW: Trial end date
+  lemonSqueezyCustomerId?: string; // NEW: Lemon Squeezy Customer ID
+  lemonSqueezySubscriptionId?: string; // NEW: Lemon Squeezy Subscription ID
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
-  enableAutoReorder?: boolean; // Corrected typo here
-  shopifyAccessToken?: string; // NEW: Shopify Access Token
-  shopifyRefreshToken?: string; // NEW: Shopify Refresh Token
-  shopifyStoreName?: string; // NEW: Shopify Store Name
-  perpetualFeatures?: string[]; // NEW: List of feature IDs for perpetual license
-  perpetualLicenseVersion?: string; // NEW: Version at time of perpetual license purchase
+  enableAutoReorder?: boolean;
+  shopifyAccessToken?: string;
+  shopifyRefreshToken?: string;
+  shopifyStoreName?: string;
+  perpetualFeatures?: string[];
+  perpetualLicenseVersion?: string;
 }
 
 export interface UserProfile {
@@ -62,7 +61,7 @@ interface ProfileContextType {
   markOnboardingWizardCompleted: () => Promise<void>;
   markUpgradePromptSeen: () => Promise<void>;
   updateProfileLocally: (updates: Partial<UserProfile>) => void;
-  transferAdminRole: (newAdminUserId: string) => Promise<void>; // NEW: Added transferAdminRole
+  transferAdminRole: (newAdminUserId: string) => Promise<void>;
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
@@ -78,7 +77,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processing user ID: ${data.id}, Raw company_logo_url from DB: "${companyData?.company_logo_url}" (Type: ${typeof companyData?.company_logo_url})`);
 
-    // NEW: Check if company_logo_url is already a public URL before converting
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
       : undefined;
@@ -89,21 +87,20 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       companyName: companyData.name,
       companyCurrency: companyData.currency,
       companyAddress: companyData.address,
-      companyLogoUrl: finalCompanyLogoUrl, // Use the intelligently determined URL
+      companyLogoUrl: finalCompanyLogoUrl,
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
-      dodoCustomerId: companyData.dodo_customer_id || undefined, // NEW: Map Dodo Customer ID
-      dodoSubscriptionId: companyData.dodo_subscription_id || undefined, // NEW: Map Dodo Subscription ID
-      // Removed: trialEndsAt: companyData.trial_ends_at ? new Date(companyData.trial_ends_at).toISOString() : undefined, // NEW: Map trial end date
+      lemonSqueezyCustomerId: companyData.lemon_squeezy_customer_id || undefined, // NEW: Map Lemon Squeezy Customer ID
+      lemonSqueezySubscriptionId: companyData.lemon_squeezy_subscription_id || undefined, // NEW: Map Lemon Squeezy Subscription ID
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
-      enableAutoReorder: companyData.enable_auto_reorder || false, // Corrected typo here
-      shopifyAccessToken: companyData.shopify_access_token || undefined, // NEW: Map Shopify Access Token
-      shopifyRefreshToken: companyData.shopify_refresh_token || undefined, // NEW: Map Shopify Refresh Token
-      shopifyStoreName: companyData.shopify_store_name || undefined, // NEW: Map Shopify Store Name
-      perpetualFeatures: companyData.perpetual_features || undefined, // NEW: Map perpetual features
-      perpetualLicenseVersion: companyData.perpetual_license_version || undefined, // NEW: Map perpetual license version
+      enableAutoReorder: companyData.enable_auto_reorder || false,
+      shopifyAccessToken: companyData.shopify_access_token || undefined,
+      shopifyRefreshToken: companyData.shopify_refresh_token || undefined,
+      shopifyStoreName: companyData.shopify_store_name || undefined,
+      perpetualFeatures: companyData.perpetual_features || undefined,
+      perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
 
     return {
@@ -135,25 +132,24 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // Removed: trial_ends_at
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,lemon_squeezy_customer_id,lemon_squeezy_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // NEW: Select Lemon Squeezy fields
       .eq('id', user.id)
       .single();
 
     if (error) {
       console.error('Error fetching profile:', error);
-      // NEW: Check for 401 Unauthorized error and force sign out
-      if ((error as any).status === 401) { // Cast to any to access status
+      if ((error as any).status === 401) {
         console.warn('Profile fetch failed with 401 Unauthorized. Attempting to sign out to clear stale session.');
-        await supabase.auth.signOut(); // Force sign out
+        await supabase.auth.signOut();
         showError('Session expired. Please log in again.');
       } else {
         showError('Failed to load profile.');
       }
-      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true); // Cast to any
+      await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true);
       setProfile(null);
     } else if (data) {
       const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
-      startTransition(() => { // Wrap the state update in startTransition
+      startTransition(() => {
         setProfile(prevProfile => {
           if (deepEqual(prevProfile, newProfileData)) {
             return prevProfile;
@@ -210,7 +206,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setProfile(prev => {
       if (!prev) return null;
       const newProfile = { ...prev, ...updates };
-      // Deep compare to prevent unnecessary re-renders if the content is effectively the same
       if (deepEqual(prev, newProfile)) {
         return prev;
       }
@@ -256,7 +251,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    // Prevent an admin from demoting themselves if they are the only admin
     if (userId === profile.id && newRole !== 'admin') {
       const otherAdminsCount = allProfiles.filter(u => u.role === 'admin' && u.id !== profile.id).length;
       if (otherAdminsCount === 0) {
@@ -297,7 +291,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    // updates.companyLogoUrl is expected to be the INTERNAL PATH or null
     const companyLogoUrlForDb = updates.companyLogoUrl === null ? null : updates.companyLogoUrl;
     console.log("[ProfileContext] updateCompanyProfile: Final companyLogoUrlForDb before DB update (internal path):", companyLogoUrlForDb);
 
@@ -305,19 +298,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       name: updates.companyName,
       currency: updates.companyCurrency,
       address: updates.companyAddress,
-      company_logo_url: companyLogoUrlForDb, // Store internal path or null
+      company_logo_url: companyLogoUrlForDb,
       plan: updates.plan,
-      dodo_customer_id: updates.dodoCustomerId, // NEW: Update Dodo Customer ID
-      dodo_subscription_id: updates.dodoSubscriptionId, // NEW: Update Dodo Subscription ID
-      // Removed: trial_ends_at: updates.trialEndsAt, // NEW: Update trial end date
+      lemon_squeezy_customer_id: updates.lemonSqueezyCustomerId, // NEW: Update Lemon Squeezy Customer ID
+      lemon_squeezy_subscription_id: updates.lemonSqueezySubscriptionId, // NEW: Update Lemon Squeezy Subscription ID
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
-      enable_auto_reorder: updates.enableAutoReorder, // Corrected typo here
-      shopify_access_token: updates.shopifyAccessToken, // NEW: Update Shopify Access Token
-      shopify_refresh_token: updates.shopifyRefreshToken, // NEW: Update Shopify Refresh Token
-      shopify_store_name: updates.shopifyStoreName, // NEW: Update Shopify Store Name
-      perpetual_features: updates.perpetualFeatures, // NEW: Update perpetual features
-      perpetual_license_version: updates.perpetualLicenseVersion, // NEW: Update perpetual license version
+      enable_auto_reorder: updates.enableAutoReorder,
+      shopify_access_token: updates.shopifyAccessToken,
+      shopify_refresh_token: updates.shopifyRefreshToken,
+      shopify_store_name: updates.shopifyStoreName,
+      perpetual_features: updates.perpetualFeatures,
+      perpetual_license_version: updates.perpetualLicenseVersion,
     };
 
     if (uniqueCode !== undefined) {
@@ -443,8 +435,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       showSuccess(data.message || "Admin role transferred successfully!");
       await logActivity("Transfer Admin Role Success", `Admin role transferred from ${profile.id} to ${newAdminUserId}.`, profile, { new_admin_user_id: newAdminUserId });
-      await fetchProfile(); // Fetch current user's updated profile (now non-admin)
-      await fetchAllProfiles(); // Refresh all users to show new admin
+      await fetchProfile();
+      await fetchAllProfiles();
     } catch (error: any) {
       console.error('Error transferring admin role:', error);
       await logActivity("Transfer Admin Role Failed", `Failed to transfer admin role: ${error.message}.`, profile, { error_message: error.message, new_admin_user_id: newAdminUserId }, true);
@@ -468,7 +460,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         markOnboardingWizardCompleted,
         markUpgradePromptSeen,
         updateProfileLocally,
-        transferAdminRole, // NEW: Provide transferAdminRole
+        transferAdminRole,
       }}
     >
       {children}

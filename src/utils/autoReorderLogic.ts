@@ -18,10 +18,7 @@ export const processAutoReorder = async (
   profile: UserProfile | null,
   addNotification: (message: string, type?: AppNotification['type']) => void
 ) => {
-  // All global auto-reorder checks are now handled by the calling useEffect in InventoryContext.tsx.
-  // This function assumes it is only called when auto-reorder is globally enabled.
-
-  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) { // Corrected typo here
+  if (!profile?.organizationId || !profile?.companyProfile?.enableAutoReorder) {
     console.warn("[Auto-Reorder] Cannot process auto-reorder: Auto-reorder is not globally enabled or organization ID is missing.");
     return;
   }
@@ -34,7 +31,6 @@ export const processAutoReorder = async (
   );
 
   if (itemsToReorder.length === 0) {
-    // console.log("[Auto-Reorder] No items currently meet individual auto-reorder criteria."); // Optional: uncomment for more verbose logging
     return;
   }
 
@@ -78,7 +74,6 @@ export const processAutoReorder = async (
       shippingMethod: "Standard",
       items: poItems,
       terms: "Net 30", // Default terms
-      // No direct folderId here, as orders are not directly tied to folders in this way
     };
 
     try {

@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button"; // NEW: Import Button
+import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProfile } from "@/context/ProfileContext";
 import Footer from "@/components/Footer";
-import PolicyDialog from "@/components/PolicyDialog"; // NEW: Import PolicyDialog
+import PolicyDialog from "@/components/PolicyDialog";
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ const OnboardingPage: React.FC = () => {
   const { profile, isLoadingProfile } = useProfile();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false); // NEW: State for PolicyDialog
-  const [policyType, setPolicyType] = useState<'terms' | 'privacy' | 'refund'>('terms'); // NEW: State for policy type
+  const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false);
+  const [policyType, setPolicyType] = useState<'terms' | 'privacy' | 'refund'>('terms');
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.hasOnboardingWizardCompleted) {
@@ -33,7 +33,6 @@ const OnboardingPage: React.FC = () => {
     navigate("/", { replace: true });
   };
 
-  // NEW: Function to open policy dialog
   const openPolicyDialog = (type: 'terms' | 'privacy' | 'refund') => {
     setPolicyType(type);
     setIsPolicyDialogOpen(true);
@@ -74,7 +73,6 @@ const OnboardingPage: React.FC = () => {
       </div>
       <Footer />
 
-      {/* NEW: Policy Dialog */}
       <PolicyDialog
         isOpen={isPolicyDialogOpen}
         onClose={() => setIsPolicyDialogOpen(false)}
