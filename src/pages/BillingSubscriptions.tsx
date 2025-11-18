@@ -23,8 +23,8 @@ interface PlanFeature {
 
 // Dodo Product IDs (provided by user)
 const DODO_PRODUCT_IDS = {
-  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
-  PRO: "pdt_TrF9X3inM62YVnop3GmX9",
+  STANDARD: "YOUR_ACTUAL_DODO_STANDARD_PRODUCT_ID", // <--- UPDATE THIS!
+  PRO: "YOUR_ACTUAL_DODO_PRO_PRODUCT_ID",           // <--- UPDATE THIS!
 };
 
 // Mock Dodo Plan structure for display
