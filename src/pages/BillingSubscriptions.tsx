@@ -19,7 +19,7 @@ interface PlanFeature {
 
 // Dodo Product IDs (provided by user)
 const DODO_PRODUCT_IDS = {
-  STANDARD: "pdt_FgO1TuiSWkgMlJ6ASpKT5",
+  STANDARD: "pdt_UYCUGm1X1RPZony6dzKyz", // UPDATED: Changed to new product ID
   PRO: "pdt_TrF9X3inM62YVnop3GmX9",
 };
 
@@ -37,7 +37,7 @@ interface DodoPlanDisplay {
 }
 
 const BillingSubscriptions: React.FC = () => {
-  const { profile, isLoadingProfile } = useProfile();
+  const { profile, isLoadingProfile, fetchProfile } = useProfile();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
   const [availableDodoPlans, setAvailableDodoPlans] = useState<DodoPlanDisplay[]>([]); // Changed to Dodo plans
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
