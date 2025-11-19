@@ -157,9 +157,9 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-    // 1. Fetch product details to get the default variant ID
-    safeConsole.log(`Edge Function: Fetching product details for product ID: ${lemonSqueezyProductId}`);
-    const productResponse = await fetch(`${lemonSqueezyApiBaseUrl}/products/${lemonSqueezyProductId}`, {
+    // 1. Fetch product's variants to get an available variant ID
+    safeConsole.log(`Edge Function: Fetching variants for product ID: ${lemonSqueezyProductId}`);
+    const variantsResponse = await fetch(`${lemonSqueezyApiBaseUrl}/variants?filter[product_id]=${lemonSqueezyProductId}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/vnd.api+json',
@@ -167,26 +167,29 @@ serve(async (req) => {
       },
     });
 
-    if (!productResponse.ok) {
-      const errorText = await productResponse.text();
-      safeConsole.error('Edge Function: Failed to fetch product details from Lemon Squeezy. Raw error response:', errorText);
-      return new Response(JSON.stringify({ error: `Failed to fetch product details: ${errorText.substring(0, 200)}...` }), {
+    if (!variantsResponse.ok) {
+      const errorText = await variantsResponse.text();
+      safeConsole.error('Edge Function: Failed to fetch product variants from Lemon Squeezy. Raw error response:', errorText);
+      return new Response(JSON.stringify({ error: `Failed to fetch product variants: ${errorText.substring(0, 200)}...` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: productResponse.status,
+        status: variantsResponse.status,
       });
     }
 
-    const productData = await productResponse.json();
-    const defaultVariantId = productData.data.attributes.default_variant_id;
+    const variantsData = await variantsResponse.json();
+    const variants = variantsData.data;
 
-    if (!defaultVariantId) {
-      safeConsole.error('Edge Function: Could not find default_variant_id for product:', lemonSqueezyProductId);
-      return new Response(JSON.stringify({ error: `Product ${lemonSqueezyProductId} has no default variant. Cannot create checkout.` }), {
+    if (!variants || variants.length === 0) {
+      safeConsole.error('Edge Function: No variants found for product:', lemonSqueezyProductId);
+      return new Response(JSON.stringify({ error: `Product ${lemonSqueezyProductId} has no variants. Cannot create checkout.` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
-    safeConsole.log('Edge Function: Retrieved default_variant_id:', defaultVariantId);
+
+    // Use the ID of the first available variant
+    const variantId = variants[0].id;
+    safeConsole.log('Edge Function: Retrieved variant_id:', variantId);
 
     // 2. Construct the checkout payload using relationships.variant
     const checkoutSessionPayload = {
@@ -207,7 +210,7 @@ serve(async (req) => {
           variant: {
             data: {
               type: "variants", // Always "variants" for linking a variant
-              id: String(defaultVariantId), // Variant ID as string
+              id: String(variantId), // Variant ID as string
             },
           },
         },
