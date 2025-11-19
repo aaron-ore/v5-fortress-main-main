@@ -161,6 +161,13 @@ const AppContent = () => {
     console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
     console.log('Integrations.tsx: lemon_squeezy_checkout_status from URL parameters:', lemonSqueezyCheckoutStatus);
 
+    // NEW: Check for OAuth callback parameters or hash and clear hash if present
+    if ((quickbooksSuccess || quickbooksError || shopifySuccess || shopifyError || lemonSqueezyCheckoutStatus) && location.hash) {
+      console.log("[AppContent] OAuth callback parameters or hash detected. Clearing hash.");
+      navigate(location.pathname + location.search, { replace: true }); // Clear hash, keep search params
+      return; // Exit early to re-evaluate after hash is cleared
+    }
+
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
         showSuccess("QuickBooks connected!");
@@ -195,7 +202,7 @@ const AppContent = () => {
       newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });
     }
-  }, [location.search, location.pathname, navigate]);
+  }, [location.search, location.pathname, location.hash, navigate]); // ADDED location.hash to dependencies
 
   useEffect(() => {
     if (isPrinting && printContentData?.type === "location-label") {

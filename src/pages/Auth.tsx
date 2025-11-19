@@ -35,14 +35,18 @@ const Auth: React.FC = () => {
     }
   }, [location.search]);
 
-  // MODIFIED: This useEffect should be the primary handler for authenticated users
+  // The global redirect logic for authenticated users is now handled in AppContent.tsx.
+  // This useEffect is no longer needed here as the `if (!isLoading && user) { return null; }`
+  // at the top of the component already prevents rendering, and AppContent.tsx will
+  // handle the actual navigation.
+  /*
   useEffect(() => {
     if (!isLoading && user) {
       console.log("[Auth.tsx] User already authenticated, redirecting to dashboard.");
-      // Use replace: true to prevent going back to /auth in history
       navigate("/", { replace: true });
     }
   }, [user, isLoading, navigate]);
+  */
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +60,7 @@ const Auth: React.FC = () => {
       } else {
         showSuccess("Logged in!");
         await logActivity("Login Success", `User ${email} logged in successfully.`, profile);
-        // No explicit navigate here, let the useEffect handle it
+        // No explicit navigate here, let the useEffect in AppContent handle it
       }
     } else {
       const options = {
@@ -115,13 +119,13 @@ const Auth: React.FC = () => {
       showError(error.message);
       await logActivity("Google Sign-in Failed", `User failed to sign in with Google.`, profile, { error_message: error.message }, true);
     } else {
-      // No explicit navigate here, let the useEffect handle it
+      // No explicit navigate here, let the useEffect in AppContent handle it
     }
     setLoading(false);
   };
 
   // If user is already authenticated, render nothing from Auth component
-  // The useEffect above will handle the navigation.
+  // The useEffect in AppContent.tsx will handle the navigation.
   if (!isLoading && user) {
     return null; // Render nothing if authenticated, let the redirect happen
   }
