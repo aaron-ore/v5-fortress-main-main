@@ -7,7 +7,7 @@ import { pdfContentComponents } from "./lib/reportConfig";
 // Removed: import { useOnboarding } from "./context/OnboardingContext";
 import { useProfile } from "./context/ProfileContext"; // Removed UserProfile import as it's not directly used here
 import { usePrint } from "./context/PrintContext";
-import { showSuccess, showError } from "./utils/toast";
+import { showSuccess, showError, showInfo } from "./utils/toast"; // ADDED showInfo
 
 import { SidebarProvider } from "./context/SidebarContext";
 import { OrdersProvider } from "./context/OrdersContext";
@@ -226,7 +226,7 @@ const AppContent = () => {
         // If authenticated but no organization and not already on onboarding, redirect to onboarding
         console.log("[AppContent] Authenticated but no organization. Redirecting to onboarding to create/join org.");
         startTransition(() => {
-          navigate('/onboarding', { replace: true });
+            navigate('/onboarding', { replace: true });
         });
       }
       // If authenticated, onboarding complete, and on dashboard, show upgrade prompt if applicable
