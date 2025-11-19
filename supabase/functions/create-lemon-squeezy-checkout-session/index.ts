@@ -86,18 +86,6 @@ serve(async (req) => {
       });
     }
 
-    // Convert product_id to a number as required by Lemon Squeezy API
-    const numericProductId = Number(lemonSqueezyProductId);
-    if (isNaN(numericProductId)) {
-      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a number, received:', lemonSqueezyProductId);
-      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a valid number.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-    safeConsole.log('Edge Function: Using numericProductId for Lemon Squeezy API:', numericProductId);
-
-
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -169,12 +157,42 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-    // MODIFIED PAYLOAD STRUCTURE: Reverting product_id to attributes and removing relationships
+    // 1. Fetch product details to get the default variant ID
+    safeConsole.log(`Edge Function: Fetching product details for product ID: ${lemonSqueezyProductId}`);
+    const productResponse = await fetch(`${lemonSqueezyApiBaseUrl}/products/${lemonSqueezyProductId}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Authorization': `Bearer ${lemonSqueezyApiKey}`,
+      },
+    });
+
+    if (!productResponse.ok) {
+      const errorText = await productResponse.text();
+      safeConsole.error('Edge Function: Failed to fetch product details from Lemon Squeezy. Raw error response:', errorText);
+      return new Response(JSON.stringify({ error: `Failed to fetch product details: ${errorText.substring(0, 200)}...` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: productResponse.status,
+      });
+    }
+
+    const productData = await productResponse.json();
+    const defaultVariantId = productData.data.attributes.default_variant_id;
+
+    if (!defaultVariantId) {
+      safeConsole.error('Edge Function: Could not find default_variant_id for product:', lemonSqueezyProductId);
+      return new Response(JSON.stringify({ error: `Product ${lemonSqueezyProductId} has no default variant. Cannot create checkout.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+    safeConsole.log('Edge Function: Retrieved default_variant_id:', defaultVariantId);
+
+    // 2. Construct the checkout payload using relationships.variant
     const checkoutSessionPayload = {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: numericProductId, // Back to direct attribute, as a number
           checkout_data: {
             custom: {
               user_id: userId,
@@ -183,6 +201,14 @@ serve(async (req) => {
           },
           product_options: { 
             redirect_url: constructedReturnUrl, 
+          },
+        },
+        relationships: {
+          variant: {
+            data: {
+              type: "variants", // Always "variants" for linking a variant
+              id: String(defaultVariantId), // Variant ID as string
+            },
           },
         },
       },
