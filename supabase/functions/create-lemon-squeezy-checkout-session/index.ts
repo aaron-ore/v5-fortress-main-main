@@ -158,14 +158,15 @@ serve(async (req) => {
         status: 500,
       });
     }
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
+    // MODIFIED: Simplified return_url to only include the status placeholder
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`;
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
     const checkoutSessionPayload = {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: numericProductId, // MODIFIED: Use numericProductId
+          product_id: numericProductId,
           checkout_data: {
             custom: {
               user_id: userId,
@@ -180,8 +181,8 @@ serve(async (req) => {
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/vnd.api+json', // Reverted to JSON:API specific content type
-        'Accept': 'application/vnd.api+json',       // Reverted to JSON:API specific accept type
+        'Content-Type': 'application/vnd.api+json',
+        'Accept': 'application/vnd.api+json',
         'Authorization': `Bearer ${lemonSqueezyApiKey}`,
       },
       body: JSON.stringify(checkoutSessionPayload),
