@@ -72,9 +72,9 @@ serve(async (req) => {
       }
     }
 
-    const { lemonSqueezyVariantId, organizationId, userId } = requestBody; // Renamed from lemonSqueezyProductId
+    const { lemonSqueezyVariantId, organizationId, userId } = requestBody;
 
-    safeConsole.log('Edge Function: Extracted lemonSqueezyVariantId:', lemonSqueezyVariantId); // Log renamed variable
+    safeConsole.log('Edge Function: Extracted lemonSqueezyVariantId:', lemonSqueezyVariantId);
     safeConsole.log('Edge Function: Extracted organizationId:', organizationId);
     safeConsole.log('Edge Function: Extracted userId:', userId);
 
@@ -157,12 +157,44 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-    // Removed the step that fetches product details or variants.
+    // 1. Fetch the Store ID
+    safeConsole.log('Edge Function: Fetching Lemon Squeezy stores to get store ID.');
+    const storesResponse = await fetch(`${lemonSqueezyApiBaseUrl}/stores`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Authorization': `Bearer ${lemonSqueezyApiKey}`,
+      },
+    });
+
+    if (!storesResponse.ok) {
+      const errorText = await storesResponse.text();
+      safeConsole.error('Edge Function: Failed to fetch stores from Lemon Squeezy. Raw error response:', errorText);
+      return new Response(JSON.stringify({ error: `Failed to fetch Lemon Squeezy store ID: ${errorText.substring(0, 200)}...` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: storesResponse.status,
+      });
+    }
+
+    const storesData = await storesResponse.json();
+    const stores = storesData.data;
+
+    if (!stores || stores.length === 0) {
+      safeConsole.error('Edge Function: No stores found for this Lemon Squeezy API key.');
+      return new Response(JSON.stringify({ error: 'No Lemon Squeezy stores found. Please check your API key and store setup.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const storeId = stores[0].id; // Use the ID of the first store found
+    safeConsole.log('Edge Function: Retrieved store_id:', storeId);
+
     // We now directly use lemonSqueezyVariantId as the variant ID.
     const variantId = lemonSqueezyVariantId;
     safeConsole.log('Edge Function: Directly using provided variant_id:', variantId);
 
-    // 2. Construct the checkout payload using relationships.variant
+    // 2. Construct the checkout payload including both variant and store relationships
     const checkoutSessionPayload = {
       data: {
         type: "checkouts",
@@ -182,6 +214,12 @@ serve(async (req) => {
             data: {
               type: "variants", // Always "variants" for linking a variant
               id: String(variantId), // Variant ID as string
+            },
+          },
+          store: { // NEW: Include the store relationship
+            data: {
+              type: "stores",
+              id: String(storeId),
             },
           },
         },
