@@ -174,13 +174,13 @@ serve(async (req) => {
         type: "checkouts",
         attributes: {
           product_id: numericProductId,
+          // NEW ATTEMPT: redirect_url directly under attributes
+          redirect_url: constructedReturnUrl, 
           checkout_data: {
             custom: {
               user_id: userId,
               organization_id: organizationId,
             },
-            // NEW ATTEMPT: redirect_url directly under checkout_data
-            redirect_url: constructedReturnUrl, 
           },
         },
       },
