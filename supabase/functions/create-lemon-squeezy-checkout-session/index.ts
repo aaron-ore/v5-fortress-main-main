@@ -166,8 +166,6 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
-    // Revert to original query parameter name, as the error is likely not about the name itself
-    // but the overall URL structure or base URL cleanliness.
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`;
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
@@ -177,11 +175,12 @@ serve(async (req) => {
         attributes: {
           product_id: numericProductId,
           checkout_data: {
+            // MOVED: redirect_url is now a direct child of checkout_data
+            redirect_url: constructedReturnUrl,
             custom: {
               user_id: userId,
               organization_id: organizationId,
             },
-            return_url: constructedReturnUrl,
           },
         },
       },
