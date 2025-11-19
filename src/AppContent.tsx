@@ -148,6 +148,15 @@ const AppContent = () => {
   const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
 
   useEffect(() => {
+    // 1. Handle URL cleanup (e.g., removing Google's #_=_ hash)
+    if (location.hash) {
+      console.log("[AppContent] Detected URL hash. Clearing it for clean routing.");
+      // Clear hash, keep search params
+      navigate(location.pathname + location.search, { replace: true });
+      return; // Exit this effect run, a new render cycle will start with the cleaned URL
+    }
+
+    // 2. Handle OAuth success/error messages (after hash is cleared)
     const params = new URLSearchParams(location.search);
     const quickbooksSuccess = params.get('quickbooks_success');
     const quickbooksError = params.get('quickbooks_error');
@@ -155,37 +164,28 @@ const AppContent = () => {
     const shopifyError = params.get('shopify_error');
     const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status');
 
-    console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
-    console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
-    console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
-    console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
-    console.log('Integrations.tsx: lemon_squeezy_checkout_status from URL parameters:', lemonSqueezyCheckoutStatus);
-
-    // NEW: Check for OAuth callback parameters or hash and clear hash if present
-    if ((quickbooksSuccess || quickbooksError || shopifySuccess || shopifyError || lemonSqueezyCheckoutStatus) && location.hash) {
-      console.log("[AppContent] OAuth callback parameters or hash detected. Clearing hash.");
-      navigate(location.pathname + location.search, { replace: true }); // Clear hash, keep search params
-      return; // Exit early to re-evaluate after hash is cleared
-    }
-
-    if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
-      if (quickbooksSuccess) {
-        showSuccess("QuickBooks connected!");
-      } else if (quickbooksError) {
-        showError(`QuickBooks connection failed: ${quickbooksError}`);
-      }
+    if (quickbooksSuccess && !qbCallbackProcessedRef.current) {
+      showSuccess("QuickBooks connected!");
       qbCallbackProcessedRef.current = true;
       navigate('/integrations', { replace: true });
+      return; // Exit after navigation
+    } else if (quickbooksError && !qbCallbackProcessedRef.current) {
+      showError(`QuickBooks connection failed: ${quickbooksError}`);
+      qbCallbackProcessedRef.current = true;
+      navigate('/integrations', { replace: true });
+      return; // Exit after navigation
     }
 
-    if ((shopifySuccess || shopifyError) && !shopifyCallbackProcessedRef.current) {
-      if (shopifySuccess) {
-        showSuccess("Shopify connected!");
-      } else if (shopifyError) {
-        showError(`Shopify connection failed: ${shopifyError}`);
-      }
+    if (shopifySuccess && !shopifyCallbackProcessedRef.current) {
+      showSuccess("Shopify connected!");
       shopifyCallbackProcessedRef.current = true;
       navigate(location.pathname, { replace: true });
+      return; // Exit after navigation
+    } else if (shopifyError && !shopifyCallbackProcessedRef.current) {
+      showError(`Shopify connection failed: ${shopifyError}`);
+      shopifyCallbackProcessedRef.current = true;
+      navigate(location.pathname, { replace: true });
+      return; // Exit after navigation
     }
 
     if (lemonSqueezyCheckoutStatus) {
@@ -201,23 +201,14 @@ const AppContent = () => {
       newSearchParams.delete('organization_id');
       newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });
+      return; // Exit after navigation
     }
-  }, [location.search, location.pathname, location.hash, navigate]); // ADDED location.hash to dependencies
 
-  useEffect(() => {
-    if (isPrinting && printContentData?.type === "location-label") {
-      document.documentElement.classList.add("print-mode-label");
-    } else {
-      document.documentElement.classList.remove("print-mode-label");
-    }
-  }, [isPrinting, printContentData]);
-
-  useEffect(() => {
-    console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
+    // 3. Handle primary routing for authenticated users (after URL is clean and OAuth messages handled)
+    console.log("[AppContent] Primary routing logic. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
       // User is authenticated
       if (location.pathname === '/auth') {
-        // If on /auth page while authenticated, redirect based on onboarding status
         if (profile.organizationId && profile.hasOnboardingWizardCompleted) {
           console.log("[AppContent] Authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
           startTransition(() => {
@@ -230,7 +221,6 @@ const AppContent = () => {
           });
         }
       } else if (!profile.organizationId && location.pathname !== '/onboarding') {
-        // If authenticated but no organization and not already on onboarding, redirect to onboarding
         console.log("[AppContent] Authenticated but no organization. Redirecting to onboarding to create/join org.");
         startTransition(() => {
             navigate('/onboarding', { replace: true });
@@ -250,8 +240,19 @@ const AppContent = () => {
         setIsUpgradePromptDialogOpen(false);
       }
     }
-  }, [isLoadingProfile, profile, navigate, location.pathname, isUpgradePromptDialogOpen]);
+  }, [
+    location.hash, location.search, location.pathname, navigate,
+    qbCallbackProcessedRef, shopifyCallbackProcessedRef, // These refs are used to prevent re-triggering toasts/redirects
+    isLoadingProfile, profile, isUpgradePromptDialogOpen,
+  ]);
 
+  useEffect(() => {
+    if (isPrinting && printContentData?.type === "location-label") {
+      document.documentElement.classList.add("print-mode-label");
+    } else {
+      document.documentElement.classList.remove("print-mode-label");
+    }
+  }, [isPrinting, printContentData]);
 
   if (isLoadingProfile) {
     return (
