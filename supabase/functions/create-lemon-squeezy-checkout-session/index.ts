@@ -86,16 +86,9 @@ serve(async (req) => {
       });
     }
 
-    // Convert product_id to a number as required by Lemon Squeezy API
-    const numericProductId = Number(lemonSqueezyProductId);
-    if (isNaN(numericProductId)) {
-      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a number, received:', lemonSqueezyProductId);
-      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a valid number.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-    safeConsole.log('Edge Function: Using numericProductId for Lemon Squeezy API:', numericProductId);
+    // Convert product_id to a string as required by Lemon Squeezy API
+    const stringProductId = String(lemonSqueezyProductId);
+    safeConsole.log('Edge Function: Using stringProductId for Lemon Squeezy API:', stringProductId);
 
 
     const supabaseAdmin = createClient(
@@ -169,22 +162,28 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-    // CORRECTED PAYLOAD STRUCTURE AS PER LEMON SQUEEZY DOCS
+    // MODIFIED PAYLOAD STRUCTURE: Using relationships.product
     const checkoutSessionPayload = {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: numericProductId,
           checkout_data: {
             custom: {
               user_id: userId,
               organization_id: organizationId,
             },
           },
-          // Temporarily removed product_options to isolate the issue
-          // product_options: { 
-          //   redirect_url: constructedReturnUrl, 
-          // },
+          product_options: { 
+            redirect_url: constructedReturnUrl, 
+          },
+        },
+        relationships: {
+          product: {
+            data: {
+              type: "products", // Standard JSON:API type for products
+              id: stringProductId, // Product ID as string
+            },
+          },
         },
       },
     };
