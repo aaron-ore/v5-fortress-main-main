@@ -179,9 +179,9 @@ serve(async (req) => {
               user_id: userId,
               organization_id: organizationId,
             },
+            // NEW ATTEMPT: redirect_url directly under checkout_data
+            redirect_url: constructedReturnUrl, 
           },
-          // CRITICAL FIX: Placing redirect_url directly under attributes
-          redirect_url: constructedReturnUrl, 
         },
       },
     };
