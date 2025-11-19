@@ -86,16 +86,16 @@ serve(async (req) => {
       });
     }
 
-    // Convert product_id to string as required by Lemon Squeezy API
-    const stringProductId = String(lemonSqueezyProductId);
-    if (!stringProductId || stringProductId.trim() === '') {
-      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a non-empty string after conversion, received:', stringProductId);
-      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a non-empty string.' }), {
+    // Convert product_id to a number as required by Lemon Squeezy API
+    const numericProductId = Number(lemonSqueezyProductId);
+    if (isNaN(numericProductId)) {
+      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a number, received:', lemonSqueezyProductId);
+      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a valid number.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
-    safeConsole.log('Edge Function: Using stringProductId for Lemon Squeezy API:', stringProductId);
+    safeConsole.log('Edge Function: Using numericProductId for Lemon Squeezy API:', numericProductId);
 
 
     const supabaseAdmin = createClient(
@@ -165,7 +165,7 @@ serve(async (req) => {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: stringProductId, // MODIFIED: Use stringProductId
+          product_id: numericProductId, // MODIFIED: Use numericProductId
           checkout_data: {
             custom: {
               user_id: userId,
