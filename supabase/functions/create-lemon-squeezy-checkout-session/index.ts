@@ -158,8 +158,8 @@ serve(async (req) => {
         status: 500,
       });
     }
-    // MODIFIED: Simplified return_url to only include the status placeholder
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`;
+    // MODIFIED: Simplified return_url to use 'status' as the query parameter name
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing?status={status}`;
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
     const checkoutSessionPayload = {
