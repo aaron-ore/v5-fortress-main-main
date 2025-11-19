@@ -24,6 +24,39 @@ const safeConsole = {
   },
 };
 
+// Helper function to verify Lemon Squeezy webhook signature
+async function verifyLemonSqueezySignature(
+  payload: string,
+  signature: string | null,
+  secret: string | undefined
+): Promise<boolean> {
+  if (!signature || !secret) {
+    safeConsole.error('Missing signature or secret for webhook verification.');
+    return false;
+  }
+
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const hmacBuffer = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(payload)
+  );
+
+  const expectedSignature = Array.from(new Uint8Array(hmacBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return expectedSignature === signature;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -36,12 +69,15 @@ serve(async (req) => {
 
     safeConsole.log('Lemon Squeezy Webhook: Received event:', JSON.stringify(event, null, 2));
 
-    // IMPORTANT: Implement webhook signature verification here for production!
-    // Lemon Squeezy provides a secret key to verify the authenticity of the webhook.
-    // Example: const signature = req.headers.get('X-Signature');
-    // if (!verifyLemonSqueezySignature(rawBodyText, signature, Deno.env.get('LEMON_SQUEEZY_WEBHOOK_SECRET'))) {
-    //   return new Response('Unauthorized: Invalid signature', { status: 401 });
-    // }
+    // IMPORTANT: Webhook signature verification
+    const signature = req.headers.get('X-Signature');
+    const lemonSqueezyWebhookSecret = Deno.env.get('LEMON_SQUEEZY_WEBHOOK_SECRET');
+
+    if (!(await verifyLemonSqueezySignature(rawBodyText, signature, lemonSqueezyWebhookSecret))) {
+      safeConsole.error('Unauthorized: Invalid webhook signature.');
+      return new Response('Unauthorized: Invalid signature', { status: 401 });
+    }
+    safeConsole.log('Lemon Squeezy Webhook: Signature verified successfully.');
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
