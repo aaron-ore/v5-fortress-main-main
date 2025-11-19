@@ -181,9 +181,10 @@ serve(async (req) => {
               organization_id: organizationId,
             },
           },
-          product_options: { // This must be a sibling of checkout_data
-            redirect_url: constructedReturnUrl, 
-          },
+          // Temporarily removed product_options to isolate the issue
+          // product_options: { 
+          //   redirect_url: constructedReturnUrl, 
+          // },
         },
       },
     };
