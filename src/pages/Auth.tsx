@@ -35,10 +35,12 @@ const Auth: React.FC = () => {
     }
   }, [location.search]);
 
+  // MODIFIED: This useEffect should be the primary handler for authenticated users
   useEffect(() => {
     if (!isLoading && user) {
       console.log("[Auth.tsx] User already authenticated, redirecting to dashboard.");
-      navigate("/");
+      // Use replace: true to prevent going back to /auth in history
+      navigate("/", { replace: true });
     }
   }, [user, isLoading, navigate]);
 
@@ -54,6 +56,7 @@ const Auth: React.FC = () => {
       } else {
         showSuccess("Logged in!");
         await logActivity("Login Success", `User ${email} logged in successfully.`, profile);
+        // No explicit navigate here, let the useEffect handle it
       }
     } else {
       const options = {
@@ -62,7 +65,7 @@ const Auth: React.FC = () => {
           company_code: companyCode.trim() || null,
           plan: selectedPlanFromUrl,
         },
-        redirectTo: window.location.origin + '/auth',
+        redirectTo: window.location.origin + '/auth', // Keep this for email confirmation flow
       };
       const { error } = await supabase.auth.signUp({ email, password, options });
       if (error) {
@@ -104,7 +107,7 @@ const Auth: React.FC = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth',
+        redirectTo: window.location.origin + '/auth', // Keep this as it's the Supabase callback
       },
     });
 
@@ -112,9 +115,16 @@ const Auth: React.FC = () => {
       showError(error.message);
       await logActivity("Google Sign-in Failed", `User failed to sign in with Google.`, profile, { error_message: error.message }, true);
     } else {
+      // No explicit navigate here, let the useEffect handle it
     }
     setLoading(false);
   };
+
+  // If user is already authenticated, render nothing from Auth component
+  // The useEffect above will handle the navigation.
+  if (!isLoading && user) {
+    return null; // Render nothing if authenticated, let the redirect happen
+  }
 
   if (isLoading) {
     return (
