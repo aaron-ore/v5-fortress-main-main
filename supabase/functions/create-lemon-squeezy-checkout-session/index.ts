@@ -150,7 +150,7 @@ serve(async (req) => {
     const lemonSqueezyCheckoutApiUrl = `${lemonSqueezyApiBaseUrl}/checkouts`;
     safeConsole.log('Edge Function: Using Lemon Squeezy API URL for checkouts:', lemonSqueezyCheckoutApiUrl);
 
-    const clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
+    let clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     if (!clientAppBaseUrl) {
       safeConsole.error('Edge Function: CLIENT_APP_BASE_URL environment variable is not set.');
       return new Response(JSON.stringify({ error: 'Server configuration error: CLIENT_APP_BASE_URL is missing.' }), {
@@ -158,8 +158,17 @@ serve(async (req) => {
         status: 500,
       });
     }
-    // MODIFIED: Simplified return_url to use 'status' as the query parameter name
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?status={status}`;
+
+    // --- EXTREME MEASURE: Sanitize CLIENT_APP_BASE_URL ---
+    clientAppBaseUrl = clientAppBaseUrl.trim(); // Remove leading/trailing whitespace
+    if (clientAppBaseUrl.endsWith('/')) {
+      clientAppBaseUrl = clientAppBaseUrl.slice(0, -1); // Remove trailing slash
+    }
+    safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
+
+    // Revert to original query parameter name, as the error is likely not about the name itself
+    // but the overall URL structure or base URL cleanliness.
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`;
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
     const checkoutSessionPayload = {
