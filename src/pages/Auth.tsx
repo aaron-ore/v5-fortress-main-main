@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/lib/supabaseClient";
 import { showSuccess, showError } from "@/utils/toast";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom"; // Removed useNavigate
 import { useAuth } from "@/context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logActivity } from "@/utils/logActivity";
@@ -18,7 +18,7 @@ const Auth: React.FC = () => {
   const [fullName, setFullName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // Removed: const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoading } = useAuth();
   const { profile } = useProfile();
