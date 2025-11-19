@@ -179,13 +179,16 @@ serve(async (req) => {
               user_id: userId,
               organization_id: organizationId,
             },
-            product_options: { // Correct nesting for redirect_url
-              redirect_url: constructedReturnUrl,
-            },
+          },
+          // MOVED: product_options is now a direct sibling of checkout_data under attributes
+          product_options: {
+            redirect_url: constructedReturnUrl,
           },
         },
       },
     };
+
+    safeConsole.log('Edge Function: Checkout Session Payload BEFORE JSON.stringify:', JSON.stringify(checkoutSessionPayload, null, 2));
 
     const fetchOptions: RequestInit = {
       method: 'POST',
@@ -201,7 +204,7 @@ serve(async (req) => {
     safeConsole.log('  URL:', lemonSqueezyCheckoutApiUrl);
     safeConsole.log('  Method:', fetchOptions.method);
     safeConsole.log('  Headers:', JSON.stringify(fetchOptions.headers, null, 2));
-    safeConsole.log('  Body:', fetchOptions.body);
+    safeConsole.log('  Body (sent to Lemon Squeezy):', fetchOptions.body); // Explicitly log the stringified body
 
     let lemonSqueezyResponse: Response;
     try {
