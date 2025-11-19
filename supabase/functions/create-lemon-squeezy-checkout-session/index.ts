@@ -86,15 +86,17 @@ serve(async (req) => {
       });
     }
 
-    // Convert product_id to integer
-    const parsedProductId = parseInt(lemonSqueezyProductId);
-    if (isNaN(parsedProductId)) {
-      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a number, received:', lemonSqueezyProductId);
-      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a number.' }), {
+    // Convert product_id to string as required by Lemon Squeezy API
+    const stringProductId = String(lemonSqueezyProductId);
+    if (!stringProductId || stringProductId.trim() === '') {
+      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a non-empty string after conversion, received:', stringProductId);
+      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a non-empty string.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
+    safeConsole.log('Edge Function: Using stringProductId for Lemon Squeezy API:', stringProductId);
+
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -163,7 +165,7 @@ serve(async (req) => {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: parsedProductId,
+          product_id: stringProductId, // MODIFIED: Use stringProductId
           checkout_data: {
             custom: {
               user_id: userId,
@@ -178,8 +180,8 @@ serve(async (req) => {
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json', // MODIFIED: Changed to application/json
-        'Accept': 'application/json',       // MODIFIED: Changed to application/json
+        'Content-Type': 'application/vnd.api+json', // Reverted to JSON:API specific content type
+        'Accept': 'application/vnd.api+json',       // Reverted to JSON:API specific accept type
         'Authorization': `Bearer ${lemonSqueezyApiKey}`,
       },
       body: JSON.stringify(checkoutSessionPayload),
