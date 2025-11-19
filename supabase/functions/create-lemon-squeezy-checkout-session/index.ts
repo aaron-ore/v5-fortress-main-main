@@ -180,10 +180,8 @@ serve(async (req) => {
               organization_id: organizationId,
             },
           },
-          // REVERTED AGAIN: product_options is now a direct sibling of checkout_data under attributes, as per docs
-          product_options: {
-            redirect_url: constructedReturnUrl,
-          },
+          // CRITICAL FIX: Placing redirect_url directly under attributes
+          redirect_url: constructedReturnUrl, 
         },
       },
     };
