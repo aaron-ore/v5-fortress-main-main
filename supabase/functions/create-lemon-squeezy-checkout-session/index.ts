@@ -175,11 +175,12 @@ serve(async (req) => {
         attributes: {
           product_id: numericProductId,
           checkout_data: {
-            // MOVED: redirect_url is now a direct child of checkout_data
-            redirect_url: constructedReturnUrl,
             custom: {
               user_id: userId,
               organization_id: organizationId,
+            },
+            product_options: { // Correct nesting for redirect_url
+              redirect_url: constructedReturnUrl,
             },
           },
         },
