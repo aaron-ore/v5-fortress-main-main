@@ -179,10 +179,10 @@ serve(async (req) => {
               user_id: userId,
               organization_id: organizationId,
             },
-          },
-          // MOVED: product_options is now a direct sibling of checkout_data under attributes
-          product_options: {
-            redirect_url: constructedReturnUrl,
+            // NEW: product_options is now nested INSIDE checkout_data, as per error path
+            product_options: {
+              redirect_url: constructedReturnUrl,
+            },
           },
         },
       },
