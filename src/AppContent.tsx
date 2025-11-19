@@ -153,15 +153,13 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const stripeSuccess = params.get('stripe_success');
-    const stripeCancel = params.get('stripe_cancel');
+    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status');
 
     console.log('Integrations.tsx: quickbooks_success from URL parameters:', quickbooksSuccess);
     console.log('Integrations.tsx: quickbooks_error from URL parameters:', quickbooksError);
     console.log('Integrations.tsx: shopify_success from URL parameters:', shopifySuccess);
     console.log('Integrations.tsx: shopify_error from URL parameters:', shopifyError);
-    console.log('Integrations.tsx: stripe_success from URL parameters:', stripeSuccess);
-    console.log('Integrations.tsx: stripe_cancel from URL parameters:', stripeCancel);
+    console.log('Integrations.tsx: lemon_squeezy_checkout_status from URL parameters:', lemonSqueezyCheckoutStatus);
 
     if ((quickbooksSuccess || quickbooksError) && !qbCallbackProcessedRef.current) {
       if (quickbooksSuccess) {
@@ -183,15 +181,18 @@ const AppContent = () => {
       navigate(location.pathname, { replace: true });
     }
 
-    if (stripeSuccess || stripeCancel) {
-      if (stripeSuccess) {
-        showSuccess("Subscription complete!");
-      } else if (stripeCancel) {
-        showError("Subscription cancelled.");
+    if (lemonSqueezyCheckoutStatus) {
+      if (lemonSqueezyCheckoutStatus === 'completed') {
+        showSuccess("Lemon Squeezy checkout completed!");
+      } else if (lemonSqueezyCheckoutStatus === 'cancelled') {
+        showError("Lemon Squeezy checkout cancelled.");
+      } else {
+        showInfo(`Lemon Squeezy checkout status: ${lemonSqueezyCheckoutStatus}`);
       }
       const newSearchParams = new URLSearchParams(params);
-      newSearchParams.delete('stripe_success');
-      newSearchParams.delete('stripe_cancel');
+      newSearchParams.delete('lemon_squeezy_checkout_status');
+      newSearchParams.delete('organization_id');
+      newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });
     }
   }, [location.search, location.pathname, navigate]);
@@ -207,28 +208,28 @@ const AppContent = () => {
   useEffect(() => {
     console.log("[AppContent] Routing effect. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
     if (!isLoadingProfile && profile) {
-      if (!profile.organizationId && location.pathname !== '/onboarding') {
-        console.log("[AppContent] User authenticated but no organization. Redirecting to onboarding to create/join org.");
+      // User is authenticated
+      if (location.pathname === '/auth') {
+        // If on /auth page while authenticated, redirect based on onboarding status
+        if (profile.organizationId && profile.hasOnboardingWizardCompleted) {
+          console.log("[AppContent] Authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
+          startTransition(() => {
+            navigate('/', { replace: true });
+          });
+        } else {
+          console.log("[AppContent] Authenticated, onboarding NOT complete, on /auth. Redirecting to onboarding.");
+          startTransition(() => {
+            navigate('/onboarding', { replace: true });
+          });
+        }
+      } else if (!profile.organizationId && location.pathname !== '/onboarding') {
+        // If authenticated but no organization and not already on onboarding, redirect to onboarding
+        console.log("[AppContent] Authenticated but no organization. Redirecting to onboarding to create/join org.");
         startTransition(() => {
           navigate('/onboarding', { replace: true });
         });
       }
-      else if (profile.organizationId && !profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
-        console.log("[AppContent] User has organization but wizard not completed, and is on /onboarding. Allowing to stay.");
-      }
-      else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/onboarding') {
-        console.log("[AppContent] Onboarding wizard already completed, redirecting to dashboard. Conditions: orgId present, wizard IS completed, IS on /onboarding.");
-        startTransition(() => {
-          navigate('/', { replace: true });
-        });
-      }
-      else if (profile.organizationId && profile.hasOnboardingWizardCompleted && location.pathname === '/auth') {
-        console.log("[AppContent] User authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
-        startTransition(() => {
-          navigate('/', { replace: true });
-        });
-      }
-
+      // If authenticated, onboarding complete, and on dashboard, show upgrade prompt if applicable
       if (
         profile.organizationId &&
         profile.hasOnboardingWizardCompleted &&
