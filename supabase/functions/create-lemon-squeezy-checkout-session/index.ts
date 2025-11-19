@@ -163,7 +163,7 @@ serve(async (req) => {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: parsedProductId, // MODIFIED: Use parsedProductId (integer)
+          product_id: parsedProductId,
           checkout_data: {
             custom: {
               user_id: userId,
@@ -178,8 +178,8 @@ serve(async (req) => {
     const fetchOptions: RequestInit = {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/vnd.api+json',
-        'Accept': 'application/vnd.api+json',
+        'Content-Type': 'application/json', // MODIFIED: Changed to application/json
+        'Accept': 'application/json',       // MODIFIED: Changed to application/json
         'Authorization': `Bearer ${lemonSqueezyApiKey}`,
       },
       body: JSON.stringify(checkoutSessionPayload),
