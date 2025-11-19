@@ -86,6 +86,16 @@ serve(async (req) => {
       });
     }
 
+    // Convert product_id to integer
+    const parsedProductId = parseInt(lemonSqueezyProductId);
+    if (isNaN(parsedProductId)) {
+      safeConsole.error('Edge Function: Invalid lemonSqueezyProductId. Expected a number, received:', lemonSqueezyProductId);
+      return new Response(JSON.stringify({ error: 'Invalid product ID provided. Must be a number.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -153,7 +163,7 @@ serve(async (req) => {
       data: {
         type: "checkouts",
         attributes: {
-          product_id: lemonSqueezyProductId,
+          product_id: parsedProductId, // MODIFIED: Use parsedProductId (integer)
           checkout_data: {
             custom: {
               user_id: userId,
