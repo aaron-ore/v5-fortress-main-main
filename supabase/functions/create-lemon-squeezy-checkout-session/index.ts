@@ -166,8 +166,9 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`;
-    safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
+    // SIMPLIFIED: Using a static return URL for initial debugging
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing`; 
+    safeConsole.log('Edge Function: Constructed (simplified) return_url:', constructedReturnUrl);
 
     const checkoutSessionPayload = {
       data: {
@@ -179,10 +180,10 @@ serve(async (req) => {
               user_id: userId,
               organization_id: organizationId,
             },
-            // NEW: product_options is now nested INSIDE checkout_data, as per error path
-            product_options: {
-              redirect_url: constructedReturnUrl,
-            },
+          },
+          // REVERTED: product_options is now a direct sibling of checkout_data under attributes, as per docs
+          product_options: {
+            redirect_url: constructedReturnUrl,
           },
         },
       },
