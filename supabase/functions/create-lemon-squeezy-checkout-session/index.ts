@@ -166,9 +166,9 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
-    // SIMPLIFIED: Using a static return URL for initial debugging
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing`; 
-    safeConsole.log('Edge Function: Constructed (simplified) return_url:', constructedReturnUrl);
+    // Re-introducing {status} placeholder as the error is about structure, not content
+    const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
+    safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
     const checkoutSessionPayload = {
       data: {
@@ -180,10 +180,10 @@ serve(async (req) => {
               user_id: userId,
               organization_id: organizationId,
             },
-          },
-          // REVERTED: product_options is now a direct sibling of checkout_data under attributes, as per docs
-          product_options: {
-            redirect_url: constructedReturnUrl,
+            // CRITICAL FIX: product_options nested INSIDE checkout_data
+            product_options: {
+              redirect_url: constructedReturnUrl,
+            },
           },
         },
       },
