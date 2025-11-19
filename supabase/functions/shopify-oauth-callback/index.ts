@@ -70,7 +70,7 @@ serve(async (req) => {
     let userIdFromState: string | null = null;
     let redirectToFrontend: string | null = null;
     let supabaseAccessToken: string | null = null; // NEW: Variable to hold Supabase access token from state
-    const FALLBACK_CLIENT_APP_BASE_URL = 'https://v4-fortress-main.vercel.app';
+    const FALLBACK_CLIENT_APP_BASE_URL = 'https://app.fortressinventory.com'; // CORRECTED: Updated to user's domain
 
     if (state) {
       try {
