@@ -169,6 +169,7 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
+    // CORRECTED PAYLOAD STRUCTURE AS PER LEMON SQUEEZY DOCS
     const checkoutSessionPayload = {
       data: {
         type: "checkouts",
@@ -180,8 +181,7 @@ serve(async (req) => {
               organization_id: organizationId,
             },
           },
-          // CRITICAL FIX: Placing product_options as a sibling of checkout_data
-          product_options: { 
+          product_options: { // This must be a sibling of checkout_data
             redirect_url: constructedReturnUrl, 
           },
         },
