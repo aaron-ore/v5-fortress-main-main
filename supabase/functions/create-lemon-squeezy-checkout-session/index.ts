@@ -72,15 +72,15 @@ serve(async (req) => {
       }
     }
 
-    const { lemonSqueezyProductId, organizationId, userId } = requestBody;
+    const { lemonSqueezyVariantId, organizationId, userId } = requestBody; // Renamed from lemonSqueezyProductId
 
-    safeConsole.log('Edge Function: Extracted lemonSqueezyProductId:', lemonSqueezyProductId);
+    safeConsole.log('Edge Function: Extracted lemonSqueezyVariantId:', lemonSqueezyVariantId); // Log renamed variable
     safeConsole.log('Edge Function: Extracted organizationId:', organizationId);
     safeConsole.log('Edge Function: Extracted userId:', userId);
 
-    if (!lemonSqueezyProductId || !organizationId || !userId) {
-      safeConsole.error('Edge Function: Missing required parameters after parsing. lemonSqueezyProductId:', lemonSqueezyProductId, 'organizationId:', organizationId, 'userId:', userId);
-      return new Response(JSON.stringify({ error: 'Missing required parameters: lemonSqueezyProductId, organizationId, userId.' }), {
+    if (!lemonSqueezyVariantId || !organizationId || !userId) {
+      safeConsole.error('Edge Function: Missing required parameters after parsing. lemonSqueezyVariantId:', lemonSqueezyVariantId, 'organizationId:', organizationId, 'userId:', userId);
+      return new Response(JSON.stringify({ error: 'Missing required parameters: lemonSqueezyVariantId, organizationId, userId.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -157,39 +157,10 @@ serve(async (req) => {
     const constructedReturnUrl = `${clientAppBaseUrl}/billing?lemon_squeezy_checkout_status={status}`; 
     safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
 
-    // 1. Fetch product's variants to get an available variant ID
-    safeConsole.log(`Edge Function: Fetching variants for product ID: ${lemonSqueezyProductId}`);
-    const variantsResponse = await fetch(`${lemonSqueezyApiBaseUrl}/variants?filter[product_id]=${lemonSqueezyProductId}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/vnd.api+json',
-        'Authorization': `Bearer ${lemonSqueezyApiKey}`,
-      },
-    });
-
-    if (!variantsResponse.ok) {
-      const errorText = await variantsResponse.text();
-      safeConsole.error('Edge Function: Failed to fetch product variants from Lemon Squeezy. Raw error response:', errorText);
-      return new Response(JSON.stringify({ error: `Failed to fetch product variants: ${errorText.substring(0, 200)}...` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: variantsResponse.status,
-      });
-    }
-
-    const variantsData = await variantsResponse.json();
-    const variants = variantsData.data;
-
-    if (!variants || variants.length === 0) {
-      safeConsole.error('Edge Function: No variants found for product:', lemonSqueezyProductId);
-      return new Response(JSON.stringify({ error: `Product ${lemonSqueezyProductId} has no variants. Cannot create checkout.` }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-
-    // Use the ID of the first available variant
-    const variantId = variants[0].id;
-    safeConsole.log('Edge Function: Retrieved variant_id:', variantId);
+    // Removed the step that fetches product details or variants.
+    // We now directly use lemonSqueezyVariantId as the variant ID.
+    const variantId = lemonSqueezyVariantId;
+    safeConsole.log('Edge Function: Directly using provided variant_id:', variantId);
 
     // 2. Construct the checkout payload using relationships.variant
     const checkoutSessionPayload = {

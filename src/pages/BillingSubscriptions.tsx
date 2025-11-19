@@ -18,8 +18,8 @@ import React, { useState, useEffect } from "react";
 
     // Lemon Squeezy Product IDs (placeholders - you'll need to replace these with your actual Lemon Squeezy Product IDs)
     const LEMON_SQUEEZY_PRODUCT_IDS = {
-      STANDARD: "697654",
-      PRO: "698715",
+      STANDARD: "1097886", // UPDATED to the provided variant ID
+      PRO: "698715", // Assuming this is still a product ID, will be handled by the Edge Function
     };
 
     interface LemonSqueezyPlanDisplay {
@@ -143,7 +143,7 @@ import React, { useState, useEffect } from "react";
           }
 
           const payload = {
-            lemonSqueezyProductId: plan.lemonSqueezyProductId,
+            lemonSqueezyVariantId: plan.lemonSqueezyProductId, // Renamed to variantId
             organizationId: profile.organizationId,
             userId: profile.id,
           };
