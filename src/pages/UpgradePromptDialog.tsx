@@ -21,6 +21,12 @@ interface UpgradePromptDialogProps {
   onClose: () => void;
 }
 
+// Dodo Product IDs (placeholders - you'll need to replace these with your actual Dodo Product IDs)
+const DODO_PRODUCT_IDS = {
+  STANDARD: "pdt_uB7ZQurvsyNW3y7s5x0qk", // Updated with provided test product ID
+  PRO: "DODO_PRODUCT_ID_PRO", // Placeholder for Pro plan
+};
+
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { profile, markUpgradePromptSeen, fetchProfile } = useProfile();
@@ -46,14 +52,15 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
     try {
       console.log(`Simulating Dodo trial for plan: ${planName}`);
 
-      const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
-      const simulatedDodoSubscriptionId = `dodo_sub_${Math.random().toString(36).substring(2, 15)}`;
+      // In a real Dodo integration, you would call a Dodo API to initiate a trial
+      // For now, we'll simulate this and update the profile directly.
+      // The actual Dodo checkout flow will be handled by the create-dodo-checkout-session Edge Function.
 
+      // For the trial, we'll just update the plan and set a trial end date.
+      // The Dodo customer/subscription IDs would typically come from a webhook after a real checkout.
       await supabase
         .from('organizations')
         .update({
-          dodo_customer_id: simulatedDodoCustomerId,
-          dodo_subscription_id: simulatedDodoDodoSubscriptionId,
           plan: planName,
           trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14-day free trial
         })

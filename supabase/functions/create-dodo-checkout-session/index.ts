@@ -135,8 +135,7 @@ serve(async (req) => {
     }
 
     const dodoApiBaseUrl = 'https://api.dodo.com/v1'; // Placeholder Dodo API URL
-    const dodoCheckoutApiUrl = `${dodoApiBaseUrl}/checkouts`;
-    safeConsole.log('Edge Function: Using Dodo API URL for checkouts:', dodoCheckoutApiUrl);
+    const dodoCheckoutApiUrl = `https://test.checkout.dodopayments.com/buy/${dodoProductId}`; // Direct payment link from user
 
     let clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     if (!clientAppBaseUrl) {
@@ -153,17 +152,14 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
-    const constructedReturnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}`; 
-    safeConsole.log('Edge Function: Constructed return_url:', constructedReturnUrl);
+    // Dodo's payment link already handles the return URL. We just need to append our custom data.
+    // The user provided a direct payment link, so we'll use that and append custom data.
+    const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
+    const checkoutUrl = `${dodoCheckoutApiUrl}?quantity=1&passthrough[user_id]=${userId}&passthrough[organization_id]=${organizationId}&return_url=${encodeURIComponent(returnUrl)}`;
 
-    // Simulate Dodo API call to create a checkout session
-    // In a real scenario, this would involve making an actual HTTP request to Dodo's API
-    // For now, we'll return a mock checkout URL.
-    const mockCheckoutUrl = `https://checkout.dodo.com/mock-checkout-session-${Math.random().toString(36).substring(2, 15)}?product_id=${dodoProductId}&user_id=${userId}&organization_id=${organizationId}&return_url=${encodeURIComponent(constructedReturnUrl)}`;
+    safeConsole.log('Edge Function: Constructed Dodo checkout URL:', checkoutUrl);
 
-    safeConsole.log('Edge Function: Successfully generated mock Dodo checkout URL:', mockCheckoutUrl);
-
-    return new Response(JSON.stringify({ checkoutUrl: mockCheckoutUrl }), {
+    return new Response(JSON.stringify({ checkoutUrl: checkoutUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
