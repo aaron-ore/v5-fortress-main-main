@@ -166,7 +166,7 @@ import React, { useState, useEffect } from "react";
 
           const checkoutUrl = data.checkoutUrl;
           if (checkoutUrl) {
-            window.location.href = checkoutUrl; // Redirect to Dodo checkout page
+            window.open(checkoutUrl, '_blank'); // MODIFIED: Open in new tab
           } else {
             throw new Error("Dodo checkout URL not received.");
           }
