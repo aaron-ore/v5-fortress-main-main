@@ -94,6 +94,9 @@ serve(async (req) => {
   let rawBodyText = '';
   try {
     rawBodyText = await req.text();
+    // NEW LOG: Log the raw body text (truncated for security)
+    safeConsole.log('Dodo Webhook: Raw Body Text (first 200 chars):', rawBodyText.substring(0, 200));
+
     const event = JSON.parse(rawBodyText);
 
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
