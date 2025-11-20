@@ -124,6 +124,7 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
 
+    // Extract userId and organizationId directly from the Dodo event payload
     const userId = obj.metadata?.user_id || obj.custom_data?.user_id || obj.user_id;
     const organizationId = obj.metadata?.organization_id || obj.custom_data?.organization_id || obj.organization_id;
     const customerId = obj.customer_id;
@@ -132,6 +133,8 @@ serve(async (req) => {
       safeConsole.error('Dodo Webhook: Missing essential metadata in event payload.', { userId, organizationId, customerId, eventType, metadata: obj.metadata, custom_data: obj.custom_data });
       return new Response('Missing essential metadata', { status: 400 });
     }
+    safeConsole.log('Dodo Webhook: Extracted userId:', userId, 'organizationId:', organizationId, 'customerId:', customerId);
+
 
     let planName: string | null = null;
     let subscriptionId: string | null = null;
