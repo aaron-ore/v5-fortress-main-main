@@ -92,8 +92,12 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
     // IMPORTANT: Webhook signature verification
-    const signatureHeader = req.headers.get('webhook-signature'); // CORRECTED: Looking for 'webhook-signature'
-    const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET');
+    const signatureHeader = req.headers.get('webhook-signature');
+    const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim(); // ADDED .trim()
+
+    safeConsole.log('Dodo Webhook: DODO_WEBHOOK_SECRET length:', dodoWebhookSecret?.length || 0); // ADDED LOG
+    safeConsole.log('Dodo Webhook: DODO_WEBHOOK_SECRET starts with:', dodoWebhookSecret ? dodoWebhookSecret.substring(0, 5) + '...' : 'N/A'); // ADDED LOG (masked)
+
 
     if (!(await verifyDodoSignature(rawBodyText, signatureHeader, dodoWebhookSecret))) {
       safeConsole.error('Unauthorized: Invalid webhook signature.');
