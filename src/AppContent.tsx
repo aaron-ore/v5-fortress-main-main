@@ -162,7 +162,7 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status');
+    const dodoCheckoutStatus = params.get('dodo_checkout_status'); // REVERTED: Dodo checkout status
 
     if (quickbooksSuccess && !qbCallbackProcessedRef.current) {
       showSuccess("QuickBooks connected!");
@@ -188,16 +188,16 @@ const AppContent = () => {
       return; // Exit after navigation
     }
 
-    if (lemonSqueezyCheckoutStatus) {
-      if (lemonSqueezyCheckoutStatus === 'completed') {
-        showSuccess("Lemon Squeezy checkout completed!");
-      } else if (lemonSqueezyCheckoutStatus === 'cancelled') {
-        showError("Lemon Squeezy checkout cancelled.");
+    if (dodoCheckoutStatus) { // REVERTED: Handle Dodo checkout status
+      if (dodoCheckoutStatus === 'completed') {
+        showSuccess("Dodo checkout completed!");
+      } else if (dodoCheckoutStatus === 'cancelled') {
+        showError("Dodo checkout cancelled.");
       } else {
-        showInfo(`Lemon Squeezy checkout status: ${lemonSqueezyCheckoutStatus}`);
+        showInfo(`Dodo checkout status: ${dodoCheckoutStatus}`);
       }
       const newSearchParams = new URLSearchParams(params);
-      newSearchParams.delete('lemon_squeezy_checkout_status');
+      newSearchParams.delete('dodo_checkout_status');
       newSearchParams.delete('organization_id');
       newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });

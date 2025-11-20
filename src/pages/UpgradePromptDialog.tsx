@@ -44,16 +44,16 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
 
     setIsProcessingTrial(true);
     try {
-      console.log(`Simulating Lemon Squeezy trial for plan: ${planName}`);
+      console.log(`Simulating Dodo trial for plan: ${planName}`);
 
-      const simulatedLemonSqueezyCustomerId = `ls_cust_${Math.random().toString(36).substring(2, 15)}`;
-      const simulatedLemonSqueezySubscriptionId = `ls_sub_${Math.random().toString(36).substring(2, 15)}`;
+      const simulatedDodoCustomerId = `dodo_cust_${Math.random().toString(36).substring(2, 15)}`;
+      const simulatedDodoSubscriptionId = `dodo_sub_${Math.random().toString(36).substring(2, 15)}`;
 
       await supabase
         .from('organizations')
         .update({
-          lemon_squeezy_customer_id: simulatedLemonSqueezyCustomerId,
-          lemon_squeezy_subscription_id: simulatedLemonSqueezySubscriptionId,
+          dodo_customer_id: simulatedDodoCustomerId,
+          dodo_subscription_id: simulatedDodoDodoSubscriptionId,
           plan: planName,
           trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14-day free trial
         })

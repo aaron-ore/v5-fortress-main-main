@@ -17,8 +17,8 @@ export interface CompanyProfile {
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
-  lemonSqueezyCustomerId?: string; // NEW: Lemon Squeezy Customer ID
-  lemonSqueezySubscriptionId?: string; // NEW: Lemon Squeezy Subscription ID
+  dodoCustomerId?: string; // REVERTED: Dodo Customer ID
+  dodoSubscriptionId?: string; // REVERTED: Dodo Subscription ID
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean;
@@ -91,8 +91,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
-      lemonSqueezyCustomerId: companyData.lemon_squeezy_customer_id || undefined, // NEW: Map Lemon Squeezy Customer ID
-      lemonSqueezySubscriptionId: companyData.lemon_squeezy_subscription_id || undefined, // NEW: Map Lemon Squeezy Subscription ID
+      dodoCustomerId: companyData.dodo_customer_id || undefined, // REVERTED: Map Dodo Customer ID
+      dodoSubscriptionId: companyData.dodo_subscription_id || undefined, // REVERTED: Map Dodo Subscription ID
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false,
@@ -132,7 +132,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,lemon_squeezy_customer_id,lemon_squeezy_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // NEW: Select Lemon Squeezy fields
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // REVERTED: Select Dodo fields
       .eq('id', user.id)
       .single();
 
@@ -300,8 +300,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       address: updates.companyAddress,
       company_logo_url: companyLogoUrlForDb,
       plan: updates.plan,
-      lemon_squeezy_customer_id: updates.lemonSqueezyCustomerId, // NEW: Update Lemon Squeezy Customer ID
-      lemon_squeezy_subscription_id: updates.lemonSqueezySubscriptionId, // NEW: Update Lemon Squeezy Subscription ID
+      dodo_customer_id: updates.dodoCustomerId, // REVERTED: Update Dodo Customer ID
+      dodo_subscription_id: updates.dodoSubscriptionId, // REVERTED: Update Dodo Subscription ID
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder,
