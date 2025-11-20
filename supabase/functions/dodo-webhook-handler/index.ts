@@ -26,7 +26,7 @@ const safeConsole = {
 
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
-  payload: string,
+  payload: string, // This payload will now be trimmed before being passed here
   signatureHeader: string | null,
   secret: string | undefined
 ): Promise<boolean> {
@@ -52,7 +52,7 @@ async function verifyDodoSignature(
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
     safeConsole.log(`  Secret length (used in func): ${secret.length}`);
     safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
-    safeConsole.log(`  Payload length (rawBodyText): ${payload.length}`);
+    safeConsole.log(`  Payload length (rawBodyText): ${payload.length}`); // This will now be the trimmed length
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
 
 
@@ -97,7 +97,11 @@ serve(async (req) => {
     // NEW LOG: Log the raw body text (truncated for security)
     safeConsole.log('Dodo Webhook: Raw Body Text (first 200 chars):', rawBodyText.substring(0, 200));
 
-    const event = JSON.parse(rawBodyText);
+    // IMPORTANT: Trim rawBodyText before verification
+    const trimmedPayload = rawBodyText.trim();
+    safeConsole.log('Dodo Webhook: Trimmed Payload length:', trimmedPayload.length); // Log trimmed length
+
+    const event = JSON.parse(rawBodyText); // Parse original rawBodyText, not trimmedPayload, as JSON parsing expects original
 
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
     safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
@@ -106,10 +110,7 @@ serve(async (req) => {
     const signatureHeader = req.headers.get('webhook-signature');
     const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim(); // ADDED .trim()
 
-    // Removed redundant logs here, moved them inside verifyDodoSignature for better context
-
-
-    if (!(await verifyDodoSignature(rawBodyText, signatureHeader, dodoWebhookSecret))) {
+    if (!(await verifyDodoSignature(trimmedPayload, signatureHeader, dodoWebhookSecret))) { // Pass trimmedPayload
       safeConsole.error('Unauthorized: Invalid webhook signature.');
       return new Response('Unauthorized: Invalid signature', { status: 401 });
     }
@@ -177,7 +178,7 @@ serve(async (req) => {
       safeConsole.log('Dodo Webhook: Organization updated successfully:', data);
       return new Response('Webhook processed successfully', { status: 200 });
 
-    } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired' || eventType === 'subscription.failed' || eventType === 'subscription.on_hold') {
+    } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired' || eventType === 'subscription.on_hold') {
       subscriptionId = obj.subscription_id;
 
       safeConsole.log(`Dodo Webhook: Handling cancellation/failure for organization ${organizationId}, customer ${customerId}. Setting plan to 'free'.`);
