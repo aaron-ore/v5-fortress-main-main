@@ -52,7 +52,8 @@ async function verifyDodoSignature(
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
     safeConsole.log(`  Secret length (used in func): ${secret.length}`);
     safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
-    safeConsole.log(`  Payload length (rawBodyText): ${payload.length}`); // This will now be the trimmed length
+    safeConsole.log(`  Payload length (trimmedPayload): ${payload.length}`);
+    safeConsole.log(`  Payload (truncated): ${payload.substring(0, 200)}...`); // Log truncated payload
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
 
 
@@ -73,6 +74,7 @@ async function verifyDodoSignature(
 
     // Convert ArrayBuffer to base64 string
     const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
+    safeConsole.log(`  Calculated Signature (Base64): ${calculatedSignature}`); // Log calculated signature
     
     const isValid = calculatedSignature === incomingSignatureBase64;
     if (!isValid) {
