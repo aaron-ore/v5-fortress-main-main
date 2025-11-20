@@ -21,11 +21,7 @@ interface UpgradePromptDialogProps {
   onClose: () => void;
 }
 
-// Dodo Product IDs (placeholders - you'll need to replace these with your actual Dodo Product IDs)
-const DODO_PRODUCT_IDS = {
-  STANDARD: "pdt_uB7ZQurvsyNW3y7s5x0qk", // Updated with provided test product ID
-  PRO: "pdt_xFu2HtpLC550GY0EnRCPk", // NEW: Test product ID for Pro plan
-};
+// DODO_PRODUCT_IDS is not used in this simulated trial dialog, so it's removed.
 
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -51,10 +47,6 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
     setIsProcessingTrial(true);
     try {
       console.log(`Simulating Dodo trial for plan: ${planName}`);
-
-      // In a real Dodo integration, you would call a Dodo API to initiate a trial
-      // For now, we'll simulate this and update the profile directly.
-      // The actual Dodo checkout flow will be handled by the create-dodo-checkout-session Edge Function.
 
       // For the trial, we'll just update the plan and set a trial end date.
       // The Dodo customer/subscription IDs would typically come from a webhook after a real checkout.
