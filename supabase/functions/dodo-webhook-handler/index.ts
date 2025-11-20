@@ -26,7 +26,7 @@ const safeConsole = {
 
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
-  payload: string, // This payload will now be trimmed before being passed here
+  payload: string, // This payload will now be the raw body, not trimmed
   signatureHeader: string | null,
   secret: string | undefined
 ): Promise<boolean> {
@@ -40,7 +40,6 @@ async function verifyDodoSignature(
   }
 
   try {
-    // Dodo's signature format is typically `v1,BASE64_ENCODED_HMAC`
     const parts = signatureHeader.split(',');
     if (parts.length !== 2 || parts[0] !== 'v1') {
       safeConsole.error('Dodo Webhook: Invalid webhook-signature format. Expected "v1,<signature>".');
@@ -48,12 +47,11 @@ async function verifyDodoSignature(
     }
     const incomingSignatureBase64 = parts[1];
 
-    // ADDED LOGS FOR DEBUGGING
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
     safeConsole.log(`  Secret length (used in func): ${secret.length}`);
     safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
-    safeConsole.log(`  Payload length (trimmedPayload): ${payload.length}`);
-    safeConsole.log(`  Payload (truncated): ${payload.substring(0, 200)}...`); // Log truncated payload
+    safeConsole.log(`  Payload length (for HMAC): ${payload.length}`); // Log the length of the payload used for HMAC
+    safeConsole.log(`  Payload (truncated for log): ${payload.substring(0, 200)}...`); // Log truncated payload
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
 
 
@@ -72,9 +70,8 @@ async function verifyDodoSignature(
       encoder.encode(payload)
     );
 
-    // Convert ArrayBuffer to base64 string
     const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
-    safeConsole.log(`  Calculated Signature (Base64): ${calculatedSignature}`); // Log calculated signature
+    safeConsole.log(`  Calculated Signature (Base64): ${calculatedSignature}`);
     
     const isValid = calculatedSignature === incomingSignatureBase64;
     if (!isValid) {
@@ -96,23 +93,21 @@ serve(async (req) => {
   let rawBodyText = '';
   try {
     rawBodyText = await req.text();
-    // NEW LOG: Log the raw body text (truncated for security)
     safeConsole.log('Dodo Webhook: Raw Body Text (first 200 chars):', rawBodyText.substring(0, 200));
+    safeConsole.log('Dodo Webhook: Raw Body Text length:', rawBodyText.length); // Log raw body length
 
-    // IMPORTANT: Trim rawBodyText before verification
-    const trimmedPayload = rawBodyText.trim();
-    safeConsole.log('Dodo Webhook: Trimmed Payload length:', trimmedPayload.length); // Log trimmed length
+    // Use rawBodyText directly for verification, without trimming
+    const payloadForVerification = rawBodyText;
 
-    const event = JSON.parse(rawBodyText); // Parse original rawBodyText, not trimmedPayload, as JSON parsing expects original
+    const event = JSON.parse(rawBodyText);
 
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
     safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
-    // IMPORTANT: Webhook signature verification
     const signatureHeader = req.headers.get('webhook-signature');
-    const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim(); // ADDED .trim()
+    const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim();
 
-    if (!(await verifyDodoSignature(trimmedPayload, signatureHeader, dodoWebhookSecret))) { // Pass trimmedPayload
+    if (!(await verifyDodoSignature(payloadForVerification, signatureHeader, dodoWebhookSecret))) { // Pass payloadForVerification
       safeConsole.error('Unauthorized: Invalid webhook signature.');
       return new Response('Unauthorized: Invalid signature', { status: 401 });
     }
@@ -129,9 +124,6 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
 
-    // Extract userId and organizationId from custom_data or metadata
-    // Dodo's passthrough data is usually in `metadata` or `custom_data` depending on setup.
-    // Let's check `obj.metadata` first, then `obj.custom_data`
     const userId = obj.metadata?.user_id || obj.custom_data?.user_id || obj.user_id;
     const organizationId = obj.metadata?.organization_id || obj.custom_data?.organization_id || obj.organization_id;
     const customerId = obj.customer_id;
@@ -144,7 +136,6 @@ serve(async (req) => {
     let planName: string | null = null;
     let subscriptionId: string | null = null;
 
-    // Handle events that indicate an active or updated subscription
     if (eventType === 'subscription.active' || eventType === 'subscription.plan_changed' || eventType === 'subscription.renewed') {
       const productId = obj.product_id;
       subscriptionId = obj.subscription_id;
@@ -153,7 +144,7 @@ serve(async (req) => {
         case Deno.env.get('DODO_PRODUCT_ID_STANDARD'):
           planName = 'standard';
           break;
-        case Deno.env.get('DODO_PRODUCT_ID_PRO'): // NEW: Recognize Pro plan product ID
+        case Deno.env.get('DODO_PRODUCT_ID_PRO'):
           planName = 'pro';
           break;
         default:
