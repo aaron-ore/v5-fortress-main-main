@@ -55,6 +55,7 @@ serve(async (req) => {
     const event = JSON.parse(rawBodyText);
 
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
+    safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2)); // NEW: Log all incoming headers
 
     // IMPORTANT: Webhook signature verification (implement Dodo's actual logic here)
     const signature = req.headers.get('X-Dodo-Signature'); // Placeholder header name
