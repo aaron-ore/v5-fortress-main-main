@@ -55,7 +55,7 @@ serve(async (req) => {
     const event = JSON.parse(rawBodyText);
 
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
-    safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2)); // NEW: Log all incoming headers
+    safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
     // IMPORTANT: Webhook signature verification (implement Dodo's actual logic here)
     const signature = req.headers.get('X-Dodo-Signature'); // Placeholder header name
@@ -72,16 +72,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const eventType = event.event_name; // Placeholder for Dodo event name
-    const obj = event.data; // The main object of the event
+    const eventType = event.event_name;
+    const obj = event.data;
 
     safeConsole.log('Dodo Webhook: Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
 
-    // Extract metadata from Dodo event payload
-    const userId = obj.custom_data?.user_id || obj.user_id; // Placeholder for custom data or direct user_id
-    const organizationId = obj.custom_data?.organization_id || obj.organization_id; // Placeholder for custom data or direct organization_id
-    const customerId = obj.customer_id; // Placeholder for Dodo customer ID
+    const userId = obj.custom_data?.user_id || obj.user_id;
+    const organizationId = obj.custom_data?.organization_id || obj.organization_id;
+    const customerId = obj.customer_id;
 
     if (!userId || !organizationId || !customerId) {
       safeConsole.error('Dodo Webhook: Missing essential metadata in event payload.', { userId, organizationId, customerId, eventType });
@@ -91,11 +90,11 @@ serve(async (req) => {
     let planName: string | null = null;
     let subscriptionId: string | null = null;
 
-    if (eventType === 'subscription.created' || eventType === 'subscription.updated') { // Placeholder event types
-      const productId = obj.product_id; // Placeholder for Dodo product ID
-      subscriptionId = obj.subscription_id; // Placeholder for Dodo subscription ID
+    // Handle events that indicate an active or updated subscription
+    if (eventType === 'subscription.active' || eventType === 'subscription.plan_changed' || eventType === 'subscription.renewed') {
+      const productId = obj.product_id;
+      subscriptionId = obj.subscription_id;
 
-      // Map Dodo Product ID to your internal plan name
       switch (String(productId)) {
         case Deno.env.get('DODO_PRODUCT_ID_STANDARD'):
           planName = 'standard';
@@ -127,26 +126,26 @@ serve(async (req) => {
       safeConsole.log('Dodo Webhook: Organization updated successfully:', data);
       return new Response('Webhook processed successfully', { status: 200 });
 
-    } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired') { // Placeholder event types
-      subscriptionId = obj.subscription_id; // Placeholder for Dodo subscription ID
+    } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired' || eventType === 'subscription.failed' || eventType === 'subscription.on_hold') {
+      subscriptionId = obj.subscription_id;
 
-      safeConsole.log(`Dodo Webhook: Handling cancellation for organization ${organizationId}, customer ${customerId}. Setting plan to 'free'.`);
+      safeConsole.log(`Dodo Webhook: Handling cancellation/failure for organization ${organizationId}, customer ${customerId}. Setting plan to 'free'.`);
 
       const { data, error } = await supabaseAdmin
         .from('organizations')
         .update({
           plan: 'free',
-          dodo_subscription_id: null, // Clear subscription ID
+          dodo_subscription_id: null,
         })
         .eq('id', organizationId);
 
       if (error) {
-        safeConsole.error('Dodo Webhook: Error updating organization on cancellation in Supabase:', error);
-        return new Response('Failed to update organization on cancellation', { status: 500 });
+        safeConsole.error('Dodo Webhook: Error updating organization on cancellation/failure in Supabase:', error);
+        return new Response('Failed to update organization on cancellation/failure', { status: 500 });
       }
 
       safeConsole.log('Dodo Webhook: Organization plan downgraded to free successfully:', data);
-      return new Response('Cancellation webhook processed successfully', { status: 200 });
+      return new Response('Cancellation/failure webhook processed successfully', { status: 200 });
 
     } else {
       safeConsole.log('Dodo Webhook: Unhandled event type:', eventType);
