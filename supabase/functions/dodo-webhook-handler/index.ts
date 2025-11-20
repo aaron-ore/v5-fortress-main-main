@@ -27,7 +27,7 @@ const safeConsole = {
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
   payload: string,
-  signatureHeader: string | null, // Renamed to signatureHeader to avoid confusion with the secret
+  signatureHeader: string | null,
   secret: string | undefined
 ): Promise<boolean> {
   if (!secret) {
@@ -47,6 +47,14 @@ async function verifyDodoSignature(
       return false;
     }
     const incomingSignatureBase64 = parts[1];
+
+    // ADDED LOGS FOR DEBUGGING
+    safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
+    safeConsole.log(`  Secret length (used in func): ${secret.length}`);
+    safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
+    safeConsole.log(`  Payload length (rawBodyText): ${payload.length}`);
+    safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
+
 
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -95,8 +103,7 @@ serve(async (req) => {
     const signatureHeader = req.headers.get('webhook-signature');
     const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim(); // ADDED .trim()
 
-    safeConsole.log('Dodo Webhook: DODO_WEBHOOK_SECRET length:', dodoWebhookSecret?.length || 0); // ADDED LOG
-    safeConsole.log('Dodo Webhook: DODO_WEBHOOK_SECRET starts with:', dodoWebhookSecret ? dodoWebhookSecret.substring(0, 5) + '...' : 'N/A'); // ADDED LOG (masked)
+    // Removed redundant logs here, moved them inside verifyDodoSignature for better context
 
 
     if (!(await verifyDodoSignature(rawBodyText, signatureHeader, dodoWebhookSecret))) {
