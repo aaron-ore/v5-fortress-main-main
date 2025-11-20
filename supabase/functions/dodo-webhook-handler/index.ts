@@ -27,19 +27,27 @@ const safeConsole = {
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
   payload: string,
-  signature: string | null,
+  signatureHeader: string | null, // Renamed to signatureHeader to avoid confusion with the secret
   secret: string | undefined
 ): Promise<boolean> {
   if (!secret) {
     safeConsole.warn('Dodo Webhook: DODO_WEBHOOK_SECRET is not configured. Skipping signature verification. THIS IS INSECURE FOR PRODUCTION!');
     return true; // Insecure: allow if no secret is configured
   }
-  if (!signature) {
-    safeConsole.error('Dodo Webhook: Missing X-Dodo-Signature header for verification.');
+  if (!signatureHeader) {
+    safeConsole.error('Dodo Webhook: Missing webhook-signature header for verification.');
     return false;
   }
 
   try {
+    // Dodo's signature format is typically `v1,BASE64_ENCODED_HMAC`
+    const parts = signatureHeader.split(',');
+    if (parts.length !== 2 || parts[0] !== 'v1') {
+      safeConsole.error('Dodo Webhook: Invalid webhook-signature format. Expected "v1,<signature>".');
+      return false;
+    }
+    const incomingSignatureBase64 = parts[1];
+
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw',
@@ -55,62 +63,12 @@ async function verifyDodoSignature(
       encoder.encode(payload)
     );
 
-    const expectedSignature = 'whsec_' + Array.from(new Uint8Array(hmacBuffer))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    // Convert ArrayBuffer to base64 string
+    const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
     
-    // Dodo's signature format is typically `whsec_` followed by a base64 encoded HMAC.
-    // The previous implementation was for a raw hex string. Let's adjust for base64.
-    // Re-evaluating Dodo's typical signature format: it's usually `whsec_` followed by a base64 encoded HMAC.
-    // The provided secret `whsec_X6Dyf+4bLnCvFumlKTGGMEDCTq4/nbP/` itself looks like a secret, not a signature.
-    // The signature would be in a header like `X-Dodo-Signature`.
-    // Let's assume the `signature` parameter is the actual `X-Dodo-Signature` header value.
-    // The secret is used to *generate* the expected signature.
-
-    // Dodo's documentation (or common practice) usually involves:
-    // 1. Concatenating timestamp and payload.
-    // 2. Hashing with HMAC-SHA256 using the signing secret.
-    // 3. Base64 encoding the hash.
-    // 4. Comparing with the `X-Dodo-Signature` header.
-
-    // For now, let's assume the `signature` passed is the raw HMAC-SHA256 base64 string (without 'whsec_').
-    // If Dodo's signature includes 'whsec_', we'll need to strip it from the incoming signature.
-
-    // Let's assume Dodo sends `X-Dodo-Signature: t=TIMESTAMP,v1=SIGNATURE_HASH`
-    // Or just `X-Dodo-Signature: SIGNATURE_HASH`
-    // The screenshot shows the secret itself, not an example signature.
-
-    // Given the format `whsec_X6Dyf+4bLnCvFumlKTGGMEDCTq4/nbP/`, this is likely the *secret key*
-    // and not the *signature header value*.
-    // The signature header would typically be something like `X-Dodo-Signature: v1=some_base64_hash`.
-
-    // Let's update the `verifyDodoSignature` to expect the secret as the key,
-    // and the signature header to be a base64 encoded HMAC-SHA256 of the payload.
-    // We'll need to check Dodo's actual header name and format.
-    // For now, let's assume the header is `X-Dodo-Signature` and its value is the base64 encoded HMAC.
-
-    // Re-reading the prompt: "I found this signing secret under the webhook page after creation. is this it? whsec_X6Dyf+4bLnCvFumlKTGGMEDCTq4/nbP/"
-    // This confirms `whsec_X6Dyf+4bLnCvFumlKTGGMEDCTq4/nbP/` is the *secret key* itself.
-    // The `X-Dodo-Signature` header will contain the *generated signature*.
-
-    // Let's assume Dodo sends a header like `X-Dodo-Signature: <base64_encoded_hmac_sha256_of_payload>`
-    // And the secret is `whsec_...`
-
-    // The `crypto.subtle.sign` returns an ArrayBuffer. We need to base64 encode it.
-    const calculatedSignatureBuffer = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(payload)
-    );
-    const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(calculatedSignatureBuffer)));
-
-    // Compare the calculated signature with the one from the header
-    // We need to handle potential prefixes like 'whsec_' if Dodo adds them to the header value.
-    const incomingSignatureClean = signature.startsWith('whsec_') ? signature.substring(6) : signature;
-
-    const isValid = calculatedSignature === incomingSignatureClean;
+    const isValid = calculatedSignature === incomingSignatureBase64;
     if (!isValid) {
-      safeConsole.error('Dodo Webhook: Signature mismatch. Calculated:', calculatedSignature, 'Incoming:', incomingSignatureClean);
+      safeConsole.error('Dodo Webhook: Signature mismatch. Calculated:', calculatedSignature, 'Incoming:', incomingSignatureBase64);
     }
     return isValid;
 
@@ -134,10 +92,10 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
     // IMPORTANT: Webhook signature verification
-    const signature = req.headers.get('X-Dodo-Signature'); // Assuming this is the header Dodo sends
+    const signatureHeader = req.headers.get('webhook-signature'); // CORRECTED: Looking for 'webhook-signature'
     const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET');
 
-    if (!(await verifyDodoSignature(rawBodyText, signature, dodoWebhookSecret))) {
+    if (!(await verifyDodoSignature(rawBodyText, signatureHeader, dodoWebhookSecret))) {
       safeConsole.error('Unauthorized: Invalid webhook signature.');
       return new Response('Unauthorized: Invalid signature', { status: 401 });
     }
@@ -154,12 +112,15 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
 
-    const userId = obj.custom_data?.user_id || obj.user_id;
-    const organizationId = obj.custom_data?.organization_id || obj.organization_id;
+    // Extract userId and organizationId from custom_data or metadata
+    // Dodo's passthrough data is usually in `metadata` or `custom_data` depending on setup.
+    // Let's check `obj.metadata` first, then `obj.custom_data`
+    const userId = obj.metadata?.user_id || obj.custom_data?.user_id || obj.user_id;
+    const organizationId = obj.metadata?.organization_id || obj.custom_data?.organization_id || obj.organization_id;
     const customerId = obj.customer_id;
 
     if (!userId || !organizationId || !customerId) {
-      safeConsole.error('Dodo Webhook: Missing essential metadata in event payload.', { userId, organizationId, customerId, eventType });
+      safeConsole.error('Dodo Webhook: Missing essential metadata in event payload.', { userId, organizationId, customerId, eventType, metadata: obj.metadata, custom_data: obj.custom_data });
       return new Response('Missing essential metadata', { status: 400 });
     }
 
