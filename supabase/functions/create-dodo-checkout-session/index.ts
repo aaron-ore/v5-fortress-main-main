@@ -134,8 +134,29 @@ serve(async (req) => {
       });
     }
 
-    const dodoApiBaseUrl = 'https://api.dodo.com/v1'; // Placeholder Dodo API URL
-    const dodoCheckoutApiUrl = `https://test.checkout.dodopayments.com/buy/${dodoProductId}`; // Direct payment link from user
+    // Determine the correct Dodo product ID based on the requested plan
+    let actualDodoProductId: string | undefined;
+    if (dodoProductId === 'pdt_uB7ZQurvsyNW3y7s5x0qk') { // Standard plan
+      actualDodoProductId = Deno.env.get('DODO_PRODUCT_ID_STANDARD');
+    } else if (dodoProductId === 'pdt_xFu2HtpLC550GY0EnRCPk') { // Pro plan
+      actualDodoProductId = Deno.env.get('DODO_PRODUCT_ID_PRO');
+    } else {
+      safeConsole.error('Edge Function: Invalid or unknown dodoProductId received:', dodoProductId);
+      return new Response(JSON.stringify({ error: 'Invalid Dodo product ID provided.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    if (!actualDodoProductId) {
+      safeConsole.error(`Edge Function: Dodo Product ID for ${dodoProductId} is not configured in environment variables.`);
+      return new Response(JSON.stringify({ error: `Server configuration error: Dodo Product ID for ${dodoProductId} is missing.` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
+
+    const dodoCheckoutApiUrl = `https://test.checkout.dodopayments.com/buy/${actualDodoProductId}`; // Use the actual product ID
 
     let clientAppBaseUrl = Deno.env.get('CLIENT_APP_BASE_URL');
     if (!clientAppBaseUrl) {
@@ -152,8 +173,6 @@ serve(async (req) => {
     }
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
-    // Dodo's payment link already handles the return URL. We just need to append our custom data.
-    // The user provided a direct payment link, so we'll use that and append custom data.
     const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
     const checkoutUrl = `${dodoCheckoutApiUrl}?quantity=1&passthrough[user_id]=${userId}&passthrough[organization_id]=${organizationId}&return_url=${encodeURIComponent(returnUrl)}`;
 

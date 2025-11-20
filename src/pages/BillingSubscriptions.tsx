@@ -19,7 +19,7 @@ import React, { useState, useEffect } from "react";
     // Dodo Product IDs (placeholders - you'll need to replace these with your actual Dodo Product IDs)
     const DODO_PRODUCT_IDS = {
       STANDARD: "pdt_uB7ZQurvsyNW3y7s5x0qk", // Updated with provided test product ID
-      PRO: "DODO_PRODUCT_ID_PRO", // Placeholder for Pro plan
+      PRO: "pdt_xFu2HtpLC550GY0EnRCPk", // NEW: Test product ID for Pro plan
     };
 
     interface DodoPlanDisplay {

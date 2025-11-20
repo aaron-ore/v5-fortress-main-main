@@ -175,7 +175,7 @@ serve(async (req) => {
         case Deno.env.get('DODO_PRODUCT_ID_STANDARD'):
           planName = 'standard';
           break;
-        case Deno.env.get('DODO_PRODUCT_ID_PRO'):
+        case Deno.env.get('DODO_PRODUCT_ID_PRO'): // NEW: Recognize Pro plan product ID
           planName = 'pro';
           break;
         default:
