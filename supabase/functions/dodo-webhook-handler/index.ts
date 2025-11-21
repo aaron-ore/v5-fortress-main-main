@@ -48,6 +48,12 @@ serve(async (req) => {
     const dodoApiKey = Deno.env.get('DODO_API_KEY')?.trim();
     const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim(); // Using DODO_PAYMENTS_WEBHOOK_KEY as per Dodo support
 
+    safeConsole.log('Dodo Webhook: Extracted webhook-signature header:', signatureHeader);
+    safeConsole.log('Dodo Webhook: Extracted webhook-timestamp header:', webhookTimestamp);
+    safeConsole.log('Dodo Webhook: DODO_API_KEY (from env):', dodoApiKey ? 'present' : 'MISSING');
+    safeConsole.log('Dodo Webhook: DODO_PAYMENTS_WEBHOOK_KEY (from env):', dodoWebhookSecret ? 'present' : 'MISSING');
+
+
     if (!dodoApiKey) {
       safeConsole.error('Dodo Webhook: DODO_API_KEY environment variable is not set. Cannot initialize DodoPayments SDK.');
       return new Response('Server configuration error: Dodo API Key is missing.', { status: 500 });
