@@ -74,24 +74,20 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
-  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any): UserProfile => {
+  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerDataFromSupabase: any): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, JSON.stringify(data, null, 2));
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, JSON.stringify(companyData, null, 2));
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (raw from join):`, JSON.stringify(customerData, null, 2), `Type: ${typeof customerData}`);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerDataFromSupabase (raw from join):`, JSON.stringify(customerDataFromSupabase, null, 2), `Type: ${typeof customerDataFromSupabase}`);
 
-    // Defensive check for customerData type: ensure it's an object or null, not an array
-    let safeCustomerData: any | null = null;
-    if (customerData && typeof customerData === 'object') {
-        if (Array.isArray(customerData)) {
-            if (customerData.length > 0) {
-                safeCustomerData = customerData[0]; // If it's an array, take the first element
-            }
-        } else {
-            safeCustomerData = customerData; // If it's already a single object
-        }
-    }
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processed safeCustomerData:`, JSON.stringify(safeCustomerData, null, 2));
+    // Determine the actual customer object, if any.
+    // If customerDataFromSupabase is an array, take the first element.
+    // If it's an object, use it directly. Otherwise, it's null.
+    const actualCustomerObject = (Array.isArray(customerDataFromSupabase) && customerDataFromSupabase.length > 0)
+        ? customerDataFromSupabase[0]
+        : (customerDataFromSupabase && typeof customerDataFromSupabase === 'object' && !Array.isArray(customerDataFromSupabase) ? customerDataFromSupabase : null);
+
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processed actualCustomerObject:`, JSON.stringify(actualCustomerObject, null, 2));
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
@@ -117,8 +113,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
 
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Before dodoCustomerId assignment, safeCustomerData:`, safeCustomerData); // CRITICAL LOG
+    // CRITICAL LOG: Log the actualCustomerObject right before accessing its properties
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Attempting to access Dodo IDs from actualCustomerObject:`, actualCustomerObject);
 
+    let dodoCustomerId: string | undefined = undefined;
+    let dodoSubscriptionId: string | undefined = undefined;
+
+    if (actualCustomerObject) {
+      dodoCustomerId = actualCustomerObject.dodo_customer_id || undefined;
+      dodoSubscriptionId = actualCustomerObject.dodo_subscription_id || undefined;
+    }
+    
     const userProfile: UserProfile = {
       id: data.id,
       fullName: data.full_name || '',
@@ -132,9 +137,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      // Explicitly check if safeCustomerData exists before accessing its properties
-      dodoCustomerId: safeCustomerData ? safeCustomerData.dodo_customer_id : undefined,
-      dodoSubscriptionId: safeCustomerData ? safeCustomerData.dodo_subscription_id : undefined,
+      dodoCustomerId: dodoCustomerId,
+      dodoSubscriptionId: dodoSubscriptionId,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
