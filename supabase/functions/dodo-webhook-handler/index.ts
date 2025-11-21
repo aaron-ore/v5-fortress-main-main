@@ -41,14 +41,14 @@ serve(async (req) => {
 
     const signatureHeader = req.headers.get('webhook-signature');
     const webhookTimestamp = req.headers.get('webhook-timestamp');
-    const webhookId = req.headers.get('webhook-id'); // NEW: Extract webhook-id
+    const webhookId = req.headers.get('webhook-id'); // Extract webhook-id
     
     const dodoApiKey = Deno.env.get('DODO_API_KEY')?.trim();
     const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim();
 
     safeConsole.log('Dodo Webhook: Extracted webhook-signature header:', signatureHeader);
     safeConsole.log('Dodo Webhook: Extracted webhook-timestamp header:', webhookTimestamp);
-    safeConsole.log('Dodo Webhook: Extracted webhook-id header:', webhookId); // NEW: Log webhook-id
+    safeConsole.log('Dodo Webhook: Extracted webhook-id header:', webhookId);
     safeConsole.log('Dodo Webhook: DODO_API_KEY (from env):', dodoApiKey ? 'present' : 'MISSING');
     safeConsole.log('Dodo Webhook: DODO_PAYMENTS_WEBHOOK_KEY (from env):', dodoWebhookSecret ? 'present' : 'MISSING');
 
@@ -69,7 +69,7 @@ serve(async (req) => {
       safeConsole.error('Dodo Webhook: Missing webhook-timestamp header for verification.');
       return new Response('Unauthorized: Missing webhook timestamp header.', { status: 401 });
     }
-    if (!webhookId) { // NEW: Check for webhook-id
+    if (!webhookId) {
       safeConsole.error('Dodo Webhook: Missing webhook-id header for verification.');
       return new Response('Unauthorized: Missing webhook ID header.', { status: 401 });
     }
@@ -82,7 +82,7 @@ serve(async (req) => {
     const webhookHeaders = {
       'webhook-signature': signatureHeader,
       'webhook-timestamp': webhookTimestamp,
-      'webhook-id': webhookId, // NEW: Include webhook-id
+      'webhook-id': webhookId,
     };
 
     let event;
@@ -100,30 +100,32 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const eventType = event.event_name;
-    const obj = event.data;
+    // Corrected field mappings based on Dodo's feedback
+    const eventType = event.type; // Use event.type for the event type
+    const customerId = event.data.attributes.customer_id; // Use event.data.attributes.customer_id for customer ID
+    const userId = event.data.attributes.passthrough?.user_id; // Extract from passthrough
+    const organizationId = event.data.attributes.passthrough?.organization_id; // Extract from passthrough
+    const productId = event.data.attributes.product_id; // Extract product ID
+    const subscriptionId = event.data.id; // The top-level ID of the data object is the subscription ID
 
-    safeConsole.log('Dodo Webhook: Event Type:', eventType);
-    safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
+    safeConsole.log('Dodo Webhook: Extracted Event Type:', eventType);
+    safeConsole.log('Dodo Webhook: Extracted Customer ID:', customerId);
+    safeConsole.log('Dodo Webhook: Extracted User ID:', userId);
+    safeConsole.log('Dodo Webhook: Extracted Organization ID:', organizationId);
+    safeConsole.log('Dodo Webhook: Extracted Product ID:', productId);
+    safeConsole.log('Dodo Webhook: Extracted Subscription ID:', subscriptionId);
 
-    const userId = obj.metadata?.user_id || obj.custom_data?.user_id || obj.user_id;
-    const organizationId = obj.metadata?.organization_id || obj.custom_data?.organization_id || obj.organization_id;
-    const customerId = obj.customer_id;
 
-    if (!userId || !organizationId || !customerId) {
-      safeConsole.error('Dodo Webhook: Missing essential metadata in event payload.', { userId, organizationId, customerId, eventType, metadata: obj.metadata, custom_data: obj.custom_data });
-      return new Response('Missing essential metadata', { status: 400 });
+    if (!userId || !organizationId || !customerId || !productId || !subscriptionId) {
+      safeConsole.error('Dodo Webhook: Missing essential metadata in event payload after corrected mapping.', { userId, organizationId, customerId, productId, subscriptionId, eventType, eventData: event.data });
+      return new Response('Missing essential metadata after mapping', { status: 400 });
     }
-    safeConsole.log('Dodo Webhook: Extracted userId:', userId, 'organizationId:', organizationId, 'customerId:', customerId);
+    safeConsole.log('Dodo Webhook: All essential metadata extracted successfully.');
 
 
     let planName: string | null = null;
-    let subscriptionId: string | null = null;
 
     if (eventType === 'subscription.active' || eventType === 'subscription.plan_changed' || eventType === 'subscription.renewed') {
-      const productId = obj.product_id;
-      subscriptionId = obj.subscription_id;
-
       switch (String(productId)) {
         case Deno.env.get('DODO_PRODUCT_ID_STANDARD'):
           planName = 'standard';
@@ -156,8 +158,6 @@ serve(async (req) => {
       return new Response('Webhook processed successfully', { status: 200 });
 
     } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired' || eventType === 'subscription.on_hold') {
-      subscriptionId = obj.subscription_id;
-
       safeConsole.log(`Dodo Webhook: Handling cancellation/failure for organization ${organizationId}, customer ${customerId}. Setting plan to 'free'.`);
 
       const { data, error } = await supabaseAdmin
