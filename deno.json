@@ -13,5 +13,8 @@
     "noEmit": true,
     "isolatedModules": true,
     "types": ["@deno/types"]
+  },
+  "imports": {
+    "dodo-payments": "npm:dodo-payments@^1.0.0"
   }
 }
