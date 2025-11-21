@@ -74,11 +74,22 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
-  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any | null): UserProfile => {
+  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, JSON.stringify(data, null, 2));
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, JSON.stringify(companyData, null, 2));
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (customers join):`, JSON.stringify(customerData, null, 2));
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (raw from join):`, JSON.stringify(customerData, null, 2), `Type: ${typeof customerData}`);
+
+    // Defensive check for customerData type: ensure it's an object or null, not an array
+    let safeCustomerData: any | null = null;
+    if (customerData && typeof customerData === 'object') {
+        if (Array.isArray(customerData) && customerData.length > 0) {
+            safeCustomerData = customerData[0]; // If it's an array, take the first element
+        } else if (!Array.isArray(customerData)) {
+            safeCustomerData = customerData; // If it's already a single object
+        }
+    }
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processed safeCustomerData:`, JSON.stringify(safeCustomerData, null, 2));
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
@@ -117,8 +128,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      dodoCustomerId: customerData?.dodo_customer_id || undefined, // Safely access dodo_customer_id
-      dodoSubscriptionId: customerData?.dodo_subscription_id || undefined, // Safely access dodo_subscription_id
+      dodoCustomerId: safeCustomerData?.dodo_customer_id || undefined, // Use safeCustomerData
+      dodoSubscriptionId: safeCustomerData?.dodo_subscription_id || undefined, // Use safeCustomerData
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -158,9 +169,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       try {
-        // Safely extract customer data: if data.customers is an array and has elements, take the first element, otherwise null
-        const customerData = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
-        console.log('[ProfileContext] fetchProfile: Extracted customerData for mapping:', JSON.stringify(customerData, null, 2));
+        // Pass the raw data.customers to the mapper, which will handle array vs object
+        const customerData = data.customers; 
+        console.log('[ProfileContext] fetchProfile: Passing raw data.customers to mapper:', JSON.stringify(customerData, null, 2));
         
         const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData);
         startTransition(() => {
@@ -209,8 +220,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAllProfiles([]);
     } else {
       const mappedProfiles: UserProfile[] = data.map((p: any) => {
-        // Safely extract customer data for each profile
-        const customerData = Array.isArray(p.customers) && p.customers.length > 0 ? p.customers[0] : null;
+        // Pass the raw p.customers to the mapper, which will handle array vs object
+        const customerData = p.customers;
         return mapSupabaseProfileToUserProfile(p, null, customerData);
       });
       startTransition(() => {
