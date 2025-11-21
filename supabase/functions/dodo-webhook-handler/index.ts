@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { DodoPayments } from 'npm:dodo-payments'; // NEW: Import DodoPayments SDK
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,80 +25,7 @@ const safeConsole = {
   },
 };
 
-// Actual Dodo webhook signature verification
-async function verifyDodoSignature(
-  payload: string, // This is now the rawBodyText
-  signatureHeader: string | null,
-  webhookTimestamp: string | null,
-  secret: string | undefined
-): Promise<boolean> {
-  if (!secret) {
-    safeConsole.warn('Dodo Webhook: DODO_WEBHOOK_SECRET is not configured. Skipping signature verification. THIS IS INSECURE FOR PRODUCTION!');
-    return true; // Insecure: allow if no secret is configured
-  }
-  if (!signatureHeader) {
-    safeConsole.error('Dodo Webhook: Missing webhook-signature header for verification.');
-    return false;
-  }
-  if (!webhookTimestamp) {
-    safeConsole.error('Dodo Webhook: Missing webhook-timestamp header for verification.');
-    return false;
-  }
-
-  try {
-    const parts = signatureHeader.split(',');
-    if (parts.length !== 2 || parts[0] !== 'v1') {
-      safeConsole.error('Dodo Webhook: Invalid webhook-signature format. Expected "v1,<signature>".');
-      return false;
-    }
-    const incomingSignatureBase64 = parts[1];
-
-    // MODIFIED: Strip 'whsec_' prefix from the secret for HMAC calculation
-    const rawSecret = secret.startsWith('whsec_') ? secret.replace('whsec_', '') : secret;
-
-    safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
-    safeConsole.log(`  Original Secret length (from env): ${secret.length}`);
-    safeConsole.log(`  Raw Secret length (after stripping prefix): ${rawSecret.length}`); // This should be 32
-    safeConsole.log(`  Raw Secret starts with (masked): ${rawSecret.substring(0, 5)}...`); // This should be the stripped one
-    safeConsole.log(`  Raw Payload length (for HMAC): ${payload.length}`);
-    safeConsole.log(`  Raw Payload (truncated for log): ${payload.substring(0, 200)}...`);
-    safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
-    safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`);
-
-    // Construct the string to sign as per Dodo's documentation
-    const stringToSign = `t=${webhookTimestamp}.${payload}`;
-    safeConsole.log(`  String to Sign (truncated): ${stringToSign.substring(0, 200)}...`);
-    safeConsole.log(`  String to Sign length: ${stringToSign.length}`);
-
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(rawSecret), // Use the rawSecret without prefix
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-
-    const hmacBuffer = await crypto.subtle.sign(
-      'HMAC',
-      key,
-      encoder.encode(stringToSign)
-    );
-
-    const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
-    safeConsole.log(`  Calculated Signature (Base64): ${calculatedSignature}`);
-    
-    const isValid = calculatedSignature === incomingSignatureBase64;
-    if (!isValid) {
-      safeConsole.error('Dodo Webhook: Signature mismatch. Calculated:', calculatedSignature, 'Incoming:', incomingSignatureBase64);
-    }
-    return isValid;
-
-  } catch (e: any) {
-    safeConsole.error('Dodo Webhook: Error during signature verification:', e.message);
-    return false;
-  }
-}
+// REMOVED: Manual verifyDodoSignature function
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -115,17 +43,48 @@ serve(async (req) => {
 
     const signatureHeader = req.headers.get('webhook-signature');
     const webhookTimestamp = req.headers.get('webhook-timestamp');
-    const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim();
+    
+    // NEW: Retrieve Dodo API Key and Webhook Key
+    const dodoApiKey = Deno.env.get('DODO_API_KEY')?.trim();
+    const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim(); // Using DODO_PAYMENTS_WEBHOOK_KEY as per Dodo support
 
-    if (!(await verifyDodoSignature(rawBodyText, signatureHeader, webhookTimestamp, dodoWebhookSecret))) {
-      safeConsole.error('Unauthorized: Invalid webhook signature.');
-      return new Response('Unauthorized: Invalid signature', { status: 401 });
+    if (!dodoApiKey) {
+      safeConsole.error('Dodo Webhook: DODO_API_KEY environment variable is not set. Cannot initialize DodoPayments SDK.');
+      return new Response('Server configuration error: Dodo API Key is missing.', { status: 500 });
     }
-    safeConsole.log('Dodo Webhook: Signature verification successful.');
+    if (!dodoWebhookSecret) {
+      safeConsole.error('Dodo Webhook: DODO_PAYMENTS_WEBHOOK_KEY environment variable is not set. Cannot initialize DodoPayments SDK.');
+      return new Response('Server configuration error: Dodo Webhook Key is missing.', { status: 500 });
+    }
+    if (!signatureHeader) {
+      safeConsole.error('Dodo Webhook: Missing webhook-signature header for verification.');
+      return new Response('Unauthorized: Missing webhook signature header.', { status: 401 });
+    }
+    if (!webhookTimestamp) {
+      safeConsole.error('Dodo Webhook: Missing webhook-timestamp header for verification.');
+      return new Response('Unauthorized: Missing webhook timestamp header.', { status: 401 });
+    }
 
-    const event = JSON.parse(rawBodyText);
-    safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
-    safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
+    // NEW: Initialize DodoPayments SDK and unwrap the webhook
+    const dodoPaymentsClient = new DodoPayments({
+      bearerToken: dodoApiKey,
+      webhookKey: dodoWebhookSecret, // Use FULL secret with whsec_ prefix
+    });
+
+    const webhookHeaders = {
+      'webhook-signature': signatureHeader,
+      'webhook-timestamp': webhookTimestamp,
+    };
+
+    let event;
+    try {
+      event = dodoPaymentsClient.webhooks.unwrap(rawBodyText, { headers: webhookHeaders });
+      safeConsole.log('Dodo Webhook: SDK unwrapped webhook successfully:', JSON.stringify(event, null, 2));
+    } catch (sdkError: any) {
+      safeConsole.error('Dodo Webhook: SDK webhook unwrap failed:', sdkError.message);
+      return new Response(`Unauthorized: Webhook verification failed. ${sdkError.message}`, { status: 401 });
+    }
+    safeConsole.log('Dodo Webhook: Signature verification successful using SDK.');
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
