@@ -21,12 +21,10 @@ interface UpgradePromptDialogProps {
   onClose: () => void;
 }
 
-// DODO_PRODUCT_IDS is not used in this simulated trial dialog, so it's removed.
-
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { profile, markUpgradePromptSeen, fetchProfile } = useProfile();
-  const [isProcessingTrial, setIsProcessingTrial] = useState(false);
+  const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
 
   const handleUpgradeNow = () => {
     markUpgradePromptSeen();
@@ -44,12 +42,12 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
       return;
     }
 
-    setIsProcessingTrial(true);
+    setIsProcessingSubscription(true);
     try {
-      console.log(`Simulating Dodo trial for plan: ${planName}`);
+      // Simulate subscription process
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
 
-      // For the trial, we'll just update the plan and set a trial end date.
-      // The Dodo customer/subscription IDs would typically come from a webhook after a real checkout.
+      // Update the organization's plan in Supabase
       await supabase
         .from('organizations')
         .update({
@@ -59,13 +57,13 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
         .eq('id', profile.organizationId);
 
       showSuccess(`14-Day Free Trial for ${planName} plan started (simulated)!`);
-      onClose();
+
     } catch (error: any) {
-      console.error("Error starting free trial (simulated):", error);
+      console.error("Error initiating trial (simulated):", error);
       showError(`Failed to start free trial: ${error.message}`);
     } finally {
-      setIsProcessingTrial(false);
-      await fetchProfile();
+      setIsProcessingSubscription(false);
+      await fetchProfile(); // Re-fetch profile to update plan status
     }
   };
 
@@ -92,10 +90,10 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
           <Button
             variant="secondary"
             onClick={() => handleStartFreeTrial('standard')}
-            disabled={isProcessingTrial}
+            disabled={isProcessingSubscription}
             className="w-full"
           >
-            {isProcessingTrial ? (
+            {isProcessingSubscription ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting Trial...
               </>

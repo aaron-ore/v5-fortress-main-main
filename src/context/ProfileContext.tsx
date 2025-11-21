@@ -40,8 +40,8 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  dodoCustomerId?: string; // NEW: Dodo Customer ID now on profile
-  dodoSubscriptionId?: string; // NEW: Dodo Subscription ID now on profile
+  // Removed: dodoCustomerId?: string;
+  // Removed: dodoSubscriptionId?: string;
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
   hasSeenUpgradePrompt: boolean;
@@ -54,7 +54,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt' | 'dodoCustomerId' | 'dodoSubscriptionId'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -74,18 +74,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
-  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerDataArray: any[]): UserProfile => {
+  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, JSON.stringify(data, null, 2));
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, JSON.stringify(companyData, null, 2));
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerDataArray (processed from join):`, JSON.stringify(customerDataArray, null, 2), `Type: ${typeof customerDataArray}`);
-
-    // Get the first customer object if the array is not empty, otherwise null
-    const actualCustomerObject = (customerDataArray && customerDataArray.length > 0)
-        ? customerDataArray[0]
-        : null;
-
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processed actualCustomerObject:`, JSON.stringify(actualCustomerObject, null, 2));
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
@@ -110,22 +102,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       perpetualFeatures: companyData.perpetual_features || undefined,
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
-
-    let dodoCustomerId: string | undefined = undefined;
-    let dodoSubscriptionId: string | undefined = undefined;
-
-    // CRITICAL LOG: Log the actualCustomerObject right before accessing its properties
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Attempting to access Dodo IDs from actualCustomerObject:`, actualCustomerObject);
-
-    try {
-        if (actualCustomerObject) {
-            dodoCustomerId = actualCustomerObject.dodo_customer_id || undefined;
-            dodoSubscriptionId = actualCustomerObject.dodo_subscription_id || undefined;
-        }
-    } catch (accessError: any) {
-        console.error(`[ProfileContext] CRITICAL ERROR: Failed to access dodo_customer_id/dodo_subscription_id. actualCustomerObject was:`, actualCustomerObject, `Error:`, accessError.message);
-        // Proceed with undefined values if an error occurs during access
-    }
     
     const userProfile: UserProfile = {
       id: data.id,
@@ -140,8 +116,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      dodoCustomerId: dodoCustomerId,
-      dodoSubscriptionId: dodoSubscriptionId,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -162,7 +136,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version), customers(dodo_customer_id, dodo_subscription_id)')
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
       .eq('id', user.id)
       .single();
 
@@ -181,19 +155,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       try {
-        let customerData = data.customers;
-        // Ensure customerData is always treated as an array for consistency, even if Supabase returns null or a single object
-        if (customerData === null || customerData === undefined) {
-            customerData = [];
-        } else if (!Array.isArray(customerData)) {
-            // If it's a single object, wrap it in an array
-            console.warn('[ProfileContext] fetchProfile: data.customers was not an array. Wrapping single object in array for consistency.');
-            customerData = [customerData];
-        }
-        
-        console.log('[ProfileContext] fetchProfile: Passing processed customerData to mapper:', JSON.stringify(customerData, null, 2));
-        
-        const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData);
+        const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
         startTransition(() => {
           setProfile(prevProfile => {
             if (deepEqual(prevProfile, newProfileData)) {
@@ -227,7 +189,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingAllProfiles(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt, customers(dodo_customer_id, dodo_subscription_id)')
+      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt')
       .eq('organization_id', profile.organizationId)
       .order('full_name', { ascending: true });
 
@@ -240,14 +202,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setAllProfiles([]);
     } else {
       const mappedProfiles: UserProfile[] = data.map((p: any) => {
-        // Pass the raw p.customers to the mapper, which will handle array vs object
-        let customerData = p.customers;
-        if (customerData === null || customerData === undefined) {
-            customerData = [];
-        } else if (!Array.isArray(customerData)) {
-            customerData = [customerData];
-        }
-        return mapSupabaseProfileToUserProfile(p, null, customerData);
+        return mapSupabaseProfileToUserProfile(p, null);
       });
       startTransition(() => {
         setAllProfiles(mappedProfiles);
@@ -286,7 +241,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt' | 'dodoCustomerId' | 'dodoSubscriptionId'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -497,7 +452,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         body: JSON.stringify({ newAdminUserId }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Authorization': `Bearer ${session.session.access_token}`,
         },
       });
 

@@ -16,13 +16,7 @@ import React, { useState, useEffect } from "react";
       included: boolean;
     }
 
-    // Dodo Product IDs (placeholders - you'll need to replace these with your actual Dodo Product IDs)
-    const DODO_PRODUCT_IDS = {
-      STANDARD: "pdt_uB7ZQurvsyNW3y7s5x0qk", // Updated with provided test product ID
-      PRO: "pdt_xFu2HtpLC550GY0EnRCPk", // NEW: Test product ID for Pro plan
-    };
-
-    interface DodoPlanDisplay {
+    interface PlanDisplay {
       id: string;
       name: string;
       description: string;
@@ -31,13 +25,12 @@ import React, { useState, useEffect } from "react";
       oneTimePrice?: number;
       isPopular?: boolean;
       features: PlanFeature[];
-      dodoProductId: string; // Dodo's product ID
     }
 
     const BillingSubscriptions: React.FC = () => {
       const { profile, isLoadingProfile, fetchProfile } = useProfile();
       const [billingCycle, setBillingCycle] = useState<"monthly" | "annually">("monthly");
-      const [availableDodoPlans, setAvailableDodoPlans] = useState<DodoPlanDisplay[]>([]);
+      const [availablePlans, setAvailablePlans] = useState<PlanDisplay[]>([]);
       const [isLoadingPlans, setIsLoadingPlans] = useState(true);
       const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
       const [isManagingSubscription, setIsManagingSubscription] = useState(false);
@@ -45,11 +38,11 @@ import React, { useState, useEffect } from "react";
       const currentPlanId = profile?.companyProfile?.plan || "free";
 
       useEffect(() => {
-        const fetchDodoPlans = async () => {
+        const fetchPlans = async () => {
           setIsLoadingPlans(true);
-          const mockDodoPlans: DodoPlanDisplay[] = [
+          const mockPlans: PlanDisplay[] = [
             {
-              id: "dodo-free",
+              id: "free",
               name: "Free",
               description: "Basic inventory management for small businesses.",
               isPopular: false,
@@ -57,10 +50,9 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
-              dodoProductId: "free", // Placeholder for free plan
             },
             {
-              id: "dodo-standard",
+              id: "standard",
               name: "Standard",
               description: "Essential features for growing businesses.",
               monthlyPrice: 59,
@@ -70,10 +62,9 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
-              dodoProductId: DODO_PRODUCT_IDS.STANDARD,
             },
             {
-              id: "dodo-pro",
+              id: "pro",
               name: "Pro",
               description: "Advanced features for optimized operations.",
               monthlyPrice: 125,
@@ -83,19 +74,17 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: getAllFeatureIds().includes(appFeature.id), // Pro includes all current features
               })),
-              dodoProductId: DODO_PRODUCT_IDS.PRO,
             },
             {
-              id: "dodo-enterprise",
+              id: "enterprise",
               name: "Enterprise",
               description: "Custom solutions for large-scale businesses.",
               isPopular: false,
               features: ALL_APP_FEATURES.map(appFeature => ({ text: appFeature.name, included: true })),
-              dodoProductId: "enterprise", // Placeholder for enterprise plan
             },
           ];
 
-          setAvailableDodoPlans(mockDodoPlans.sort((a, b) => {
+          setAvailablePlans(mockPlans.sort((a, b) => {
             if (a.name.toLowerCase() === 'free') return -1;
             if (b.name.toLowerCase() === 'free') return 1;
             return (a.monthlyPrice || Infinity) - (b.monthlyPrice || Infinity);
@@ -103,10 +92,10 @@ import React, { useState, useEffect } from "react";
           setIsLoadingPlans(false);
         };
 
-        fetchDodoPlans();
+        fetchPlans();
       }, []);
 
-      const getPriceDisplay = (plan: DodoPlanDisplay) => {
+      const getPriceDisplay = (plan: PlanDisplay) => {
         if (plan.name.toLowerCase() === "enterprise") return "Contact Sales";
         if (plan.name.toLowerCase() === "free") return "Free";
         if (plan.oneTimePrice !== undefined) return `$${plan.oneTimePrice.toFixed(0)} one-time`;
@@ -119,7 +108,7 @@ import React, { useState, useEffect } from "react";
         }
       };
 
-      const handleChoosePlan = async (plan: DodoPlanDisplay) => {
+      const handleChoosePlan = async (plan: PlanDisplay) => {
         if (!profile?.organizationId) {
           showError("Organization not found. Please ensure your company profile is set up.");
           return;
@@ -137,44 +126,21 @@ import React, { useState, useEffect } from "react";
 
         setIsProcessingSubscription(true);
         try {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          if (sessionError || !sessionData.session) {
-            throw new Error("Authentication session expired. Please log in again.");
-          }
+          // Simulate subscription process
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
 
-          const payload = {
-            dodoProductId: plan.dodoProductId,
-            organizationId: profile.organizationId,
-            userId: profile.id,
-          };
-          console.log("[BillingSubscriptions] Calling create-dodo-checkout-session with body:", payload);
+          // Update the organization's plan in Supabase
+          await supabase
+            .from('organizations')
+            .update({
+              plan: plan.name.toLowerCase(),
+            })
+            .eq('id', profile.organizationId);
 
-          const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
-            body: payload,
-            headers: {
-              'Authorization': `Bearer ${sessionData.session.access_token}`,
-            },
-          });
-
-          if (error) {
-            throw error;
-          }
-
-          if (data.error) {
-            throw new Error(data.error);
-          }
-
-          const checkoutUrl = data.checkoutUrl;
-          if (checkoutUrl) {
-            window.open(checkoutUrl, '_blank'); // MODIFIED: Open in new tab
-          } else {
-            throw new Error("Dodo checkout URL not received.");
-          }
-          
-          showInfo(`Redirecting to Dodo to subscribe to ${plan.name} plan...`);
+          showSuccess(`Successfully subscribed to ${plan.name} plan (simulated)!`);
 
         } catch (error: any) {
-          console.error("Error initiating Dodo Checkout:", error);
+          console.error("Error initiating subscription (simulated):", error);
           showError(`Failed to subscribe: ${error.message}`);
         } finally {
           setIsProcessingSubscription(false);
@@ -183,19 +149,20 @@ import React, { useState, useEffect } from "react";
       };
 
       const handleManageSubscription = async () => {
-        if (!profile?.organizationId || !profile?.dodoCustomerId) { // MODIFIED: Check profile.dodoCustomerId
-          showError("You don't have an active Dodo subscription to manage.");
+        if (!profile?.organizationId) {
+          showError("You don't have an active subscription to manage.");
           return;
         }
 
         setIsManagingSubscription(true);
         try {
-          showInfo("Redirecting to Dodo Customer Portal...");
+          showInfo("Redirecting to subscription management portal (simulated)...");
           // In a real integration, you would generate a link to the customer portal
-          // For now, a placeholder or direct link if available
-          window.open(`https://app.dodo.com/my-orders`, '_blank'); // Generic link
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
+          // For now, just show a success message
+          showSuccess("Redirected to simulated subscription management.");
         } catch (error: any) {
-          console.error("Error managing Dodo subscription:", error);
+          console.error("Error managing subscription (simulated):", error);
           showError(`Failed to manage subscription: ${error.message}`);
         } finally {
           setIsManagingSubscription(false);
@@ -208,15 +175,15 @@ import React, { useState, useEffect } from "react";
       const paymentMethods: any[] = [];
 
       const handleUpdatePaymentMethod = () => {
-        showError("Payment methods are managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.");
+        showError("Payment methods are managed directly in the subscription portal. Click 'Manage Subscription' to access it.");
       };
 
       const handleDownloadInvoice = (_invoiceId: string) => {
-        showError("Invoice history is managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.");
+        showError("Invoice history is managed directly in the subscription portal. Click 'Manage Subscription' to access it.");
       };
 
-      const recurringPlans = availableDodoPlans.filter((plan: DodoPlanDisplay) => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
-      const lifetimePlans = availableDodoPlans.filter((plan: DodoPlanDisplay) => plan.oneTimePrice !== undefined);
+      const recurringPlans = availablePlans.filter((plan: PlanDisplay) => plan.monthlyPrice !== undefined || plan.annualPrice !== undefined);
+      const lifetimePlans = availablePlans.filter((plan: PlanDisplay) => plan.oneTimePrice !== undefined);
 
       if (isLoadingProfile || isLoadingPlans) {
         return (
@@ -253,7 +220,7 @@ import React, { useState, useEffect } from "react";
 
           {/* Recurring Plan Cards */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {recurringPlans.map((plan: DodoPlanDisplay) => (
+            {recurringPlans.map((plan: PlanDisplay) => (
               <Card
                 key={plan.id}
                 className={cn(
@@ -315,7 +282,7 @@ import React, { useState, useEffect } from "react";
               <h2 className="text-2xl font-bold text-foreground text-center">One-Time Licenses</h2>
               <p className="text-muted-foreground text-center">Get access to a specific feature set with a single payment!</p>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {lifetimePlans.map((plan: DodoPlanDisplay) => (
+                {lifetimePlans.map((plan: PlanDisplay) => (
                   <Card
                     key={plan.id}
                     className={cn(
@@ -394,7 +361,7 @@ import React, { useState, useEffect } from "react";
               <div className="space-y-2">
                 <h3 className="font-semibold text-foreground">Features:</h3>
                 <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                  {availableDodoPlans.find((p: DodoPlanDisplay) => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
+                  {availablePlans.find((p: PlanDisplay) => p.name.toLowerCase() === currentPlanId)?.features.filter((f: PlanFeature) => f.included).map((feature: PlanFeature, index: number) => (
                     <li key={index} className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" /> {feature.text}
                     </li>
@@ -487,7 +454,7 @@ import React, { useState, useEffect } from "react";
               ) : (
                 <p className="text-center text-muted-foreground py-4">No invoices available.</p>
               )}
-              <Button onClick={() => showError("Invoice history is managed directly in the Dodo Customer Portal. Click 'Manage Subscription' to access it.")}>View All Invoices</Button>
+              <Button onClick={() => showError("Invoice history is managed directly in the subscription portal. Click 'Manage Subscription' to access it.")}>View All Invoices</Button>
             </CardContent>
           </Card>
         </div>
