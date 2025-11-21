@@ -54,6 +54,19 @@ async function verifyDodoSignature(
     safeConsole.log(`  Payload (truncated for log): ${payload.substring(0, 200)}...`); // Log truncated payload
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
 
+    // NEW: Canonicalize the JSON payload before signing
+    let canonicalPayload: string;
+    try {
+      const parsedEvent = JSON.parse(payload);
+      // Re-stringify to a compact form (no whitespace).
+      // For strict canonicalization, keys might need to be sorted, but usually compact is enough.
+      canonicalPayload = JSON.stringify(parsedEvent); 
+      safeConsole.log(`  Canonical Payload length: ${canonicalPayload.length}`);
+      safeConsole.log(`  Canonical Payload (truncated): ${canonicalPayload.substring(0, 200)}...`);
+    } catch (e: any) {
+      safeConsole.error('Dodo Webhook: Failed to parse raw body as JSON for canonicalization. Using raw body for verification.', e.message);
+      canonicalPayload = payload; // Fallback to raw if not valid JSON
+    }
 
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
@@ -67,7 +80,7 @@ async function verifyDodoSignature(
     const hmacBuffer = await crypto.subtle.sign(
       'HMAC',
       key,
-      encoder.encode(payload)
+      encoder.encode(canonicalPayload) // Use canonicalPayload here
     );
 
     const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
