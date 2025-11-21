@@ -100,13 +100,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Corrected field mappings based on Dodo's feedback
-    const eventType = event.type; // Use event.type for the event type
-    const customerId = event.data.attributes.customer_id; // Use event.data.attributes.customer_id for customer ID
-    const userId = event.data.attributes.passthrough?.user_id; // Extract from passthrough
-    const organizationId = event.data.attributes.passthrough?.organization_id; // Extract from passthrough
-    const productId = event.data.attributes.product_id; // Extract product ID
-    const subscriptionId = event.data.id; // The top-level ID of the data object is the subscription ID
+    // Corrected field mappings based on Dodo's feedback and logs
+    const eventType = event.type; // Correct: Use event.type
+    const customerId = event.data.customer?.customer_id; // Correct: Access via event.data.customer
+    const productId = event.data.product_id; // Correct: Access via event.data
+    const subscriptionId = event.data.subscription_id; // Correct: Access via event.data
+
+    // Passthrough data (userId, organizationId) is typically in event.data.metadata
+    const userId = event.data.metadata?.user_id;
+    const organizationId = event.data.metadata?.organization_id;
+
 
     safeConsole.log('Dodo Webhook: Extracted Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Extracted Customer ID:', customerId);
