@@ -52,15 +52,19 @@ async function verifyDodoSignature(
     }
     const incomingSignatureBase64 = parts[1];
 
+    // MODIFIED: Strip 'whsec_' prefix from the secret
+    const rawSecret = secret.startsWith('whsec_') ? secret.replace('whsec_', '') : secret;
+
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
-    safeConsole.log(`  Secret length (used in func): ${secret.length}`);
-    safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
+    safeConsole.log(`  Original Secret length: ${secret.length}`);
+    safeConsole.log(`  Raw Secret length (after stripping prefix): ${rawSecret.length}`);
+    safeConsole.log(`  Raw Secret starts with (masked): ${rawSecret.substring(0, 5)}...`);
     safeConsole.log(`  Raw Payload length (for HMAC): ${payload.length}`);
     safeConsole.log(`  Raw Payload (truncated for log): ${payload.substring(0, 200)}...`);
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
     safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`);
 
-    // MODIFIED: Use the raw payload directly without re-stringifying
+    // Construct the string to sign as per Dodo's documentation
     const stringToSign = `t=${webhookTimestamp}.${payload}`;
     safeConsole.log(`  String to Sign (truncated): ${stringToSign.substring(0, 200)}...`);
     safeConsole.log(`  String to Sign length: ${stringToSign.length}`);
@@ -68,7 +72,7 @@ async function verifyDodoSignature(
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(secret),
+      encoder.encode(rawSecret), // Use the rawSecret without prefix
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign']
