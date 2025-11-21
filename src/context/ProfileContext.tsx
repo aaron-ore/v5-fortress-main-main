@@ -75,7 +75,10 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any | null): UserProfile => {
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processing user ID: ${data.id}, Raw company_logo_url from DB: "${companyData?.company_logo_url}" (Type: ${typeof companyData?.company_logo_url})`);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, data);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, companyData);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (customers join):`, customerData);
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
@@ -101,7 +104,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
 
-    return {
+    const userProfile: UserProfile = {
       id: data.id,
       fullName: data.full_name || '',
       email: data.email || '',
@@ -120,10 +123,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
     };
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: END for user ID: ${data.id}, Result:`, userProfile);
+    return userProfile;
   };
 
   const fetchProfile = useCallback(async () => {
+    console.log(`[ProfileContext] fetchProfile: START for user: ${user?.id || 'null'}`);
     if (!user) {
+      console.log('[ProfileContext] fetchProfile: No user, setting profile to null.');
       setProfile(null);
       setIsLoadingProfile(false);
       return;
@@ -132,9 +139,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version), customers(dodo_customer_id, dodo_subscription_id)') // MODIFIED: Removed Dodo fields from organizations, added from customers
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version), customers(dodo_customer_id, dodo_subscription_id)')
       .eq('id', user.id)
       .single();
+
+    console.log(`[ProfileContext] fetchProfile: Supabase query result - data:`, data, `error:`, error);
 
     if (error) {
       console.error('Error fetching profile:', error);
@@ -148,23 +157,37 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true);
       setProfile(null);
     } else if (data) {
-      // Safely extract customer data: if data.customers is an array, take the first element, otherwise null
-      const customerData = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
-      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData); // MODIFIED: Pass customer data
-      startTransition(() => {
-        setProfile(prevProfile => {
-          if (deepEqual(prevProfile, newProfileData)) {
-            return prevProfile;
-          }
-          return newProfileData;
+      try {
+        // Safely extract customer data: if data.customers is an array, take the first element, otherwise null
+        const customerData = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
+        console.log('[ProfileContext] fetchProfile: Extracted customerData for mapping:', customerData);
+        
+        const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData);
+        startTransition(() => {
+          setProfile(prevProfile => {
+            if (deepEqual(prevProfile, newProfileData)) {
+              console.log('[ProfileContext] fetchProfile: New profile data is deep equal to previous, skipping state update.');
+              return prevProfile;
+            }
+            console.log('[ProfileContext] fetchProfile: Updating profile state with new data.');
+            return newProfileData;
+          });
         });
-      });
+      } catch (mappingError: any) {
+        console.error('Error mapping Supabase data to UserProfile:', mappingError);
+        showError('Failed to process profile data.');
+        await logActivity("Profile Mapping Failed", `Error mapping profile data for user ${user.id}.`, profile, { error_message: mappingError.message, raw_data: data }, true);
+        setProfile(null);
+      }
     }
     setIsLoadingProfile(false);
+    console.log(`[ProfileContext] fetchProfile: END for user: ${user?.id || 'null'}`);
   }, [user, isLoadingAuth]);
 
   const fetchAllProfiles = useCallback(async () => {
+    console.log(`[ProfileContext] fetchAllProfiles: START for organization: ${profile?.organizationId || 'null'}`);
     if (!profile?.organizationId) {
+      console.log('[ProfileContext] fetchAllProfiles: No organizationId, setting allProfiles to empty.');
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
       return;
@@ -173,9 +196,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingAllProfiles(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt, customers(dodo_customer_id, dodo_subscription_id)') // MODIFIED: Added Dodo fields from customers
+      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt, customers(dodo_customer_id, dodo_subscription_id)')
       .eq('organization_id', profile.organizationId)
       .order('full_name', { ascending: true });
+
+    console.log(`[ProfileContext] fetchAllProfiles: Supabase query result - data:`, data, `error:`, error);
 
     if (error) {
       console.error('Error fetching all profiles:', error);
@@ -186,23 +211,29 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mappedProfiles: UserProfile[] = data.map((p: any) => {
         // Safely extract customer data for each profile
         const customerData = Array.isArray(p.customers) && p.customers.length > 0 ? p.customers[0] : null;
-        return mapSupabaseProfileToUserProfile(p, null, customerData); // MODIFIED: Pass customer data
+        return mapSupabaseProfileToUserProfile(p, null, customerData);
       });
-      setAllProfiles(mappedProfiles);
+      startTransition(() => {
+        setAllProfiles(mappedProfiles);
+      });
     }
     setIsLoadingAllProfiles(false);
+    console.log(`[ProfileContext] fetchAllProfiles: END for organization: ${profile?.organizationId || 'null'}`);
   }, [profile?.organizationId, profile]);
 
   useEffect(() => {
     if (!isLoadingAuth) {
+      console.log('[ProfileContext] useEffect (isLoadingAuth): Auth loading complete, calling fetchProfile.');
       fetchProfile();
     }
   }, [isLoadingAuth, fetchProfile]);
 
   useEffect(() => {
     if (!isLoadingProfile && profile?.organizationId) {
+      console.log('[ProfileContext] useEffect (isLoadingProfile/profile.organizationId): Profile loaded with organizationId, calling fetchAllProfiles.');
       fetchAllProfiles();
     } else if (!isLoadingProfile && !profile?.organizationId) {
+      console.log('[ProfileContext] useEffect (isLoadingProfile/profile.organizationId): Profile loaded without organizationId, clearing allProfiles.');
       setAllProfiles([]);
       setIsLoadingAllProfiles(false);
     }
