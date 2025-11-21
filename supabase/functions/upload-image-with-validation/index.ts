@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { createClient } from 'npm:@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { fileTypeFromBuffer } from 'npm:file-type'; // Import file-type library
 
 const corsHeaders = {
@@ -162,5 +162,4 @@ serve(async (req) => {
       status: 400,
     });
   }
-  // --- END: Global Error Handling for the entire Edge Function ---
 });

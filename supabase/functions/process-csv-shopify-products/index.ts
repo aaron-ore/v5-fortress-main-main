@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import * as XLSX from 'npm:xlsx'; // Import XLSX for CSV parsing
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
 // Inlined corsHeaders to avoid module resolution issues

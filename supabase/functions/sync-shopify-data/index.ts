@@ -1,12 +1,24 @@
-import { createClient } from 'npm:@supabase/supabase-js';
-import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-
+import { createClient } from '@supabase/supabase-js';
+import * as XLSX from 'npm:xlsx'; // Import XLSX for CSV parsing
+import { serve } from "https://deno.land/std@0.200.0/http/server.ts"; // Explicitly import serve
+// Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+// Define an interface for existing inventory items to provide type safety
+interface ExistingInventoryItem {
+  id: string;
+  name: string;
+  sku: string;
+  picking_bin_quantity: number;
+  overstock_quantity: number;
+  quantity: number; // Total quantity
+}
+
+serve(async (req) => { // Changed Deno.serve to serve
+  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }

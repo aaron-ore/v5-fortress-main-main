@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0';
+import { createClient } from '@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 // Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
@@ -159,5 +159,4 @@ serve(async (req) => {
       status: 400,
     });
   }
-  // --- END: Global Error Handling for the entire Edge Function ---
 });

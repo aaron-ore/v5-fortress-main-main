@@ -1,6 +1,6 @@
-import { createClient } from 'npm:@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { DodoPayments } from 'npm:dodo-payments'; // NEW: Import DodoPayments SDK
+import { DodoPayments } from 'npm:dodopayments'; // Corrected package name
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,8 +25,6 @@ const safeConsole = {
   },
 };
 
-// REMOVED: Manual verifyDodoSignature function
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -44,9 +42,8 @@ serve(async (req) => {
     const signatureHeader = req.headers.get('webhook-signature');
     const webhookTimestamp = req.headers.get('webhook-timestamp');
     
-    // NEW: Retrieve Dodo API Key and Webhook Key
     const dodoApiKey = Deno.env.get('DODO_API_KEY')?.trim();
-    const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim(); // Using DODO_PAYMENTS_WEBHOOK_KEY as per Dodo support
+    const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim();
 
     safeConsole.log('Dodo Webhook: Extracted webhook-signature header:', signatureHeader);
     safeConsole.log('Dodo Webhook: Extracted webhook-timestamp header:', webhookTimestamp);
@@ -71,10 +68,9 @@ serve(async (req) => {
       return new Response('Unauthorized: Missing webhook timestamp header.', { status: 401 });
     }
 
-    // NEW: Initialize DodoPayments SDK and unwrap the webhook
     const dodoPaymentsClient = new DodoPayments({
       bearerToken: dodoApiKey,
-      webhookKey: dodoWebhookSecret, // Use FULL secret with whsec_ prefix
+      webhookKey: dodoWebhookSecret,
     });
 
     const webhookHeaders = {
@@ -103,7 +99,6 @@ serve(async (req) => {
     safeConsole.log('Dodo Webhook: Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Event Object:', JSON.stringify(obj, null, 2));
 
-    // Extract userId and organizationId directly from the Dodo event payload
     const userId = obj.metadata?.user_id || obj.custom_data?.user_id || obj.user_id;
     const organizationId = obj.metadata?.organization_id || obj.custom_data?.organization_id || obj.organization_id;
     const customerId = obj.customer_id;

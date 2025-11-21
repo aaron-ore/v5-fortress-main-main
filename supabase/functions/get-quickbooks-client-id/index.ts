@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { createClient } from 'npm:@supabase/supabase-js'; // Corrected import statement
+import { createClient } from '@supabase/supabase-js'; // Corrected import statement
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,5 +114,4 @@ serve(async (req) => {
       status: 400,
     });
   }
-  // --- END: Global Error Handling for the entire Edge Function ---
 });
