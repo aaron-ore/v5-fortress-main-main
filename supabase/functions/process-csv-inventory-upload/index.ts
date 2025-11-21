@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'npm:@supabase/supabase-js';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 // Inlined corsHeaders to avoid module resolution issues
@@ -391,12 +391,11 @@ serve(async (req) => {
         newItemsToInsert.push({ ...itemPayload, quantity: totalQuantity, user_id: user.id, organization_id: organizationId, created_at: currentTimestamp });
       }
     }
-    console.log('Edge Function: Finished processing CSV rows.');
 
     let insertCount = 0;
     let updateCount = 0;
 
-    console.log('Edge Function: Performing batched inserts.');
+    // Perform batched inserts
     if (newItemsToInsert.length > 0) {
       const { error: insertError } = await supabaseAdmin
         .from('inventory_items')
@@ -407,9 +406,8 @@ serve(async (req) => {
         insertCount = newItemsToInsert.length;
       }
     }
-    console.log('Edge Function: Performed inserts. Count:', insertCount);
 
-    console.log('Edge Function: Performing batched updates.');
+    // Perform batched updates
     if (itemsToUpdate.length > 0) {
       for (const updateItem of itemsToUpdate) {
         const { error: updateError } = await supabaseAdmin
@@ -423,24 +421,18 @@ serve(async (req) => {
         }
       }
     }
-    console.log('Edge Function: Performed updates. Count:', updateCount);
 
-    console.log('Edge Function: Cleaning up uploaded CSV file from storage.');
+    // Clean up the uploaded CSV file from storage
     const { error: deleteFileError } = await supabaseAdmin.storage
       .from('csv-uploads')
       .remove([filePath]);
 
     if (deleteFileError) {
-      console.warn('Edge Function: Error deleting uploaded CSV file from storage:', deleteFileError);
+      console.warn('Error deleting uploaded CSV file from storage:', deleteFileError);
     }
-    console.log('Edge Function: CSV file cleanup attempted.');
-
-    const finalMessage = errors.length > 0 
-      ? `Bulk import completed with ${errors.length} error(s). Inserted ${insertCount} items, updated ${updateCount} items.`
-      : `Bulk import complete. Inserted ${insertCount} items, updated ${updateCount} items.`;
 
     return new Response(JSON.stringify({
-      message: finalMessage,
+      message: `Bulk import complete. Inserted ${insertCount} items, updated ${updateCount} items.`,
       errors: errors,
       success: errors.length === 0,
     }), {

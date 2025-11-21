@@ -15,6 +15,6 @@
     "types": ["@deno/types"]
   },
   "imports": {
-    "dodo-payments": "npm:dodo-payments@^1.0.0"
+    "dodopayments": "npm:dodopayments@^1.0.0"
   }
 }

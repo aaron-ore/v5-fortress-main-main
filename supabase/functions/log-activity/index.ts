@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 // Inlined corsHeaders to avoid module resolution issues
 const corsHeaders = {
