@@ -106,25 +106,30 @@ serve(async (req) => {
     const productId = event.data.product_id; // Correct: Access via event.data
     const subscriptionId = event.data.subscription_id; // Correct: Access via event.data
 
-    // Passthrough data (userId, organizationId) is typically in event.data.metadata
-    const userId = event.data.metadata?.user_id;
-    const organizationId = event.data.metadata?.organization_id;
-
-
     safeConsole.log('Dodo Webhook: Extracted Event Type:', eventType);
     safeConsole.log('Dodo Webhook: Extracted Customer ID:', customerId);
-    safeConsole.log('Dodo Webhook: Extracted User ID:', userId);
-    safeConsole.log('Dodo Webhook: Extracted Organization ID:', organizationId);
     safeConsole.log('Dodo Webhook: Extracted Product ID:', productId);
     safeConsole.log('Dodo Webhook: Extracted Subscription ID:', subscriptionId);
 
-
-    if (!userId || !organizationId || !customerId || !productId || !subscriptionId) {
-      safeConsole.error('Dodo Webhook: Missing essential metadata in event payload after corrected mapping.', { userId, organizationId, customerId, productId, subscriptionId, eventType, eventData: event.data });
-      return new Response('Missing essential metadata after mapping', { status: 400 });
+    if (!customerId || !productId || !subscriptionId) {
+      safeConsole.error('Dodo Webhook: Missing essential data in event payload.', { customerId, productId, subscriptionId, eventType, eventData: event.data });
+      return new Response('Missing essential data', { status: 400 });
     }
-    safeConsole.log('Dodo Webhook: All essential metadata extracted successfully.');
+    safeConsole.log('Dodo Webhook: All essential data extracted successfully.');
 
+    // NEW: Look up organization_id using dodo_customer_id
+    const { data: organizationData, error: orgFetchError } = await supabaseAdmin
+      .from('organizations')
+      .select('id, plan')
+      .eq('dodo_customer_id', customerId)
+      .single();
+
+    if (orgFetchError || !organizationData) {
+      safeConsole.error('Dodo Webhook: Organization not found for dodo_customer_id:', customerId, orgFetchError?.message);
+      return new Response('Organization not found for customer ID', { status: 404 });
+    }
+    const organizationId = organizationData.id;
+    safeConsole.log('Dodo Webhook: Found organization ID:', organizationId, 'for customer ID:', customerId);
 
     let planName: string | null = null;
 
@@ -141,13 +146,13 @@ serve(async (req) => {
           planName = 'unknown';
       }
 
-      safeConsole.log(`Dodo Webhook: Updating organization ${organizationId} for user ${userId} with plan: ${planName}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
+      safeConsole.log(`Dodo Webhook: Updating organization ${organizationId} with plan: ${planName}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
 
       const { data, error } = await supabaseAdmin
         .from('organizations')
         .update({
           plan: planName,
-          dodo_customer_id: customerId,
+          dodo_customer_id: customerId, // Ensure customer_id is also updated/confirmed
           dodo_subscription_id: subscriptionId,
         })
         .eq('id', organizationId);
