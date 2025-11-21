@@ -76,9 +76,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any | null): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, data);
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, companyData);
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (customers join):`, customerData);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, JSON.stringify(data, null, 2));
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, JSON.stringify(companyData, null, 2));
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerData (customers join):`, JSON.stringify(customerData, null, 2));
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
       ? (companyData.company_logo_url.startsWith('http') ? companyData.company_logo_url : getPublicUrlFromSupabase(companyData.company_logo_url, 'company-logos'))
@@ -123,7 +123,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
     };
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: END for user ID: ${data.id}, Result:`, userProfile);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: END for user ID: ${data.id}, Result:`, JSON.stringify(userProfile, null, 2));
     return userProfile;
   };
 
@@ -143,7 +143,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .eq('id', user.id)
       .single();
 
-    console.log(`[ProfileContext] fetchProfile: Supabase query result - data:`, data, `error:`, error);
+    console.log(`[ProfileContext] fetchProfile: Supabase query result - data:`, JSON.stringify(data, null, 2), `error:`, error);
 
     if (error) {
       console.error('Error fetching profile:', error);
@@ -158,9 +158,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       try {
-        // Safely extract customer data: if data.customers is an array, take the first element, otherwise null
+        // Safely extract customer data: if data.customers is an array and has elements, take the first element, otherwise null
         const customerData = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
-        console.log('[ProfileContext] fetchProfile: Extracted customerData for mapping:', customerData);
+        console.log('[ProfileContext] fetchProfile: Extracted customerData for mapping:', JSON.stringify(customerData, null, 2));
         
         const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData);
         startTransition(() => {
@@ -200,7 +200,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .eq('organization_id', profile.organizationId)
       .order('full_name', { ascending: true });
 
-    console.log(`[ProfileContext] fetchAllProfiles: Supabase query result - data:`, data, `error:`, error);
+    console.log(`[ProfileContext] fetchAllProfiles: Supabase query result - data:`, JSON.stringify(data, null, 2), `error:`, error);
 
     if (error) {
       console.error('Error fetching all profiles:', error);
