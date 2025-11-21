@@ -114,8 +114,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      dodoCustomerId: customerData?.dodo_customer_id || undefined, // NEW: Map Dodo Customer ID from customerData
-      dodoSubscriptionId: customerData?.dodo_subscription_id || undefined, // NEW: Map Dodo Subscription ID from customerData
+      dodoCustomerId: customerData?.dodo_customer_id || undefined, // Safely access dodo_customer_id
+      dodoSubscriptionId: customerData?.dodo_subscription_id || undefined, // Safely access dodo_subscription_id
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -148,7 +148,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true);
       setProfile(null);
     } else if (data) {
-      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, data.customers); // MODIFIED: Pass customer data
+      // Safely extract customer data: if data.customers is an array, take the first element, otherwise null
+      const customerData = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
+      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData); // MODIFIED: Pass customer data
       startTransition(() => {
         setProfile(prevProfile => {
           if (deepEqual(prevProfile, newProfileData)) {
@@ -181,7 +183,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("All Profiles Fetch Failed", `Failed to load all profiles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setAllProfiles([]);
     } else {
-      const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null, p.customers)); // MODIFIED: Pass customer data
+      const mappedProfiles: UserProfile[] = data.map((p: any) => {
+        // Safely extract customer data for each profile
+        const customerData = Array.isArray(p.customers) && p.customers.length > 0 ? p.customers[0] : null;
+        return mapSupabaseProfileToUserProfile(p, null, customerData); // MODIFIED: Pass customer data
+      });
       setAllProfiles(mappedProfiles);
     }
     setIsLoadingAllProfiles(false);
