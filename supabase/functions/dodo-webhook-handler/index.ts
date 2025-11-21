@@ -26,7 +26,7 @@ const safeConsole = {
 
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
-  payload: string,
+  payload: string, // This is now the rawBodyText
   signatureHeader: string | null,
   webhookTimestamp: string | null,
   secret: string | undefined
@@ -60,20 +60,8 @@ async function verifyDodoSignature(
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
     safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`);
 
-    // Canonicalize the JSON payload
-    let canonicalPayload: string;
-    try {
-      const parsedEvent = JSON.parse(payload);
-      canonicalPayload = JSON.stringify(parsedEvent); 
-      safeConsole.log(`  Canonical Payload length: ${canonicalPayload.length}`);
-      safeConsole.log(`  Canonical Payload (truncated): ${canonicalPayload.substring(0, 200)}...`);
-    } catch (e: any) {
-      safeConsole.error('Dodo Webhook: Failed to parse raw body as JSON for canonicalization. Using raw body for verification.', e.message);
-      canonicalPayload = payload; // Fallback to raw if not valid JSON
-    }
-
-    // Construct the string to sign as per Dodo's documentation
-    const stringToSign = `t=${webhookTimestamp}.${canonicalPayload}`;
+    // MODIFIED: Use the raw payload directly without re-stringifying
+    const stringToSign = `t=${webhookTimestamp}.${payload}`;
     safeConsole.log(`  String to Sign (truncated): ${stringToSign.substring(0, 200)}...`);
     safeConsole.log(`  String to Sign length: ${stringToSign.length}`);
 
