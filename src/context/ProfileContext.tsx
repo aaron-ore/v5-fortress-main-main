@@ -83,9 +83,11 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Defensive check for customerData type: ensure it's an object or null, not an array
     let safeCustomerData: any | null = null;
     if (customerData && typeof customerData === 'object') {
-        if (Array.isArray(customerData) && customerData.length > 0) {
-            safeCustomerData = customerData[0]; // If it's an array, take the first element
-        } else if (!Array.isArray(customerData)) {
+        if (Array.isArray(customerData)) {
+            if (customerData.length > 0) {
+                safeCustomerData = customerData[0]; // If it's an array, take the first element
+            }
+        } else {
             safeCustomerData = customerData; // If it's already a single object
         }
     }
@@ -115,6 +117,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
 
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Before dodoCustomerId assignment, safeCustomerData:`, safeCustomerData); // CRITICAL LOG
+
     const userProfile: UserProfile = {
       id: data.id,
       fullName: data.full_name || '',
@@ -128,8 +132,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
-      dodoCustomerId: safeCustomerData?.dodo_customer_id || undefined, // Use safeCustomerData
-      dodoSubscriptionId: safeCustomerData?.dodo_subscription_id || undefined, // Use safeCustomerData
+      // Explicitly check if safeCustomerData exists before accessing its properties
+      dodoCustomerId: safeCustomerData ? safeCustomerData.dodo_customer_id : undefined,
+      dodoSubscriptionId: safeCustomerData ? safeCustomerData.dodo_subscription_id : undefined,
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
