@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
+import { DodoPayments } from 'npm:dodopayments'; // Add this import
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -134,6 +135,69 @@ serve(async (req) => {
       });
     }
 
+    const dodoPaymentsClient = new DodoPayments({
+      bearerToken: dodoApiKey,
+    });
+
+    // Fetch organization details to get existing dodo_customer_id
+    const { data: organizationDetails, error: orgDetailsError } = await supabaseAdmin
+      .from('organizations')
+      .select('id, dodo_customer_id')
+      .eq('id', organizationId)
+      .single();
+
+    if (orgDetailsError || !organizationDetails) {
+      safeConsole.error('Edge Function: Organization not found for ID:', organizationId, orgDetailsError?.message);
+      return new Response(JSON.stringify({ error: 'Organization not found for the current user.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      });
+    }
+
+    let currentDodoCustomerId = organizationDetails.dodo_customer_id;
+
+    if (!currentDodoCustomerId) {
+      safeConsole.log('Edge Function: No existing Dodo Customer ID for organization. Creating a new Dodo customer.');
+      // Create a Dodo customer
+      const { data: dodoCustomer, error: createDodoCustomerError } = await dodoPaymentsClient.customers.create({
+        email: user.email, // Use the authenticated user's email
+        name: user.user_metadata.full_name || user.email, // Use user's full name or email
+        // You can add more metadata here if needed, e.g., organizationId
+        metadata: {
+          organization_id: organizationId,
+          user_id: userId,
+        }
+      });
+
+      if (createDodoCustomerError) {
+        safeConsole.error('Edge Function: Error creating Dodo customer:', createDodoCustomerError);
+        return new Response(JSON.stringify({ error: `Failed to create Dodo customer: ${createDodoCustomerError.message}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+
+      currentDodoCustomerId = dodoCustomer.customer_id;
+      safeConsole.log('Edge Function: New Dodo Customer created with ID:', currentDodoCustomerId);
+
+      // Update our organization record with the new Dodo Customer ID
+      const { error: updateOrgError } = await supabaseAdmin
+        .from('organizations')
+        .update({ dodo_customer_id: currentDodoCustomerId })
+        .eq('id', organizationId);
+
+      if (updateOrgError) {
+        safeConsole.error('Edge Function: Error updating organization with new Dodo Customer ID:', updateOrgError);
+        return new Response(JSON.stringify({ error: `Failed to link Dodo customer to organization: ${updateOrgError.message}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
+      safeConsole.log('Edge Function: Organization updated with new Dodo Customer ID.');
+    } else {
+      safeConsole.log('Edge Function: Existing Dodo Customer ID found:', currentDodoCustomerId);
+    }
+
     // Determine the correct Dodo product ID based on the requested plan
     let actualDodoProductId: string | undefined;
     if (dodoProductId === 'pdt_uB7ZQurvsyNW3y7s5x0qk') { // Standard plan
@@ -174,7 +238,8 @@ serve(async (req) => {
     safeConsole.log('Edge Function: Sanitized CLIENT_APP_BASE_URL:', clientAppBaseUrl);
 
     const returnUrl = `${clientAppBaseUrl}/billing?dodo_checkout_status={status}&organization_id=${organizationId}&user_id=${userId}`;
-    const checkoutUrl = `${dodoCheckoutApiUrl}?quantity=1&passthrough[user_id]=${userId}&passthrough[organization_id]=${organizationId}&return_url=${encodeURIComponent(returnUrl)}`;
+    // Pass the currentDodoCustomerId to Dodo checkout
+    const checkoutUrl = `${dodoCheckoutApiUrl}?customer_id=${currentDodoCustomerId}&quantity=1&passthrough[user_id]=${userId}&passthrough[organization_id]=${organizationId}&return_url=${encodeURIComponent(returnUrl)}`;
 
     safeConsole.log('Edge Function: Constructed Dodo checkout URL:', checkoutUrl);
 
