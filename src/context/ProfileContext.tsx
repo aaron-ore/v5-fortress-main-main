@@ -17,8 +17,6 @@ export interface CompanyProfile {
   organizationCode?: string;
   organizationTheme?: string;
   plan?: string;
-  dodoCustomerId?: string; // REVERTED: Dodo Customer ID
-  dodoSubscriptionId?: string; // REVERTED: Dodo Subscription ID
   defaultReorderLevel?: number;
   enableAutoReorderNotifications?: boolean;
   enableAutoReorder?: boolean;
@@ -42,6 +40,8 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
+  dodoCustomerId?: string; // NEW: Dodo Customer ID now on profile
+  dodoSubscriptionId?: string; // NEW: Dodo Subscription ID now on profile
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
   hasSeenUpgradePrompt: boolean;
@@ -54,7 +54,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt' | 'dodoCustomerId' | 'dodoSubscriptionId'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -74,7 +74,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
-  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null): UserProfile => {
+  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerData: any | null): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processing user ID: ${data.id}, Raw company_logo_url from DB: "${companyData?.company_logo_url}" (Type: ${typeof companyData?.company_logo_url})`);
 
     const finalCompanyLogoUrl = companyData?.company_logo_url
@@ -91,8 +91,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       organizationCode: companyData.unique_code || undefined,
       organizationTheme: companyData.default_theme || undefined,
       plan: companyData.plan || undefined,
-      dodoCustomerId: companyData.dodo_customer_id || undefined, // REVERTED: Map Dodo Customer ID
-      dodoSubscriptionId: companyData.dodo_subscription_id || undefined, // REVERTED: Map Dodo Subscription ID
       defaultReorderLevel: companyData.default_reorder_level || 0,
       enableAutoReorderNotifications: companyData.enable_auto_reorder_notifications || false,
       enableAutoReorder: companyData.enable_auto_reorder || false,
@@ -116,6 +114,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
+      dodoCustomerId: customerData?.dodo_customer_id || undefined, // NEW: Map Dodo Customer ID from customerData
+      dodoSubscriptionId: customerData?.dodo_subscription_id || undefined, // NEW: Map Dodo Subscription ID from customerData
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -132,7 +132,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,dodo_customer_id,dodo_subscription_id,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)') // REVERTED: Select Dodo fields
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version), customers(dodo_customer_id, dodo_subscription_id)') // MODIFIED: Removed Dodo fields from organizations, added from customers
       .eq('id', user.id)
       .single();
 
@@ -148,7 +148,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("Profile Fetch Failed", `Failed to load user profile for user ${user.id}.`, profile, { error_message: error.message, error_status: (error as any).status }, true);
       setProfile(null);
     } else if (data) {
-      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations);
+      const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, data.customers); // MODIFIED: Pass customer data
       startTransition(() => {
         setProfile(prevProfile => {
           if (deepEqual(prevProfile, newProfileData)) {
@@ -171,7 +171,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingAllProfiles(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt')
+      .select('id, full_name, email, avatar_url, role, organization_id, phone, address, created_at, quickbooks_access_token, quickbooks_refresh_token, quickbooks_realm_id, has_onboarding_wizard_completed, has_seen_upgrade_prompt, customers(dodo_customer_id, dodo_subscription_id)') // MODIFIED: Added Dodo fields from customers
       .eq('organization_id', profile.organizationId)
       .order('full_name', { ascending: true });
 
@@ -181,7 +181,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       await logActivity("All Profiles Fetch Failed", `Failed to load all profiles for organization ${profile.organizationId}.`, profile, { error_message: error.message }, true);
       setAllProfiles([]);
     } else {
-      const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null));
+      const mappedProfiles: UserProfile[] = data.map((p: any) => mapSupabaseProfileToUserProfile(p, null, p.customers)); // MODIFIED: Pass customer data
       setAllProfiles(mappedProfiles);
     }
     setIsLoadingAllProfiles(false);
@@ -213,7 +213,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt' | 'dodoCustomerId' | 'dodoSubscriptionId'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -300,8 +300,6 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       address: updates.companyAddress,
       company_logo_url: companyLogoUrlForDb,
       plan: updates.plan,
-      dodo_customer_id: updates.dodoCustomerId, // REVERTED: Update Dodo Customer ID
-      dodo_subscription_id: updates.dodoSubscriptionId, // REVERTED: Update Dodo Subscription ID
       default_reorder_level: updates.defaultReorderLevel,
       enable_auto_reorder_notifications: updates.enableAutoReorderNotifications,
       enable_auto_reorder: updates.enableAutoReorder,

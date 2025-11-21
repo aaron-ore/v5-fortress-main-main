@@ -183,7 +183,7 @@ import React, { useState, useEffect } from "react";
       };
 
       const handleManageSubscription = async () => {
-        if (!profile?.organizationId || !profile?.companyProfile?.dodoCustomerId) {
+        if (!profile?.organizationId || !profile?.dodoCustomerId) { // MODIFIED: Check profile.dodoCustomerId
           showError("You don't have an active Dodo subscription to manage.");
           return;
         }

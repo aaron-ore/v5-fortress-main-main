@@ -171,8 +171,6 @@ serve(async (req) => {
         .from('organizations')
         .update({
           plan: planName,
-          // dodo_customer_id and dodo_subscription_id are now on the customers table
-          // so we remove them from the organizations update here.
         })
         .eq('id', organizationIdToUpdate);
 
@@ -191,7 +189,6 @@ serve(async (req) => {
         .from('organizations')
         .update({
           plan: 'free',
-          // dodo_subscription_id is now on the customers table
         })
         .eq('id', organizationIdToUpdate);
 

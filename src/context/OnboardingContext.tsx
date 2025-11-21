@@ -239,8 +239,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             organizationCode: uniqueCodeToPersist,
             organizationTheme: orgData.default_theme || 'dark',
             plan: orgData.plan || 'free',
-            dodoCustomerId: undefined, // REVERTED: Dodo Customer ID
-            dodoSubscriptionId: undefined, // REVERTED: Dodo Subscription ID
             defaultReorderLevel: 0,
             enableAutoReorderNotifications: false,
             enableAutoReorder: false,
@@ -267,7 +265,7 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const { data: existingOrg, error: fetchOrgError } = await supabase
           .from('organizations')
-          .select('unique_code, company_logo_url, default_theme, plan, dodo_customer_id, dodo_subscription_id, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // REVERTED: Select Dodo fields
+          .select('unique_code, company_logo_url, default_theme, plan, default_reorder_level, enable_auto_reorder_notifications, enable_auto_reorder') // MODIFIED: Removed Dodo fields
           .eq('id', profile.organizationId)
           .single();
 
@@ -316,8 +314,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
           default_theme: existingOrg?.default_theme || 'dark',
           plan: existingOrg?.plan || 'free',
           company_logo_url: profileData.companyLogoUrl,
-          dodo_customer_id: existingOrg?.dodo_customer_id, // REVERTED: Keep existing Dodo customer ID
-          dodo_subscription_id: existingOrg?.dodo_subscription_id, // REVERTED: Keep existing Dodo subscription ID
           default_reorder_level: existingOrg?.default_reorder_level || 0,
           enable_auto_reorder_notifications: existingOrg?.enable_auto_reorder_notifications || false,
           enable_auto_reorder: existingOrg?.enable_auto_reorder || false,
@@ -349,8 +345,6 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
             organizationCode: uniqueCodeToPersist,
             organizationTheme: updatePayload.default_theme,
             plan: updatePayload.plan,
-            dodoCustomerId: updatePayload.dodo_customer_id, // REVERTED: Dodo Customer ID
-            dodoSubscriptionId: updatePayload.dodo_subscription_id, // REVERTED: Dodo Subscription ID
             defaultReorderLevel: updatePayload.default_reorder_level,
             enableAutoReorderNotifications: updatePayload.enable_auto_reorder_notifications,
             enableAutoReorder: updatePayload.enable_auto_reorder,
