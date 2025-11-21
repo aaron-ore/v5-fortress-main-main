@@ -41,12 +41,14 @@ serve(async (req) => {
 
     const signatureHeader = req.headers.get('webhook-signature');
     const webhookTimestamp = req.headers.get('webhook-timestamp');
+    const webhookId = req.headers.get('webhook-id'); // NEW: Extract webhook-id
     
     const dodoApiKey = Deno.env.get('DODO_API_KEY')?.trim();
     const dodoWebhookSecret = Deno.env.get('DODO_PAYMENTS_WEBHOOK_KEY')?.trim();
 
     safeConsole.log('Dodo Webhook: Extracted webhook-signature header:', signatureHeader);
     safeConsole.log('Dodo Webhook: Extracted webhook-timestamp header:', webhookTimestamp);
+    safeConsole.log('Dodo Webhook: Extracted webhook-id header:', webhookId); // NEW: Log webhook-id
     safeConsole.log('Dodo Webhook: DODO_API_KEY (from env):', dodoApiKey ? 'present' : 'MISSING');
     safeConsole.log('Dodo Webhook: DODO_PAYMENTS_WEBHOOK_KEY (from env):', dodoWebhookSecret ? 'present' : 'MISSING');
 
@@ -67,6 +69,10 @@ serve(async (req) => {
       safeConsole.error('Dodo Webhook: Missing webhook-timestamp header for verification.');
       return new Response('Unauthorized: Missing webhook timestamp header.', { status: 401 });
     }
+    if (!webhookId) { // NEW: Check for webhook-id
+      safeConsole.error('Dodo Webhook: Missing webhook-id header for verification.');
+      return new Response('Unauthorized: Missing webhook ID header.', { status: 401 });
+    }
 
     const dodoPaymentsClient = new DodoPayments({
       bearerToken: dodoApiKey,
@@ -76,6 +82,7 @@ serve(async (req) => {
     const webhookHeaders = {
       'webhook-signature': signatureHeader,
       'webhook-timestamp': webhookTimestamp,
+      'webhook-id': webhookId, // NEW: Include webhook-id
     };
 
     let event;
