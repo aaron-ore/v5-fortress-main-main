@@ -56,15 +56,15 @@ async function verifyDodoSignature(
     const rawSecret = secret.startsWith('whsec_') ? secret.replace('whsec_', '') : secret;
 
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
-    safeConsole.log(`  Original Secret length: ${secret.length}`);
-    safeConsole.log(`  Raw Secret length (after stripping prefix): ${rawSecret.length}`);
-    safeConsole.log(`  Raw Secret starts with (masked): ${rawSecret.substring(0, 5)}...`);
+    safeConsole.log(`  Original Secret length (from env): ${secret.length}`);
+    safeConsole.log(`  Raw Secret length (after stripping prefix): ${rawSecret.length}`); // This should be 32
+    safeConsole.log(`  Raw Secret starts with (masked): ${rawSecret.substring(0, 5)}...`); // This should be the stripped one
     safeConsole.log(`  Raw Payload length (for HMAC): ${payload.length}`);
     safeConsole.log(`  Raw Payload (truncated for log): ${payload.substring(0, 200)}...`);
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
     safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`);
 
-    // MODIFIED: Use the raw payload directly in the stringToSign, without JSON.parse/stringify
+    // Construct the string to sign as per Dodo's documentation
     const stringToSign = `t=${webhookTimestamp}.${payload}`;
     safeConsole.log(`  String to Sign (truncated): ${stringToSign.substring(0, 200)}...`);
     safeConsole.log(`  String to Sign length: ${stringToSign.length}`);
