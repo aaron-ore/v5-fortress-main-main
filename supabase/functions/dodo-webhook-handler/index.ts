@@ -26,9 +26,9 @@ const safeConsole = {
 
 // Actual Dodo webhook signature verification
 async function verifyDodoSignature(
-  payload: string, // This payload will now be the raw body, not trimmed
+  payload: string,
   signatureHeader: string | null,
-  webhookTimestamp: string | null, // NEW: Pass webhookTimestamp
+  webhookTimestamp: string | null,
   secret: string | undefined
 ): Promise<boolean> {
   if (!secret) {
@@ -39,7 +39,7 @@ async function verifyDodoSignature(
     safeConsole.error('Dodo Webhook: Missing webhook-signature header for verification.');
     return false;
   }
-  if (!webhookTimestamp) { // NEW: Check for missing timestamp
+  if (!webhookTimestamp) {
     safeConsole.error('Dodo Webhook: Missing webhook-timestamp header for verification.');
     return false;
   }
@@ -55,10 +55,10 @@ async function verifyDodoSignature(
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
     safeConsole.log(`  Secret length (used in func): ${secret.length}`);
     safeConsole.log(`  Secret starts with (masked): ${secret.substring(0, 5)}...`);
-    safeConsole.log(`  Raw Payload length (for HMAC): ${payload.length}`); // Log the length of the payload used for HMAC
-    safeConsole.log(`  Raw Payload (truncated for log): ${payload.substring(0, 200)}...`); // Log truncated payload
+    safeConsole.log(`  Raw Payload length (for HMAC): ${payload.length}`);
+    safeConsole.log(`  Raw Payload (truncated for log): ${payload.substring(0, 200)}...`);
     safeConsole.log(`  Incoming Signature (Base64): ${incomingSignatureBase64}`);
-    safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`); // NEW: Log timestamp
+    safeConsole.log(`  Webhook Timestamp: ${webhookTimestamp}`);
 
     // Canonicalize the JSON payload
     let canonicalPayload: string;
@@ -72,7 +72,7 @@ async function verifyDodoSignature(
       canonicalPayload = payload; // Fallback to raw if not valid JSON
     }
 
-    // NEW: Construct the string to sign as per Dodo's documentation
+    // Construct the string to sign as per Dodo's documentation
     const stringToSign = `t=${webhookTimestamp}.${canonicalPayload}`;
     safeConsole.log(`  String to Sign (truncated): ${stringToSign.substring(0, 200)}...`);
     safeConsole.log(`  String to Sign length: ${stringToSign.length}`);
@@ -89,7 +89,7 @@ async function verifyDodoSignature(
     const hmacBuffer = await crypto.subtle.sign(
       'HMAC',
       key,
-      encoder.encode(stringToSign) // MODIFIED: Use stringToSign here
+      encoder.encode(stringToSign)
     );
 
     const calculatedSignature = btoa(String.fromCharCode(...new Uint8Array(hmacBuffer)));
@@ -112,23 +112,26 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  let rawBodyBuffer: ArrayBuffer;
   let rawBodyText = '';
   try {
-    rawBodyText = await req.text();
+    rawBodyBuffer = await req.arrayBuffer(); // Read as ArrayBuffer
+    rawBodyText = new TextDecoder().decode(rawBodyBuffer); // Decode to string
+
     safeConsole.log('Dodo Webhook: Raw Body Text (first 200 chars):', rawBodyText.substring(0, 200));
-    safeConsole.log('Dodo Webhook: Raw Body Text length:', rawBodyText.length); // Log raw body length
+    safeConsole.log('Dodo Webhook: Raw Body Text length:', rawBodyText.length);
 
     const signatureHeader = req.headers.get('webhook-signature');
-    const webhookTimestamp = req.headers.get('webhook-timestamp'); // NEW: Get timestamp header
+    const webhookTimestamp = req.headers.get('webhook-timestamp');
     const dodoWebhookSecret = Deno.env.get('DODO_WEBHOOK_SECRET')?.trim();
 
-    if (!(await verifyDodoSignature(rawBodyText, signatureHeader, webhookTimestamp, dodoWebhookSecret))) { // MODIFIED: Pass webhookTimestamp
+    if (!(await verifyDodoSignature(rawBodyText, signatureHeader, webhookTimestamp, dodoWebhookSecret))) {
       safeConsole.error('Unauthorized: Invalid webhook signature.');
       return new Response('Unauthorized: Invalid signature', { status: 401 });
     }
     safeConsole.log('Dodo Webhook: Signature verification successful.');
 
-    const event = JSON.parse(rawBodyText); // Parse after verification
+    const event = JSON.parse(rawBodyText);
     safeConsole.log('Dodo Webhook: Received event:', JSON.stringify(event, null, 2));
     safeConsole.log('Dodo Webhook: Incoming Headers:', JSON.stringify(Object.fromEntries(req.headers.entries()), null, 2));
 
