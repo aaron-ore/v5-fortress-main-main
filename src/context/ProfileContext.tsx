@@ -74,18 +74,16 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingAllProfiles, setIsLoadingAllProfiles] = useState(true);
 
-  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerDataFromSupabase: any): UserProfile => {
+  const mapSupabaseProfileToUserProfile = (data: any, companyData: any | null, customerDataArray: any[]): UserProfile => {
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: START for user ID: ${data.id}`);
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input data (profile row):`, JSON.stringify(data, null, 2));
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input companyData (organizations join):`, JSON.stringify(companyData, null, 2));
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerDataFromSupabase (raw from join):`, JSON.stringify(customerDataFromSupabase, null, 2), `Type: ${typeof customerDataFromSupabase}`);
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Input customerDataArray (processed from join):`, JSON.stringify(customerDataArray, null, 2), `Type: ${typeof customerDataArray}`);
 
-    // Determine the actual customer object, if any.
-    // If customerDataFromSupabase is an array, take the first element.
-    // If it's an object, use it directly. Otherwise, it's null.
-    const actualCustomerObject = (Array.isArray(customerDataFromSupabase) && customerDataFromSupabase.length > 0)
-        ? customerDataFromSupabase[0]
-        : (customerDataFromSupabase && typeof customerDataFromSupabase === 'object' && !Array.isArray(customerDataFromSupabase) ? customerDataFromSupabase : null);
+    // Get the first customer object if the array is not empty, otherwise null
+    const actualCustomerObject = (customerDataArray && customerDataArray.length > 0)
+        ? customerDataArray[0]
+        : null;
 
     console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Processed actualCustomerObject:`, JSON.stringify(actualCustomerObject, null, 2));
 
@@ -113,15 +111,20 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
     } : undefined;
 
-    // CRITICAL LOG: Log the actualCustomerObject right before accessing its properties
-    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Attempting to access Dodo IDs from actualCustomerObject:`, actualCustomerObject);
-
     let dodoCustomerId: string | undefined = undefined;
     let dodoSubscriptionId: string | undefined = undefined;
 
-    if (actualCustomerObject) {
-      dodoCustomerId = actualCustomerObject.dodo_customer_id || undefined;
-      dodoSubscriptionId = actualCustomerObject.dodo_subscription_id || undefined;
+    // CRITICAL LOG: Log the actualCustomerObject right before accessing its properties
+    console.log(`[ProfileContext] mapSupabaseProfileToUserProfile: Attempting to access Dodo IDs from actualCustomerObject:`, actualCustomerObject);
+
+    try {
+        if (actualCustomerObject) {
+            dodoCustomerId = actualCustomerObject.dodo_customer_id || undefined;
+            dodoSubscriptionId = actualCustomerObject.dodo_subscription_id || undefined;
+        }
+    } catch (accessError: any) {
+        console.error(`[ProfileContext] CRITICAL ERROR: Failed to access dodo_customer_id/dodo_subscription_id. actualCustomerObject was:`, actualCustomerObject, `Error:`, accessError.message);
+        // Proceed with undefined values if an error occurs during access
     }
     
     const userProfile: UserProfile = {
@@ -178,9 +181,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setProfile(null);
     } else if (data) {
       try {
-        // Pass the raw data.customers to the mapper, which will handle array vs object
-        const customerData = data.customers; 
-        console.log('[ProfileContext] fetchProfile: Passing raw data.customers to mapper:', JSON.stringify(customerData, null, 2));
+        let customerData = data.customers;
+        // Ensure customerData is always treated as an array for consistency, even if Supabase returns null or a single object
+        if (customerData === null || customerData === undefined) {
+            customerData = [];
+        } else if (!Array.isArray(customerData)) {
+            // If it's a single object, wrap it in an array
+            console.warn('[ProfileContext] fetchProfile: data.customers was not an array. Wrapping single object in array for consistency.');
+            customerData = [customerData];
+        }
+        
+        console.log('[ProfileContext] fetchProfile: Passing processed customerData to mapper:', JSON.stringify(customerData, null, 2));
         
         const newProfileData = mapSupabaseProfileToUserProfile(data, data.organizations, customerData);
         startTransition(() => {
@@ -230,7 +241,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } else {
       const mappedProfiles: UserProfile[] = data.map((p: any) => {
         // Pass the raw p.customers to the mapper, which will handle array vs object
-        const customerData = p.customers;
+        let customerData = p.customers;
+        if (customerData === null || customerData === undefined) {
+            customerData = [];
+        } else if (!Array.isArray(customerData)) {
+            customerData = [customerData];
+        }
         return mapSupabaseProfileToUserProfile(p, null, customerData);
       });
       startTransition(() => {
@@ -481,7 +497,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         body: JSON.stringify({ newAdminUserId }),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.session.access_token}`,
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
       });
 
