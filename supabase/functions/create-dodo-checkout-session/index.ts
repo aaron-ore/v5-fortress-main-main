@@ -139,30 +139,31 @@ serve(async (req) => {
       bearerToken: dodoApiKey,
     });
 
-    // Fetch organization details to get existing dodo_customer_id
-    const { data: organizationDetails, error: orgDetailsError } = await supabaseAdmin
-      .from('organizations')
+    // Fetch customer details to get existing dodo_customer_id
+    const { data: customerDetails, error: customerDetailsError } = await supabaseAdmin
+      .from('customers')
       .select('id, dodo_customer_id')
-      .eq('id', organizationId)
+      .eq('organization_id', organizationId)
+      .eq('email', user.email) // Assuming customer email matches user email for initial lookup
       .single();
 
-    if (orgDetailsError || !organizationDetails) {
-      safeConsole.error('Edge Function: Organization not found for ID:', organizationId, orgDetailsError?.message);
-      return new Response(JSON.stringify({ error: 'Organization not found for the current user.' }), {
+    if (customerDetailsError && customerDetailsError.code !== 'PGRST116') { // PGRST116 means no rows found
+      safeConsole.error('Edge Function: Error fetching customer details for ID:', userId, customerDetailsError?.message);
+      return new Response(JSON.stringify({ error: 'Failed to retrieve customer profile data.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 404,
+        status: 500,
       });
     }
 
-    let currentDodoCustomerId = organizationDetails.dodo_customer_id;
+    let currentDodoCustomerId = customerDetails?.dodo_customer_id;
+    let fortressCustomerId = customerDetails?.id;
 
     if (!currentDodoCustomerId) {
-      safeConsole.log('Edge Function: No existing Dodo Customer ID for organization. Creating a new Dodo customer.');
+      safeConsole.log('Edge Function: No existing Dodo Customer ID for customer. Creating a new Dodo customer.');
       // Create a Dodo customer
       const { data: dodoCustomer, error: createDodoCustomerError } = await dodoPaymentsClient.customers.create({
         email: user.email, // Use the authenticated user's email
         name: user.user_metadata.full_name || user.email, // Use user's full name or email
-        // You can add more metadata here if needed, e.g., organizationId
         metadata: {
           organization_id: organizationId,
           user_id: userId,
@@ -180,20 +181,33 @@ serve(async (req) => {
       currentDodoCustomerId = dodoCustomer.customer_id;
       safeConsole.log('Edge Function: New Dodo Customer created with ID:', currentDodoCustomerId);
 
-      // Update our organization record with the new Dodo Customer ID
-      const { error: updateOrgError } = await supabaseAdmin
-        .from('organizations')
-        .update({ dodo_customer_id: currentDodoCustomerId })
-        .eq('id', organizationId);
+      // Upsert our customer record with the new Dodo Customer ID
+      const { data: upsertedFortressCustomer, error: upsertCustomerError } = await supabaseAdmin
+        .from('customers')
+        .upsert({
+          id: fortressCustomerId, // If existing, use its ID, otherwise Supabase will generate
+          email: user.email,
+          name: user.user_metadata.full_name || user.email,
+          dodo_customer_id: currentDodoCustomerId,
+          organization_id: organizationId,
+          user_id: userId,
+        }, {
+          onConflict: 'email, organization_id', // Conflict on email and organization_id
+          ignoreDuplicates: false
+        })
+        .select('id')
+        .single();
 
-      if (updateOrgError) {
-        safeConsole.error('Edge Function: Error updating organization with new Dodo Customer ID:', updateOrgError);
-        return new Response(JSON.stringify({ error: `Failed to link Dodo customer to organization: ${updateOrgError.message}` }), {
+      if (upsertCustomerError) {
+        safeConsole.error('Edge Function: Error upserting customer with new Dodo Customer ID:', upsertCustomerError);
+        return new Response(JSON.stringify({ error: `Failed to link Dodo customer to Fortress customer: ${upsertCustomerError.message}` }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 500,
         });
       }
-      safeConsole.log('Edge Function: Organization updated with new Dodo Customer ID.');
+      fortressCustomerId = upsertedFortressCustomer.id;
+      safeConsole.log('Edge Function: Fortress customer upserted with new Dodo Customer ID:', fortressCustomerId);
+
     } else {
       safeConsole.log('Edge Function: Existing Dodo Customer ID found:', currentDodoCustomerId);
     }

@@ -1,7 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { DodoPayments } from 'npm:dodopayments'; // Corrected package name
-
+// Inlined corsHeaders definition to resolve module import error
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -100,36 +99,56 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Corrected field mappings based on Dodo's feedback and logs
-    const eventType = event.type; // Correct: Use event.type
-    const customerId = event.data.customer?.customer_id; // Correct: Access via event.data.customer
-    const productId = event.data.product_id; // Correct: Access via event.data
-    const subscriptionId = event.data.subscription_id; // Correct: Access via event.data
+    const eventType = event.type;
+    const dodoCustomerId = event.data.customer?.customer_id;
+    const productId = event.data.product_id;
+    const subscriptionId = event.data.subscription_id;
+    const customerEmail = event.data.customer?.email;
+    const customerName = event.data.customer?.name;
+    const organizationIdFromPassthrough = event.meta?.passthrough?.organization_id;
+    const userIdFromPassthrough = event.meta?.passthrough?.user_id;
 
     safeConsole.log('Dodo Webhook: Extracted Event Type:', eventType);
-    safeConsole.log('Dodo Webhook: Extracted Customer ID:', customerId);
+    safeConsole.log('Dodo Webhook: Extracted Dodo Customer ID:', dodoCustomerId);
     safeConsole.log('Dodo Webhook: Extracted Product ID:', productId);
     safeConsole.log('Dodo Webhook: Extracted Subscription ID:', subscriptionId);
+    safeConsole.log('Dodo Webhook: Extracted Customer Email:', customerEmail);
+    safeConsole.log('Dodo Webhook: Extracted Customer Name:', customerName);
+    safeConsole.log('Dodo Webhook: Extracted Organization ID from passthrough:', organizationIdFromPassthrough);
+    safeConsole.log('Dodo Webhook: Extracted User ID from passthrough:', userIdFromPassthrough);
 
-    if (!customerId || !productId || !subscriptionId) {
-      safeConsole.error('Dodo Webhook: Missing essential data in event payload.', { customerId, productId, subscriptionId, eventType, eventData: event.data });
-      return new Response('Missing essential data', { status: 400 });
+
+    if (!dodoCustomerId || !productId || !subscriptionId || !customerEmail || !customerName || !organizationIdFromPassthrough || !userIdFromPassthrough) {
+      safeConsole.error('Dodo Webhook: Missing essential data in event payload or passthrough.', { dodoCustomerId, productId, subscriptionId, customerEmail, customerName, organizationIdFromPassthrough, userIdFromPassthrough, eventType, eventData: event.data, passthrough: event.meta?.passthrough });
+      return new Response('Missing essential data in webhook payload or passthrough', { status: 400 });
     }
     safeConsole.log('Dodo Webhook: All essential data extracted successfully.');
 
-    // NEW: Look up organization_id using dodo_customer_id
-    const { data: organizationData, error: orgFetchError } = await supabaseAdmin
-      .from('organizations')
-      .select('id, plan')
-      .eq('dodo_customer_id', customerId)
+    // Step 1: Upsert customer in public.customers table
+    safeConsole.log('Dodo Webhook: Attempting to upsert customer into public.customers...');
+    const { data: upsertedCustomer, error: upsertError } = await supabaseAdmin
+      .from('customers')
+      .upsert({
+        email: customerEmail,
+        name: customerName,
+        dodo_customer_id: dodoCustomerId,
+        dodo_subscription_id: subscriptionId,
+        organization_id: organizationIdFromPassthrough, // Link to the organization from passthrough
+        user_id: userIdFromPassthrough, // Link to the user from passthrough
+      }, {
+        onConflict: 'dodo_customer_id', // Use dodo_customer_id for conflict resolution
+        ignoreDuplicates: false
+      })
+      .select('id, organization_id') // Select organization_id to use for updating plan
       .single();
 
-    if (orgFetchError || !organizationData) {
-      safeConsole.error('Dodo Webhook: Organization not found for dodo_customer_id:', customerId, orgFetchError?.message);
-      return new Response('Organization not found for customer ID', { status: 404 });
+    if (upsertError) {
+      safeConsole.error('Dodo Webhook: Failed to upsert customer:', upsertError);
+      return new Response(`Failed to upsert customer: ${upsertError.message}`, { status: 500 });
     }
-    const organizationId = organizationData.id;
-    safeConsole.log('Dodo Webhook: Found organization ID:', organizationId, 'for customer ID:', customerId);
+    safeConsole.log('Dodo Webhook: Customer upserted successfully. Fortress Customer ID:', upsertedCustomer.id, 'Organization ID:', upsertedCustomer.organization_id);
+
+    const organizationIdToUpdate = upsertedCustomer.organization_id; // Use the organization_id from the upserted customer
 
     let planName: string | null = null;
 
@@ -146,39 +165,39 @@ serve(async (req) => {
           planName = 'unknown';
       }
 
-      safeConsole.log(`Dodo Webhook: Updating organization ${organizationId} with plan: ${planName}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
+      safeConsole.log(`Dodo Webhook: Updating organization ${organizationIdToUpdate} with plan: ${planName}`);
 
       const { data, error } = await supabaseAdmin
         .from('organizations')
         .update({
           plan: planName,
-          dodo_customer_id: customerId, // Ensure customer_id is also updated/confirmed
-          dodo_subscription_id: subscriptionId,
+          // dodo_customer_id and dodo_subscription_id are now on the customers table
+          // so we remove them from the organizations update here.
         })
-        .eq('id', organizationId);
+        .eq('id', organizationIdToUpdate);
 
       if (error) {
-        safeConsole.error('Dodo Webhook: Error updating organization in Supabase:', error);
-        return new Response('Failed to update organization', { status: 500 });
+        safeConsole.error('Dodo Webhook: Error updating organization plan in Supabase:', error);
+        return new Response('Failed to update organization plan', { status: 500 });
       }
 
-      safeConsole.log('Dodo Webhook: Organization updated successfully:', data);
+      safeConsole.log('Dodo Webhook: Organization plan updated successfully:', data);
       return new Response('Webhook processed successfully', { status: 200 });
 
     } else if (eventType === 'subscription.cancelled' || eventType === 'subscription.expired' || eventType === 'subscription.on_hold') {
-      safeConsole.log(`Dodo Webhook: Handling cancellation/failure for organization ${organizationId}, customer ${customerId}. Setting plan to 'free'.`);
+      safeConsole.log(`Dodo Webhook: Handling cancellation/failure for organization ${organizationIdToUpdate}, customer ${dodoCustomerId}. Setting plan to 'free'.`);
 
       const { data, error } = await supabaseAdmin
         .from('organizations')
         .update({
           plan: 'free',
-          dodo_subscription_id: null,
+          // dodo_subscription_id is now on the customers table
         })
-        .eq('id', organizationId);
+        .eq('id', organizationIdToUpdate);
 
       if (error) {
-        safeConsole.error('Dodo Webhook: Error updating organization on cancellation/failure in Supabase:', error);
-        return new Response('Failed to update organization on cancellation/failure', { status: 500 });
+        safeConsole.error('Dodo Webhook: Error updating organization plan on cancellation/failure in Supabase:', error);
+        return new Response('Failed to update organization plan on cancellation/failure', { status: 500 });
       }
 
       safeConsole.log('Dodo Webhook: Organization plan downgraded to free successfully:', data);
