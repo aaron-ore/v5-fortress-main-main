@@ -52,7 +52,7 @@ async function verifyDodoSignature(
     }
     const incomingSignatureBase64 = parts[1];
 
-    // Strip 'whsec_' prefix from the secret
+    // MODIFIED: Strip 'whsec_' prefix from the secret for HMAC calculation
     const rawSecret = secret.startsWith('whsec_') ? secret.replace('whsec_', '') : secret;
 
     safeConsole.log('Dodo Webhook: Debugging Signature Verification:');
