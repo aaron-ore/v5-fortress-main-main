@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
-import { DodoPayments } from 'dodopayments';
+import { DodoPayments } from 'npm:dodopayments'; // Corrected import
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
