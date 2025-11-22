@@ -27,6 +27,7 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_DODO_PRODUCT_ID_PRO': JSON.stringify(env.DODO_PRODUCT_ID_PRO),
       'import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT': JSON.stringify(env.DODO_PRODUCT_ID_STANDARD_VARIANT),
       'import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT': JSON.stringify(env.DODO_PRODUCT_ID_PRO_VARIANT),
+      'import.meta.env.VITE_DODO_STORE_URL': JSON.stringify(env.DODO_STORE_URL), // NEW: Expose Dodo Store URL
       // Add any other VITE_ prefixed env vars you need to expose to the client here
     },
     build: {

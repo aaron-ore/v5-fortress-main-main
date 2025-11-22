@@ -38,9 +38,8 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
       return;
     }
 
-    // Assuming DODO_PRODUCT_ID_STANDARD and DODO_PRODUCT_ID_PRO are set in environment variables
     const dodoProductId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD : import.meta.env.VITE_DODO_PRODUCT_ID_PRO;
-    const dodoVariantId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT : import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT; // Assuming variants for monthly
+    const dodoVariantId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT : import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT;
 
     if (!dodoProductId || !dodoVariantId) {
       showError("Dodo product information missing for this plan. Contact support.");
@@ -49,35 +48,21 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
 
     setIsProcessingSubscription(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData.session) {
-        throw new Error("Authentication session expired. Please log in again.");
+      const dodoStoreUrl = import.meta.env.VITE_DODO_STORE_URL;
+      if (!dodoStoreUrl) {
+        throw new Error("Dodo Store URL is not configured. Please contact support.");
       }
 
-      const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
-        body: JSON.stringify({
-          productId: dodoProductId,
-          variantId: dodoVariantId,
-          organizationId: profile.organizationId,
-          userId: profile.id,
-          customerEmail: profile.email,
-          customerName: profile.fullName,
-          redirectTo: window.location.origin + '/billing', // Redirect back to billing page
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-        },
-      });
+      const redirectUrl = encodeURIComponent(`${window.location.origin}/billing?dodo_checkout_status={checkout_status}&organization_id=${profile.organizationId}&user_id=${profile.id}`);
+      const passthroughData = encodeURIComponent(JSON.stringify({
+        organization_id: profile.organizationId,
+        user_id: profile.id,
+        plan_id: planName, // Pass the plan ID for webhook processing
+      }));
 
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl; // Redirect to Dodo checkout
-      } else {
-        throw new Error("No checkout URL received from Dodo.");
-      }
+      const checkoutUrl = `https://${dodoStoreUrl}/checkout/buy/${dodoProductId}?variant=${dodoVariantId}&passthrough=${passthroughData}&redirect_url=${redirectUrl}`;
+      
+      window.location.href = checkoutUrl; // Redirect to Dodo checkout page
 
     } catch (error: any) {
       console.error("Error initiating Dodo checkout for trial:", error);

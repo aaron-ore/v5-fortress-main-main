@@ -338,9 +338,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopify_store_name: updates.shopifyStoreName,
       perpetual_features: updates.perpetualFeatures,
       perpetual_license_version: updates.perpetualLicenseVersion,
-      // RE-ADDED Dodo fields
-      dodo_customer_id: updates.dodoCustomerId,
-      dodo_subscription_id: updates.dodoSubscriptionId,
+      // Removed Dodo fields from payload as they are managed by webhook
+      // dodo_customer_id: updates.dodoCustomerId,
+      // dodo_subscription_id: updates.dodoSubscriptionId,
     };
 
     if (uniqueCode !== undefined) {
