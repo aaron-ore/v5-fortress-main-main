@@ -25,8 +25,8 @@ import React, { useState, useEffect } from "react";
       oneTimePrice?: number;
       isPopular?: boolean;
       features: PlanFeature[];
-      dodoProductId?: string; // RE-ADDED
-      dodoVariantId?: string; // RE-ADDED
+      dodoProductId?: string;
+      dodoVariantId?: string;
     }
 
     const BillingSubscriptions: React.FC = () => {
@@ -64,8 +64,8 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: ['core_inventory_management', 'dashboard_overview', 'basic_order_management', 'user_profile_management', 'basic_reports', 'mobile_responsive_ui', 'in_app_notifications', 'email_notifications', 'customer_management', 'vendor_management', 'folder_management', 'qr_code_generation', 'csv_import_export', 'order_kanban_board', 'pdf_export_orders', 'warehouse_operations_dashboard', 'warehouse_tool_item_lookup', 'warehouse_tool_receive_inventory', 'warehouse_tool_putaway', 'warehouse_tool_fulfill_order', 'warehouse_tool_ship_order', 'warehouse_tool_stock_transfer', 'warehouse_tool_cycle_count', 'warehouse_tool_issue_report', 'terms_of_service', 'privacy_policy', 'refund_policy'].includes(appFeature.id),
               })),
-              dodoProductId: Deno.env.get('DODO_PRODUCT_ID_STANDARD') || 'prod_standard_mock', // RE-ADDED
-              dodoVariantId: 'standard_monthly_mock', // RE-ADDED
+              dodoProductId: import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD || 'prod_standard_mock',
+              dodoVariantId: import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT || 'standard_monthly_mock',
             },
             {
               id: "pro",
@@ -78,8 +78,8 @@ import React, { useState, useEffect } from "react";
                 text: appFeature.name,
                 included: getAllFeatureIds().includes(appFeature.id), // Pro includes all current features
               })),
-              dodoProductId: Deno.env.get('DODO_PRODUCT_ID_PRO') || 'prod_pro_mock', // RE-ADDED
-              dodoVariantId: 'pro_monthly_mock', // RE-ADDED
+              dodoProductId: import.meta.env.VITE_DODO_PRODUCT_ID_PRO || 'prod_pro_mock',
+              dodoVariantId: import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT || 'pro_monthly_mock',
             },
             {
               id: "enterprise",

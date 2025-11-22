@@ -39,8 +39,8 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
     }
 
     // Assuming DODO_PRODUCT_ID_STANDARD and DODO_PRODUCT_ID_PRO are set in environment variables
-    const dodoProductId = planName === 'standard' ? Deno.env.get('DODO_PRODUCT_ID_STANDARD') : Deno.env.get('DODO_PRODUCT_ID_PRO');
-    const dodoVariantId = planName === 'standard' ? Deno.env.get('DODO_PRODUCT_ID_STANDARD_VARIANT') : Deno.env.get('DODO_PRODUCT_ID_PRO_VARIANT'); // Assuming variants for monthly
+    const dodoProductId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD : import.meta.env.VITE_DODO_PRODUCT_ID_PRO;
+    const dodoVariantId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT : import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT; // Assuming variants for monthly
 
     if (!dodoProductId || !dodoVariantId) {
       showError("Dodo product information missing for this plan. Contact support.");

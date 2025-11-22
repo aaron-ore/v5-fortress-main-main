@@ -23,8 +23,10 @@ export default defineConfig(({ mode }) => {
     define: { // Explicitly define environment variables to ensure they are injected into the client-side bundle
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-      // VITE_SHOPIFY_CLIENT_ID and VITE_SHOPIFY_CLIENT_SECRET are removed from here to prevent client-side exposure.
-      // They should only be accessed server-side (e.g., in Edge Functions) via Deno.env.get().
+      'import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD': JSON.stringify(env.DODO_PRODUCT_ID_STANDARD),
+      'import.meta.env.VITE_DODO_PRODUCT_ID_PRO': JSON.stringify(env.DODO_PRODUCT_ID_PRO),
+      'import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT': JSON.stringify(env.DODO_PRODUCT_ID_STANDARD_VARIANT),
+      'import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT': JSON.stringify(env.DODO_PRODUCT_ID_PRO_VARIANT),
       // Add any other VITE_ prefixed env vars you need to expose to the client here
     },
     build: {
