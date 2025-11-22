@@ -15,6 +15,6 @@
     "types": ["@deno/types"]
   },
   "imports": {
-    // Removed: "dodopayments": "npm:dodopayments"
+    "dodopayments": "npm:dodopayments"
   }
 }

@@ -33,37 +33,57 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
   };
 
   const handleStartFreeTrial = async (planName: 'standard' | 'pro') => {
-    if (!profile?.organizationId) {
-      showError("Organization not found. Cannot start trial.");
+    if (!profile?.organizationId || !profile?.id || !profile?.email || !profile?.fullName) {
+      showError("User or organization data missing. Cannot start trial.");
       return;
     }
-    if (!profile?.id) {
-      showError("User not found. Log in again.");
+
+    // Assuming DODO_PRODUCT_ID_STANDARD and DODO_PRODUCT_ID_PRO are set in environment variables
+    const dodoProductId = planName === 'standard' ? Deno.env.get('DODO_PRODUCT_ID_STANDARD') : Deno.env.get('DODO_PRODUCT_ID_PRO');
+    const dodoVariantId = planName === 'standard' ? Deno.env.get('DODO_PRODUCT_ID_STANDARD_VARIANT') : Deno.env.get('DODO_PRODUCT_ID_PRO_VARIANT'); // Assuming variants for monthly
+
+    if (!dodoProductId || !dodoVariantId) {
+      showError("Dodo product information missing for this plan. Contact support.");
       return;
     }
 
     setIsProcessingSubscription(true);
     try {
-      // Simulate subscription process
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session) {
+        throw new Error("Authentication session expired. Please log in again.");
+      }
 
-      // Update the organization's plan in Supabase
-      await supabase
-        .from('organizations')
-        .update({
-          plan: planName,
-          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14-day free trial
-        })
-        .eq('id', profile.organizationId);
+      const { data, error } = await supabase.functions.invoke('create-dodo-checkout-session', {
+        body: JSON.stringify({
+          productId: dodoProductId,
+          variantId: dodoVariantId,
+          organizationId: profile.organizationId,
+          userId: profile.id,
+          customerEmail: profile.email,
+          customerName: profile.fullName,
+          redirectTo: window.location.origin + '/billing', // Redirect back to billing page
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+        },
+      });
 
-      showSuccess(`14-Day Free Trial for ${planName} plan started (simulated)!`);
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl; // Redirect to Dodo checkout
+      } else {
+        throw new Error("No checkout URL received from Dodo.");
+      }
 
     } catch (error: any) {
-      console.error("Error initiating trial (simulated):", error);
+      console.error("Error initiating Dodo checkout for trial:", error);
       showError(`Failed to start free trial: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);
-      await fetchProfile(); // Re-fetch profile to update plan status
     }
   };
 

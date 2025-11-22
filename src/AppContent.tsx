@@ -144,6 +144,7 @@ const AppContent = () => {
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
+  const dodoCallbackProcessedRef = useRef(false); // RE-ADDED
 
   const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
 
@@ -162,7 +163,7 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const dodoCheckoutStatus = params.get('dodo_checkout_status'); // REVERTED: Dodo checkout status
+    const dodoCheckoutStatus = params.get('dodo_checkout_status'); // RE-ADDED
 
     if (quickbooksSuccess && !qbCallbackProcessedRef.current) {
       showSuccess("QuickBooks connected!");
@@ -188,7 +189,7 @@ const AppContent = () => {
       return; // Exit after navigation
     }
 
-    if (dodoCheckoutStatus) { // REVERTED: Handle Dodo checkout status
+    if (dodoCheckoutStatus && !dodoCallbackProcessedRef.current) { // RE-ADDED
       if (dodoCheckoutStatus === 'completed') {
         showSuccess("Dodo checkout completed!");
       } else if (dodoCheckoutStatus === 'cancelled') {
@@ -201,6 +202,7 @@ const AppContent = () => {
       newSearchParams.delete('organization_id');
       newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });
+      dodoCallbackProcessedRef.current = true; // Mark as processed
       return; // Exit after navigation
     }
 
@@ -242,7 +244,7 @@ const AppContent = () => {
     }
   }, [
     location.hash, location.search, location.pathname, navigate,
-    qbCallbackProcessedRef, shopifyCallbackProcessedRef, // These refs are used to prevent re-triggering toasts/redirects
+    qbCallbackProcessedRef, shopifyCallbackProcessedRef, dodoCallbackProcessedRef, // RE-ADDED
     isLoadingProfile, profile, isUpgradePromptDialogOpen,
   ]);
 

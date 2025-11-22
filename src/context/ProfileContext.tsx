@@ -40,8 +40,8 @@ export interface UserProfile {
   quickbooksAccessToken?: string;
   quickbooksRefreshToken?: string;
   quickbooksRealmId?: string;
-  // Removed: dodoCustomerId?: string;
-  // Removed: dodoSubscriptionId?: string;
+  dodoCustomerId?: string; // RE-ADDED
+  dodoSubscriptionId?: string; // RE-ADDED
   companyProfile?: CompanyProfile;
   hasOnboardingWizardCompleted: boolean;
   hasSeenUpgradePrompt: boolean;
@@ -54,7 +54,7 @@ interface ProfileContextType {
   isLoadingAllProfiles: boolean;
   fetchProfile: () => Promise<void>;
   fetchAllProfiles: () => Promise<void>;
-  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'dodoCustomerId' | 'dodoSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => Promise<void>;
   updateUserRole: (userId: string, newRole: string, organizationId: string) => Promise<void>;
   updateCompanyProfile: (updates: Partial<CompanyProfile>, uniqueCode?: string) => Promise<void>;
   updateOrganizationTheme: (newTheme: string) => Promise<void>;
@@ -116,6 +116,8 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       quickbooksAccessToken: data.quickbooks_access_token || undefined,
       quickbooksRefreshToken: data.quickbooks_refresh_token || undefined,
       quickbooksRealmId: data.quickbooks_realm_id || undefined,
+      dodoCustomerId: companyData?.dodo_customer_id || undefined, // RE-ADDED
+      dodoSubscriptionId: companyData?.dodo_subscription_id || undefined, // RE-ADDED
       companyProfile: companyProfile,
       hasOnboardingWizardCompleted: data.has_onboarding_wizard_completed ?? false,
       hasSeenUpgradePrompt: data.has_seen_upgrade_prompt ?? false,
@@ -136,7 +138,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version)')
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version,dodo_customer_id,dodo_subscription_id)') // RE-ADDED Dodo fields
       .eq('id', user.id)
       .single();
 
@@ -241,7 +243,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
-  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
+  const updateProfile = async (updates: Partial<Omit<UserProfile, 'id' | 'email' | 'role' | 'organizationId' | 'createdAt' | 'quickbooksAccessToken' | 'quickbooksRefreshToken' | 'quickbooksRealmId' | 'dodoCustomerId' | 'dodoSubscriptionId' | 'hasOnboardingWizardCompleted' | 'hasSeenUpgradePrompt'>>) => {
     if (!profile) {
       const errorMessage = 'User profile not loaded.';
       await logActivity("Update User Profile Failed", errorMessage, profile, { updated_fields: updates }, true);
@@ -336,6 +338,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopify_store_name: updates.shopifyStoreName,
       perpetual_features: updates.perpetualFeatures,
       perpetual_license_version: updates.perpetualLicenseVersion,
+      // RE-ADDED Dodo fields
+      dodo_customer_id: updates.dodoCustomerId,
+      dodo_subscription_id: updates.dodoSubscriptionId,
     };
 
     if (uniqueCode !== undefined) {
