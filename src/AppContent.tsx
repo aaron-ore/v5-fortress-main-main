@@ -50,7 +50,7 @@ const Users = lazy(() => import("./pages/Users"));
 const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
 const SetupInstructions = lazy(() => import("./pages/SetupInstructions"));
 const WarehouseOperationsPage = lazy(() => import("./pages/WarehouseOperationsPage"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword")); // ADDED lazy import
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Folders = lazy(() => import("./pages/Locations"));
 const Customers = lazy(() => import("./pages/Customers"));
 const Integrations = lazy(() => import("./pages/Integrations"));
@@ -59,9 +59,10 @@ const Automation = lazy(() => import("./pages/Automation"));
 const ItemHistoryPage = lazy(() => import("./pages/ItemHistoryPage"));
 const FolderContentPage = lazy(() => import("./pages/FolderContentPage"));
 const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService")); // NEW: Import TermsOfService
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy")); // NEW: Import PrivacyPolicy
-const RefundPolicy = lazy(() => import("./pages/RefundPolicy")); // NEW: Import RefundPolicy
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
+const CustomerImport = lazy(() => import("./pages/CustomerImport")); // NEW: Lazy import for CustomerImport
 
 
 // Fallback component for Suspense
@@ -115,9 +116,10 @@ const AuthenticatedApp = () => {
                               <Route path="folders/:folderId" element={<FolderContentPage />} />
                               <Route path="integrations" element={<Integrations />} />
                               <Route path="automation" element={<Automation />} />
-                              <Route path="terms-of-service" element={<TermsOfService />} /> {/* NEW: Route for TermsOfService */}
-                              <Route path="privacy-policy" element={<PrivacyPolicy />} /> {/* NEW: Route for PrivacyPolicy */}
-                              <Route path="refund-policy" element={<RefundPolicy />} /> {/* NEW: Route for RefundPolicy */}
+                              <Route path="customer-import" element={<CustomerImport />} /> {/* NEW: Route for CustomerImport */}
+                              <Route path="terms-of-service" element={<TermsOfService />} />
+                              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                              <Route path="refund-policy" element={<RefundPolicy />} />
                               <Route path="*" element={<NotFound />} />
                             </Route>
                           </Routes>

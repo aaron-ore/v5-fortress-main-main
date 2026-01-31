@@ -18,6 +18,7 @@ import {
   Zap,
   Activity,
   FileText, // Added FileText icon for policy documents
+  Upload, // NEW: Import Upload icon
 } from "lucide-react";
 
 export interface NavItem {
@@ -42,6 +43,7 @@ export const mainNavItems: NavItem[] = [
     children: [
       { title: "All Items", href: "/inventory", icon: Package },
       { title: "Folders", href: "/folders", icon: MapPin },
+      { title: "Customer Import", href: "/customer-import", icon: Upload, adminOnly: true, tag: "NEW" }, // NEW: Customer Import link
     ],
   },
   { title: "Orders", href: "/orders", icon: Receipt },
