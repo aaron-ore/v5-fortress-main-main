@@ -46,6 +46,12 @@ const BillingSubscriptions = lazy(() => import("./pages/BillingSubscriptions"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const WhatsNew = lazy(() => import("./pages/WhatsNew"));
 const Vendors = lazy(() => import("./pages/Vendors"));
+const Users = lazy(() => import("./pages/Users"));
+const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
+const SetupInstructions = lazy(() => import("./pages/SetupInstructions"));
+const WarehouseOperationsPage = lazy(() => import("./pages/WarehouseOperationsPage"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword")); // ADDED lazy import
+const Folders = lazy(() => import("./pages/Locations"));
 const Customers = lazy(() => import("./pages/Customers"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
