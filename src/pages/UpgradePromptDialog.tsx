@@ -38,34 +38,35 @@ const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClo
       return;
     }
 
-    const dodoProductId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD : import.meta.env.VITE_DODO_PRODUCT_ID_PRO;
-    const dodoVariantId = planName === 'standard' ? import.meta.env.VITE_DODO_PRODUCT_ID_STANDARD_VARIANT : import.meta.env.VITE_DODO_PRODUCT_ID_PRO_VARIANT;
+    // Use Lemon Squeezy product IDs (assuming they are now configured in .env)
+    const lemonSqueezyProductId = planName === 'standard' ? import.meta.env.VITE_LEMON_SQUEEZY_PRODUCT_ID_STANDARD : import.meta.env.VITE_LEMON_SQUEEZY_PRODUCT_ID_PRO;
+    const lemonSqueezyVariantId = planName === 'standard' ? import.meta.env.VITE_LEMON_SQUEEZY_PRODUCT_ID_STANDARD_VARIANT : import.meta.env.VITE_LEMON_SQUEEZY_PRODUCT_ID_PRO_VARIANT;
 
-    if (!dodoProductId || !dodoVariantId) {
-      showError("Dodo product information missing for this plan. Contact support.");
+    if (!lemonSqueezyProductId || !lemonSqueezyVariantId) {
+      showError("Lemon Squeezy product information missing for this plan. Contact support.");
       return;
     }
 
     setIsProcessingSubscription(true);
     try {
-      const dodoStoreUrl = import.meta.env.VITE_DODO_STORE_URL;
-      if (!dodoStoreUrl) {
-        throw new Error("Dodo Store URL is not configured. Please contact support.");
+      const lemonSqueezyStoreUrl = import.meta.env.VITE_LEMON_SQUEEZY_STORE_URL;
+      if (!lemonSqueezyStoreUrl) {
+        throw new Error("Lemon Squeezy Store URL is not configured. Please contact support.");
       }
 
-      const redirectUrl = encodeURIComponent(`${window.location.origin}/billing?dodo_checkout_status={checkout_status}&organization_id=${profile.organizationId}&user_id=${profile.id}`);
+      const redirectUrl = encodeURIComponent(`${window.location.origin}/billing?lemon_squeezy_checkout_status={checkout_status}&organization_id=${profile.organizationId}&user_id=${profile.id}`);
       const passthroughData = encodeURIComponent(JSON.stringify({
         organization_id: profile.organizationId,
         user_id: profile.id,
         plan_id: planName, // Pass the plan ID for webhook processing
       }));
 
-      const checkoutUrl = `https://${dodoStoreUrl}/checkout/buy/${dodoProductId}?variant=${dodoVariantId}&passthrough=${passthroughData}&redirect_url=${redirectUrl}`;
+      const checkoutUrl = `https://${lemonSqueezyStoreUrl}/checkout/buy/${lemonSqueezyProductId}?variant=${lemonSqueezyVariantId}&passthrough=${passthroughData}&redirect_url=${redirectUrl}`;
       
-      window.location.href = checkoutUrl; // Redirect to Dodo checkout page
+      window.location.href = checkoutUrl; // Redirect to Lemon Squeezy checkout page
 
     } catch (error: any) {
-      console.error("Error initiating Dodo checkout for trial:", error);
+      console.error("Error initiating Lemon Squeezy checkout for trial:", error);
       showError(`Failed to start free trial: ${error.message}`);
     } finally {
       setIsProcessingSubscription(false);

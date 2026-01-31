@@ -54,6 +54,7 @@
     "input-otp": "^1.2.4",
     "jsbarcode": "^3.12.1",
     "jspdf": "^3.0.1",
+    "lemonsqueezy": "0.0.1-claimed",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "qrcode": "^1.5.3",

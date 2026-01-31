@@ -46,12 +46,6 @@ const BillingSubscriptions = lazy(() => import("./pages/BillingSubscriptions"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const WhatsNew = lazy(() => import("./pages/WhatsNew"));
 const Vendors = lazy(() => import("./pages/Vendors"));
-const Users = lazy(() => import("./pages/Users"));
-const CreateInvoice = lazy(() => import("./pages/CreateInvoice"));
-const SetupInstructions = lazy(() => import("./pages/SetupInstructions"));
-const WarehouseOperationsPage = lazy(() => import("./pages/WarehouseOperationsPage"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Folders = lazy(() => import("./pages/Locations"));
 const Customers = lazy(() => import("./pages/Customers"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
@@ -138,13 +132,13 @@ const AuthenticatedApp = () => {
 const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isLoadingProfile, profile } = useProfile();
+  const { isLoadingProfile, profile, fetchProfile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
   // Removed: const { isTutorialActive, currentStep } = useTutorial();
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
-  const dodoCallbackProcessedRef = useRef(false); // RE-ADDED
+  const lemonSqueezyCallbackProcessedRef = useRef(false); // RENAMED
 
   const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
 
@@ -163,7 +157,7 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const dodoCheckoutStatus = params.get('dodo_checkout_status'); // RE-ADDED
+    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status'); // RENAMED
 
     if (quickbooksSuccess && !qbCallbackProcessedRef.current) {
       showSuccess("QuickBooks connected!");
@@ -189,20 +183,23 @@ const AppContent = () => {
       return; // Exit after navigation
     }
 
-    if (dodoCheckoutStatus && !dodoCallbackProcessedRef.current) { // RE-ADDED
-      if (dodoCheckoutStatus === 'completed') {
-        showSuccess("Dodo checkout completed!");
-      } else if (dodoCheckoutStatus === 'cancelled') {
-        showError("Dodo checkout cancelled.");
+    if (lemonSqueezyCheckoutStatus && !lemonSqueezyCallbackProcessedRef.current) { // RENAMED
+      if (lemonSqueezyCheckoutStatus === 'completed') {
+        showSuccess("Subscription checkout completed! Refreshing profile...");
+      } else if (lemonSqueezyCheckoutStatus === 'cancelled') {
+        showError("Subscription checkout cancelled.");
       } else {
-        showInfo(`Dodo checkout status: ${dodoCheckoutStatus}`);
+        showInfo(`Subscription checkout status: ${lemonSqueezyCheckoutStatus}`);
       }
+      // Trigger profile fetch to update plan status
+      fetchProfile(); 
+      
       const newSearchParams = new URLSearchParams(params);
-      newSearchParams.delete('dodo_checkout_status');
+      newSearchParams.delete('lemon_squeezy_checkout_status');
       newSearchParams.delete('organization_id');
       newSearchParams.delete('user_id');
       navigate({ search: newSearchParams.toString() }, { replace: true });
-      dodoCallbackProcessedRef.current = true; // Mark as processed
+      lemonSqueezyCallbackProcessedRef.current = true; // Mark as processed
       return; // Exit after navigation
     }
 
@@ -244,8 +241,8 @@ const AppContent = () => {
     }
   }, [
     location.hash, location.search, location.pathname, navigate,
-    qbCallbackProcessedRef, shopifyCallbackProcessedRef, dodoCallbackProcessedRef, // RE-ADDED
-    isLoadingProfile, profile, isUpgradePromptDialogOpen,
+    qbCallbackProcessedRef, shopifyCallbackProcessedRef, lemonSqueezyCallbackProcessedRef, // RENAMED
+    isLoadingProfile, profile, isUpgradePromptDialogOpen, fetchProfile,
   ]);
 
   useEffect(() => {
