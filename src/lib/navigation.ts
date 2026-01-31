@@ -20,7 +20,7 @@ import {
   FileText, // Added FileText icon for policy documents
   Upload, // NEW: Import Upload icon
   Utensils, // NEW: Import Utensils icon
-  Tool, // NEW: Import Tool icon for Advanced Tools
+  Wrench, // Changed from Tool to Wrench icon for Advanced Tools
 } from "lucide-react";
 
 export interface NavItem {
@@ -56,7 +56,7 @@ export const mainNavItems: NavItem[] = [
   {
     title: "Advanced Tools", // NEW Parent Item
     href: "/advanced-tools",
-    icon: Tool, // Using Tool icon
+    icon: Wrench, // Using Wrench icon
     isParent: true,
     children: [
       { title: "Integrations", href: "/integrations", icon: Plug },
