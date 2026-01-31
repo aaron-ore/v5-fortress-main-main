@@ -19,6 +19,7 @@ import {
   Activity,
   FileText, // Added FileText icon for policy documents
   Upload, // NEW: Import Upload icon
+  Utensils, // NEW: Import Utensils icon
 } from "lucide-react";
 
 export interface NavItem {
@@ -43,7 +44,8 @@ export const mainNavItems: NavItem[] = [
     children: [
       { title: "All Items", href: "/inventory", icon: Package },
       { title: "Folders", href: "/folders", icon: MapPin },
-      { title: "Customer Import", href: "/customer-import", icon: Upload, adminOnly: true, tag: "NEW" }, // NEW: Customer Import link
+      { title: "Recipes (BOM)", href: "/recipes", icon: Utensils, tag: "NEW" }, // NEW: Recipes link
+      { title: "Customer Import", href: "/customer-import", icon: Upload, adminOnly: true, tag: "NEW" },
     ],
   },
   { title: "Orders", href: "/orders", icon: Receipt },

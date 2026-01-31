@@ -19,6 +19,8 @@ import { StockMovementProvider } from "./context/StockMovementContext";
 import { ReplenishmentProvider } from "./context/ReplenishmentContext";
 import { InventoryProvider } from "./context/InventoryContext";
 import { AutomationProvider } from "./context/AutomationContext";
+import { UnitOfMeasureProvider } from "./context/UnitOfMeasureContext"; // NEW: Import UnitOfMeasureProvider
+import { RecipeProvider } from "./context/RecipeContext"; // NEW: Import RecipeProvider
 import ErrorBoundary from "./components/ErrorBoundary";
 import PrintWrapper from "./components/PrintWrapper";
 import { Loader2 } from "lucide-react";
@@ -62,7 +64,8 @@ const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
-const CustomerImport = lazy(() => import("./pages/CustomerImport")); // NEW: Lazy import for CustomerImport
+const CustomerImport = lazy(() => import("./pages/CustomerImport"));
+const Recipes = lazy(() => import("./pages/Recipes")); // NEW: Lazy import for Recipes
 
 
 // Fallback component for Suspense
@@ -84,47 +87,52 @@ const AuthenticatedApp = () => {
                 <StockMovementProvider>
                   <ReplenishmentProvider>
                     <InventoryProvider>
-                      <AutomationProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          {/* This is the main layout for authenticated users */}
-                          <Routes>
-                            <Route path="/" element={<Layout />}>
-                              <Route index element={<Dashboard />} />
-                              <Route path="inventory" element={<Inventory />} />
-                              <Route path="inventory/:id" element={<EditInventoryItem />} />
-                              <Route path="inventory/:id/history" element={<ItemHistoryPage />} />
-                              <Route path="orders" element={<Orders />} />
-                              <Route path="orders/:id" element={<EditPurchaseOrder />} />
-                              <Route path="reports" element={<Reports />} />
-                              <Route path="settings" element={<Settings />} />
-                              <Route path="create-po" element={<CreatePurchaseOrder />} />
-                              <Route path="create-invoice" element={<CreateInvoice />} />
-                              <Route path="profile" element={<MyProfile />} />
-                              <Route path="account-settings" element={<AccountSettings />} />
-                              <Route path="notifications-page" element={<NotificationsPage />} />
-                              <Route path="billing" element={<BillingSubscriptions />} />
-                              <Route path="help" element={<HelpCenter />} />
-                              <Route path="whats-new" element={<WhatsNew />} />
-                              <Route path="vendors" element={<Vendors />} />
-                              <Route path="customers" element={<Customers />} />
-                              <Route path="users" element={<Users />} />
-                              <Route path="activity-logs" element={<ActivityLogs />} />
-                              <Route path="setup-instructions" element={<SetupInstructions />} />
-                              <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
-                              <Route path="reset-password" element={<ResetPassword />} />
-                              <Route path="folders" element={<Folders />} />
-                              <Route path="folders/:folderId" element={<FolderContentPage />} />
-                              <Route path="integrations" element={<Integrations />} />
-                              <Route path="automation" element={<Automation />} />
-                              <Route path="customer-import" element={<CustomerImport />} /> {/* NEW: Route for CustomerImport */}
-                              <Route path="terms-of-service" element={<TermsOfService />} />
-                              <Route path="privacy-policy" element={<PrivacyPolicy />} />
-                              <Route path="refund-policy" element={<RefundPolicy />} />
-                              <Route path="*" element={<NotFound />} />
-                            </Route>
-                          </Routes>
-                        </Suspense>
-                      </AutomationProvider>
+                      <UnitOfMeasureProvider> {/* NEW: UnitOfMeasureProvider */}
+                        <RecipeProvider> {/* NEW: RecipeProvider */}
+                          <AutomationProvider>
+                            <Suspense fallback={<LoadingFallback />}>
+                              {/* This is the main layout for authenticated users */}
+                              <Routes>
+                                <Route path="/" element={<Layout />}>
+                                  <Route index element={<Dashboard />} />
+                                  <Route path="inventory" element={<Inventory />} />
+                                  <Route path="inventory/:id" element={<EditInventoryItem />} />
+                                  <Route path="inventory/:id/history" element={<ItemHistoryPage />} />
+                                  <Route path="orders" element={<Orders />} />
+                                  <Route path="orders/:id" element={<EditPurchaseOrder />} />
+                                  <Route path="reports" element={<Reports />} />
+                                  <Route path="settings" element={<Settings />} />
+                                  <Route path="create-po" element={<CreatePurchaseOrder />} />
+                                  <Route path="create-invoice" element={<CreateInvoice />} />
+                                  <Route path="profile" element={<MyProfile />} />
+                                  <Route path="account-settings" element={<AccountSettings />} />
+                                  <Route path="notifications-page" element={<NotificationsPage />} />
+                                  <Route path="billing" element={<BillingSubscriptions />} />
+                                  <Route path="help" element={<HelpCenter />} />
+                                  <Route path="whats-new" element={<WhatsNew />} />
+                                  <Route path="vendors" element={<Vendors />} />
+                                  <Route path="customers" element={<Customers />} />
+                                  <Route path="users" element={<Users />} />
+                                  <Route path="activity-logs" element={<ActivityLogs />} />
+                                  <Route path="setup-instructions" element={<SetupInstructions />} />
+                                  <Route path="warehouse-operations" element={<WarehouseOperationsPage />} />
+                                  <Route path="reset-password" element={<ResetPassword />} />
+                                  <Route path="folders" element={<Folders />} />
+                                  <Route path="folders/:folderId" element={<FolderContentPage />} />
+                                  <Route path="integrations" element={<Integrations />} />
+                                  <Route path="automation" element={<Automation />} />
+                                  <Route path="customer-import" element={<CustomerImport />} />
+                                  <Route path="recipes" element={<Recipes />} /> {/* NEW: Route for Recipes */}
+                                  <Route path="terms-of-service" element={<TermsOfService />} />
+                                  <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                                  <Route path="refund-policy" element={<RefundPolicy />} />
+                                  <Route path="*" element={<NotFound />} />
+                                </Route>
+                              </Routes>
+                            </Suspense>
+                          </AutomationProvider>
+                        </RecipeProvider> {/* NEW: RecipeProvider */}
+                      </UnitOfMeasureProvider> {/* NEW: UnitOfMeasureProvider */}
                     </InventoryProvider>
                   </ReplenishmentProvider>
                 </StockMovementProvider>
