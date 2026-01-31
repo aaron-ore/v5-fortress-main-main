@@ -34,6 +34,9 @@ const Settings: React.FC = () => {
   const [isSavingTheme, setIsSavingTheme] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isLogoCleared, setIsLogoCleared] = useState(false);
+  
+  // NEW: Industry state
+  const [industry, setIndustry] = useState(profile?.companyProfile?.industry || "warehouse");
 
   useEffect(() => {
     if (profile?.companyProfile) {
@@ -44,6 +47,8 @@ const Settings: React.FC = () => {
       setOrganizationCodeInput(profile.companyProfile.organizationCode || "");
       setSelectedTheme(profile.companyProfile.organizationTheme || "dark");
       setIsLogoCleared(false);
+      // NEW: Update industry state
+      setIndustry(profile.companyProfile.industry || "warehouse");
       console.log("[Settings] useEffect: Profile loaded. companyLogoUrl (public from context):", profile.companyProfile.companyLogoUrl, "companyLogoUrlPreview (state):", companyLogoUrlPreview);
     }
   }, [profile?.companyProfile]);
@@ -145,6 +150,7 @@ const Settings: React.FC = () => {
         companyAddress: companyAddress,
         companyCurrency: companyCurrency,
         companyLogoUrl: finalCompanyLogoUrlForDb,
+        industry: industry, // NEW: Pass industry
       }, organizationCodeInput);
     } catch (error: any) {
       showError(`Failed to update profile: ${error.message}`);
@@ -205,7 +211,8 @@ const Settings: React.FC = () => {
     companyAddress !== (profile?.companyProfile?.companyAddress || "") ||
     companyCurrency !== (profile?.companyProfile?.companyCurrency || "USD") ||
     (companyLogoFile !== null) ||
-    isLogoCleared;
+    isLogoCleared ||
+    industry !== (profile?.companyProfile?.industry || "warehouse"); // NEW: Check industry change
 
   const hasOrganizationCodeChanges = organizationCodeInput !== (profile?.companyProfile?.organizationCode || "");
   const hasThemeChanges = selectedTheme !== (profile?.companyProfile?.organizationTheme || "dark");
@@ -258,6 +265,30 @@ const Settings: React.FC = () => {
               rows={3}
             />
           </div>
+          
+          {/* NEW: Industry Toggle */}
+          <div className="space-y-2">
+            <Label htmlFor="industry">Business Type</Label>
+            <RadioGroup
+              id="industry"
+              value={industry}
+              onValueChange={setIndustry}
+              className="flex space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="warehouse" id="industry-warehouse" />
+                <Label htmlFor="industry-warehouse">Warehouse / Retail</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="restaurant" id="industry-restaurant" />
+                <Label htmlFor="industry-restaurant">Restaurant / Food Service</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Selecting 'Restaurant' optimizes the dashboard for food service metrics (e.g., COGS, Recipes).
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="companyLogoFile">Company Logo (Optional)</Label>
             <Input

@@ -22,12 +22,20 @@ import GenerateReportButton from "@/components/dashboard/GenerateReportButton";
 import { Button } from "@/components/ui/button";
 import { FilterX, Loader2, AlertTriangle } from "lucide-react";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useProfile } from "@/context/ProfileContext"; // Import useProfile
+
+// NEW: Imports for Restaurant Mode Swaps
+import TotalStockValueCard from "@/components/dashboard/TotalStockValueCard";
+import LowStockAlertsCard from "@/components/dashboard/LowStockAlertsCard";
+import InventoryTurnoverRateCard from "@/components/dashboard/InventoryTurnoverRateCard";
+import OpenPurchaseOrdersCard from "@/components/dashboard/OpenPurchaseOrdersCard";
 
 
 const DefaultDashboardContent: React.FC = () => {
   const [isAddInventoryDialogOpen, setIsAddInventoryDialogOpen] = useState(false);
   const [isScanItemDialogOpen, setIsScanItemDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const { profile } = useProfile(); // Get profile to check industry
 
   const { data: dashboardData, isLoading, error, refresh } = useDashboardData(dateRange);
 
@@ -65,11 +73,14 @@ const DefaultDashboardContent: React.FC = () => {
   }
 
   const { metrics, charts, lists } = dashboardData;
+  
+  // Determine business type
+  const isRestaurant = profile?.companyProfile?.industry === 'restaurant';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold">{isRestaurant ? "Restaurant Dashboard" : "Warehouse Dashboard"}</h1>
         <div className="flex items-center gap-2">
           <DateRangePicker dateRange={dateRange} onSelect={setDateRange} />
           {dateRange?.from && isValid(dateRange.from) && (
@@ -81,25 +92,46 @@ const DefaultDashboardContent: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        
+        {/* Slot 1: Fulfillment Rate (Warehouse) / Total Stock Value (Restaurant) */}
         <div className="col-span-full md:col-span-1">
-          <OrderFulfillmentRateCard
-            fulfillmentPercentage={metrics.fulfillmentPercentage}
-            pendingPercentage={metrics.pendingPercentage}
-            totalOrders={lists.recentSalesOrders.length + lists.recentPurchaseOrders.length}
-          />
+          {isRestaurant ? (
+            <TotalStockValueCard
+              totalStockValue={metrics.totalStockValue}
+              totalStockValueTrendData={charts.totalStockValueTrendData}
+            />
+          ) : (
+            <OrderFulfillmentRateCard
+              fulfillmentPercentage={metrics.fulfillmentPercentage}
+              pendingPercentage={metrics.pendingPercentage}
+              totalOrders={lists.recentSalesOrders.length + lists.recentPurchaseOrders.length}
+            />
+          )}
         </div>
+        
+        {/* Slot 2: Last 3 Month Sales (Reused) */}
         <div className="col-span-full md:col-span-1">
           <Last3MonthSalesCard
             data={charts.last3MonthSalesData}
           />
         </div>
+        
+        {/* Slot 3: Issues Card (Warehouse) / Low Stock Alerts (Restaurant) */}
         <div className="col-span-full md:col-span-1">
-          <IssuesCard
-            dailyIssuesCount={lists.dailyIssuesCount}
-            previousPeriodIssuesCount={lists.previousPeriodIssuesCount}
-            dateRange={dateRange}
-          />
+          {isRestaurant ? (
+            <LowStockAlertsCard
+              lowStockItems={lists.lowStockItems}
+            />
+          ) : (
+            <IssuesCard
+              dailyIssuesCount={lists.dailyIssuesCount}
+              previousPeriodIssuesCount={lists.previousPeriodIssuesCount}
+              dateRange={dateRange}
+            />
+          )}
         </div>
+        
+        {/* Slot 4: Mini Metrics (Reused) */}
         <div className="col-span-full md:col-span-1 flex flex-col gap-4">
           <WalletCard
             totalStockValue={metrics.totalStockValue}
@@ -121,33 +153,57 @@ const DefaultDashboardContent: React.FC = () => {
           />
         </div>
 
+        {/* Slot 5: Live Activity Chart (Reused) */}
         <div className="col-span-full md:col-span-2 lg:col-span-2 xl:col-span-2">
           <LiveInformationAreaChartCard
             data={charts.liveActivityData}
           />
         </div>
+        
+        {/* Slot 6: Stock Discrepancy (Warehouse) / Inventory Turnover Rate (Restaurant) */}
         <div className="col-span-full md:col-span-1">
-          <StockDiscrepancyCard
-            pendingDiscrepanciesCount={lists.pendingDiscrepanciesCount}
-            previousPeriodDiscrepanciesCount={lists.previousPeriodDiscrepanciesCount}
-            dateRange={dateRange}
-          />
+          {isRestaurant ? (
+            <InventoryTurnoverRateCard
+              inventoryTurnoverRate={metrics.inventoryTurnoverRate}
+            />
+          ) : (
+            <StockDiscrepancyCard
+              pendingDiscrepanciesCount={lists.pendingDiscrepanciesCount}
+              previousPeriodDiscrepanciesCount={lists.previousPeriodDiscrepanciesCount}
+              dateRange={dateRange}
+            />
+          )}
         </div>
+        
+        {/* Slot 7: Location Stock Health (Warehouse) / Top Selling Products (Restaurant) */}
         <div className="col-span-full md:col-span-1">
-          <LocationStockHealthCard
-            locationStockHealthData={charts.locationStockHealthData}
-          />
+          {isRestaurant ? (
+            <TopSellingProductsCard
+              topSellingProducts={lists.topSellingProducts}
+            />
+          ) : (
+            <LocationStockHealthCard
+              locationStockHealthData={charts.locationStockHealthData}
+            />
+          )}
         </div>
 
+        {/* Slot 8 & 9: Monthly Overview Chart & Top Selling Products/Open POs */}
         <div className="col-span-full md:col-span-2 lg:col-span-3 xl:col-span-3">
           <MonthlyOverviewChartCard
             data={charts.monthlyOverviewData}
           />
         </div>
         <div className="col-span-full md:col-span-1">
-          <TopSellingProductsCard
-            topSellingProducts={lists.topSellingProducts}
-          />
+          {isRestaurant ? (
+            <OpenPurchaseOrdersCard
+              openPurchaseOrders={lists.openPurchaseOrders}
+            />
+          ) : (
+            <TopSellingProductsCard
+              topSellingProducts={lists.topSellingProducts}
+            />
+          )}
         </div>
       </div>
 

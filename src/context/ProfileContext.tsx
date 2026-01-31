@@ -25,6 +25,7 @@ export interface CompanyProfile {
   shopifyStoreName?: string;
   perpetualFeatures?: string[];
   perpetualLicenseVersion?: string;
+  industry?: string; // NEW
 }
 
 export interface UserProfile {
@@ -101,6 +102,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopifyStoreName: companyData.shopify_store_name || undefined,
       perpetualFeatures: companyData.perpetual_features || undefined,
       perpetualLicenseVersion: companyData.perpetual_license_version || undefined,
+      industry: companyData.industry || undefined, // NEW
     } : undefined;
     
     const userProfile: UserProfile = {
@@ -138,7 +140,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoadingProfile(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version,lemon_squeezy_customer_id,lemon_squeezy_subscription_id)') // MODIFIED: Use lemon_squeezy columns
+      .select('*, organizations(name,currency,address,unique_code,default_theme,company_logo_url,shopify_access_token,shopify_refresh_token,shopify_store_name,plan,default_reorder_level,enable_auto_reorder_notifications,enable_auto_reorder,perpetual_features,perpetual_license_version,lemon_squeezy_customer_id,lemon_squeezy_subscription_id,industry)') // MODIFIED: Added industry
       .eq('id', user.id)
       .single();
 
@@ -177,7 +179,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     setIsLoadingProfile(false);
     console.log(`[ProfileContext] fetchProfile: END for user: ${user?.id || 'null'}`);
-  }, [user, isLoadingAuth]);
+  }, [user]);
 
   const fetchAllProfiles = useCallback(async () => {
     console.log(`[ProfileContext] fetchAllProfiles: START for organization: ${profile?.organizationId || 'null'}`);
@@ -338,6 +340,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       shopify_store_name: updates.shopifyStoreName,
       perpetual_features: updates.perpetualFeatures,
       perpetual_license_version: updates.perpetualLicenseVersion,
+      industry: updates.industry, // NEW
     };
 
     if (uniqueCode !== undefined) {
