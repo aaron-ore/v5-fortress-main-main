@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/pos-sync",
+      "destination": "https://nojumocxivfjsbqnnkqe.supabase.co/functions/v1/pos-webhook-processor"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
