@@ -20,6 +20,7 @@ import {
   FileText, // Added FileText icon for policy documents
   Upload, // NEW: Import Upload icon
   Utensils, // NEW: Import Utensils icon
+  Tool, // NEW: Import Tool icon for Advanced Tools
 } from "lucide-react";
 
 export interface NavItem {
@@ -52,9 +53,17 @@ export const mainNavItems: NavItem[] = [
   { title: "Customers", href: "/customers", icon: User },
   { title: "Vendors", href: "/vendors", icon: Truck },
   { title: "Reports", href: "/reports", icon: BarChart },
-  { title: "Integrations", href: "/integrations", icon: Plug },
-  { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
-  { title: "Warehouse Operations", href: "/warehouse-operations", icon: Warehouse },
+  {
+    title: "Advanced Tools", // NEW Parent Item
+    href: "/advanced-tools",
+    icon: Tool, // Using Tool icon
+    isParent: true,
+    children: [
+      { title: "Integrations", href: "/integrations", icon: Plug },
+      { title: "Automation", href: "/automation", icon: Zap, adminOnly: true },
+      { title: "Warehouse Operations", href: "/warehouse-operations", icon: Warehouse },
+    ],
+  },
 ];
 
 export const userAndSettingsNavItems: NavItem[] = [
