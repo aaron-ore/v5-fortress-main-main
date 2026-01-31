@@ -51,7 +51,7 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true);
   const { profile, isLoadingProfile } = useProfile();
 
-  const mapSupabaseRecipeToRecipe = (data: any, ingredients: any[], units: UnitOfMeasure[], inventoryItems: InventoryItem[]): Recipe => {
+  const mapSupabaseRecipeToRecipe = (data: any, ingredients: any[], units: UnitOfMeasure[], inventoryItems: Partial<InventoryItem>[]): Recipe => {
     const yieldUnit = units.find(u => u.id === data.yield_unit_id);
 
     const mappedIngredients: RecipeIngredient[] = ingredients.map(ing => {
@@ -100,8 +100,8 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       { data: inventoryData, error: inventoryError },
     ] = await Promise.all([
       supabase.from("recipes").select("*").eq("organization_id", profile.organizationId),
-      supabase.from("recipe_ingredients").select("*"),
-      supabase.from("units_of_measure").select("*").eq("organization_id", profile.organizationId),
+      supabase.from("recipe_ingredients").select('*'),
+      supabase.from("units_of_measure").select('id, abbreviation, base_unit_factor, is_base_unit, name, created_at, organization_id').eq("organization_id", profile.organizationId),
       supabase.from("inventory_items").select("id, name").eq("organization_id", profile.organizationId),
     ]);
 
@@ -130,7 +130,7 @@ export const RecipeProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const mappedRecipes: Recipe[] = recipeData.map(recipe => {
       const ingredients = ingredientData.filter(ing => ing.recipe_id === recipe.id);
-      return mapSupabaseRecipeToRecipe(recipe, ingredients, unitsMap, inventoryItemsMap as InventoryItem[]);
+      return mapSupabaseRecipeToRecipe(recipe, ingredients, unitsMap, inventoryItemsMap as Partial<InventoryItem>[]);
     });
 
     setRecipes(mappedRecipes);

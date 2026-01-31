@@ -17,7 +17,7 @@ interface PosWebhookPayload {
     total_amount?: number;
     customer_name?: string;
     items: Array<{
-      sku: string;
+      menu_item_name: string; // Changed from sku to menu_item_name
       quantity: number;
       unit_price: number;
       type: 'sale' | 'return' | 'adjustment';
@@ -25,6 +25,13 @@ interface PosWebhookPayload {
     }>;
   };
 }
+
+// Helper function to convert quantity between units (simplified for Edge Function)
+const convertQuantity = (quantity: number, fromUnitFactor: number, toUnitFactor: number): number => {
+    if (fromUnitFactor === 0 || toUnitFactor === 0) return quantity;
+    // Convert to base unit, then convert to target unit
+    return (quantity * fromUnitFactor) / toUnitFactor;
+};
 
 serve(async (req) => {
   let rawBodyText = '';
@@ -78,108 +85,139 @@ serve(async (req) => {
     }
 
     const organizationId = apiKeyData.organization_id;
-    const systemUserId = apiKeyData.user_id || '00000000-0000-0000-0000-000000000000'; // Fallback to a system user ID if needed
+    const systemUserId = apiKeyData.user_id || '00000000-0000-0000-0000-000000000000';
 
     console.log(`[pos-webhook-processor] Authenticated POS for Org ID: ${organizationId}, Event: ${event_type}`);
 
-    // 2. Fetch all relevant inventory items by SKU for the organization
-    const skus = data.items.map(item => item.sku);
-    const { data: inventoryData, error: invError } = await supabaseAdmin
-      .from('inventory_items')
-      .select('id, name, sku, quantity, picking_bin_quantity, overstock_quantity, unit_cost, folder_id')
-      .in('sku', skus)
-      .eq('organization_id', organizationId);
+    // 2. Fetch all necessary data: Recipes, Ingredients, Units, and Inventory
+    const [
+      { data: recipesData, error: recipesError },
+      { data: ingredientsData, error: ingredientsError },
+      { data: unitsData, error: unitsError },
+      { data: inventoryData, error: invError },
+    ] = await Promise.all([
+      supabaseAdmin.from('recipes').select('id, name, yield_unit_id').eq('organization_id', organizationId),
+      supabaseAdmin.from('recipe_ingredients').select('*'),
+      supabaseAdmin.from('units_of_measure').select('id, abbreviation, base_unit_factor, is_base_unit').eq('organization_id', organizationId),
+      supabaseAdmin.from('inventory_items').select('id, name, sku, quantity, picking_bin_quantity, overstock_quantity, unit_cost, folder_id, yield_unit_id'),
+    ]);
 
-    if (invError) {
-      console.error('[pos-webhook-processor] Error fetching inventory:', invError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch inventory data.' }), {
+    if (recipesError || ingredientsError || unitsError || invError) {
+      console.error('[pos-webhook-processor] Error fetching core data:', recipesError || ingredientsError || unitsError || invError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch core inventory/recipe data.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
     }
 
-    const inventoryMap = new Map(inventoryData.map(item => [item.sku, item]));
+    const recipeMap = new Map(recipesData.map(r => [r.name.toLowerCase(), r]));
+    const unitMap = new Map(unitsData.map(u => [u.id, u]));
+    const inventoryMap = new Map(inventoryData.map(i => [i.id, i]));
+    const inventorySkuMap = new Map(inventoryData.map(i => [i.sku.toLowerCase(), i]));
+
     const updates = [];
     const movements = [];
     let totalSaleAmount = 0;
+    let unmappedItems = [];
 
-    // 3. Process items and prepare updates
-    for (const item of data.items) {
-      const inventoryItem = inventoryMap.get(item.sku);
-      if (!inventoryItem) {
-        console.warn(`[pos-webhook-processor] Item not found in inventory for SKU: ${item.sku}. Skipping.`);
+    // 3. Process Menu Items and Deplete Ingredients
+    for (const menuItem of data.items) {
+      const recipe = recipeMap.get(menuItem.menu_item_name.toLowerCase());
+      
+      if (!recipe) {
+        unmappedItems.push(menuItem.menu_item_name);
+        console.warn(`[pos-webhook-processor] Menu Item not mapped to a recipe: ${menuItem.menu_item_name}. Skipping depletion.`);
         continue;
       }
 
-      const oldQuantity = inventoryItem.quantity;
-      let newQuantity = oldQuantity;
-      let newPickingBinQuantity = inventoryItem.picking_bin_quantity;
-      let newOverstockQuantity = inventoryItem.overstock_quantity;
-      let movementType: 'add' | 'subtract';
-      let reason: string;
+      if (event_type === 'SALE_COMPLETED' && menuItem.type === 'sale') {
+        totalSaleAmount += menuItem.quantity * menuItem.unit_price;
+      } else if (event_type === 'SALE_COMPLETED' && menuItem.type === 'return') {
+        totalSaleAmount -= menuItem.quantity * menuItem.unit_price;
+      }
 
-      if (event_type === 'SALE_COMPLETED' && item.type === 'sale') {
-        // Sale: Subtract from picking bin first
-        const quantityToSubtract = item.quantity;
-        movementType = 'subtract';
-        reason = `POS Sale: ${data.transaction_id || 'N/A'}`;
-
-        if (newPickingBinQuantity >= quantityToSubtract) {
-          newPickingBinQuantity -= quantityToSubtract;
-        } else {
-          const remaining = quantityToSubtract - newPickingBinQuantity;
-          newPickingBinQuantity = 0;
-          newOverstockQuantity -= remaining;
-        }
-        newQuantity = newPickingBinQuantity + newOverstockQuantity;
-        totalSaleAmount += item.quantity * item.unit_price;
-
-      } else if (event_type === 'SALE_COMPLETED' && item.type === 'return') {
-        // Return: Add to picking bin
-        movementType = 'add';
-        reason = `POS Return: ${data.transaction_id || 'N/A'}`;
-        newPickingBinQuantity += item.quantity;
-        newQuantity = newPickingBinQuantity + newOverstockQuantity;
-        totalSaleAmount -= item.quantity * item.unit_price; // Reduce total sale amount
-
-      } else if (event_type === 'INVENTORY_ADJUSTMENT' && item.type === 'adjustment') {
-        // Direct Adjustment (e.g., waste, count correction)
-        movementType = item.quantity > 0 ? 'add' : 'subtract';
-        reason = `POS Adjustment: ${item.reason || 'N/A'}`;
+      const recipeIngredients = ingredientsData.filter(ing => ing.recipe_id === recipe.id);
+      
+      for (const ingredient of recipeIngredients) {
+        const inventoryItem = inventoryMap.get(ingredient.inventory_item_id);
+        const ingredientUnit = unitMap.get(ingredient.unit_id);
         
-        // For simplicity, apply adjustment to picking bin
-        newPickingBinQuantity += item.quantity;
-        newQuantity = newPickingBinQuantity + newOverstockQuantity;
-      } else {
-        console.warn(`[pos-webhook-processor] Unhandled item type/event combination: ${event_type}/${item.type}. Skipping.`);
-        continue;
+        if (!inventoryItem || !ingredientUnit) {
+          console.warn(`[pos-webhook-processor] Missing inventory item or unit for ingredient ID: ${ingredient.inventory_item_id}. Skipping.`);
+          continue;
+        }
+
+        // Determine the base unit factor for the inventory item's current unit (assuming it's the same as the ingredient's unit for simplicity, or we need a yield unit on inventory_items)
+        // Since we don't store the UoM on inventory_items, we'll assume the ingredient's unit is the base unit for depletion calculation.
+        // For a robust system, we'd need to know the inventory item's base unit.
+        // For now, we'll assume the ingredient's unit is the base unit for the raw material.
+        
+        // Calculate total raw quantity needed for the sale
+        const rawQuantityNeeded = parseFloat(ingredient.quantity_needed) * menuItem.quantity;
+        
+        // Find the current state of the item (use the latest state from the updates array if present)
+        const currentUpdate = updates.find(u => u.id === inventoryItem.id);
+        let currentPickingBinQuantity = currentUpdate?.picking_bin_quantity ?? inventoryItem.picking_bin_quantity;
+        let currentOverstockQuantity = currentUpdate?.overstock_quantity ?? inventoryItem.overstock_quantity;
+        let currentTotalQuantity = currentPickingBinQuantity + currentOverstockQuantity;
+        
+        const oldTotalQuantity = currentTotalQuantity;
+        
+        let quantityToDeplete = rawQuantityNeeded;
+        
+        if (menuItem.type === 'return') {
+            quantityToDeplete = -quantityToDeplete; // Reverse depletion for returns
+        } else if (menuItem.type !== 'sale') {
+            continue; // Only process sales and returns for recipe depletion
+        }
+
+        if (quantityToDeplete > 0) { // Depletion (Sale)
+            if (currentPickingBinQuantity >= quantityToDeplete) {
+                currentPickingBinQuantity -= quantityToDeplete;
+            } else {
+                const remaining = quantityToDeplete - currentPickingBinQuantity;
+                currentPickingBinQuantity = 0;
+                currentOverstockQuantity -= remaining;
+            }
+        } else if (quantityToDeplete < 0) { // Replenishment (Return)
+            currentPickingBinQuantity += Math.abs(quantityToDeplete);
+        }
+
+        // Ensure non-negative
+        currentPickingBinQuantity = Math.max(0, currentPickingBinQuantity);
+        currentOverstockQuantity = Math.max(0, currentOverstockQuantity);
+        currentTotalQuantity = currentPickingBinQuantity + currentOverstockQuantity;
+
+        // Prepare update payload
+        const existingUpdateIndex = updates.findIndex(u => u.id === inventoryItem.id);
+        const updatePayload = {
+            id: inventoryItem.id,
+            picking_bin_quantity: currentPickingBinQuantity,
+            overstock_quantity: currentOverstockQuantity,
+            quantity: currentTotalQuantity,
+            last_updated: new Date().toISOString().split('T')[0],
+        };
+
+        if (existingUpdateIndex !== -1) {
+            updates[existingUpdateIndex] = updatePayload;
+        } else {
+            updates.push(updatePayload);
+        }
+
+        // Log movement
+        movements.push({
+            item_id: inventoryItem.id,
+            item_name: inventoryItem.name,
+            type: quantityToDeplete > 0 ? 'subtract' : 'add',
+            amount: Math.abs(quantityToDeplete),
+            old_quantity: oldTotalQuantity,
+            new_quantity: currentTotalQuantity,
+            reason: `${menuItem.type === 'sale' ? 'POS Sale Depletion' : 'POS Return Replenishment'} for ${menuItem.menu_item_name}`,
+            user_id: systemUserId,
+            organization_id: organizationId,
+            folder_id: inventoryItem.folder_id,
+        });
       }
-
-      // Ensure quantities don't go negative (though this should be handled by POS logic)
-      newPickingBinQuantity = Math.max(0, newPickingBinQuantity);
-      newOverstockQuantity = Math.max(0, newOverstockQuantity);
-      newQuantity = newPickingBinQuantity + newOverstockQuantity;
-
-      updates.push({
-        id: inventoryItem.id,
-        picking_bin_quantity: newPickingBinQuantity,
-        overstock_quantity: newOverstockQuantity,
-        quantity: newQuantity,
-        last_updated: new Date().toISOString().split('T')[0],
-      });
-
-      movements.push({
-        item_id: inventoryItem.id,
-        item_name: inventoryItem.name,
-        type: movementType,
-        amount: Math.abs(item.quantity),
-        old_quantity: oldQuantity,
-        new_quantity: newQuantity,
-        reason: reason,
-        user_id: systemUserId,
-        organization_id: organizationId,
-        folder_id: inventoryItem.folder_id,
-      });
     }
 
     // 4. Execute database updates
@@ -196,18 +234,17 @@ serve(async (req) => {
       const { error: movementError } = await supabaseAdmin.from('stock_movements').insert(movements);
       if (movementError) {
         console.error('[pos-webhook-processor] Error inserting stock movements:', movementError);
-        // Note: We don't fail the whole transaction if logging fails, but we log the error.
       }
     }
 
-    // 6. Create a corresponding Sales Order if it was a sale event
+    // 6. Create a corresponding Sales Order
     if (event_type === 'SALE_COMPLETED' && data.transaction_id) {
       const orderItems: any[] = data.items.map(item => ({
         id: Math.random(),
-        itemName: inventoryMap.get(item.sku)?.name || item.sku,
+        itemName: item.menu_item_name,
         quantity: item.quantity,
         unitPrice: item.unit_price,
-        inventoryItemId: inventoryMap.get(item.sku)?.id,
+        // inventoryItemId is not directly available here, but the depletion happened via recipe
       }));
 
       const newOrder = {
@@ -215,11 +252,11 @@ serve(async (req) => {
         type: "Sales",
         customer_supplier: data.customer_name || 'POS Customer',
         created_at: data.timestamp,
-        status: "Shipped", // Assume POS sales are immediately shipped
+        status: "Shipped",
         total_amount: totalSaleAmount,
         due_date: data.timestamp.split('T')[0],
         item_count: orderItems.length,
-        notes: `Auto-generated from POS transaction ${data.transaction_id}.`,
+        notes: `Auto-generated from POS transaction ${data.transaction_id}. Unmapped items: ${unmappedItems.join(', ') || 'None'}.`,
         order_type: "Retail",
         shipping_method: "POS Pickup",
         items: orderItems,
@@ -230,11 +267,10 @@ serve(async (req) => {
       const { error: orderError } = await supabaseAdmin.from('orders').insert(newOrder);
       if (orderError) {
         console.error('[pos-webhook-processor] Error creating POS Sales Order:', orderError);
-        // Log error but don't fail the webhook response
       }
     }
 
-    return new Response(JSON.stringify({ message: 'Webhook processed successfully.', updates: updates.length, movements: movements.length }), {
+    return new Response(JSON.stringify({ message: 'Webhook processed successfully.', updates: updates.length, movements: movements.length, unmapped_menu_items: unmappedItems }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
