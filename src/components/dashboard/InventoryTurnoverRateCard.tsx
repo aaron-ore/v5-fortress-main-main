@@ -8,7 +8,7 @@ interface InventoryTurnoverRateCardProps {
 
 const InventoryTurnoverRateCard: React.FC<InventoryTurnoverRateCardProps> = ({ inventoryTurnoverRate }) => {
   return (
-    <Card className="bg-card border-border rounded-lg shadow-sm p-4">
+    <Card className="bg-card border-border rounded-lg shadow-sm p-4 flex flex-col h-[310px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-lg font-bold text-center text-foreground">Inventory Turnover Rate</CardTitle>
         <RefreshCw className="h-4 w-4 text-muted-foreground" />
