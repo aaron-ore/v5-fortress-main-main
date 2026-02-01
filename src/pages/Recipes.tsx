@@ -10,11 +10,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Utensils, Edit, Trash2, Scale, Loader2, AlertTriangle } from "lucide-react";
+import { PlusCircle, Utensils, Edit, Trash2, Scale, Loader2 } from "lucide-react";
 import { useRecipe, Recipe } from "@/context/RecipeContext";
 import { useUnitOfMeasure, UnitOfMeasure } from "@/context/UnitOfMeasureContext";
 import { useProfile } from "@/context/ProfileContext";
-import { showError, showSuccess } from "@/utils/toast";
+import { showError } from "@/utils/toast";
 import AddEditRecipeDialog from "@/components/recipes/AddEditRecipeDialog";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";

@@ -8,7 +8,6 @@ import React, { useState, useEffect } from "react";
     import { cn } from "@/lib/utils";
     import { Badge } from "@/components/ui/badge";
     import { useProfile } from "@/context/ProfileContext";
-    import { supabase } from "@/lib/supabaseClient";
     import { ALL_APP_FEATURES, getAllFeatureIds } from "@/lib/features";
 
     interface PlanFeature {
@@ -137,24 +136,25 @@ import React, { useState, useEffect } from "react";
 
         setIsProcessingSubscription(true);
         try {
-          const dodoStoreUrl = import.meta.env.VITE_DODO_STORE_URL;
-          if (!dodoStoreUrl) {
-            throw new Error("Dodo Store URL is not configured. Please contact support.");
+          const lemonSqueezyStoreUrl = import.meta.env.VITE_LEMON_SQUEEZY_STORE_URL;
+          if (!lemonSqueezyStoreUrl) {
+            throw new Error("Lemon Squeezy Store URL is not configured. Please contact support.");
           }
 
-          const redirectUrl = encodeURIComponent(`${window.location.origin}/billing?dodo_checkout_status={checkout_status}&organization_id=${profile.organizationId}&user_id=${profile.id}`);
+          const redirectUrl = encodeURIComponent(`${window.location.origin}/billing?lemon_squeezy_checkout_status={checkout_status}&organization_id=${profile.organizationId}&user_id=${profile.id}`);
           const passthroughData = encodeURIComponent(JSON.stringify({
             organization_id: profile.organizationId,
             user_id: profile.id,
             plan_id: plan.id, // Pass the plan ID for webhook processing
           }));
 
-          const checkoutUrl = `https://${dodoStoreUrl}/checkout/buy/${plan.dodoProductId}?variant=${plan.dodoVariantId}&passthrough=${passthroughData}&redirect_url=${redirectUrl}`;
+          // NOTE: Using Dodo product/variant IDs here, assuming they map to Lemon Squeezy checkout links
+          const checkoutUrl = `https://${lemonSqueezyStoreUrl}/checkout/buy/${plan.dodoProductId}?variant=${plan.dodoVariantId}&passthrough=${passthroughData}&redirect_url=${redirectUrl}`;
           
-          window.location.href = checkoutUrl; // Redirect to Dodo checkout page
+          window.location.href = checkoutUrl; // Redirect to Lemon Squeezy checkout page
 
         } catch (error: any) {
-          console.error("Error initiating Dodo checkout:", error);
+          console.error("Error initiating Lemon Squeezy checkout:", error);
           showError(`Failed to initiate checkout: ${error.message}`);
         } finally {
           setIsProcessingSubscription(false);
@@ -162,20 +162,20 @@ import React, { useState, useEffect } from "react";
       };
 
       const handleManageSubscription = async () => {
-        if (!profile?.organizationId || !profile?.dodoSubscriptionId) {
-          showError("You don't have an active Dodo subscription to manage.");
+        // FIX: Corrected property access from dodoSubscriptionId to lemonSqueezySubscriptionId
+        if (!profile?.organizationId || !profile?.lemonSqueezySubscriptionId) { 
+          showError("You don't have an active subscription to manage.");
           return;
         }
 
         setIsManagingSubscription(true);
         try {
-          // In a real Dodo integration, you would generate a link to the customer portal
-          // For now, we'll simulate this and show a message.
-          showInfo("Redirecting to Dodo subscription management portal (simulated)...");
+          // In a real Lemon Squeezy integration, you would generate a link to the customer portal
+          showInfo("Redirecting to subscription management portal (simulated)...");
           await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call delay
-          showSuccess("Redirected to simulated Dodo subscription management.");
+          showSuccess("Redirected to simulated subscription management.");
         } catch (error: any) {
-          console.error("Error managing Dodo subscription (simulated):", error);
+          console.error("Error managing subscription (simulated):", error);
           showError(`Failed to manage subscription: ${error.message}`);
         } finally {
           setIsManagingSubscription(false);
@@ -350,7 +350,7 @@ import React, { useState, useEffect } from "react";
                 ))}
               </div>
               <p className="text-xs text-muted-foreground text-center mt-4">
-                Perpetual Licenses grant access to the features available at the time of purchase, plus ongoing bug fixes and security updates. New features are not included.
+                Perpetual Licenses grants access to the features available at the time of purchase, plus ongoing bug fixes and security updates. New features are not included.
               </p>
             </div>
           )}

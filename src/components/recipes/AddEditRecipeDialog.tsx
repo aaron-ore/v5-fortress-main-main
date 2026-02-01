@@ -14,9 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Trash2, Utensils, Loader2 } from "lucide-react";
 import { useRecipe, Recipe, RecipeIngredient } from "@/context/RecipeContext";
-import { useUnitOfMeasure, UnitOfMeasure } from "@/context/UnitOfMeasureContext";
-import { useInventory, InventoryItem } from "@/context/InventoryContext";
-import { showError, showSuccess } from "@/utils/toast";
+import { useUnitOfMeasure } from "@/context/UnitOfMeasureContext";
+import { useInventory } from "@/context/InventoryContext";
+import { showError } from "@/utils/toast";
 import { useProfile } from "@/context/ProfileContext";
 import { ScrollArea } from "@/components/ui/scroll-area";
 

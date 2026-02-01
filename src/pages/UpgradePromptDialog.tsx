@@ -14,7 +14,6 @@ import { Sparkles, Crown, ArrowRight, X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "@/context/ProfileContext";
 import { showError, showSuccess } from "@/utils/toast";
-import { supabase } from "@/lib/supabaseClient";
 
 interface UpgradePromptDialogProps {
   isOpen: boolean;

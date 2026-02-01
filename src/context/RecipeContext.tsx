@@ -4,7 +4,6 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useCa
 import { supabase } from "@/lib/supabaseClient";
 import { showError, showSuccess } from "@/utils/toast";
 import { useProfile } from "./ProfileContext";
-import { logActivity } from "@/utils/logActivity";
 import { UnitOfMeasure } from "./UnitOfMeasureContext";
 import { InventoryItem } from "./InventoryContext";
 
