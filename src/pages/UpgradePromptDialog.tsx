@@ -22,7 +22,7 @@ interface UpgradePromptDialogProps {
 
 const UpgradePromptDialog: React.FC<UpgradePromptDialogProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
-  const { profile, markUpgradePromptSeen, fetchProfile } = useProfile();
+  const { profile, markUpgradePromptSeen } = useProfile();
   const [isProcessingSubscription, setIsProcessingSubscription] = useState(false);
 
   const handleUpgradeNow = () => {
