@@ -29,6 +29,7 @@ import { Loader2 } from "lucide-react";
 import UpgradePromptDialog from "./components/UpgradePromptDialog";
 import LiveChatWidget from "./components/LiveChatWidget";
 import Footer from "./components/Footer"; // NEW: Import Footer
+import { useAuth } from "./context/AuthContext"; // NEW: Import useAuth
 
 // Dynamically import all page components for code splitting
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -148,13 +149,13 @@ const AuthenticatedApp = () => {
 const AppContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isLoading: isLoadingAuth } = useAuth(); // NEW: Use user and isLoadingAuth
   const { isLoadingProfile, profile, fetchProfile } = useProfile();
   const { isPrinting, printContentData, resetPrintState } = usePrint();
-  // Removed: const { isTutorialActive, currentStep } = useTutorial();
 
   const qbCallbackProcessedRef = useRef(false);
   const shopifyCallbackProcessedRef = useRef(false);
-  const lemonSqueezyCallbackProcessedRef = useRef(false); // RENAMED
+  const lemonSqueezyCallbackProcessedRef = useRef(false);
 
   const [isUpgradePromptDialogOpen, setIsUpgradePromptDialogOpen] = useState(false);
 
@@ -173,7 +174,7 @@ const AppContent = () => {
     const quickbooksError = params.get('quickbooks_error');
     const shopifySuccess = params.get('shopify_success');
     const shopifyError = params.get('shopify_error');
-    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status'); // RENAMED
+    const lemonSqueezyCheckoutStatus = params.get('lemon_squeezy_checkout_status');
 
     if (quickbooksSuccess && !qbCallbackProcessedRef.current) {
       showSuccess("QuickBooks connected!");
@@ -199,7 +200,7 @@ const AppContent = () => {
       return; // Exit after navigation
     }
 
-    if (lemonSqueezyCheckoutStatus && !lemonSqueezyCallbackProcessedRef.current) { // RENAMED
+    if (lemonSqueezyCheckoutStatus && !lemonSqueezyCallbackProcessedRef.current) {
       if (lemonSqueezyCheckoutStatus === 'completed') {
         showSuccess("Subscription checkout completed! Refreshing profile...");
       } else if (lemonSqueezyCheckoutStatus === 'cancelled') {
@@ -220,30 +221,37 @@ const AppContent = () => {
     }
 
     // 3. Handle primary routing for authenticated users (after URL is clean and OAuth messages handled)
-    console.log("[AppContent] Primary routing logic. isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
-    if (!isLoadingProfile && profile) {
-      // User is authenticated
+    console.log("[AppContent] Primary routing logic. isLoadingAuth:", isLoadingAuth, "user:", user, "isLoadingProfile:", isLoadingProfile, "profile:", profile, "location.pathname:", location.pathname);
+    
+    if (!isLoadingAuth && user) {
+      // User is authenticated (raw user object exists)
       if (location.pathname === '/auth') {
-        if (profile.organizationId && profile.hasOnboardingWizardCompleted) {
-          console.log("[AppContent] Authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
-          startTransition(() => {
-            navigate('/', { replace: true });
-          });
-        } else {
-          console.log("[AppContent] Authenticated, onboarding NOT complete, on /auth. Redirecting to onboarding.");
-          startTransition(() => {
-            navigate('/onboarding', { replace: true });
-          });
+        // If on /auth, wait for profile to load to decide where to go
+        if (!isLoadingProfile) {
+          if (profile?.organizationId && profile.hasOnboardingWizardCompleted) {
+            console.log("[AppContent] Authenticated, onboarding complete, on /auth. Redirecting to dashboard.");
+            startTransition(() => {
+              navigate('/', { replace: true });
+            });
+          } else {
+            console.log("[AppContent] Authenticated, onboarding NOT complete, on /auth. Redirecting to onboarding.");
+            startTransition(() => {
+              navigate('/onboarding', { replace: true });
+            });
+          }
         }
-      } else if (!profile.organizationId && location.pathname !== '/onboarding') {
+      } else if (!isLoadingProfile && !profile?.organizationId && location.pathname !== '/onboarding') {
+        // If authenticated but no organization, redirect to onboarding
         console.log("[AppContent] Authenticated but no organization. Redirecting to onboarding to create/join org.");
         startTransition(() => {
             navigate('/onboarding', { replace: true });
         });
       }
-      // If authenticated, onboarding complete, and on dashboard, show upgrade prompt if applicable
+      
+      // Show upgrade prompt if applicable (only after profile is fully loaded and on dashboard)
       if (
-        profile.organizationId &&
+        !isLoadingProfile &&
+        profile?.organizationId &&
         profile.hasOnboardingWizardCompleted &&
         !profile.hasSeenUpgradePrompt &&
         profile.companyProfile?.plan === 'free' &&
@@ -257,8 +265,8 @@ const AppContent = () => {
     }
   }, [
     location.hash, location.search, location.pathname, navigate,
-    qbCallbackProcessedRef, shopifyCallbackProcessedRef, lemonSqueezyCallbackProcessedRef, // RENAMED
-    isLoadingProfile, profile, isUpgradePromptDialogOpen, fetchProfile,
+    qbCallbackProcessedRef, shopifyCallbackProcessedRef, lemonSqueezyCallbackProcessedRef,
+    isLoadingAuth, user, isLoadingProfile, profile, isUpgradePromptDialogOpen, fetchProfile,
   ]);
 
   useEffect(() => {
@@ -269,7 +277,7 @@ const AppContent = () => {
     }
   }, [isPrinting, printContentData]);
 
-  if (isLoadingProfile) {
+  if (isLoadingAuth || (user && isLoadingProfile)) { // Show loading screen if authenticating OR if user is present but profile is still loading
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -278,7 +286,7 @@ const AppContent = () => {
     );
   }
 
-  const mainAppRoutes = profile ? (
+  const mainAppRoutes = user ? (
     <ErrorBoundary>
       <Routes>
         <Route path="/onboarding" element={
@@ -294,9 +302,9 @@ const AppContent = () => {
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} /> {/* NEW: Public route for TermsOfService */}
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* NEW: Public route for PrivacyPolicy */}
-        <Route path="/refund-policy" element={<RefundPolicy />} /> {/* NEW: Public route for RefundPolicy */}
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="*" element={<Auth />} />
       </Routes>
     </Suspense>
@@ -331,10 +339,6 @@ const AppContent = () => {
           {renderPdfComponent()}
         </PrintWrapper>
       )}
-
-      {/* Removed: {isTutorialActive && currentStep && (
-        <TutorialTooltip step={currentStep} />
-      )} */}
 
       <UpgradePromptDialog
         isOpen={isUpgradePromptDialogOpen}
