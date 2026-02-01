@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@supabase/supabase-js';
-import { GoogleGenAI } from 'npm:@google/generative-ai';
 import { serve } from "https://deno.land/std@0.200.0/http/server.ts";
 
 const corsHeaders = {
@@ -7,13 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-
-if (!GEMINI_API_KEY) {
-  console.error("[ai-report-summaries] GEMINI_API_KEY is not set.");
-}
-
-const ai = GEMINI_API_KEY ? new GoogleGenAI(GEMINI_API_KEY) : null;
+const OPENROUTER_API_KEY = Deno.env.get('GEMINI_API_KEY'); // Using the provided secret name
 
 serve(async (req) => {
   let rawBodyText = '';
@@ -44,8 +37,8 @@ serve(async (req) => {
       });
     }
 
-    if (!ai) {
-      return new Response(JSON.stringify({ error: '[ai-report-summaries] AI service not configured. GEMINI_API_KEY is missing.' }), {
+    if (!OPENROUTER_API_KEY) {
+      return new Response(JSON.stringify({ error: '[ai-report-summaries] AI service not configured. GEMINI_API_KEY (OpenRouter Key) is missing.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       });
@@ -108,15 +101,37 @@ serve(async (req) => {
     // Construct the prompt
     const prompt = `Analyze the following inventory and order management report data of type "${reportType}". Provide a concise, actionable summary in three bullet points. Focus on key trends, potential risks (e.g., low stock, high losses), and opportunities (e.g., top sellers, high turnover). The data is provided as a JSON object: ${JSON.stringify(reportData)}`;
 
-    console.log('[ai-report-summaries] Sending prompt to Gemini...');
+    console.log('[ai-report-summaries] Sending prompt to OpenRouter...');
     
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
+    const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini', // Using a fast, capable model
+        messages: [
+          { role: 'system', content: 'You are an expert inventory and supply chain analyst. Your response must be a concise, actionable summary in three bullet points, based strictly on the provided JSON data.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.2,
+        max_tokens: 500,
+      }),
     });
 
-    const summary = response.text.trim();
-    console.log('[ai-report-summaries] Received summary from Gemini.');
+    if (!openRouterResponse.ok) {
+      const errorData = await openRouterResponse.json();
+      console.error('[ai-report-summaries] OpenRouter API error:', openRouterResponse.status, errorData);
+      return new Response(JSON.stringify({ error: `OpenRouter API failed: ${errorData.error?.message || openRouterResponse.statusText}` }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: openRouterResponse.status,
+      });
+    }
+
+    const responseData = await openRouterResponse.json();
+    const summary = responseData.choices?.[0]?.message?.content?.trim() || 'AI failed to generate a summary.';
+    console.log('[ai-report-summaries] Received summary from OpenRouter.');
 
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
