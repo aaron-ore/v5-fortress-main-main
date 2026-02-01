@@ -111,7 +111,8 @@ const Auth: React.FC = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth', // Keep this as it's the Supabase callback
+        // Ensure the redirect is clean to avoid issues with hash/query params being misinterpreted
+        redirectTo: window.location.origin, 
       },
     });
 
